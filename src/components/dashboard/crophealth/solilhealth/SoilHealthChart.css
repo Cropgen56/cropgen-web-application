@@ -1,0 +1,38 @@
+.soil-health-chart-container {
+  width: 100%;
+  max-width: 100vw !important;
+  margin: auto;
+  box-sizing: border-box;
+}
+
+.soil-health-chart-title {
+  color: #344e41;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+  padding-left: 3rem;
+}
+
+/* Responsive adjustments for tablets */
+@media (max-width: 768px) {
+  .soil-health-chart-container {
+    max-width: 90%;
+    padding: 0.5rem;
+  }
+
+  .soil-health-chart-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 480px) {
+  .soil-health-chart-container {
+    max-width: 100%;
+    padding: 0.25rem;
+  }
+
+  .soil-health-chart-title {
+    font-size: 1rem;
+  }
+}

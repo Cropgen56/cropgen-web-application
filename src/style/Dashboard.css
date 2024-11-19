@@ -1,0 +1,11 @@
+/* Hide scrollbar for the Dashboard component */
+.dashboard {
+  height: 100vh;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dashboard::-webkit-scrollbar {
+  display: none;
+}

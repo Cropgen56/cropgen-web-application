@@ -1,0 +1,125 @@
+.weather-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: auto;
+  position: relative;
+  top: -5px;
+}
+
+.forecast-wrapper {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+}
+
+.weather-day {
+  flex: 1;
+  text-align: center;
+}
+
+.weather-day img {
+  margin-top: 10px;
+  width: 80px;
+  height: 80px;
+}
+
+.weather-day h3 {
+  font-size: 1.2em;
+  font-family: Inter;
+  color: #9a9898;
+  font-weight: 700;
+}
+
+.weather-day p {
+  margin: 15px 0;
+  font-size: 1em;
+  font-weight: 700;
+}
+
+.line {
+  border: 0.5px solid;
+  border-color: #9a9898;
+  width: 100%;
+  position: relative;
+  top: 70px;
+  z-index: 1;
+}
+
+.line2 {
+  border-left: 1px solid #9a9898;
+  position: absolute;
+  width: 0;
+  height: 250px;
+  z-index: 1;
+}
+
+.line3 {
+  border-left: 1px solid #9a9898;
+  position: absolute;
+  width: 0;
+  height: 250px;
+  z-index: 1;
+}
+.line4 {
+  border-left: 1px solid #9a9898;
+  position: absolute;
+  width: 0;
+  height: 250px;
+  z-index: 1;
+}
+
+.line5 {
+  border-left: 1px solid #9a9898;
+  position: absolute;
+  width: 0;
+  height: 250px;
+  z-index: 1;
+}
+
+.line6 {
+  border-left: 1px solid #9a9898;
+  position: absolute;
+  width: 0;
+  height: 250px;
+  z-index: 1;
+}
+
+.line7 {
+  border-left: 1px solid #9a9898;
+  position: absolute;
+  width: 0;
+  height: 250px;
+  z-index: 1;
+}
+
+.next {
+  position: absolute;
+  top: 20px;
+}
+
+.back {
+  position: absolute;
+}
+
+.w-heading {
+  font-weight: 700;
+  position: relative;
+  top: -15px;
+  color: #344e41;
+}
+
+.subtext {
+  position: relative;
+  top: -25px;
+  left: 2px;
+  font-size: 12px;
+}
+
+.DatePicker {
+  background-color: #f8f8f8;
+  position: absolute;
+  top: 70px;
+  left: 22px;
+}

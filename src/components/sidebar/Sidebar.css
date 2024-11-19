@@ -1,0 +1,149 @@
+/* Sidebar.css */
+.sidebar {
+  display: flex;
+  min-height: 100vh;
+  transition: width 0.3s ease;
+}
+/* cropgen title and logo style  */
+.collapse-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.collapse-button img {
+  width: 1.5rem !important;
+  height: 1.3rem !important;
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.7rem;
+  padding-left: 3rem;
+  cursor: pointer;
+}
+
+.company-logo {
+  margin-right: 2px;
+  height: 40px;
+  font-size: 1.4rem;
+}
+
+.title-text {
+  font-size: 1.2rem;
+  color: #f8f8f8;
+}
+
+.offcanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  z-index: 1030;
+  border-right: 1px solid #ddd;
+  background-color: #344e41 !important;
+  overflow-y: auto;
+  width: 240px !important;
+  transition: width 0.3s ease;
+}
+.offcanvas.collapsed {
+  width: 60px !important;
+  text-align: center;
+  margin: 0px;
+  padding: 0px;
+  transition: width 0.3s ease;
+}
+/* card profile css style */
+.card {
+  margin: 20px auto;
+  background-color: #5a7c6b !important;
+  cursor: pointer;
+}
+.profile-image {
+  width: 80px !important;
+  height: 80px;
+  gap: 0px;
+  margin: auto;
+  opacity: 0px;
+}
+.active {
+  padding: 2px 0 3px 5px;
+  font-size: 0.9rem !important;
+  font-weight: 200;
+  line-height: 18.15px;
+  text-align: left;
+  color: #f8f8f8 !important;
+}
+.profile-user-name {
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 30.26px;
+  color: #f8f8f8 !important;
+}
+.profile-user-email {
+  font-size: 0.9rem;
+  font-weight: 200;
+  line-height: 18.15px;
+  color: #d9d9d9 !important;
+}
+
+/* sidebar nav style */
+nav {
+  padding: 0px 10px;
+  width: Hug (237px) px;
+  height: Hug (625px) px;
+  left: 2rem !important;
+  gap: 29px;
+  opacity: 0px;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+}
+
+nav li {
+  margin: 10px 0px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 2rem;
+  color: #f5f5f5 !important;
+  cursor: pointer;
+}
+
+nav a {
+  text-decoration: none;
+  color: #f5f5f5;
+}
+
+/* logout feature style */
+
+.offcanvas-footer {
+  text-align: center;
+}
+
+.footer-text {
+  display: flex;
+  /* align-items: center; */
+  /* justify-content: center; */
+  gap: 8px;
+  font-size: 1rem;
+  color: #fff;
+  cursor: pointer;
+  padding-left: 15px;
+}
+
+.logout-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Hide scrollbar for Chrome, Safari, and Opera */
+.offcanvas .offcanvas-body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.offcanvas .offcanvas-body::-webkit-scrollbar {
+  display: none;
+}

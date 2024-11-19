@@ -1,0 +1,126 @@
+/* Map container styling */
+.map-container {
+  height: 70vh;
+  width: 80vw;
+  margin: auto;
+  border-radius: 1rem;
+  border: 2px solid #ccc;
+  position: relative;
+}
+
+/* Control button styling */
+.map-controls {
+  position: absolute;
+  top: 60px;
+  left: 50px;
+  z-index: 1000;
+}
+
+/* "Add Field" Button styling */
+.add-field-button {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  z-index: 1000;
+  padding: 5px 10px;
+}
+.add-field-button :nth-child(1) {
+  padding: 3px 4px;
+  background-color: #5a7c6b;
+  border-radius: 5px;
+}
+.add-field-button .add-field {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.add-field-button button {
+  background-color: transparent;
+  border: none;
+}
+.add-field-button button img {
+  height: 1.5rem;
+  background-color: transparent !important;
+}
+
+/* Position the zoom control in the middle left */
+.leaflet-left .leaflet-control-zoom {
+  position: absolute;
+  top: 33vh;
+  transform: translateY(-50%);
+  left: 2px;
+  z-index: 1000;
+  background-color: #f1f1f1;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.map-layout {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.map-content {
+  width: 100vw;
+  height: 80vh;
+  position: relative;
+  margin: auto;
+  border-radius: 1rem;
+}
+
+.map-controls {
+  position: absolute;
+  top: 290px;
+  left: -30px;
+  z-index: 1000;
+}
+
+.delete-markers-btn {
+  position: absolute;
+  z-index: 1000;
+}
+
+.add-field-button {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  z-index: 1000;
+  padding: 5px 10px;
+}
+
+.add-field-button img {
+  height: 1.5rem;
+}
+
+.add-field-button .add-field {
+  color: #fff;
+  font-size: 1rem;
+  background-color: #5a7c6b;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+}
+.add-field-right-arrow {
+  border-left: 1px solid hsl(0, 0%, 100%) !important;
+  padding-left: 0.5rem;
+}
+.add-field-left-arrow {
+  border-right: 1px solid #fff !important;
+}
+
+.leaflet-left .leaflet-control-zoom {
+  position: absolute;
+  top: 33vh;
+  left: 2px;
+  z-index: 1000;
+  background-color: #f1f1f1;
+  border-radius: 4px;
+  padding: 2px;
+}
