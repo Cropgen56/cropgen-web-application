@@ -1,2 +1,1 @@
-# cropgen-web-application
-This is the Cropgen Web application
+# This is CropGen webApplication

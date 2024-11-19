@@ -1,0 +1,63 @@
+.crop-advisory {
+  background-color: #f8f9fa !important;
+  border-radius: 8px;
+}
+
+.crop-advisory-title h2 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #344e41;
+}
+
+.horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 1rem;
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-thumb {
+  background-color: #cccccc;
+  border-radius: 10px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-track {
+  background-color: #f0f0f0;
+}
+
+.advisory-card {
+  min-width: 18rem;
+  background-color: #5a7c6bb2;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.1rem;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.advisory-card .card-title {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #344e41;
+}
+
+.advisory-card .card-text {
+  font-size: 0.7rem;
+  color: #e0e0e0;
+}
+
+.read-more {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #e0e0e0;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.7rem;
+  float: inline-end;
+}
+
+.read-more:hover {
+  text-decoration: underline;
+}

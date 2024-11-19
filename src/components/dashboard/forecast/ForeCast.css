@@ -1,0 +1,105 @@
+.forecast {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #fff !important;
+}
+
+.forecast-container {
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+.forecast h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #344e41;
+}
+.forecast h2 {
+  font-size: 0.9rem;
+  color: #a2a2a2;
+}
+.forecast-today {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #344e41;
+  text-align: center;
+}
+
+.today-weather {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.weather-icon {
+  font-size: 1.7rem;
+  margin-right: 10px;
+}
+
+.temperature {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+/* week weather forcart style */
+.week-weather {
+  width: 100%;
+}
+
+.day-icon {
+  font-size: 1.4rem;
+}
+.day-temperature {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #344e41;
+}
+.forecast-week {
+  display: flex;
+  justify-content: space-between;
+}
+
+.today-details {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  margin-top: 1rem;
+  color: #555;
+  font-size: 0.7rem;
+}
+
+.day-forecast {
+  text-align: center;
+  width: 7rem;
+  border-radius: 10%;
+  padding: 10px;
+}
+
+.day-forecast .day {
+  font-weight: 200;
+  margin-bottom: 5px;
+  color: #000000;
+}
+
+.day-forecast .icon {
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.day-forecast .temp {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #344e41;
+}
+
+.day-forecast .rain-chance {
+  font-size: 0.9rem;
+  color: #5a7c6b;
+}
+
+.highlighted {
+  background-color: #5a7c6b;
+  color: #fff;
+}

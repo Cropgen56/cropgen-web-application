@@ -1,0 +1,70 @@
+.farm-report-sidebar {
+  width: 28vw;
+  margin: 0;
+  padding: 0;
+}
+.farm-report-heading {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #344e41;
+  padding: 0.6rem;
+  cursor: pointer;
+}
+.field-info.selected-field {
+  background-color: #5a7c6b;
+}
+.selected-titel {
+  color: #fff !important;
+}
+.farm-report-heading:nth-child(0) {
+  display: flex;
+  flex-direction: row;
+}
+
+.farm-report-heading h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #344e41;
+}
+
+.farm-report-field h2 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #344e41;
+  padding-left: 1rem;
+  padding-top: 0.5rem;
+}
+
+.farm-report-field .field-info {
+  display: flex;
+  justify-content: space-around;
+  border-bottom: 1px solid #344e41;
+  padding-top: 1rem;
+  cursor: pointer;
+}
+
+.farm-report-field .field-info h4 {
+  color: #344e41;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.farm-report-sidebar .field-info .field-details {
+  display: flex;
+}
+
+.farm-report-sidebar .field-info .ha {
+  margin: 0;
+  padding: 0;
+  font-size: 0.7rem;
+  color: #a2a2a2;
+  margin-bottom: 0.2rem;
+}
+
+.farm-report-sidebar .field-info .field-details p {
+  font-size: 0.7rem;
+  color: #a2a2a2;
+  margin-right: 1rem;
+}

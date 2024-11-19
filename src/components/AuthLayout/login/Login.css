@@ -1,0 +1,47 @@
+.auth-form-group {
+  margin-bottom: 18px;
+}
+
+.auth-form-login {
+  padding: 0 20px;
+  padding-bottom: 2rem;
+}
+.auth-form-label {
+  font-size: 0.8rem;
+  color: #fff;
+  font-weight: 500;
+}
+
+.auth-form-input {
+  background-color: #075a53;
+  border: none;
+  outline: none;
+  width: 100%;
+  padding: 3px 5px;
+  border-radius: 5px;
+  color: #9a9898;
+  font-size: 0.9rem;
+}
+
+.auth-form-input:focus {
+  border-color: #0066ff;
+  outline: none;
+}
+
+.auth-form-error {
+  color: #d9534f;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.auth-form-button {
+  border: none;
+  outline: none;
+  border-radius: 5px;
+  padding: 3px 0;
+  background-color: #3592fd;
+  color: #fff;
+  width: 100%;
+  font-weight: 600;
+}

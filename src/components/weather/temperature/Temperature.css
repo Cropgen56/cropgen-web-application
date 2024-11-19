@@ -1,0 +1,33 @@
+.temperature-card {
+  margin-top: 20px;
+  margin: 20px 10px 0px 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #ffffff !important;
+}
+.Temperature-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.Temperature-heading h2 {
+  color: #344e41;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.Temperature-heading div {
+  display: flex;
+}
+.Temperature-heading p {
+  margin: 0;
+  padding: 0;
+  padding: 0 5px;
+  color: #9a9898;
+  font-size: 0.8rem;
+}
+
+.temperature-echarts {
+  width: 100%;
+  position: relative;
+  height: 250px !important;
+}

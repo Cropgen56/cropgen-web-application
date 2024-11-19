@@ -1,0 +1,56 @@
+.plant-growth-card {
+  background-color: #fff !important;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.heading-container {
+  padding: 30px 0px 10px 40px;
+}
+
+.header-title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #344e41;
+}
+
+.subheader-text {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #9a9898;
+}
+
+.dropdown-container {
+  display: flex;
+  gap: 10px;
+  margin-right: 4rem;
+  margin-bottom: 1rem;
+}
+
+.custom-dropdown select {
+  border: none;
+  background-color: transparent;
+  outline: turquoiseas;
+  color: #9a9898;
+  font-size: 0.9rem;
+  border: 1px solid #5a7c6b;
+  padding: 10px 20px;
+  border-radius: 25px;
+}
+
+.dropdown-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.custom-dropdown {
+  position: relative;
+  width: 60%;
+}
