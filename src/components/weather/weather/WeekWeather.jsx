@@ -1,6 +1,7 @@
 // import axios from "axios";
 // import React, { useState, useEffect } from "react";
 // import { Container, Row, Col, Card } from "react-bootstrap";
+// import { useSelector } from "react-redux";
 
 // const WeekWeather = () => {
 //   const [forecast, setForecast] = useState([]);
@@ -53,7 +54,7 @@
 //   // WeatherDay component inside WeekWeather.js
 //   const WeatherDay = ({ day, data }) => {
 //     return (
-//       <div className="weather-day">
+//       <div className="weather-day bg-primary h-25">
 //         <h3>{day}</h3>
 //         <img
 //           src={`https://openweathermap.org/img/wn/${data.icon}@2x.png`}
@@ -95,8 +96,48 @@
 import React from "react";
 import "./WeekWeather.css";
 import { Card } from "react-bootstrap";
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
 
 const WeekWeather = () => {
+  const [forecast, setForecast] = useState([]);
+  const { data } = useSelector((state) => state.weather);
+  console.log(data);
+  useEffect(() => {
+    try {
+      // Process the data to extract daily forecast data
+      const dailyData = data.data.list.reduce((acc, reading) => {
+        const dateObj = new Date(reading.dt * 1000);
+        const date = `${dateObj.toLocaleDateString("en-US", {
+          weekday: "short",
+        })} ${dateObj.getDate()} ${dateObj.toLocaleDateString("en-US", {
+          month: "short",
+        })}`;
+
+        // Only store the data for one reading per day (e.g., for noon or midnight)
+        if (!acc[date]) {
+          acc[date] = {
+            temp: reading.main.temp,
+            icon: reading.weather[0].icon,
+            description: reading.weather[0].description,
+            feelsLike: reading.main.feels_like,
+            pressure: reading.main.pressure,
+            humidity: reading.main.humidity,
+            windSpeed: reading.wind.speed,
+            clouds: reading.clouds.all,
+          };
+        }
+        return acc;
+      }, {});
+
+      // Only keep data for the next 7 days
+      setForecast(Object.entries(dailyData).slice(0, 7)); // 7 days of forecast data
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+    }
+  }, []);
+
+  console.log(forecast);
   const forecastData = [
     {
       date: "SUN, 9 Jun",

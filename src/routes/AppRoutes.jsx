@@ -14,7 +14,7 @@ import Setting from "../pages/Setting";
 import Operation from "../pages/Operation";
 import Profile from "../pages/Profile";
 import PageNotFound from "../pages/PageNotFound";
-import Login from "../pages/Login";
+// import Login from "../pages/Login";
 import AuthLayout from "../pages/AuthLayout";
 
 const AppRoutes = () => {
@@ -25,7 +25,7 @@ const AppRoutes = () => {
         <Route path="/" element={<MainLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/cropgen-analytics" element={<CropGenAnalytics />} />
+          <Route path="/cropgen-analytics" element={<Dashboard />} />
           <Route path="/addfield" element={<AddField />} />
           <Route path="/weather" element={<Weather />} />
           <Route path="/operation" element={<Operation />} />

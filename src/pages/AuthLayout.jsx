@@ -3,7 +3,6 @@ import "../style/AuthLayout.css";
 import SignUp from "../components/AuthLayout/signup/Signnup";
 import Login from "../components/AuthLayout/login/Login";
 import SocialButtons from "../components/AuthLayout/shared/socialbuttons/SocialButton";
-import LanguageSwitcher from "../components/AuthLayout/shared/LanguageSwitcher";
 import { Logo } from "../assets/Icons.jsx";
 
 const AuthLayout = () => {

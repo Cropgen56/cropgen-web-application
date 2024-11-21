@@ -1,12 +1,7 @@
 import React from "react";
-
+import GoogleMapView from "../components/addfield/GoogleMapView";
 const AddField = () => {
-  return (
-    <div className="" style={{ height: "100vh" }}>
-      {" "}
-      <h1 className="text-center  ">AddField</h1>
-    </div>
-  );
+  return <GoogleMapView />;
 };
 
 export default AddField;
