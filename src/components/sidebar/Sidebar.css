@@ -9,6 +9,9 @@
   background: none;
   border: none;
   cursor: pointer;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 .collapse-button img {
   width: 1.5rem !important;
@@ -64,7 +67,7 @@
   height: 80px;
   gap: 0px;
   margin: auto;
-  opacity: 0px;
+  z-index: 1000;
 }
 .active {
   padding: 2px 0 3px 5px;
@@ -94,7 +97,7 @@ nav {
   height: Hug (625px) px;
   left: 2rem !important;
   gap: 29px;
-  opacity: 0px;
+  opacity: 1px;
 }
 
 nav ul {
@@ -109,6 +112,9 @@ nav li {
   line-height: 2rem;
   color: #f5f5f5 !important;
   cursor: pointer;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 nav a {

@@ -19,7 +19,7 @@ import AuthLayout from "../pages/AuthLayout";
 
 const AppRoutes = () => {
   return (
-    <Router>
+    <Router basename="/">
       <Routes>
         {/* Main Site Routes */}
         <Route path="/" element={<MainLayout />}>

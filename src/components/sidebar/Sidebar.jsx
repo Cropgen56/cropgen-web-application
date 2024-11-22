@@ -22,7 +22,6 @@ import "./Sidebar.css";
 
 function Sidebar({ onToggleCollapse }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState("");
   const navigate = useNavigate();
 
   const handleCollapseToggle = (collapse) => {
@@ -62,7 +61,7 @@ function Sidebar({ onToggleCollapse }) {
               onClick={() => handleNavigation("/profile")}
               className="profile-card"
             >
-              <Card.Img variant="top" src={profile} className="profile-image" />
+              <img variant="top" src={profile} className="profile-image" />
               <Card.Body className="text-center">
                 <Card.Title className="profile-user-name">User Name</Card.Title>
                 <Card.Text className="profile-user-email">
@@ -82,113 +81,43 @@ function Sidebar({ onToggleCollapse }) {
                   <Hammer />
                 </li>
               )}
-              <li
-                onClick={() => handleNavigation("/cropgen-analytics")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/cropgen-analytics"
-                      ? "white"
-                      : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/cropgen-analytics")}>
                 <CropAnalysisIcon />
                 {!isCollapsed && "CropGen Analytics"}
               </li>
-              <li
-                onClick={() => handleNavigation("/addfield")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/addfield" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/addfield")}>
                 <AddFieldIcon />
                 {!isCollapsed && "Add Field"}
               </li>
-              <li
-                onClick={() => handleNavigation("/weather")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/weather" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/weather")}>
                 <Weather />
                 {!isCollapsed && "Weather"}
               </li>
-              <li
-                onClick={() => handleNavigation("/operation")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/operation" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/operation")}>
                 <Operation />
                 {!isCollapsed && "Operation"}
               </li>
-              <li
-                onClick={() => handleNavigation("/disease-detection")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/disease-detection"
-                      ? "white"
-                      : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/disease-detection")}>
                 <DieaseDetaction />
                 {!isCollapsed && "Disease Detection"}
               </li>
-              <li
-                onClick={() => handleNavigation("/smart-advisory")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/smart-advisory"
-                      ? "white"
-                      : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/smart-advisory")}>
                 <SmartAdvisory />
                 {!isCollapsed && "Smart Advisory"}
               </li>
-              <li
-                onClick={() => handleNavigation("/crop-information")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/crop-information"
-                      ? "white"
-                      : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/crop-information")}>
                 <CropInformation />
                 {!isCollapsed && "Crop Information"}
               </li>
-              <li
-                onClick={() => handleNavigation("/farm-report")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/farm-report" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/farm-report")}>
                 <FarmReport />
                 {!isCollapsed && "Farm Report"}
               </li>
-              <li
-                onClick={() => handleNavigation("/personalise-crop-shedule")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/personalise-crop-shedule"
-                      ? "white"
-                      : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/personalise-crop-shedule")}>
                 <PersonaliseCropShedule />
                 {!isCollapsed && "Personalise Crop Schedule"}
               </li>
-              <li
-                onClick={() => handleNavigation("/setting")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/setting" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/setting")}>
                 <Setting />
                 {!isCollapsed && "Setting"}
               </li>

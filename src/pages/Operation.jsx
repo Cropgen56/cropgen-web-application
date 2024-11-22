@@ -8,10 +8,7 @@ const Operation = () => {
       <div>
         <OperationSidebar />
       </div>
-      <div className="w-100">
-        {" "}
-        <OperationCalender />
-      </div>
+      <div className="w-100"> {/* <OperationCalender /> */}</div>
     </div>
   );
 };
