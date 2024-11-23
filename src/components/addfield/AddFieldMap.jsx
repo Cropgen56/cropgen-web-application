@@ -1,6 +1,6 @@
-import L from "leaflet";
 import React, { useState, useEffect, useRef } from "react";
-import { Layout, Button, Calendar } from "antd";
+import L from "leaflet";
+import { Layout, Button } from "antd";
 import {
   MapContainer,
   TileLayer,
@@ -13,18 +13,15 @@ import {
 import "leaflet/dist/leaflet.css";
 import "leaflet-control-geocoder/dist/Control.Geocoder.css";
 import "leaflet-control-geocoder/dist/Control.Geocoder.js";
+import * as ELG from "esri-leaflet-geocoder";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import * as ELG from "esri-leaflet-geocoder";
-import {
-  Calender,
-  LeftArrow,
-  RightArrow,
-} from "../../../assets/DashboardIcons.jsx";
-import "./MapView.css";
+import { Calender, LeftArrow, RightArrow } from "../../assets/DashboardIcons";
+import "./AddFieldMap.css";
+
 const { Content } = Layout;
 
-const MapData = () => {
+const AddFieldMap = () => {
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
   const mapRef = useRef();
@@ -65,25 +62,18 @@ const MapData = () => {
         mapRef.current.setView(latlng, 10);
       }
     });
-  }, [mapRef]);
+  }, []);
 
-  const toggleAddMarkers = () => {
-    setIsAddingMarkers((prev) => !prev);
-  };
+  const toggleAddMarkers = () => setIsAddingMarkers((prev) => !prev);
 
   return (
-    <Layout>
-      <Content style={{ height: "100%", position: "relative" }}>
+    <Layout className="map-layout add-field">
+      <Content className="map-content">
         <MapContainer
           center={[20.5937, 78.9629]}
           zoom={30}
           zoomControl={true}
-          style={{
-            height: "60vh",
-            width: "auto",
-            margin: "auto",
-            borderRadius: "1rem",
-          }}
+          className="map-container"
           whenCreated={(mapInstance) => {
             mapRef.current = mapInstance;
           }}
@@ -106,6 +96,7 @@ const MapData = () => {
               </Popup>
             </Marker>
           ))}
+
           {markers.length > 0 && (
             <Polygon
               positions={markers.map((marker) => [marker.lat, marker.lng])}
@@ -115,9 +106,34 @@ const MapData = () => {
           <Markers />
           <ZoomControl />
         </MapContainer>
+
+        <div className="map-controls">
+          <Button onClick={() => setMarkers([])} className="delete-markers-btn">
+            Delete Markers
+          </Button>
+        </div>
+
+        <div className="add-field-button">
+          <div className="d-flex justify-content-between mx-auto">
+            <div className="add-field-left-arrow">
+              <button>
+                <Calender />
+              </button>
+              <button>
+                <LeftArrow />
+              </button>
+            </div>
+            <button onClick={toggleAddMarkers} className="add-field">
+              Add Field
+            </button>
+            <button className="add-field-right-arrow">
+              <RightArrow />
+            </button>
+          </div>
+        </div>
       </Content>
     </Layout>
   );
 };
 
-export default MapData;
+export default AddFieldMap;

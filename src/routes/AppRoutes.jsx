@@ -7,7 +7,7 @@ import AddField from "../pages/AddField";
 import Weather from "../pages/Weather";
 import DiseaseDetection from "../pages/DiseaseDetection";
 import SmartAdvisory from "../pages/SmartAdviosory";
-import CropInformation from "../pages/CropInformation";
+import SoilReport from "../pages/SoilReport";
 import FarmReport from "../pages/FarmReport";
 import PersonaliseCropSchedule from "../pages/PersonaliseCropSchedule";
 import Setting from "../pages/Setting";
@@ -31,7 +31,7 @@ const AppRoutes = () => {
           <Route path="/operation" element={<Operation />} />
           <Route path="/disease-detection" element={<DiseaseDetection />} />
           <Route path="/smart-advisory" element={<SmartAdvisory />} />
-          <Route path="/crop-information" element={<CropInformation />} />
+          <Route path="/soil-report" element={<SoilReport />} />
           <Route path="/farm-report" element={<FarmReport />} />
           <Route
             path="/Personalise-crop-shedule"

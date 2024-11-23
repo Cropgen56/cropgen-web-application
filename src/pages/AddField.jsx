@@ -1,7 +1,8 @@
 import React from "react";
-import GoogleMapView from "../components/addfield/GoogleMapView";
+import AddFieldMap from "../components/addfield/AddFieldMap";
+
 const AddField = () => {
-  return <GoogleMapView />;
+  return <AddFieldMap />;
 };
 
 export default AddField;

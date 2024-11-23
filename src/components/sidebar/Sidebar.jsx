@@ -6,8 +6,8 @@ import profile from "../../assets/image/pngimages/profile.png";
 import {
   AddFieldIcon,
   CropAnalysisIcon,
-  CropInformation,
   DieaseDetaction,
+  SoilReportIcon,
   FarmReport,
   Operation,
   SmartAdvisory,
@@ -105,9 +105,9 @@ function Sidebar({ onToggleCollapse }) {
                 <SmartAdvisory />
                 {!isCollapsed && "Smart Advisory"}
               </li>
-              <li onClick={() => handleNavigation("/crop-information")}>
-                <CropInformation />
-                {!isCollapsed && "Crop Information"}
+              <li onClick={() => handleNavigation("/soil-report")}>
+                <SoilReportIcon />
+                {!isCollapsed && "Soil Report"}
               </li>
               <li onClick={() => handleNavigation("/farm-report")}>
                 <FarmReport />
