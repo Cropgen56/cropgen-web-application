@@ -1,19 +1,23 @@
 import React, { useState } from "react";
-import { Operation2 } from "../../../assets/Icons";
+import { SmartAdvisoryDarkIcon } from "../../../assets/Icons";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
-import "./SoilReportSidebar.css";
+import "./SmartAdvisorySidebar.css";
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   <div
-    className={`soil-report-info ${isSelected ? "selected-soil-report" : ""}`}
+    className={`advisory-field-info ${
+      isSelected ? "selected-advisory-field" : ""
+    }`}
     onClick={onClick}
   >
     <FieldIcon isSelected={isSelected} />
-    <div className="soil-report-operations">
-      <h4 className={`${isSelected ? "selected-title" : ""}`}>{title}</h4>
-      <p className="ha">{area}</p>
-      <div className="soil-report-details">
+    <div className="advisory-field-operations">
+      <h4 className={`${isSelected ? "selected-advisory-title" : ""}`}>
+        {title}
+      </h4>
+      <p className="field-area">{area}</p>
+      <div className="advisory-field-details">
         <p>{lat} N</p>
         <p>{lon} E</p>
       </div>
@@ -21,7 +25,7 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   </div>
 );
 
-const SoilReportSidebar = ({ selectedOperation, setSelectedOperation }) => {
+const SmartAdvisorySidebar = ({ selectedOperation, setSelectedOperation }) => {
   const [selectedOperationIndex, setSelectedOperationIndex] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
@@ -36,15 +40,15 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation }) => {
   return (
     <>
       {isSidebarVisible && (
-        <div className="soil-report-sidebar">
-          <div className="soil-report-heading">
-            <div className="soil-report-first-row">
-              <Operation2 />
-              <h2>Soil Report</h2>
+        <div className="advisory-sidebar">
+          <div className="advisory-heading">
+            <div className="advisory-first-row">
+              <SmartAdvisoryDarkIcon />
+              <h2>Smart Advisory</h2>
               <svg
                 width="30"
                 height="30"
-                className="soil-report-close-button"
+                className="advisory-close-button"
                 viewBox="0 0 30 30"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -71,16 +75,16 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation }) => {
                 </defs>
               </svg>
             </div>
-            <div className="soil-report-search">
-              <CiSearch className="search-icon" />
+            <div className="advisory-search">
+              <CiSearch className="advisory-search-icon" />
               <input
                 type="search"
-                className="search-input"
+                className="advisory-search-input"
                 placeholder="Search"
               />
             </div>
           </div>
-          <div className="soil-report-field">
+          <div className="advisory-field">
             <h2>Field</h2>
             {operations.map((operation, index) => (
               <FieldInfo
@@ -104,4 +108,4 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation }) => {
   );
 };
 
-export default SoilReportSidebar;
+export default SmartAdvisorySidebar;

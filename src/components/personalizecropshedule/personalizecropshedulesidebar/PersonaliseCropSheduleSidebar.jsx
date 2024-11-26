@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Operation2 } from "../../../assets/Icons";
+import { PersonaliseCropSheduleDarkIcon } from "../../../assets/Icons";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import "./PersonaliseCropSheduleSidebar.css";
@@ -50,8 +50,8 @@ const PersonaliseCropSheduleSidebar = ({
         <div className="personalise-crop-schedule-sidebar">
           <div className="personalise-crop-schedule-sidebar-heading">
             <div className="personalise-crop-schedule-sidebar-first-row">
-              <Operation2 />
-              <h2>Soil Report</h2>
+              <PersonaliseCropSheduleDarkIcon />
+              <h2>Personalise Crop shedule</h2>
               <svg
                 width="30"
                 height="30"

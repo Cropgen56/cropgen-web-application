@@ -1,0 +1,33 @@
+.setting-sidebar {
+  width: 18vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: #fff;
+}
+.setting-sidebar-heading {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  padding: 10px;
+  border-bottom: 1px solid #344e41;
+}
+.setting-sidebar-heading h2 {
+  font-size: 1.2rem;
+  color: #344e41;
+}
+
+.list-of-settings {
+  cursor: pointer;
+}
+.list-of-settings .setting-option {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.list-of-settings .selected {
+  background-color: #5a7c6b;
+  color: #fff;
+}
