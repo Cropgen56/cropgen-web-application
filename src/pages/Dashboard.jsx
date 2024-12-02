@@ -9,7 +9,7 @@ import "../style/Dashboard.css";
 
 const Dashboard = () => {
   return (
-    <div className="dashboard p-3" style={{ height: "100vh" }}>
+    <div className="dashboard float-end p-3 ">
       <MapView />
       <CropHealth />
       <ForeCast />

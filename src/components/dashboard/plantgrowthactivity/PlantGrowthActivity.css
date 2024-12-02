@@ -6,10 +6,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
 }
 .heading-container {
-  padding: 30px 0px 10px 40px;
+  padding: 5px 0px 10px 40px;
 }
 
 .header-title {

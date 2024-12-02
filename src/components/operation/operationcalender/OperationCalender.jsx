@@ -1,88 +1,193 @@
 import React, { useState } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import "./OperationCalender.css";
+import FullCalendar from "@fullcalendar/react";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { FilterIcon } from "../../../assets/Icons";
+import EventForm from "../operationform/EventForm";
 import moment from "moment";
-import EventForm from "./eventForm";
+import "./OperationCalender.css";
 
-const localizer = momentLocalizer(moment);
+const FarmerScheduler = () => {
+  const [view, setView] = useState("timeGridThreeDay");
+  const [date, setDate] = useState(new Date());
+  const [events, setEvents] = useState([
+    {
+      title: "Example Task 2",
+      start: "2024-11-28T12:00:00",
+      end: "2024-11-28T14:00:00",
+    },
+  ]);
 
-const Calender = (props) => {
-  const [events, setEvents] = useState(props.events || []);
-  const [view, setView] = useState("week");
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [showForm, setShowForm] = useState(false);
-  const [selectedCell, setSelectedCell] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
-  const handleSelectSlot = ({ start, end }) => {
-    setSelectedCell({ start, end });
-    setShowForm(true);
+  const handleNavigate = (action) => {
+    const increment = view === "timeGridThreeDay" ? 3 : 1;
+    const newDate =
+      action === "prev"
+        ? moment(date).subtract(increment, "days").toDate()
+        : moment(date).add(increment, "days").toDate();
+    setDate(newDate);
   };
 
-  const handleSaveEvent = (formValues) => {
-    const newEvent = {
-      title: formValues.title,
-      cropName: formValues.cropName,
-      operationType: formValues.operationType,
-      supervisorName: formValues.supervisorName,
-      labourMale: formValues.labourMale,
-      labourFemale: formValues.labourFemale,
-      date: formValues.date,
-      estimatedCost: formValues.estimatedCost,
-      start: formValues.start.toDate(),
-      end: formValues.end.toDate(),
-    };
-    setEvents([...events, newEvent]);
-    setShowForm(false);
-    setSelectedCell(null);
+  const handleViewChange = (newView) => {
+    setView(newView);
   };
 
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setSelectedCell(null);
+  const handleFilter = () => {
+    alert("Filter functionality triggered!");
   };
 
-  const eventPropGetter = (event) => ({
-    style: { backgroundColor: "#63a4ff", color: "white", padding: "5px" },
-  });
+  const handleDateSelect = (selectInfo) => {
+    setSelectedEvent({
+      start: selectInfo.startStr,
+      end: selectInfo.endStr,
+    });
+    setIsModalVisible(true);
+  };
 
-  const EventComponent = ({ event }) => (
-    <div className="w-100 h-50">
-      <strong>{event.title}</strong>
-      <div>{event.cropName}</div>
-      <div>{event.operationType}</div>
-    </div>
-  );
+  const handleEventClick = (info) => {
+    setSelectedEvent({
+      ...info.event.extendedProps,
+      start: info.event.startStr,
+      end: info.event.endStr,
+    });
+    setIsModalVisible(true);
+  };
+
+  const handleMonthChange = (monthIndex) => {
+    const newDate = moment(date).month(monthIndex).startOf("month").toDate();
+    setDate(newDate);
+  };
+
+  const handleSave = (newEvent) => {
+    setEvents((prevEvents) => [
+      ...prevEvents,
+      {
+        title: newEvent.title,
+        start: moment(newEvent.start).format(),
+        end: moment(newEvent.end).format(),
+      },
+    ]);
+    setIsModalVisible(false);
+  };
+
+  const handleClose = () => {
+    setIsModalVisible(false);
+    setSelectedEvent(null);
+  };
 
   return (
-    <div className="calendar-container">
-      <Calendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: "calc(100vh - 50px)" }}
-        date={currentDate}
-        defaultView={view}
-        views={["day", "week", "month"]}
-        onNavigate={(date) => setCurrentDate(date)}
-        className="Custom-Calendar p-1"
-        selectable
-        onSelectSlot={handleSelectSlot}
-        eventPropGetter={eventPropGetter}
-        components={{
-          event: EventComponent,
-        }}
-      />
+    <div className="calender-container p-1">
+      {/* Calendar Header */}
+      <div className="calendar-header">
+        <div className="top-left">
+          <select
+            onChange={(e) => handleMonthChange(e.target.value)}
+            value={moment(date).month()}
+          >
+            {moment.monthsShort().map((month, index) => (
+              <option key={month} value={index}>
+                {month}
+              </option>
+            ))}
+          </select>
+          <button className="filter-button" onClick={handleFilter}>
+            <FilterIcon />
+            Filter
+          </button>
+          <div className="long-button">
+            <button
+              onClick={() => handleViewChange("timeGridDay")}
+              className={view === "timeGridDay" ? "selected-button" : ""}
+            >
+              D
+            </button>
+            <button
+              onClick={() => handleViewChange("timeGridThreeDay")}
+              className={view === "timeGridThreeDay" ? "selected-button" : ""}
+            >
+              3D
+            </button>
+            <button
+              onClick={() => handleViewChange("timeGridWeek")}
+              className={view === "timeGridWeek" ? "selected-button" : ""}
+            >
+              W
+            </button>
+          </div>
+        </div>
+        <div className="top-right">
+          <div className="button-group">
+            <button
+              onClick={() => handleNavigate("prev")}
+              className="left-arrow"
+            >
+              {"<"}
+            </button>
+            <button
+              onClick={() => handleNavigate("next")}
+              className="right-arrow"
+            >
+              {">"}
+            </button>
+          </div>
 
-      <EventForm
-        visible={showForm}
-        onClose={handleCloseForm}
-        onSave={handleSaveEvent}
-        initialData={selectedCell}
-      />
+          <button
+            onClick={() => setIsModalVisible(true)}
+            className="add-option-button"
+          >
+            Add Opp +
+          </button>
+        </div>
+      </div>
+
+      {/* FullCalendar */}
+      <div className="calendar-container-body">
+        <FullCalendar
+          key={`${view}-${date}`}
+          plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
+          initialView={view}
+          initialDate={date}
+          headerToolbar={false}
+          views={{
+            timeGridThreeDay: {
+              type: "timeGrid",
+              duration: { days: 3 },
+              buttonText: "3 Days",
+            },
+          }}
+          events={events}
+          selectable
+          select={handleDateSelect}
+          eventClick={handleEventClick}
+          eventColor="#378006"
+          eventTextColor="#ffffff"
+          height="80vh"
+          contentHeight="auto"
+          scrollTime="09:00:00"
+          slotDuration="01:00:00"
+          slotLabelInterval="01:00:00"
+          slotLabelFormat={{
+            hour: "numeric",
+            minute: "2-digit",
+            meridiem: "short",
+          }}
+        />
+
+        {/* Event Form Modal */}
+        {isModalVisible && (
+          <EventForm
+            visible={isModalVisible}
+            onClose={handleClose}
+            onSave={handleSave}
+            initialData={selectedEvent}
+          />
+        )}
+      </div>
     </div>
   );
 };
 
-export default Calender;
+export default FarmerScheduler;

@@ -16,7 +16,7 @@ const MainLayout = () => {
       {/* Sidebar */}
       <div
         style={{
-          width: isSidebarCollapsed ? "3.7rem" : "15rem",
+          width: isSidebarCollapsed ? "3.7rem" : "14.9rem",
           transition: "margin-left 0.3s ease",
         }}
       >

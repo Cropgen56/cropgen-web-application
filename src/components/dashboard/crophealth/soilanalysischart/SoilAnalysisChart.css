@@ -1,0 +1,64 @@
+.soil-analysis-chart-container {
+  width: 100%;
+  max-width: 600px;
+  margin: auto;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.soil-analysis-chart-title {
+  text-align: start;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #344e41;
+  margin-left: 2rem;
+}
+
+.y-axis-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #86d72f;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  border-radius: 50%;
+  position: relative;
+}
+
+.y-axis-label p {
+  font-size: 0.75rem;
+  margin-top: 5px;
+  text-align: center;
+  color: #344e41;
+}
+
+.nutrient-names {
+  position: absolute;
+  top: -25px;
+  left: 60px;
+  width: calc(100% - 100px);
+}
+
+.nutrient-name {
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: left;
+  color: #344e41;
+  margin-bottom: 50px;
+}
+
+.nutrient-P {
+  margin-top: 80px;
+}
+
+.nutrient-Mg {
+  margin-top: 50px;
+}
+
+.nutrient-K {
+  margin-top: 60px !important;
+}

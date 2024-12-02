@@ -8,7 +8,7 @@ const Operation = () => {
       <div>
         <OperationSidebar />
       </div>
-      <div className="w-100">
+      <div className="operation-body ">
         <Calendar />
       </div>
     </div>

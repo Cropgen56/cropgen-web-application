@@ -1,23 +1,30 @@
 .forecast {
-  background-color: #f8f9fa;
+  background-color: #f8f9fa !important;
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #fff !important;
 }
 
 .forecast-container {
   font-family: Arial, sans-serif;
   color: #333;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
 }
+
 .forecast h3 {
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: 700;
   color: #344e41;
+  text-align: center;
 }
+
 .forecast h2 {
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #a2a2a2;
+  text-align: center;
 }
+
 .forecast-today {
   display: flex;
   flex-direction: column;
@@ -25,6 +32,7 @@
   justify-content: center;
   border-right: 1px solid #344e41;
   text-align: center;
+  flex: 1;
 }
 
 .today-weather {
@@ -32,42 +40,47 @@
   align-items: center;
   justify-content: center;
 }
+
 .weather-icon {
   font-size: 1.7rem;
   margin-right: 10px;
 }
 
 .temperature {
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-/* week weather forcart style */
-.week-weather {
-  width: 100%;
-}
-
-.day-icon {
-  font-size: 1.4rem;
-}
-.day-temperature {
-  font-size: 1.1rem;
-  font-weight: bold;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: #344e41;
-}
-.forecast-week {
-  display: flex;
-  justify-content: space-between;
 }
 
 .today-details {
   display: flex;
-  flex-direction: row;
-  align-items: center;
   justify-content: space-around;
   margin-top: 1rem;
   color: #555;
-  font-size: 0.7rem;
+  font-size: 0.9rem;
+}
+
+.today-details div {
+  margin: 0 5px;
+}
+.weather-data-container {
+  display: flex;
+  justify-content: space-around;
+}
+.week-weather {
+  width: 100%;
+  padding-left: 1rem;
+}
+
+.forecast-week {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  /* justify-content: space-between; */
+}
+
+.forecast-week-heading {
+  text-align: center;
 }
 
 .day-forecast {
@@ -75,31 +88,149 @@
   width: 7rem;
   border-radius: 10%;
   padding: 10px;
+  margin: 0.5rem;
 }
 
 .day-forecast .day {
-  font-weight: 200;
+  font-weight: 600;
   margin-bottom: 5px;
-  color: #000000;
+  color: #000;
 }
 
-.day-forecast .icon {
-  font-size: 1rem;
+.day-forecast .day-icon {
+  font-size: 1.5rem;
   margin-bottom: 5px;
 }
 
-.day-forecast .temp {
+.day-temperature {
   font-size: 1rem;
   font-weight: bold;
   color: #344e41;
 }
 
-.day-forecast .rain-chance {
+.rain-chance {
   font-size: 0.9rem;
   color: #5a7c6b;
 }
 
 .highlighted {
   background-color: #5a7c6b;
-  color: #fff;
+  color: #fff !important;
+}
+
+/* Media Queries */
+@media (max-width: 1024px) {
+  .forecast-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .forecast-today {
+    border-right: none;
+    border-bottom: 1px solid #344e41;
+    padding: 1rem 0;
+    width: 100%;
+  }
+
+  .today-weather {
+    padding: 0;
+    flex-direction: column;
+  }
+
+  .week-weather {
+    padding-left: 0;
+    width: 100%;
+  }
+
+  .forecast-week {
+    justify-content: space-evenly;
+  }
+
+  .day-forecast {
+    width: 6rem;
+  }
+
+  .day-forecast .day-icon {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .forecast {
+    padding: 0.5rem;
+  }
+
+  .forecast h3 {
+    font-size: 1rem;
+  }
+
+  .forecast h2 {
+    font-size: 0.8rem;
+  }
+
+  .forecast-today {
+    padding: 0.5rem 0;
+  }
+
+  .day-forecast {
+    width: 5rem;
+    padding: 8px;
+  }
+
+  .day-forecast .day-icon {
+    font-size: 1rem;
+  }
+
+  .day-temperature {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .forecast {
+    padding: 0.5rem;
+  }
+
+  .forecast-container {
+    flex-direction: column;
+  }
+
+  .forecast h3 {
+    font-size: 0.9rem;
+  }
+
+  .forecast h2 {
+    font-size: 0.8rem;
+  }
+
+  .forecast-today {
+    padding: 0.5rem 0;
+  }
+
+  .today-weather {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .today-details {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .day-forecast {
+    width: 4.5rem;
+    padding: 5px;
+  }
+
+  .day-forecast .day-icon {
+    font-size: 0.8rem;
+  }
+
+  .day-temperature {
+    font-size: 0.8rem;
+  }
+
+  .rain-chance {
+    font-size: 0.7rem;
+  }
 }

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
@@ -23,6 +23,14 @@ import "./Sidebar.css";
 function Sidebar({ onToggleCollapse }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // useEffect(() => {
+  //   // Check if the current route is "/cropgen-analytics"
+  //   if (location.pathname === "/cropgen-analytics") {
+  //     setIsCollapsed(false); // Don't collapse the sidebar
+  //   }
+  // }, [location]); // Re-run effect when the route changes
 
   const handleCollapseToggle = (collapse) => {
     const newCollapsedState = collapse || !isCollapsed;
@@ -31,10 +39,12 @@ function Sidebar({ onToggleCollapse }) {
   };
 
   const handleNavigation = (path) => {
-    // set the selected route and change the background color of the active link
-    // setSelectedRoute(path);
     navigate(path);
-    handleCollapseToggle(true);
+
+    // Only collapse the sidebar if the current route is NOT "/cropgen-analytics"
+    if (path !== "/cropgen-analytics") {
+      handleCollapseToggle(true);
+    }
   };
 
   return (

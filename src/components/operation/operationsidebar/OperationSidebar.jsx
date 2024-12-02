@@ -91,9 +91,12 @@ const OperationSidebar = ({ selectedOperation, setSelectedOperation }) => {
                 lon={operation.lon}
                 isSelected={selectedOperationIndex === index}
                 onClick={() => {
-                  console.log("hello");
                   setSelectedOperationIndex(index);
-                  setSelectedOperation(operation);
+                  if (typeof setSelectedOperation === "function") {
+                    setSelectedOperation(operation);
+                  } else {
+                    console.error("setSelectedOperation is not a function.");
+                  }
                 }}
               />
             ))}
