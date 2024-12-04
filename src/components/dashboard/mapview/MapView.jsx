@@ -1,6 +1,6 @@
 import L from "leaflet";
 import React, { useState, useEffect, useRef } from "react";
-import { Layout, Button, Calendar } from "antd";
+import { Layout, Button } from "antd";
 import {
   MapContainer,
   TileLayer,
@@ -9,25 +9,30 @@ import {
   Polygon,
   useMapEvents,
   ZoomControl,
+  LayersControl,
 } from "react-leaflet";
+import {
+  Calender,
+  LeftArrow,
+  RightArrow,
+} from "../../../assets/DashboardIcons";
+import { CurrentLocation } from "../../../assets/Icons";
 import "leaflet/dist/leaflet.css";
 import "leaflet-control-geocoder/dist/Control.Geocoder.css";
 import "leaflet-control-geocoder/dist/Control.Geocoder.js";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import * as ELG from "esri-leaflet-geocoder";
-import {
-  Calender,
-  LeftArrow,
-  RightArrow,
-} from "../../../assets/DashboardIcons.jsx";
+import { CiSearch } from "react-icons/ci";
 import "./MapView.css";
+
 const { Content } = Layout;
+const { BaseLayer } = LayersControl;
 
 const MapData = () => {
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
-  const mapRef = useRef();
+  const mapRef = useRef(null);
 
   const customMarkerIcon = new L.Icon({
     iconUrl: markerIcon,
@@ -38,6 +43,7 @@ const MapData = () => {
     shadowSize: [41, 41],
   });
 
+  // Component for handling map clicks to add markers
   const Markers = () => {
     useMapEvents({
       click: (e) => {
@@ -53,34 +59,89 @@ const MapData = () => {
     return null;
   };
 
+  // Initialize geocoder search control
   useEffect(() => {
     if (!mapRef.current) return;
 
-    const searchControl = new ELG.Geosearch().addTo(mapRef.current);
+    const searchControl = new ELG.Geosearch({
+      useMapBounds: false,
+      expanded: true,
+      placeholder: "Search for a location...",
+    }).addTo(mapRef.current);
 
-    searchControl.on("results", function (data) {
+    searchControl.on("results", (data) => {
       if (data.results.length > 0) {
         const { latlng } = data.results[0];
         setMarkers((currentMarkers) => [...currentMarkers, latlng]);
-        mapRef.current.setView(latlng, 10);
+        mapRef.current.setView(latlng, 12);
       }
     });
-  }, [mapRef]);
+  }, []);
 
   const toggleAddMarkers = () => {
     setIsAddingMarkers((prev) => !prev);
   };
 
   return (
-    <Layout>
+    <Layout className="map-layout-dashboard">
       <Content style={{ height: "100%", position: "relative" }}>
+        {/* Search Bar */}
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Search Location"
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
+                const query = e.target.value.trim();
+                if (!query) {
+                  alert("Please enter a valid location!");
+                  return;
+                }
+
+                // Geocode query using Esri Leaflet Geocoder
+                const geocoder = new ELG.GeocodeService({
+                  apikey: "YOUR_API_KEY",
+                });
+
+                geocoder
+                  .geocode()
+                  .text(query)
+                  .run((error, response) => {
+                    if (error) {
+                      console.error("Geocoding error:", error.message);
+                      alert(
+                        "An error occurred during the search. Please try again."
+                      );
+                      return;
+                    }
+                    if (
+                      response &&
+                      response.results &&
+                      response.results.length > 0
+                    ) {
+                      const { latlng } = response.results[0];
+                      setMarkers((currentMarkers) => [
+                        ...currentMarkers,
+                        latlng,
+                      ]);
+                      mapRef.current.setView(latlng, 12);
+                    } else {
+                      alert("No results found for the entered location.");
+                    }
+                  });
+              }
+            }}
+          />
+          <CiSearch className="field-search-icon" />
+        </div>
         <MapContainer
+          className="dashboard-map"
           center={[20.5937, 78.9629]}
-          zoom={30}
-          zoomControl={true}
+          zoom={6}
+          zoomControl={false}
           style={{
-            height: "60vh",
-            width: "auto",
+            height: "80vh",
+            width: "100%",
             margin: "auto",
             borderRadius: "1rem",
           }}
@@ -88,11 +149,26 @@ const MapData = () => {
             mapRef.current = mapInstance;
           }}
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          />
+          <LayersControl position="topright">
+            <BaseLayer checked name="Satellite">
+              <TileLayer
+                attribution="© Google Satellite"
+                url="http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+                subdomains={["mt0", "mt1", "mt2", "mt3"]}
+                maxZoom={20}
+              />
+            </BaseLayer>
+            <BaseLayer name="Road">
+              <TileLayer
+                attribution="© Google Road"
+                url="http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                subdomains={["mt0", "mt1", "mt2", "mt3"]}
+                maxZoom={20}
+              />
+            </BaseLayer>
+          </LayersControl>
 
+          {/* Render Markers */}
           {markers.map((marker, idx) => (
             <Marker
               key={idx}
@@ -100,21 +176,61 @@ const MapData = () => {
               icon={customMarkerIcon}
             >
               <Popup>
-                A pretty CSS3 popup.
-                <br />
-                Easily customizable.
+                Marker Location: [{marker.lat.toFixed(4)},{" "}
+                {marker.lng.toFixed(4)}]
               </Popup>
             </Marker>
           ))}
-          {markers.length > 0 && (
+
+          {/* Render Polygon if more than two markers */}
+          {markers.length > 2 && (
             <Polygon
               positions={markers.map((marker) => [marker.lat, marker.lng])}
               color="purple"
             />
           )}
+
           <Markers />
           <ZoomControl />
         </MapContainer>
+        {/* Map Controls */}
+        <div className="map-controls">
+          {/* <Button onClick={() => setMarkers([])} className="delete-markers-btn">
+            Delete Markers
+          </Button> */}
+          <Button
+            className="current-location-btn"
+            onClick={() => {
+              if (mapRef.current) {
+                mapRef.current.locate({ setView: true, maxZoom: 16 });
+              } else {
+                alert("Map is not initialized yet. Please wait.");
+              }
+            }}
+          >
+            <CurrentLocation />
+          </Button>
+        </div>
+
+        {/* Add Field Button Section */}
+        <div className="add-field-button">
+          <div className="d-flex justify-content-between mx-auto">
+            <div className="add-field-left-arrow">
+              <button>
+                <Calender />
+              </button>
+              <button>
+                <LeftArrow />
+              </button>
+            </div>
+            <button onClick={toggleAddMarkers} className="add-field">
+              Add Field
+            </button>
+            <button className="add-field-right-arrow">
+              <RightArrow />
+            </button>
+          </div>
+        </div>
       </Content>
     </Layout>
   );
