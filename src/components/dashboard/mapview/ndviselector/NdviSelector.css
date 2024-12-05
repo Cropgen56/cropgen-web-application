@@ -4,7 +4,7 @@
   align-items: center;
   font-family: Arial, sans-serif;
   position: absolute;
-  top: 400px;
+  top: 70%;
   z-index: 1000;
   width: 100%;
 }
@@ -43,7 +43,7 @@
 .date-item {
   background-color: transparent;
   border-radius: 5px;
-  padding: 3px 20px;
+  padding: 3px 2px;
   text-align: center;
   display: flex;
   flex-direction: column;

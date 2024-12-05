@@ -13,18 +13,18 @@ import Card from "react-bootstrap/Card";
 import "./NdviGraph.css";
 
 const data = [
-  { date: "Sep 03", NDVI1: 0.4, NDVI2: 0.35, NDVI3: 0.3 },
-  { date: "Sep 10", NDVI1: 0.6, NDVI2: 0.55, NDVI3: 0.5 },
-  { date: "Sep 17", NDVI1: 0.65, NDVI2: 0.6, NDVI3: 0.55 },
-  { date: "Sep 24", NDVI1: 0.7, NDVI2: 0.65, NDVI3: 0.6 },
-  { date: "Oct 01", NDVI1: 0.6, NDVI2: 0.55, NDVI3: 0.5 },
-  { date: "Oct 07", NDVI1: 0.75, NDVI2: 0.7, NDVI3: 0.65 },
-  { date: "Oct 14", NDVI1: 0.55, NDVI2: 0.5, NDVI3: 0.45 },
-  { date: "Oct 21", NDVI1: 0.6, NDVI2: 0.55, NDVI3: 0.5 },
-  { date: "Oct 28", NDVI1: 0.7, NDVI2: 0.65, NDVI3: 0.6 },
-  { date: "Nov 04", NDVI1: 0.8, NDVI2: 0.75, NDVI3: 0.7 },
+  { date: "Jan 03", NDVI1: 0.4, NDVI2: 0.35, NDVI3: 0.3 },
+  { date: "Feb 10", NDVI1: 0.6, NDVI2: 0.55, NDVI3: 0.5 },
+  { date: "March 17", NDVI1: 0.65, NDVI2: 0.6, NDVI3: 0.55 },
+  { date: "Apr 24", NDVI1: 0.7, NDVI2: 0.65, NDVI3: 0.6 },
+  { date: "May 01", NDVI1: 0.6, NDVI2: 0.55, NDVI3: 0.5 },
+  { date: "Jun 07", NDVI1: 0.75, NDVI2: 0.7, NDVI3: 0.65 },
+  { date: "Jully 14", NDVI1: 0.55, NDVI2: 0.5, NDVI3: 0.45 },
+  { date: "Aug 21", NDVI1: 0.6, NDVI2: 0.55, NDVI3: 0.5 },
+  { date: "Sep 28", NDVI1: 0.7, NDVI2: 0.65, NDVI3: 0.6 },
+  { date: "Oct 04", NDVI1: 0.8, NDVI2: 0.75, NDVI3: 0.7 },
   { date: "Nov 11", NDVI1: 0.65, NDVI2: 0.6, NDVI3: 0.55 },
-  { date: "Nov 18", NDVI1: 0.5, NDVI2: 0.45, NDVI3: 0.4 },
+  { date: "Dec 18", NDVI1: 0.5, NDVI2: 0.45, NDVI3: 0.4 },
 ];
 
 const NdviGraph = () => {

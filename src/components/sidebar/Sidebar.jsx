@@ -25,13 +25,6 @@ function Sidebar({ onToggleCollapse }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // useEffect(() => {
-  //   // Check if the current route is "/cropgen-analytics"
-  //   if (location.pathname === "/cropgen-analytics") {
-  //     setIsCollapsed(false); // Don't collapse the sidebar
-  //   }
-  // }, [location]); // Re-run effect when the route changes
-
   const handleCollapseToggle = (collapse) => {
     const newCollapsedState = collapse || !isCollapsed;
     setIsCollapsed(newCollapsedState);
@@ -41,9 +34,9 @@ function Sidebar({ onToggleCollapse }) {
   const handleNavigation = (path) => {
     navigate(path);
 
-    // Only collapse the sidebar if the current route is NOT "/cropgen-analytics"
+    // Do not collapse the sidebar when navigating to '/cropgen-analytics'
     if (path !== "/cropgen-analytics") {
-      handleCollapseToggle(true);
+      handleCollapseToggle(true); // Collapse the sidebar for other routes
     }
   };
 
@@ -91,7 +84,11 @@ function Sidebar({ onToggleCollapse }) {
                   <Hammer />
                 </li>
               )}
-              <li onClick={() => handleNavigation("/cropgen-analytics")}>
+              <li
+                onClick={() => {
+                  handleNavigation("/cropgen-analytics");
+                }}
+              >
                 <CropAnalysisIcon />
                 {!isCollapsed && "CropGen Analytics"}
               </li>
