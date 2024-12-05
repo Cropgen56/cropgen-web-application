@@ -26,12 +26,11 @@ const { Content } = Layout;
 const { BaseLayer } = LayersControl;
 
 const AddFieldMap = () => {
-  // State to manage markers
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
+  const [isFieldAdded, setIsFieldAdded] = useState(false); // State to check if the field is added
   const mapRef = useRef();
 
-  // Custom Leaflet marker icon
   const customMarkerIcon = new L.Icon({
     iconUrl: markerIcon,
     iconSize: [25, 41],
@@ -77,7 +76,22 @@ const AddFieldMap = () => {
   }, []);
 
   // Toggle marker adding mode
-  const toggleAddMarkers = () => setIsAddingMarkers((prev) => !prev);
+  const toggleAddMarkers = () => {
+    setIsAddingMarkers((prev) => !prev);
+    setIsFieldAdded(false); // Reset the field added state
+  };
+
+  // Log lat/long when the user saves the farm
+  const saveFarm = () => {
+    if (markers.length === 0) {
+      alert("No markers added. Please add some markers first.");
+      return;
+    }
+    markers.forEach((marker) => {
+      console.log(`Lat: ${marker.lat}, Lng: ${marker.lng}`);
+    });
+    alert("Farm saved successfully!");
+  };
 
   return (
     <Layout className="map-layout add-field">
@@ -133,8 +147,8 @@ const AddFieldMap = () => {
         </div>
 
         <MapContainer
-          center={[20.5937, 78.9629]}
-          zoom={5}
+          center={[20.1360471, 77.157196]}
+          zoom={17}
           zoomControl={false}
           className="map-container"
           whenCreated={(mapInstance) => {
@@ -217,12 +231,19 @@ const AddFieldMap = () => {
               </button>
             </div>
             <button onClick={toggleAddMarkers} className="add-field">
-              Add Field
+              {isAddingMarkers ? "Stop Adding Markers" : "Add Field"}
             </button>
             <button className="add-field-right-arrow">
               <RightArrow />
             </button>
           </div>
+        </div>
+
+        {/* Save Farm Button */}
+        <div className="save-farm-button">
+          <Button onClick={saveFarm} className="save-farm-btn">
+            Save Farm
+          </Button>
         </div>
       </Content>
     </Layout>

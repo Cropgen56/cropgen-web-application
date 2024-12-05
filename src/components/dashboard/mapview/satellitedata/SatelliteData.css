@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f3f3f3;
+}
+
+.satellite-data-main-container {
+  width: 97%;
+  margin: 2px auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.satellite-data-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dropdown {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #5a7c6b;
+  color: #fff;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
+.button {
+  background: #5a7c6b;
+  color: #ffffff;
+  border: none;
+  padding: 8px 30px;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.ndvi-btn {
+  background-color: #344e41;
+}
+.ndvi-btn:hover {
+  background-color: #344e41 !important;
+}
+.button:hover {
+  background: #5a7c6b;
+}
+
+.arrow-button {
+  background: #5a7c6b;
+  color: #ffffff;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: default;
+}
+
+.color-palette {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  background-color: #5a7c6b;
+  margin-top: 2px;
+}
+
+.color-block {
+  text-align: center;
+}
+
+.color {
+  width: 55px;
+  height: 30px;
+}
+
+.range-text {
+  font-size: 8px;
+  color: #ffffff;
+  margin-top: 2px;
+  font-weight: 700;
+  border: none;
+  outline: none;
+}
+
+.cloud-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}

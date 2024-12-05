@@ -11,11 +11,6 @@ import {
   ZoomControl,
   LayersControl,
 } from "react-leaflet";
-import {
-  Calender,
-  LeftArrow,
-  RightArrow,
-} from "../../../assets/DashboardIcons";
 import { CurrentLocation } from "../../../assets/Icons";
 import "leaflet/dist/leaflet.css";
 import "leaflet-control-geocoder/dist/Control.Geocoder.css";
@@ -25,6 +20,7 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import * as ELG from "esri-leaflet-geocoder";
 import { CiSearch } from "react-icons/ci";
 import "./MapView.css";
+import NDVISelector from "./ndviselector/NdviSelector";
 
 const { Content } = Layout;
 const { BaseLayer } = LayersControl;
@@ -33,6 +29,13 @@ const MapData = () => {
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
   const mapRef = useRef(null);
+
+  const defaultFieldCoordinates = [
+    [20.136105449905884, 77.15584727246397],
+    [20.137283993813227, 77.1562120770173],
+    [20.13656377359276, 77.15825069069757],
+    [20.13566223451258, 77.1574781634082],
+  ];
 
   const customMarkerIcon = new L.Icon({
     iconUrl: markerIcon,
@@ -43,7 +46,13 @@ const MapData = () => {
     shadowSize: [41, 41],
   });
 
-  // Component for handling map clicks to add markers
+  const customLayerIcon = new L.Icon({
+    iconUrl: "path_to_custom_layer_icon.png",
+    iconSize: [5, 5],
+    iconAnchor: [12, 12],
+    popupAnchor: [1, -12],
+  });
+
   const Markers = () => {
     useMapEvents({
       click: (e) => {
@@ -59,7 +68,6 @@ const MapData = () => {
     return null;
   };
 
-  // Initialize geocoder search control
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -74,6 +82,24 @@ const MapData = () => {
         const { latlng } = data.results[0];
         setMarkers((currentMarkers) => [...currentMarkers, latlng]);
         mapRef.current.setView(latlng, 12);
+      }
+    });
+
+    // Customize the layer control icons once the map is created
+    const mapInstance = mapRef.current;
+
+    mapInstance.whenReady(() => {
+      const layersControl =
+        mapInstance._controlCorners["topright"]._map._layersControl;
+      if (layersControl) {
+        // Customizing the BaseLayer icons
+        const baseLayerControl = layersControl._getContainer();
+        const baseLayerIcons = baseLayerControl.querySelectorAll(
+          ".leaflet-control-layers-base"
+        );
+        baseLayerIcons.forEach((layerIcon) => {
+          layerIcon.style.backgroundImage = `url(${customLayerIcon.options.iconUrl})`; // Set custom icon for layer switch
+        });
       }
     });
   }, []);
@@ -98,7 +124,6 @@ const MapData = () => {
                   return;
                 }
 
-                // Geocode query using Esri Leaflet Geocoder
                 const geocoder = new ELG.GeocodeService({
                   apikey: "YOUR_API_KEY",
                 });
@@ -136,11 +161,11 @@ const MapData = () => {
         </div>
         <MapContainer
           className="dashboard-map"
-          center={[20.5937, 78.9629]}
-          zoom={6}
+          center={[20.1360471, 77.157196]}
+          zoom={17}
           zoomControl={false}
           style={{
-            height: "80vh",
+            height: "90vh",
             width: "100%",
             margin: "auto",
             borderRadius: "1rem",
@@ -167,6 +192,18 @@ const MapData = () => {
               />
             </BaseLayer>
           </LayersControl>
+
+          {/* Default Field Polygon */}
+          <Polygon
+            positions={defaultFieldCoordinates}
+            pathOptions={{
+              color: "#EBF7AB",
+              weight: 1,
+              opacity: 0.7,
+              fillColor: "#EBF7AB",
+              fillOpacity: 0.7,
+            }}
+          />
 
           {/* Render Markers */}
           {markers.map((marker, idx) => (
@@ -195,9 +232,6 @@ const MapData = () => {
         </MapContainer>
         {/* Map Controls */}
         <div className="map-controls">
-          {/* <Button onClick={() => setMarkers([])} className="delete-markers-btn">
-            Delete Markers
-          </Button> */}
           <Button
             className="current-location-btn"
             onClick={() => {
@@ -212,25 +246,8 @@ const MapData = () => {
           </Button>
         </div>
 
-        {/* Add Field Button Section */}
-        <div className="add-field-button">
-          <div className="d-flex justify-content-between mx-auto">
-            <div className="add-field-left-arrow">
-              <button>
-                <Calender />
-              </button>
-              <button>
-                <LeftArrow />
-              </button>
-            </div>
-            <button onClick={toggleAddMarkers} className="add-field">
-              Add Field
-            </button>
-            <button className="add-field-right-arrow">
-              <RightArrow />
-            </button>
-          </div>
-        </div>
+        {/* NDVI */}
+        <NDVISelector />
       </Content>
     </Layout>
   );

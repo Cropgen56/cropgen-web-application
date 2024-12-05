@@ -78,7 +78,7 @@ const DoughnutChart = () => {
     },
   };
   return (
-    <div className="chart-container me-5">
+    <div className="chart-container">
       <Doughnut data={data} options={options} />
       {/* plugins={[centerTextPlugin]} */}
     </div>

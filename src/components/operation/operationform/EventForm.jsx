@@ -71,7 +71,7 @@ const EventForm = ({ visible, onClose, onSave, initialData }) => {
                 <Select.Option value="cultivator">Cultivator</Select.Option>
                 <Select.Option value="sowing">Sowing</Select.Option>
                 <Select.Option value="fransplanting">
-                  Fransplanting
+                  Transplanting
                 </Select.Option>
                 <Select.Option value="fertilizer application">
                   Fertilizer application

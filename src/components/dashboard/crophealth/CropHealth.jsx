@@ -7,9 +7,9 @@ import SoilAnalysisChart from "./soilanalysischart/SoilAnalysisChart.jsx";
 
 const CropHealth = () => {
   return (
-    <Card body className="mt-4 mb-4 crop-health shadow">
+    <Card body className="mt-4 mb-3 crop-health shadow">
       <h2 className="crop-health-title">Crop Health</h2>
-      <div className="d-flex justify-content-between align-items-center">
+      <div className="d-flex align-items-center">
         <div className="pt-1">
           <table>
             <tr>
@@ -44,14 +44,13 @@ const CropHealth = () => {
             </tr>
           </table>
         </div>
-        <div>
+        <div style={{ marginLeft: "10rem" }}>
           <DaughnutChart />
         </div>
       </div>
 
       <div className="d-flex justify-content-between align-items-center mt-5">
         <div style={{ width: "50%" }}>
-          <h2></h2>
           <SoilAnalysisChart />
         </div>
         <div style={{ width: "50%" }}>

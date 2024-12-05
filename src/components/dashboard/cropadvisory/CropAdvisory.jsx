@@ -27,7 +27,7 @@ const CropAdvisory = () => {
   ];
 
   return (
-    <Card body className="mt-2 mb-2 crop-advisory shadow">
+    <Card body className="mt-2 mb-3 crop-advisory shadow">
       <div className="crop-advisory-title ">
         <h2>Crop Advisory</h2>
       </div>

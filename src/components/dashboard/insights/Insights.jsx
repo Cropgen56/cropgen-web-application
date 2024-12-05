@@ -88,7 +88,7 @@ const Insights = () => {
   ];
 
   return (
-    <Card body className="mt-1 mb-5 forecast shadow">
+    <Card body className="mt-1 mb-3 forecast shadow">
       <div className="d-flex flex-direction-row justify-content-between align-items-center mb-1">
         <div className="insights-titel-container">
           <div className="insights-titel">Insights</div>

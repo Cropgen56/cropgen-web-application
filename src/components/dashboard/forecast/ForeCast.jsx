@@ -36,7 +36,7 @@ function ForeCast() {
   };
 
   return (
-    <Card body className="mt-4 mb-5 forecast shadow">
+    <Card body className="mt-4 mb-3 forecast shadow">
       <div className="forecast-container d-flex row">
         <div className="p-0 m-0 d-flex justify-content-between">
           {" "}

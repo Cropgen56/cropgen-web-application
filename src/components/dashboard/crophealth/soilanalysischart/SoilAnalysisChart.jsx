@@ -12,7 +12,7 @@ import "./SoilAnalysisChart.css";
 
 const data = [
   { nutrient: "P", current: 23.4, lastYear: 15.6, label: "Nitrogen" },
-  { nutrient: "Mg", current: 28.1, lastYear: 12.5, label: "Phosphorous" },
+  { nutrient: "P", current: 28.1, lastYear: 12.5, label: "Phosphorous" },
   { nutrient: "K", current: 10.4, lastYear: 8.1, label: "Potassium" },
 ];
 
@@ -67,7 +67,7 @@ const SoilAnalysisChart = () => {
             dataKey="lastYear"
             fill="#C4E930"
             barSize={4}
-            name="Last Year"
+            name="Required"
             radius={[10, 10, 10, 10]}
             label={{
               position: "right",

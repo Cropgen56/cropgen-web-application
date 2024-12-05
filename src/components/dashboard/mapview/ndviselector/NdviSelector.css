@@ -1,0 +1,90 @@
+.ndvi-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  position: absolute;
+  top: 400px;
+  z-index: 1000;
+  width: 100%;
+}
+
+.calendar-icon-container {
+  display: flex;
+  align-items: center;
+}
+
+.calendar-icon-button {
+  border: none;
+  cursor: pointer;
+}
+
+.calendar-container {
+  position: absolute;
+  top: 50px;
+}
+
+.dates-container {
+  display: flex;
+  width: 97%;
+  align-items: center;
+  background-color: #5a7c6b;
+  border-radius: 5px;
+}
+
+.dates-list {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.date-item {
+  background-color: transparent;
+  border-radius: 5px;
+  padding: 3px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  font-weight: 500;
+}
+.date-data {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.8rem;
+}
+
+.date-item.selected {
+  background-color: #344e41;
+  border-radius: 5px;
+  padding: 1px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+}
+
+.date-change.positive {
+  color: green;
+}
+
+.date-change.negative {
+  color: red;
+}
+
+.arrow-button {
+  border: none;
+  cursor: pointer !important;
+}
+
+.vertical-line {
+  width: 1px;
+  height: 40px;
+  background-color: #ccc;
+  margin: 0 10px;
+}

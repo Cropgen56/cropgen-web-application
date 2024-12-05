@@ -6,6 +6,7 @@ import PlantGrowthActivity from "../components/dashboard/plantgrowthactivity/Pla
 import Insights from "../components/dashboard/insights/Insights";
 import CropAdvisory from "../components/dashboard/cropadvisory/CropAdvisory";
 import "../style/Dashboard.css";
+import NdviGraph from "../components/dashboard/ndvigraph/NdviGraph";
 
 const Dashboard = () => {
   return (
@@ -13,6 +14,7 @@ const Dashboard = () => {
       <MapView />
       <CropHealth />
       <ForeCast />
+      <NdviGraph />
       <Insights />
       <CropAdvisory />
       <PlantGrowthActivity />
