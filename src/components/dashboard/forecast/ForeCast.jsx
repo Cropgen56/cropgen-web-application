@@ -86,7 +86,13 @@ function ForeCast() {
                       day.isHighlighted ? "highlighted" : ""
                     }`}
                   >
-                    <div className="day">{day.day}</div>
+                    <div
+                      className={`day ${
+                        day.isHighlighted ? "highlighted" : ""
+                      } `}
+                    >
+                      {day.day}
+                    </div>
                     <div className="icon w-100 m-0 p-0">
                       <span className="day-icon">{day.icon}</span>
                       <span

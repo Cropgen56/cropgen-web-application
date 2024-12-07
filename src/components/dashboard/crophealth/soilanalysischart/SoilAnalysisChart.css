@@ -51,14 +51,16 @@
   margin-bottom: 50px;
 }
 
+.nutrient-N {
+  margin-top: 80px !important;
+  padding-left: 10px;
+}
 .nutrient-P {
   margin-top: 70px !important;
-}
-
-.nutrient-Mg {
-  margin-top: 40px !important;
+  padding-left: 15px;
 }
 
 .nutrient-K {
   margin-top: 60px !important;
+  padding-left: 15px;
 }

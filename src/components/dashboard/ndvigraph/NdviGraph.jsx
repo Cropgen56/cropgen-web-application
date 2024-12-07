@@ -43,7 +43,7 @@ const NdviGraph = () => {
         </div>
 
         {/* Right Side */}
-        <div className="ndvi-right">
+        <div className="ndvi-right ">
           <div className="ndvi-select">
             <select>
               <option value="NDVI">NDVI</option>
@@ -51,10 +51,10 @@ const NdviGraph = () => {
               <option value="NDRE">NDRE</option>
             </select>
           </div>
-          <ResponsiveContainer width="100%" height={250}>
+          <ResponsiveContainer width="100%" height={200}>
             <LineChart
               data={data}
-              margin={{ top: 20, right: 0, left: 0, bottom: 5 }}
+              margin={{ top: 1, right: 0, left: 0, bottom: 5 }}
             >
               <CartesianGrid stroke="#ccc" vertical={true} horizontal={false} />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
@@ -69,7 +69,8 @@ const NdviGraph = () => {
                 verticalAlign="top"
                 align="start"
                 wrapperStyle={{
-                  paddingBottom: "20px",
+                  paddingBottom: "10px",
+                  paddingLeft: "50px",
                 }}
                 formatter={(value) => {
                   const color = value === "NDVI1" ? "#86D72F" : "#000000";

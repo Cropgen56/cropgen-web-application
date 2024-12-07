@@ -4,11 +4,11 @@
   align-items: center;
   font-family: Arial, sans-serif;
   position: absolute;
-  top: 70%;
-  z-index: 1000;
+  bottom: 0;
   width: 100%;
+  z-index: 1000;
+  padding: 2px 0;
 }
-
 .calendar-icon-container {
   display: flex;
   align-items: center;

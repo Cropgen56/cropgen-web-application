@@ -11,7 +11,7 @@ import {
 import "./SoilAnalysisChart.css";
 
 const data = [
-  { nutrient: "P", current: 23.4, lastYear: 15.6, label: "Nitrogen" },
+  { nutrient: "N", current: 23.4, lastYear: 15.6, label: "Nitrogen" },
   { nutrient: "P", current: 28.1, lastYear: 12.5, label: "Phosphorous" },
   { nutrient: "K", current: 10.4, lastYear: 8.1, label: "Potassium" },
 ];
