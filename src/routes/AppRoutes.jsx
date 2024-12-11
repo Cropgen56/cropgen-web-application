@@ -14,15 +14,22 @@ import Setting from "../pages/Setting";
 import Operation from "../pages/Operation";
 import Profile from "../pages/Profile";
 import PageNotFound from "../pages/PageNotFound";
-// import Login from "../pages/Login";
 import AuthLayout from "../pages/AuthLayout";
+import ProtectedRoute from "../authroute/ProtectedRoute";
 
 const AppRoutes = () => {
   return (
     <Router basename="/">
       <Routes>
         {/* Main Site Routes */}
-        <Route path="/" element={<MainLayout />}>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/cropgen-analytics" element={<Dashboard />} />

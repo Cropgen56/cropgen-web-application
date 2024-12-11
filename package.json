@@ -46,6 +46,7 @@
     "react-scripts": "5.0.1",
     "react-select": "^5.8.1",
     "react-spring": "^9.7.4",
+    "react-toastify": "^10.0.6",
     "react-window": "^1.8.10",
     "recharts": "^2.12.7",
     "web-vitals": "^2.1.4"

@@ -19,26 +19,38 @@ import {
   Logo,
 } from "../../assets/Icons";
 import "./Sidebar.css";
+import { decodeToken, loadLocalStorage } from "../../redux/slices/authSlice";
+import { useDispatch, useSelector } from "react-redux";
 
-function Sidebar({ onToggleCollapse }) {
+const Sidebar = ({ onToggleCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
 
+  // handle to collaps the sidebar
   const handleCollapseToggle = (collapse) => {
     const newCollapsedState = collapse || !isCollapsed;
     setIsCollapsed(newCollapsedState);
     onToggleCollapse(newCollapsedState);
   };
 
+  // load the loadLocalStorage data
+  useEffect(() => {
+    dispatch(loadLocalStorage());
+    dispatch(decodeToken());
+  }, [dispatch]);
+
+  // handel to navigate
   const handleNavigation = (path) => {
     navigate(path);
-
-    // Do not collapse the sidebar when navigating to '/cropgen-analytics'
     if (path !== "/cropgen-analytics") {
-      handleCollapseToggle(true); // Collapse the sidebar for other routes
+      handleCollapseToggle(true);
     }
   };
+
+  // get the user data formt he redux store
+  const user = useSelector((state) => state?.auth?.user);
 
   return (
     <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
@@ -66,9 +78,11 @@ function Sidebar({ onToggleCollapse }) {
             >
               <img variant="top" src={profile} className="profile-image" />
               <Card.Body className="text-center">
-                <Card.Title className="profile-user-name">User Name</Card.Title>
+                <Card.Title className="profile-user-name">
+                  {user?.firstName} {user?.lastName}
+                </Card.Title>
                 <Card.Text className="profile-user-email">
-                  user@gmail.com
+                  {user?.email}
                 </Card.Text>
               </Card.Body>
             </Card>
@@ -143,6 +157,6 @@ function Sidebar({ onToggleCollapse }) {
       </Offcanvas>
     </div>
   );
-}
+};
 
 export default Sidebar;

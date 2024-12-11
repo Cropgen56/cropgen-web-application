@@ -4,9 +4,19 @@ import SignUp from "../components/AuthLayout/signup/Signnup";
 import Login from "../components/AuthLayout/login/Login";
 import SocialButtons from "../components/AuthLayout/shared/socialbuttons/SocialButton";
 import { Logo } from "../assets/Icons.jsx";
+import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice.js";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const AuthLayout = () => {
   const [activeTab, setActiveTab] = useState("SignUp");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  useEffect(() => {
+    dispatch(loadLocalStorage());
+    dispatch(decodeToken());
+  }, [dispatch]);
 
   return (
     <div className="auth-container">
@@ -62,7 +72,11 @@ const AuthLayout = () => {
               <span>OR</span>
               <hr />
             </div>
-            {activeTab === "SignUp" ? <SignUp /> : <Login />}
+            {activeTab === "SignUp" ? (
+              <SignUp setActiveTab={setActiveTab} />
+            ) : (
+              <Login />
+            )}
           </div>
         </div>
       </div>

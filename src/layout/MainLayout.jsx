@@ -1,6 +1,9 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { Navigate, Outlet } from "react-router-dom";
 import Sidebar from "../components/sidebar/Sidebar";
+import { useDispatch } from "react-redux";
+import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice";
 
 const MainLayout = () => {
   // State to track if the sidebar is collapsed
@@ -10,6 +13,19 @@ const MainLayout = () => {
   const toggleSidebar = (collapsed) => {
     setIsSidebarCollapsed(collapsed);
   };
+
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(loadLocalStorage());
+    dispatch(decodeToken());
+  }, [dispatch]);
+
+  // Get authentication status from Redux store
+  const { token, loading } = useSelector((state) => state.auth);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
