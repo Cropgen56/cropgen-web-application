@@ -78,3 +78,29 @@
   background-color: transparent !important;
   border: none;
 }
+
+/* selcted field dropdown  */
+#field-dropdown {
+  background-color: #5a7c6ba6 !important;
+  outline: none;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  padding: 5px 10px;
+  position: absolute;
+  left: 62vw;
+  top: -8vh;
+}
+
+#field-dropdown option:checked {
+  background-color: #5a7c6ba6 !important;
+  color: white;
+}
+
+#field-dropdown:hover {
+  background-color: #5a7c6ba6 !important;
+}
+
+#field-dropdown option {
+  background-color: #5a7c6ba6;
+}

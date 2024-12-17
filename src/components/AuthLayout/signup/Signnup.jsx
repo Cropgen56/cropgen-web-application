@@ -40,13 +40,13 @@ const Signup = ({ setActiveTab }) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\d{10}$/;
 
-    if (!formData.firstName || !nameRegex.test(formData.firstName)) {
-      toast.warning("First name must only contain letters.");
+    if (!formData.firstName) {
+      toast.warning("First name must !");
       return false;
     }
 
-    if (!formData.lastName || !nameRegex.test(formData.lastName)) {
-      toast.warning("Last name must only contain letters.");
+    if (!formData.lastName) {
+      toast.warning("First name must !");
       return false;
     }
 

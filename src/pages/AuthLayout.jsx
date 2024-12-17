@@ -18,6 +18,14 @@ const AuthLayout = () => {
     dispatch(decodeToken());
   }, [dispatch]);
 
+  const handleSuccess = (credentialResponse) => {
+    console.log("Encoded JWT ID token:", credentialResponse.credential);
+    // Decode and use JWT to fetch user data
+  };
+
+  const handleError = () => {
+    console.log("Login Failed");
+  };
   return (
     <div className="auth-container">
       {/* Left Side with Image and Text */}
@@ -66,7 +74,10 @@ const AuthLayout = () => {
             </div>
           </div>
           <div className="login-body">
-            <SocialButtons />
+            <SocialButtons
+              handleSuccess={handleSuccess}
+              handleError={handleError}
+            />
             <div className="or ">
               <hr />
               <span>OR</span>

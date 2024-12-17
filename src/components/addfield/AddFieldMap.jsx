@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import { Layout, Button } from "antd";
 import {
@@ -19,16 +19,18 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { Calender, LeftArrow, RightArrow } from "../../assets/DashboardIcons";
 import { CiSearch } from "react-icons/ci";
-import "./AddFieldMap.css";
 import { CurrentLocation } from "../../assets/Icons";
-
+import "./AddFieldMap.css";
 const { Content } = Layout;
 const { BaseLayer } = LayersControl;
 
-const AddFieldMap = () => {
-  const [markers, setMarkers] = useState([]);
-  const [isAddingMarkers, setIsAddingMarkers] = useState(false);
-  const [isFieldAdded, setIsFieldAdded] = useState(false); // State to check if the field is added
+const AddFieldMap = ({
+  markers,
+  setMarkers,
+  isAddingMarkers,
+  toggleAddMarkers,
+  clearMarkers,
+}) => {
   const mapRef = useRef();
 
   const customMarkerIcon = new L.Icon({
@@ -73,25 +75,7 @@ const AddFieldMap = () => {
         mapRef.current.setView(latlng, 10);
       }
     });
-  }, []);
-
-  // Toggle marker adding mode
-  const toggleAddMarkers = () => {
-    setIsAddingMarkers((prev) => !prev);
-    setIsFieldAdded(false); // Reset the field added state
-  };
-
-  // Log lat/long when the user saves the farm
-  const saveFarm = () => {
-    if (markers.length === 0) {
-      alert("No markers added. Please add some markers first.");
-      return;
-    }
-    markers.forEach((marker) => {
-      console.log(`Lat: ${marker.lat}, Lng: ${marker.lng}`);
-    });
-    alert("Farm saved successfully!");
-  };
+  }, [setMarkers]);
 
   return (
     <Layout className="map-layout add-field">
@@ -202,7 +186,7 @@ const AddFieldMap = () => {
 
         {/* Map Controls */}
         <div className="map-controls">
-          <Button onClick={() => setMarkers([])} className="delete-markers-btn">
+          <Button onClick={clearMarkers} className="delete-markers-btn">
             Delete Markers
           </Button>
           <Button
@@ -237,13 +221,6 @@ const AddFieldMap = () => {
               <RightArrow />
             </button>
           </div>
-        </div>
-
-        {/* Save Farm Button */}
-        <div className="save-farm-button">
-          <Button onClick={saveFarm} className="save-farm-btn">
-            Save Farm
-          </Button>
         </div>
       </Content>
     </Layout>

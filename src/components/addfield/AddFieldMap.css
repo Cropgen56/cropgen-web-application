@@ -28,7 +28,7 @@
 .search-bar {
   position: absolute;
   top: 15px;
-  left: 15%;
+  left: 20%;
   transform: translateX(-50%);
   z-index: 1000;
   padding: 1px 10px;
@@ -68,11 +68,19 @@
 }
 
 .add-field .delete-markers-btn {
-  color: #000;
+  color: #fff;
   border: none;
   border-radius: 5px;
   padding: 5px 10px;
   cursor: pointer;
+  background-color: #5a7c6ba6;
+  position: absolute;
+  left: 63vw;
+  top: 70vh;
+}
+.add-field .delete-markers-btn:hover {
+  background-color: #5a7c6ba6 !important;
+  color: #fff !important;
 }
 
 /* Current Location Button */
@@ -191,12 +199,16 @@
   left: 10px;
   z-index: 1000;
 }
+.save-farm-btn:hover {
+  background-color: #5a7c6ba6 !important;
+  color: #fff !important;
+}
 
 .save-farm-btn {
   color: white;
   border: none;
   outline: none;
-  background-color: #5a7c6b;
+  background-color: #5a7c6ba6;
 }
 
 .save-farm-btn:hover {
