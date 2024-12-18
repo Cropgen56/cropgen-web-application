@@ -17,15 +17,6 @@ export const addFarmField = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      console.log(
-        cropName,
-        variety,
-        sowingDate,
-        typeOfIrrigation,
-        farmName,
-        latlng,
-        userId
-      );
       const response = await addFieldAPI({
         latlng,
         userId,

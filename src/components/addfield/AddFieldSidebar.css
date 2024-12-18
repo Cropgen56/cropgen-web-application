@@ -115,7 +115,7 @@
 .add-field-sidebar .add-field-submit-button {
   display: flex;
   justify-content: center;
-  height: 5rem;
+  height: 10rem;
   align-items: end;
 }
 .add-field-sidebar .add-field-submit-button button {

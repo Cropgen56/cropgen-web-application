@@ -3,29 +3,7 @@ import { FieldIcon } from "../../assets/Globalicon";
 import "./AddFieldSidebar.css";
 import cropename from "../../assets/cropname.json";
 
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
-  <div
-    className={`field-info ${isSelected ? "selected-field" : ""}`}
-    onClick={onClick}
-  >
-    <FieldIcon isSelected={isSelected} />
-    <div className="fields">
-      <h4 className={`${isSelected ? "selected-title" : ""}`}>{title}</h4>
-      <p className="ha">{area}</p>
-      <div className="field-details">
-        <p>{lat} N</p>
-        <p>{lon} E</p>
-      </div>
-    </div>
-  </div>
-);
-
-const AddFieldSidebar = ({
-  selectedField,
-  setSelectedField,
-  saveFarm,
-  markers,
-}) => {
+const AddFieldSidebar = ({ saveFarm, markers }) => {
   const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
@@ -126,22 +104,6 @@ const AddFieldSidebar = ({
               </defs>
             </svg>
           </div>
-          <div className="add-field-list">
-            {fields.map((field, index) => (
-              <FieldInfo
-                key={index}
-                title={field.title}
-                area={field.area}
-                lat={field.lat}
-                lon={field.lon}
-                isSelected={selectedFieldIndex === index}
-                onClick={() => {
-                  setSelectedFieldIndex(index);
-                  setSelectedField(field);
-                }}
-              />
-            ))}
-          </div>
 
           {/* Crop Details Form */}
           <div>
@@ -202,6 +164,7 @@ const AddFieldSidebar = ({
                   </option>
                   <option value="Micro Irrigation">Micro Irrigation</option>
                   <option value="Open Irrigation">Open Irrigation</option>
+                  <option value="Dripe Irrigation">Drip Irrigation</option>
                   <option value="Other Irrigation">Other Irrigation</option>
                 </select>
               </div>

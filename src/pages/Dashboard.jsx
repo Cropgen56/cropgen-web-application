@@ -39,7 +39,6 @@ const Dashboard = () => {
   const selectedFieldsDetials = fields.filter(
     (item) => item?._id === selectedField
   );
-  console.log(selectedFieldsDetials);
 
   return (
     <div className="dashboard float-end p-3">
@@ -52,7 +51,10 @@ const Dashboard = () => {
         setSelectedField={setSelectedField}
         fields={fields}
       />
-      <CropHealth selectedFieldsDetials={selectedFieldsDetials} />
+      <CropHealth
+        selectedFieldsDetials={selectedFieldsDetials}
+        fields={fields}
+      />
       <ForeCast />
       <NdviGraph />
       <Insights />

@@ -3,11 +3,13 @@ import AddFieldMap from "../components/addfield/AddFieldMap";
 import AddFieldSidebar from "../components/addfield/AddFieldSidebar";
 import { useDispatch, useSelector } from "react-redux";
 import { addFarmField } from "../redux/slices/farmSlice";
+import { useNavigate } from "react-router-dom";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // Toggle marker adding mode
   const toggleAddMarkers = () => {
@@ -36,8 +38,6 @@ const AddField = () => {
       return;
     }
 
-    console.log(markers);
-
     dispatch(
       addFarmField({
         latlng: markers,
@@ -48,9 +48,10 @@ const AddField = () => {
         typeOfIrrigation,
         farmName,
       })
-    );
-
-    alert("Farm saved successfully!");
+    ).then((result) => {
+      alert("Field added successfylly !");
+      navigate("/cropgen-analytics");
+    });
   };
 
   return (

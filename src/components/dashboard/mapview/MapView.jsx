@@ -168,7 +168,7 @@ const MapView = ({
             <select id="field-dropdown" onChange={handleFieldChange}>
               {fields.map((field, index) => (
                 <option key={field?._id} value={field?._id}>
-                  Field {index + 1}
+                  {field.fieldName + " " + (index + 1)}
                 </option>
               ))}
             </select>

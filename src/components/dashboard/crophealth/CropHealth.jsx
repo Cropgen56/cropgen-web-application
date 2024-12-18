@@ -4,10 +4,13 @@ import "./CropHealth.css";
 import cropImage from "../../../assets/image/dashboard/crop-image.jpg";
 import SoilHealthChart from "./solilhealth/SoilHealthChart.jsx";
 import SoilAnalysisChart from "./soilanalysischart/SoilAnalysisChart.jsx";
+import * as turf from "@turf/turf";
 
 const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials[0];
   const sowingDate = cropDetials?.sowingDate;
+  const corrdinatesPoint = cropDetials?.field;
+  let totalArea = 0;
 
   function calculateDaysFromDate(input) {
     // Parse the input date string into a Date object
@@ -35,8 +38,30 @@ const CropHealth = ({ selectedFieldsDetials }) => {
     return daysDifference;
   }
 
-  // // Example usage:
-  // calculateDaysFromDate(sowingDate);
+  const calculateArea = (corrdinatesPoint) => {
+    // Transform backend data into Turf.js-compatible format
+    const coordinates = corrdinatesPoint?.map((point) => [
+      point.lng,
+      point.lat,
+    ]);
+
+    // Close the polygon by adding the first point at the end
+    coordinates.push(coordinates[0]);
+
+    // Create the polygon
+    const polygon = turf.polygon([coordinates]);
+
+    // Calculate area in square meters
+    const area = turf.area(polygon);
+
+    // Convert to hectares and acres
+    const areaHectares = area / 10000;
+    totalArea = area / 4046.86;
+  };
+
+  if (corrdinatesPoint) {
+    calculateArea(corrdinatesPoint);
+  }
 
   return (
     <Card body className="mt-4 mb-3 crop-health shadow">
@@ -70,7 +95,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
                 <tr>
                   {" "}
                   <th>Total Area :-</th>
-                  <td>1.5 Acre</td>
+                  <td>{totalArea.toFixed(2) + " Acre"}</td>
                 </tr>
               </td>
             </tr>

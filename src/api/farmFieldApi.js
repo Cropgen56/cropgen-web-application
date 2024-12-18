@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://server.cropgenapp.com/api/auth";
+const API_URL = "https://server.cropgenapp.com/api/field";
 // const API_URL = "http://localhost:8080/api/field";
 
 // Add field API
