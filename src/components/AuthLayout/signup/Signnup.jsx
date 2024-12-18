@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import "./Signup.css";
 import { useDispatch, useSelector } from "react-redux";
 import { signupUser } from "../../../redux/slices/authSlice";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
 const Signup = ({ setActiveTab }) => {
@@ -41,32 +40,32 @@ const Signup = ({ setActiveTab }) => {
     const phoneRegex = /^\d{10}$/;
 
     if (!formData.firstName) {
-      toast.warning("First name must !");
+      alert("First name must !");
       return false;
     }
 
     if (!formData.lastName) {
-      toast.warning("First name must !");
+      alert("First name must !");
       return false;
     }
 
     if (!formData.email || !emailRegex.test(formData.email)) {
-      toast.warning("Please enter a valid email address.");
+      alert("Please enter a valid email address.");
       return false;
     }
 
     if (!formData.phone || !phoneRegex.test(formData.phone)) {
-      toast.warning("Phone number must be exactly 10 digits.");
+      alert("Phone number must be exactly 10 digits.");
       return false;
     }
 
     if (!formData.password || formData.password.length < 6) {
-      toast.warning("Password must be at least 6 characters.");
+      alert("Password must be at least 6 characters.");
       return false;
     }
 
     if (!formData.terms) {
-      toast.warning("You must agree to the terms and conditions.");
+      alert("You must agree to the terms and conditions.");
       return false;
     }
 
@@ -82,11 +81,11 @@ const Signup = ({ setActiveTab }) => {
     dispatch(signupUser(formData))
       .then((result) => {
         if (result.payload.success) {
-          toast.success(result.payload.message);
+          alert(result.payload.message);
           setActiveTab("Login");
         }
         if (!result.payload.success) {
-          toast.error(result.payload.message);
+          alert(result.payload.message);
         }
       })
       .catch((err) => {

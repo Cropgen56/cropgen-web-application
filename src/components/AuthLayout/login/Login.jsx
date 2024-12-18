@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import "./Login.css";
 import { useDispatch, useSelector } from "react-redux";
 import { signinUser } from "../../../redux/slices/authSlice";
-import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { combineSlices } from "@reduxjs/toolkit";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -20,15 +18,15 @@ const Login = () => {
   const validate = () => {
     const emailRegex = /\S+@\S+\.\S+/;
     if (!formData.email) {
-      toast.warning("Email is required.");
+      alert("Email is required.");
       return false;
     } else if (!emailRegex.test(formData.email)) {
-      toast.warning("Enter a valid email.");
+      alert("Enter a valid email.");
       return false;
     }
 
     if (!formData.password) {
-      toast.warning("Password is required.");
+      alert("Password is required.");
       return false;
     }
 
@@ -41,11 +39,11 @@ const Login = () => {
       dispatch(signinUser(formData))
         .then((result) => {
           if (result.payload.success) {
-            toast.success(result.payload.message);
+            alert(result.payload.message);
             navigate("/");
           }
           if (!result.payload.success) {
-            toast.error(result.payload.message);
+            alert(result.payload.message);
           }
         })
         .catch((err) => {});
