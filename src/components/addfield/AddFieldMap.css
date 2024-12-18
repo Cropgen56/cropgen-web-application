@@ -1,0 +1,217 @@
+/* General Layout Styling */
+.map-layout {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.add-field .map-content {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  margin: auto;
+}
+
+.add-field .map-container {
+  height: 100%;
+  width: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.add-field .map-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Search Bar Styling */
+.search-bar {
+  position: absolute;
+  top: 15px;
+  left: 20%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  padding: 1px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-bar input {
+  border: none;
+  outline: none;
+  width: 300px;
+  background-color: #5a7c6ba6;
+  border-radius: 4px;
+  z-index: 1000;
+  padding: 5px;
+  color: #fff !important;
+}
+.search-bar input::placeholder {
+  color: #fff;
+  opacity: 1;
+}
+.field-search-icon {
+  position: absolute;
+  font-size: 1.2rem;
+  padding: 2;
+  margin-top: 0.5rem;
+  margin-left: -2rem;
+  color: #fff;
+}
+
+/* Map Controls */
+.add-field .map-controls {
+  position: absolute;
+  top: 60px;
+  left: 50px;
+  z-index: 1000;
+}
+
+.add-field .delete-markers-btn {
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background-color: #5a7c6ba6;
+  position: absolute;
+  left: 63vw;
+  top: 70vh;
+}
+.add-field .delete-markers-btn:hover {
+  background-color: #5a7c6ba6 !important;
+  color: #fff !important;
+}
+
+/* Current Location Button */
+.current-location-btn {
+  position: absolute;
+  top: 320px;
+  left: -36px;
+  z-index: 1000;
+  background-color: #5a7c6b;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 5px;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Zoom Control Customization */
+.leaflet-left .leaflet-control-zoom {
+  position: absolute;
+  top: 45vh;
+  left: 2px;
+  z-index: 1000;
+  background-color: #5a7c6b;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+  color: #fff !important;
+  background-color: transparent !important;
+  border: none;
+}
+
+/* Add Field Button Section */
+.add-field .add-field-button {
+  width: 100%;
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  text-align: center;
+  z-index: 1000;
+}
+
+.add-field .add-field {
+  color: #fff;
+  font-size: 1rem;
+  background-color: #5a7c6b;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+}
+
+.add-field-button {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  z-index: 1000;
+  padding: 5px 10px;
+}
+
+.add-field-button img {
+  height: 1.5rem;
+}
+
+.add-field-button .add-field {
+  color: #fff;
+  font-size: 1rem;
+  background-color: #5a7c6b;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  border: none;
+  cursor: pointer;
+}
+.add-field-right-arrow {
+  border-left: 1px solid hsl(0, 0%, 100%) !important;
+  padding-left: 0.5rem;
+}
+.add-field-left-arrow {
+  border-right: 1px solid #fff !important;
+}
+.add-field-button {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  z-index: 1000;
+  padding: 5px 10px;
+}
+.add-field-button :nth-child(1) {
+  padding: 3px 4px;
+  background-color: #5a7c6b;
+  border-radius: 5px;
+}
+.add-field-button .add-field {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.add-field-button button {
+  background-color: transparent;
+  border: none;
+}
+.add-field-button button img {
+  height: 1.5rem;
+  background-color: transparent !important;
+}
+
+.save-farm-button {
+  position: absolute;
+  top: 450px;
+  left: 10px;
+  z-index: 1000;
+}
+.save-farm-btn:hover {
+  background-color: #5a7c6ba6 !important;
+  color: #fff !important;
+}
+
+.save-farm-btn {
+  color: white;
+  border: none;
+  outline: none;
+  background-color: #5a7c6ba6;
+}
+
+.save-farm-btn:hover {
+  background-color: #5a7c6b !important;
+  color: #fff;
+}

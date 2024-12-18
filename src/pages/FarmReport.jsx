@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "../style/FarmReport.css";
 import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmReportSidebar";
-import { reloadResources } from "i18next";
 
 const FarmReport = () => {
   const [selectedField, setSelectedField] = useState({});

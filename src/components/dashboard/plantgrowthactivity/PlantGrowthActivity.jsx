@@ -1,4 +1,3 @@
-// PlantGrowthActivity.js
 import React from "react";
 import {
   AreaChart,
@@ -15,15 +14,15 @@ import "./PlantGrowthActivity.css";
 const PlantGrowthActivity = () => {
   const data = [
     { week: "Week 1", height: 1 },
-    { week: "Week 2", height: 1.5 },
-    { week: "Week 3", height: 2 },
+    { week: "Week 2", height: 2 },
+    { week: "Week 3", height: 1.5 },
     { week: "Week 4", height: 2.5 },
-    { week: "Week 5", height: 3 },
-    { week: "Week 6", height: 3.5 },
-    { week: "Week 7", height: 4 },
-    { week: "Week 8", height: 4.5 },
+    { week: "Week 5", height: 2 },
+    { week: "Week 6", height: 3 },
+    { week: "Week 7", height: 2.5 },
+    { week: "Week 8", height: 4.6 },
     { week: "Week 9", height: 5 },
-    { week: "Week 10", height: 5.5 },
+    { week: "Week 10", height: 5.3 },
     { week: "Week 11", height: 6 },
   ];
 
@@ -58,7 +57,7 @@ const PlantGrowthActivity = () => {
         <ResponsiveContainer width="100%" height={250}>
           <AreaChart
             data={data}
-            margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
+            margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
           >
             <defs>
               <linearGradient id="colorHeight" x1="0" y1="0" x2="0" y2="1">
@@ -66,15 +65,38 @@ const PlantGrowthActivity = () => {
                 <stop offset="95%" stopColor="#4B970F" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#ccc" vertical={false} />
-            <XAxis dataKey="week" />
+            <CartesianGrid stroke="#ccc" vertical={false} />{" "}
+            {/* Removes vertical lines */}
+            <XAxis
+              dataKey="week"
+              axisLine={false}
+              tickLine={false}
+              style={{
+                fontSize: "12px",
+                fill: "#000000",
+                fontWeight: 600,
+                paddingTop: "100px",
+              }}
+              tickMargin={10}
+            />
             <YAxis
               type="number"
               domain={[1, 6]}
               ticks={[1, 2, 3, 4, 5, 6]}
+              tickMargin={15}
               unit=" cm"
+              axisLine={false}
+              tickLine={false}
+              style={{ fontSize: "12px", fill: "#000000", fontWeight: 600 }}
             />
-            <Tooltip />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#fff",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+              }}
+              itemStyle={{ color: "#4B970F", fontSize: "12px" }}
+            />
             <Area
               type="monotone"
               dataKey="height"

@@ -1,4 +1,8 @@
 .operation {
+  height: 100%;
+  width: 100%;
+}
+
+.operation-body {
   background-color: #5a7c6b;
-  height: 100vh;
 }

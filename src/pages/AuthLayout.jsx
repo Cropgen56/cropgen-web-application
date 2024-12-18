@@ -3,12 +3,29 @@ import "../style/AuthLayout.css";
 import SignUp from "../components/AuthLayout/signup/Signnup";
 import Login from "../components/AuthLayout/login/Login";
 import SocialButtons from "../components/AuthLayout/shared/socialbuttons/SocialButton";
-import LanguageSwitcher from "../components/AuthLayout/shared/LanguageSwitcher";
 import { Logo } from "../assets/Icons.jsx";
+import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice.js";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const AuthLayout = () => {
   const [activeTab, setActiveTab] = useState("SignUp");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  useEffect(() => {
+    dispatch(loadLocalStorage());
+    dispatch(decodeToken());
+  }, [dispatch]);
 
+  const handleSuccess = (credentialResponse) => {
+    console.log("Encoded JWT ID token:", credentialResponse.credential);
+    // Decode and use JWT to fetch user data
+  };
+
+  const handleError = () => {
+    console.log("Login Failed");
+  };
   return (
     <div className="auth-container">
       {/* Left Side with Image and Text */}
@@ -57,13 +74,20 @@ const AuthLayout = () => {
             </div>
           </div>
           <div className="login-body">
-            <SocialButtons />
+            <SocialButtons
+              handleSuccess={handleSuccess}
+              handleError={handleError}
+            />
             <div className="or ">
               <hr />
               <span>OR</span>
               <hr />
             </div>
-            {activeTab === "SignUp" ? <SignUp /> : <Login />}
+            {activeTab === "SignUp" ? (
+              <SignUp setActiveTab={setActiveTab} />
+            ) : (
+              <Login />
+            )}
           </div>
         </div>
       </div>

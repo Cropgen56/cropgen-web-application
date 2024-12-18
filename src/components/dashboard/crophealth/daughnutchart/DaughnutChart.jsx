@@ -45,9 +45,42 @@ const DoughnutChart = () => {
     },
   };
 
+  const centerTextPlugin = {
+    id: "centerText",
+    beforeDraw: (chart) => {
+      const { width, height } = chart;
+      const ctx = chart.ctx;
+      ctx.save();
+
+      // Calculate total and percentage
+      const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+      const percentage = Math.round((data.datasets[0].data[0] / total) * 100);
+      const percentageText = `${percentage}%`;
+      const labelText = "Normal";
+
+      // Measure text width to center-align dynamically
+      const percentageTextWidth = ctx.measureText(percentageText).width;
+      const labelTextWidth = ctx.measureText(labelText).width;
+
+      // Draw percentage
+      ctx.font = "bold 24px Arial";
+      ctx.fillStyle = "#344E41";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(percentageText, width / 2, height / 2 - 10);
+
+      // Draw label
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "#888888";
+      ctx.fillText(labelText, width / 2, height / 2 + 15);
+
+      ctx.restore();
+    },
+  };
   return (
     <div className="chart-container">
       <Doughnut data={data} options={options} />
+      {/* plugins={[centerTextPlugin]} */}
     </div>
   );
 };

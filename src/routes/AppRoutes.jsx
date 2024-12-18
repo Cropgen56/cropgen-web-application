@@ -7,31 +7,38 @@ import AddField from "../pages/AddField";
 import Weather from "../pages/Weather";
 import DiseaseDetection from "../pages/DiseaseDetection";
 import SmartAdvisory from "../pages/SmartAdviosory";
-import CropInformation from "../pages/CropInformation";
+import SoilReport from "../pages/SoilReport";
 import FarmReport from "../pages/FarmReport";
 import PersonaliseCropSchedule from "../pages/PersonaliseCropSchedule";
 import Setting from "../pages/Setting";
 import Operation from "../pages/Operation";
 import Profile from "../pages/Profile";
 import PageNotFound from "../pages/PageNotFound";
-import Login from "../pages/Login";
 import AuthLayout from "../pages/AuthLayout";
+import ProtectedRoute from "../authroute/ProtectedRoute";
 
 const AppRoutes = () => {
   return (
-    <Router>
+    <Router basename="/">
       <Routes>
         {/* Main Site Routes */}
-        <Route path="/" element={<MainLayout />}>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/cropgen-analytics" element={<CropGenAnalytics />} />
+          <Route path="/cropgen-analytics" element={<Dashboard />} />
           <Route path="/addfield" element={<AddField />} />
           <Route path="/weather" element={<Weather />} />
           <Route path="/operation" element={<Operation />} />
           <Route path="/disease-detection" element={<DiseaseDetection />} />
           <Route path="/smart-advisory" element={<SmartAdvisory />} />
-          <Route path="/crop-information" element={<CropInformation />} />
+          <Route path="/soil-report" element={<SoilReport />} />
           <Route path="/farm-report" element={<FarmReport />} />
           <Route
             path="/Personalise-crop-shedule"

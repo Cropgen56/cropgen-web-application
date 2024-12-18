@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
 import {
   AddFieldIcon,
   CropAnalysisIcon,
-  CropInformation,
   DieaseDetaction,
+  SoilReportIcon,
   FarmReport,
   Operation,
   SmartAdvisory,
@@ -19,24 +19,38 @@ import {
   Logo,
 } from "../../assets/Icons";
 import "./Sidebar.css";
+import { decodeToken, loadLocalStorage } from "../../redux/slices/authSlice";
+import { useDispatch, useSelector } from "react-redux";
 
-function Sidebar({ onToggleCollapse }) {
+const Sidebar = ({ onToggleCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
 
+  // handle to collaps the sidebar
   const handleCollapseToggle = (collapse) => {
     const newCollapsedState = collapse || !isCollapsed;
     setIsCollapsed(newCollapsedState);
     onToggleCollapse(newCollapsedState);
   };
 
+  // load the loadLocalStorage data
+  useEffect(() => {
+    dispatch(loadLocalStorage());
+    dispatch(decodeToken());
+  }, [dispatch]);
+
+  // handel to navigate
   const handleNavigation = (path) => {
-    // set the selected route and change the background color of the active link
-    // setSelectedRoute(path);
     navigate(path);
-    handleCollapseToggle(true);
+    if (path !== "/cropgen-analytics") {
+      handleCollapseToggle(true);
+    }
   };
+
+  // get the user data formt he redux store
+  const user = useSelector((state) => state?.auth?.user);
 
   return (
     <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
@@ -62,11 +76,13 @@ function Sidebar({ onToggleCollapse }) {
               onClick={() => handleNavigation("/profile")}
               className="profile-card"
             >
-              <Card.Img variant="top" src={profile} className="profile-image" />
+              <img variant="top" src={profile} className="profile-image" />
               <Card.Body className="text-center">
-                <Card.Title className="profile-user-name">User Name</Card.Title>
+                <Card.Title className="profile-user-name">
+                  {user?.firstName} {user?.lastName}
+                </Card.Title>
                 <Card.Text className="profile-user-email">
-                  user@gmail.com
+                  {user?.email}
                 </Card.Text>
               </Card.Body>
             </Card>
@@ -83,112 +99,46 @@ function Sidebar({ onToggleCollapse }) {
                 </li>
               )}
               <li
-                onClick={() => handleNavigation("/cropgen-analytics")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/cropgen-analytics"
-                      ? "white"
-                      : "transparent",
+                onClick={() => {
+                  handleNavigation("/cropgen-analytics");
                 }}
               >
                 <CropAnalysisIcon />
                 {!isCollapsed && "CropGen Analytics"}
               </li>
-              <li
-                onClick={() => handleNavigation("/addfield")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/addfield" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/addfield")}>
                 <AddFieldIcon />
                 {!isCollapsed && "Add Field"}
               </li>
-              <li
-                onClick={() => handleNavigation("/weather")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/weather" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/weather")}>
                 <Weather />
                 {!isCollapsed && "Weather"}
               </li>
-              <li
-                onClick={() => handleNavigation("/operation")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/operation" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/operation")}>
                 <Operation />
                 {!isCollapsed && "Operation"}
               </li>
-              <li
-                onClick={() => handleNavigation("/disease-detection")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/disease-detection"
-                      ? "white"
-                      : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/disease-detection")}>
                 <DieaseDetaction />
                 {!isCollapsed && "Disease Detection"}
               </li>
-              <li
-                onClick={() => handleNavigation("/smart-advisory")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/smart-advisory"
-                      ? "white"
-                      : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/smart-advisory")}>
                 <SmartAdvisory />
                 {!isCollapsed && "Smart Advisory"}
               </li>
-              <li
-                onClick={() => handleNavigation("/crop-information")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/crop-information"
-                      ? "white"
-                      : "transparent",
-                }}
-              >
-                <CropInformation />
-                {!isCollapsed && "Crop Information"}
+              <li onClick={() => handleNavigation("/soil-report")}>
+                <SoilReportIcon />
+                {!isCollapsed && "Soil Report"}
               </li>
-              <li
-                onClick={() => handleNavigation("/farm-report")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/farm-report" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/farm-report")}>
                 <FarmReport />
                 {!isCollapsed && "Farm Report"}
               </li>
-              <li
-                onClick={() => handleNavigation("/personalise-crop-shedule")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/personalise-crop-shedule"
-                      ? "white"
-                      : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/personalise-crop-shedule")}>
                 <PersonaliseCropShedule />
                 {!isCollapsed && "Personalise Crop Schedule"}
               </li>
-              <li
-                onClick={() => handleNavigation("/setting")}
-                style={{
-                  backgroundColor:
-                    selectedRoute === "/setting" ? "white" : "transparent",
-                }}
-              >
+              <li onClick={() => handleNavigation("/setting")}>
                 <Setting />
                 {!isCollapsed && "Setting"}
               </li>
@@ -207,6 +157,6 @@ function Sidebar({ onToggleCollapse }) {
       </Offcanvas>
     </div>
   );
-}
+};
 
 export default Sidebar;

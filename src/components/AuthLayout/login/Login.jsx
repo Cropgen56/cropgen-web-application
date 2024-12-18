@@ -1,51 +1,63 @@
 import React, { useState } from "react";
 import "./Login.css";
+import { useDispatch, useSelector } from "react-redux";
+import { signinUser } from "../../../redux/slices/authSlice";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({ email: "", password: "" });
 
+  const dispatch = useDispatch();
+  const { status, error } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
   const validate = () => {
-    let isValid = true;
-    const newErrors = { email: "", password: "" };
-
+    const emailRegex = /\S+@\S+\.\S+/;
     if (!formData.email) {
-      newErrors.email = "Email is required.";
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Enter a valid email.";
-      isValid = false;
+      alert("Email is required.");
+      return false;
+    } else if (!emailRegex.test(formData.email)) {
+      alert("Enter a valid email.");
+      return false;
     }
 
     if (!formData.password) {
-      newErrors.password = "Password is required.";
-      isValid = false;
+      alert("Password is required.");
+      return false;
     }
 
-    setErrors(newErrors);
-    return isValid;
+    return true;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      console.log("Login data: ", formData);
+      dispatch(signinUser(formData))
+        .then((result) => {
+          if (result.payload.success) {
+            alert(result.payload.message);
+            navigate("/");
+          }
+          if (!result.payload.success) {
+            alert(result.payload.message);
+          }
+        })
+        .catch((err) => {});
     }
   };
 
   return (
-    <form className="auth-form-login" onSubmit={handleSubmit}>
+    <form className="auth-form-login py-3" onSubmit={handleSubmit}>
       <div className="auth-form-group">
         <label htmlFor="email" className="auth-form-label">
           Email
         </label>
         <input
-          type="email"
+          type="tex"
           id="email"
           name="email"
           value={formData.email}
@@ -53,9 +65,6 @@ const Login = () => {
           className="auth-form-input"
           placeholder="example@gmail.com"
         />
-        {errors.email && (
-          <span className="auth-form-error">{errors.email}</span>
-        )}
       </div>
 
       <div className="auth-form-group">
@@ -71,12 +80,13 @@ const Login = () => {
           className="auth-form-input"
           placeholder="Password"
         />
-        {errors.password && (
-          <span className="auth-form-error">{errors.password}</span>
-        )}
       </div>
 
-      <button type="submit" className="auth-form-button">
+      <button
+        type="submit"
+        className="auth-form-button mb-3"
+        disabled={status === "loading"}
+      >
         Login
       </button>
     </form>
