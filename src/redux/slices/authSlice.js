@@ -7,6 +7,7 @@ export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async (signupData, { rejectWithValue }) => {
     try {
+      // Pass the token in the headers for the API request
       const response = await signupAPI(signupData);
       return response;
     } catch (error) {
@@ -31,7 +32,7 @@ export const signinUser = createAsyncThunk(
 // Initial state
 const initialState = {
   user: null,
-  token: null,
+  token: localStorage.getItem("authToken") || null,
   status: "idle",
   error: null,
 };
@@ -44,14 +45,17 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.status = "idle";
+      localStorage.removeItem("authToken");
     },
     loadLocalStorage: (state) => {
       const token = localStorage.getItem("authToken");
       state.token = token;
     },
     decodeToken: (state) => {
-      const userData = decodeJWT(state.token);
-      state.user = userData;
+      if (state.token) {
+        const userData = decodeJWT(state.token);
+        state.user = userData;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -63,7 +67,6 @@ const authSlice = createSlice({
       })
       .addCase(signupUser.fulfilled, (state, action) => {
         state.status = "succeeded";
-        // localStorage.setItem("authToken", action.payload.token);
         state.error = null;
       })
       .addCase(signupUser.rejected, (state, action) => {

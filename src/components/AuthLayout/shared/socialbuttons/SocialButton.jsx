@@ -1,66 +1,56 @@
-import React, { useState } from "react";
+import React from "react";
 import "./SocialButton.css";
 import { GoogleIcon } from "../../../../assets/Globalicon";
 import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const SocialButtons = () => {
-  const [userData, setUserData] = useState(null);
-
+  const navigate = useNavigate();
   // Google Login handler
   const login = useGoogleLogin({
-    onSuccess: (tokenResponse) => {
-      fetchUserInfo(tokenResponse.access_token);
+    onSuccess: async (tokenResponse) => {
+      try {
+        // Fetch user profile info using Axios
+        const userResponse = await axios.get(
+          "https://www.googleapis.com/oauth2/v1/userinfo",
+          {
+            params: {
+              alt: "json",
+              access_token: tokenResponse.access_token,
+            },
+          }
+        );
+        const user = userResponse.data;
+
+        // Send to backend using Axios
+        const backendResponse = await axios
+          .post(
+            "https://server.cropgenapp.com/api/auth/google-login",
+            {
+              access_token: tokenResponse.access_token,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          )
+          .then((res) => {
+            if (res.data.success) {
+              localStorage.setItem("authToken", res.data.token);
+              navigate("/");
+            }
+          });
+      } catch (error) {
+        console.error("Error during login:", error);
+      }
     },
     onError: () => {
-      console.log("Login Failed");
+      alert("Login field try again !");
     },
     scope: "profile email https://www.googleapis.com/auth/contacts.readonly",
   });
-
-  // Fetch user information from Google API
-  const fetchUserInfo = async (accessToken) => {
-    try {
-      // Get basic user info
-      const response = await fetch(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-      const userInfo = await response.json();
-
-      // Fetch extended information (like phone number) using the People API
-      const extendedResponse = await fetch(
-        "https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,phoneNumbers",
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-      const extendedUserInfo = await extendedResponse.json();
-
-      // Check if phoneNumbers exists and safely access its value
-      const phoneNumber = extendedUserInfo.phoneNumbers
-        ? extendedUserInfo.phoneNumbers[0].value
-        : "No phone number available";
-
-      setUserData({
-        ...userInfo,
-        firstName: extendedUserInfo.names
-          ? extendedUserInfo.names[0].givenName
-          : "",
-        lastName: extendedUserInfo.names
-          ? extendedUserInfo.names[0].familyName
-          : "",
-        phoneNumber: phoneNumber,
-      });
-    } catch (error) {
-      console.error("Error fetching user info:", error);
-    }
-  };
 
   return (
     <div className="social-buttons pt-1">

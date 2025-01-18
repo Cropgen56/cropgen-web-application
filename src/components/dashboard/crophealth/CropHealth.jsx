@@ -95,7 +95,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
                 <tr>
                   {" "}
                   <th>Total Area :-</th>
-                  <td>{totalArea.toFixed(2) + " Acre"}</td>
+                  <td>{totalArea?.toFixed(2) + " Acre"}</td>
                 </tr>
               </td>
             </tr>
