@@ -1,7 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://server.cropgenapp.com/v1/api/field";
-// const API_URL = "http://localhost:8080/api/field";
+const API_URL = process.env.REACT_APP_API_URL;
 
 const token = localStorage.getItem("authToken") || null;
 
@@ -14,10 +13,11 @@ export const addFieldAPI = async ({
   sowingDate,
   typeOfIrrigation,
   farmName,
+  acre,
 }) => {
   try {
     const response = await axios.post(
-      `${API_URL}/add-field/${userId}`,
+      `${API_URL}/api/field/add-field/${userId}`,
       {
         latlng,
         cropName,
@@ -25,6 +25,7 @@ export const addFieldAPI = async ({
         sowingDate,
         typeOfIrrigation,
         farmName,
+        acre,
       },
       {
         headers: {
@@ -42,11 +43,14 @@ export const addFieldAPI = async ({
 // Get field API
 export const getFieldAPI = async (userId) => {
   try {
-    const response = await axios.get(`${API_URL}/get-field/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axios.get(
+      `${API_URL}/api/field/get-field/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching field data:", error);

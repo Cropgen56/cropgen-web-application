@@ -98,12 +98,10 @@
 }
 .add-field-sidebar .crop-details-container input,
 .select {
-  background-color: #344e41;
-  width: 75%;
-  border: none;
+  border: 1px solid #344e41;
+  width: 90%;
   outline: none;
   border-radius: 5px;
-  color: #a2a2a2;
   padding: 0px 5px;
 }
 

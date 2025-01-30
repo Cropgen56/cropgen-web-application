@@ -10,6 +10,7 @@ import {
   useMapEvents,
   ZoomControl,
   LayersControl,
+  useMap,
 } from "react-leaflet";
 import { CurrentLocation } from "../../../assets/Icons";
 import "leaflet/dist/leaflet.css";
@@ -24,6 +25,7 @@ import {
   LeftArrow,
   RightArrow,
 } from "../../../assets/DashboardIcons";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const { Content } = Layout;
@@ -38,6 +40,10 @@ const MapView = ({
   fields,
 }) => {
   const mapRef = useRef(null);
+
+  const [selectedLocation, setSelectedLocation] = useState({});
+  const [selectedIcon, setSelectedIcon] = useState("");
+
   const navigate = useNavigate();
 
   // Extract Field Coordinates
@@ -97,6 +103,55 @@ const MapView = ({
     });
   }, [setMarkers]);
 
+  // get the currenct location
+  const CurrentLocationButton = ({ onLocationFound }) => {
+    console.log("Location found:");
+    const map = useMap();
+    const handleCurrentLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            onLocationFound({
+              lat: latitude,
+              lng: longitude,
+              name: "Your Current Location",
+            });
+            map.setView([latitude, longitude], 18);
+          },
+          () => alert("Unable to fetch your location."),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        alert("Geolocation not supported.");
+      }
+    };
+
+    return (
+      <button
+        style={{
+          position: "absolute",
+          top: "40vh",
+          right: "16px",
+          zIndex: 1000,
+          padding: "14px 14px",
+          backgroundColor: "#075a53",
+          color: "#fff",
+          border: "none",
+          borderRadius: "50px",
+          cursor: "pointer",
+        }}
+        className={selectedIcon == "current-location" ? "selected-icon" : ""}
+        onClick={() => {
+          handleCurrentLocation();
+          setSelectedIcon("current-location");
+        }}
+      >
+        <CurrentLocation />
+      </button>
+    );
+  };
+
   return (
     <Layout className="map-layout-dashboard">
       <Content style={{ height: "100%", position: "relative" }}>
@@ -113,8 +168,10 @@ const MapView = ({
           <LayersControl position="topright">
             <BaseLayer checked name="Satellite">
               <TileLayer
-                url="http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+                attribution="© Google Maps"
+                url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
                 subdomains={["mt0", "mt1", "mt2", "mt3"]}
+                maxZoom={50}
               />
             </BaseLayer>
             <BaseLayer name="Road">
@@ -148,21 +205,12 @@ const MapView = ({
             <Polygon positions={markers.map((m) => [m.lat, m.lng])} />
           )}
 
+          <CurrentLocationButton onLocationFound={setSelectedLocation} />
           <Markers />
-          <ZoomControl position="bottomright" />
         </MapContainer>
 
         {/* Map Controls */}
         <div className="map-controls">
-          <Button
-            className="current-location-btn"
-            onClick={() =>
-              mapRef.current?.locate({ setView: true, maxZoom: 16 })
-            }
-          >
-            <CurrentLocation />
-          </Button>
-
           {/* Dropdown to Change Field */}
           {fields.length > 0 && (
             <select id="field-dropdown" onChange={handleFieldChange}>

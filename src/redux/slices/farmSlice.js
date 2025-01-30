@@ -13,6 +13,7 @@ export const addFarmField = createAsyncThunk(
       sowingDate,
       typeOfIrrigation,
       farmName,
+      acre,
     },
     { rejectWithValue }
   ) => {
@@ -25,6 +26,7 @@ export const addFarmField = createAsyncThunk(
         sowingDate,
         typeOfIrrigation,
         farmName,
+        acre,
       });
       return response;
     } catch (error) {

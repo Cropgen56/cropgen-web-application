@@ -124,12 +124,88 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
                   value={cropName}
                   onChange={(e) => setCropName(e.target.value)}
                 >
-                  <option value="">e.g. Tomato</option>
-                  {cropename.crops.map((crop, index) => (
-                    <option key={index} value={crop}>
-                      {crop}
-                    </option>
-                  ))}
+                  <option value="" disabled>
+                    Select Crop
+                  </option>
+                  <option value="Barley">Barley</option>
+                  <option value="Wheat">Wheat</option>
+                  <option value="PearlMillet">Pearl Millet</option>
+                  <option value="Sorghum">Sorghum</option>
+                  <option value="FingerMillet">Finger Millet</option>
+                  <option value="Chickpea">Chickpea</option>
+                  <option value="RedGram">Red Gram</option>
+                  <option value="GreenGram">Green Gram</option>
+                  <option value="BlackGram">Black Gram</option>
+                  <option value="Lentil">Lentil</option>
+                  <option value="FieldPea">Field Pea</option>
+                  <option value="HorseGram">Horse Gram</option>
+                  <option value="Cowpea">Cowpea</option>
+                  <option value="Groundnut">Groundnut</option>
+                  <option value="Mustard">Mustard</option>
+                  <option value="Soybean">Soybean</option>
+                  <option value="Sunflower">Sunflower</option>
+                  <option value="Sesame">Sesame</option>
+                  <option value="Linseed">Linseed</option>
+                  <option value="Castor">Castor</option>
+                  <option value="Safflower">Safflower</option>
+                  <option value="Niger">Niger</option>
+                  <option value="Sugarcane">Sugarcane</option>
+                  <option value="Cotton">Cotton</option>
+                  <option value="Jute">Jute</option>
+                  <option value="Tobacco">Tobacco</option>
+                  <option value="Potato">Potato</option>
+                  <option value="Tomato">Tomato</option>
+                  <option value="Brinjal">Brinjal</option>
+                  <option value="Cabbage">Cabbage</option>
+                  <option value="Cauliflower">Cauliflower</option>
+                  <option value="Onion">Onion</option>
+                  <option value="Garlic">Garlic</option>
+                  <option value="Okra">Okra</option>
+                  <option value="Carrot">Carrot</option>
+                  <option value="Radish">Radish</option>
+                  <option value="Spinach">Spinach</option>
+                  <option value="Methi">Methi</option>
+                  <option value="GreenPeas">Green Peas</option>
+                  <option value="BitterGourd">Bitter Gourd</option>
+                  <option value="BottleGourd">Bottle Gourd</option>
+                  <option value="Pumpkin">Pumpkin</option>
+                  <option value="Cucumber">Cucumber</option>
+                  <option value="Beans">Beans</option>
+                  <option value="Mango">Mango</option>
+                  <option value="Banana">Banana</option>
+                  <option value="Guava">Guava</option>
+                  <option value="Apple">Apple</option>
+                  <option value="Papaya">Papaya</option>
+                  <option value="Orange">Orange</option>
+                  <option value="Lemon">Lemon</option>
+                  <option value="Pomegranate">Pomegranate</option>
+                  <option value="Grapes">Grapes</option>
+                  <option value="Pineapple">Pineapple</option>
+                  <option value="Watermelon">Watermelon</option>
+                  <option value="Muskmelon">Muskmelon</option>
+                  <option value="Turmeric">Turmeric</option>
+                  <option value="Ginger">Ginger</option>
+                  <option value="Coriander">Coriander</option>
+                  <option value="Cumin">Cumin</option>
+                  <option value="BlackPepper">Black Pepper</option>
+                  <option value="RedChilies">Red Chilies</option>
+                  <option value="Tea">Tea</option>
+                  <option value="Coffee">Coffee</option>
+                  <option value="Coconut">Coconut</option>
+                  <option value="Arecanut">Arecanut</option>
+                  <option value="Rubber">Rubber</option>
+                  <option value="DragonFruit">Dragon Fruit</option>
+                  <option value="SpongeGourd">Sponge Gourd</option>
+                  <option value="SnakeGourd">Snake Gourd</option>
+                  <option value="AshGourd">Ash Gourd</option>
+                  <option value="Drumstick">Drumstick</option>
+                  <option value="Chili">Chili</option>
+                  <option value="Chia">Chia</option>
+                  <option value="Rice">Rice</option>
+                  <option value="Kiwi">Kiwi</option>
+                  <option value="Amla">Amla</option>
+                  <option value="Capsicum">Capsicum</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
               <div className="crop-variety-container">
@@ -159,13 +235,9 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
                   onChange={(e) => setTypeOfIrrigation(e.target.value)}
                 >
                   <option value="">Select irrigation Type</option>
-                  <option value="Sprinkler Irrigation">
-                    Sprinkler Irrigation
-                  </option>
-                  <option value="Micro Irrigation">Micro Irrigation</option>
-                  <option value="Open Irrigation">Open Irrigation</option>
-                  <option value="Dripe Irrigation">Drip Irrigation</option>
-                  <option value="Other Irrigation">Other Irrigation</option>
+                  <option value="open-irrigation">Open Irrigation</option>
+                  <option value="drip-irrigation">Drip Irrigation</option>
+                  <option value="sprinkler">Sprinkler Irrigation</option>
                 </select>
               </div>
             </form>

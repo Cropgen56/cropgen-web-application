@@ -4,6 +4,7 @@ import AddFieldSidebar from "../components/addfield/AddFieldSidebar";
 import { useDispatch, useSelector } from "react-redux";
 import { addFarmField } from "../redux/slices/farmSlice";
 import { useNavigate } from "react-router-dom";
+import * as turf from "@turf/turf";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
@@ -24,7 +25,6 @@ const AddField = () => {
   // get user id
   const userId = useSelector((state) => state?.auth?.user?.id);
 
-  // Save farm function (you can customize the farm data saving logic)
   const saveFarm = ({
     markers,
     cropName,
@@ -38,6 +38,20 @@ const AddField = () => {
       return;
     }
 
+    // calculate the farm in acer
+    const calculateArea = (corrdinatesPoint) => {
+      const coordinates = corrdinatesPoint.map((point) => [
+        point.lng,
+        point.lat,
+      ]);
+      coordinates.push(coordinates[0]);
+      const polygon = turf.polygon([coordinates]);
+      const area = turf.area(polygon);
+
+      console.log(area);
+      return area / 4046.86;
+    };
+
     dispatch(
       addFarmField({
         latlng: markers,
@@ -47,10 +61,13 @@ const AddField = () => {
         sowingDate,
         typeOfIrrigation,
         farmName,
+        acre: calculateArea(markers),
       })
     ).then((result) => {
-      alert("Field added successfylly !");
-      navigate("/cropgen-analytics");
+      if (result?.payload?.success) {
+        alert("Field added successfylly !");
+        navigate("/cropgen-analytics");
+      }
     });
   };
 
