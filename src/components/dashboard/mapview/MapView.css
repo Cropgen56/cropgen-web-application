@@ -1,95 +1,48 @@
-/* Map Container Styling */
-.map-layout-dashboard .dashboard-map {
+.farm-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
-  height: 100vh;
-  border-radius: 1rem;
-  margin: auto;
+  height: 100%;
+  position: relative;
 }
 
-/* Search Bar Styling */
-.map-layout-dashboard .search-bar {
+.farm-map-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.farm-map-spinner-overlay {
   position: absolute;
-  top: 15px;
-  left: 12%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  padding: 1px 50px;
-  border-radius: 4px;
-}
-
-.map-layout-dashboard .search-bar input {
-  border: none;
-  outline: none;
-  width: 230px;
-  background-color: #5a7c6bb2;
-  border-radius: 4px;
-  padding: 7px;
-  color: #fff;
-}
-
-.map-layout-dashboard .search-bar input::placeholder {
-  color: #fff;
-  opacity: 1;
-}
-
-/* Map Controls */
-.map-layout-dashboard .map-controls {
-  position: absolute;
-  top: 60px;
-  left: 50px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.7);
   z-index: 1000;
 }
 
-.map-layout-dashboard .delete-markers-btn {
-  color: #000;
-  border: none;
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-.map-layout-dashboard .current-location-btn {
+.map-controls {
   position: absolute;
-  top: 200px;
-  left: -36px;
   z-index: 1000;
-  background-color: #5a7c6ba6;
-  border: none;
-  border-radius: 4px;
-  padding: 5px 4 px;
-  color: #fff;
-  cursor: pointer;
+  height: 80%;
 }
-
-/* Zoom Control Customization */
-.map-layout-dashboard .leaflet-left .leaflet-control-zoom {
-  position: absolute;
-  top: 28vh;
-  left: 2px;
-  z-index: 1000;
-  background-color: #5a7c6ba6;
-  border-radius: 4px;
-  padding: 2px;
-}
-
-.map-layout-dashboard .leaflet-control-zoom-in,
-.map-layout-dashboard .leaflet-control-zoom-out {
-  color: #fff !important;
-  background-color: transparent !important;
-  border: none;
-}
-
-/* selcted field dropdown  */
 #field-dropdown {
-  background-color: #5a7c6ba6 !important;
+  background-color: #5a7c6bb2 !important;
   outline: none;
   border: none;
   border-radius: 5px;
   color: #fff;
   padding: 5px 10px;
   position: absolute;
-  left: 60vw;
-  top: -8vh;
+  left: -10rem;
+  top: 1rem;
+  cursor: pointer;
 }
 
 #field-dropdown option:checked {
@@ -103,4 +56,67 @@
 
 #field-dropdown option {
   background-color: #5a7c6ba6;
+}
+
+.field-actions {
+  width: 100%;
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  text-align: center;
+  z-index: 1000;
+}
+
+.add-new-field-container {
+  color: #fff;
+  font-size: 1rem;
+  background-color: #5a7c6b;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 33rem;
+  position: absolute;
+  z-index: 1000;
+}
+
+.actions-container {
+  width: 95%;
+  margin: auto;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  z-index: 1000;
+  padding: 5px 10px;
+  background-color: #5a7c6b;
+  border-radius: 5px;
+}
+
+.actions-container img {
+  height: 1.5rem;
+}
+
+.action-right {
+  border-left: 1px solid #fff !important;
+  padding-left: 0.5rem;
+}
+
+.action-left {
+  border-right: 1px solid #fff !important;
+}
+
+.actions-container :nth-child(1) {
+  padding: 3px 4px;
+  background-color: #5a7c6b;
+  border-radius: 5px;
+}
+
+.actions-container button {
+  background-color: transparent;
+  border: none;
+}
+
+.actions-container button img {
+  height: 1.5rem;
+  background-color: transparent !important;
 }

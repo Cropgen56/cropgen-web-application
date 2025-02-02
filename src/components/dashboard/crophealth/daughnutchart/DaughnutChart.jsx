@@ -1,10 +1,22 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCropHealth } from "../../../../redux/slices/satelliteSlice";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const DoughnutChart = () => {
+const DoughnutChart = ({ selectedFieldsDetials }) => {
+  const farmDetails = selectedFieldsDetials[0];
+
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(fetchCropHealth(farmDetails));
+  }, [selectedFieldsDetials]);
+
+  const { cropHealth } = useSelector((state) => state?.satellite);
+  const { Health_Percentage = {}, Crop_Health = {} } = cropHealth || {};
+
   const data = {
     labels: ["Good", "Moderate", "Bad"],
     datasets: [
@@ -48,9 +60,18 @@ const DoughnutChart = () => {
   const centerTextPlugin = {
     id: "centerText",
     beforeDraw: (chart) => {
-      const { width, height } = chart;
-      const ctx = chart.ctx;
+      const { ctx } = chart;
       ctx.save();
+
+      // Check if chart area is available
+      if (!chart.chartArea) {
+        ctx.restore();
+        return;
+      }
+
+      // Calculate center point of the chart
+      const x = (chart.chartArea.left + chart.chartArea.right) / 2;
+      const y = (chart.chartArea.top + chart.chartArea.bottom) / 2;
 
       // Calculate total and percentage
       const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
@@ -58,29 +79,25 @@ const DoughnutChart = () => {
       const percentageText = `${percentage}%`;
       const labelText = "Normal";
 
-      // Measure text width to center-align dynamically
-      const percentageTextWidth = ctx.measureText(percentageText).width;
-      const labelTextWidth = ctx.measureText(labelText).width;
-
       // Draw percentage
       ctx.font = "bold 24px Arial";
       ctx.fillStyle = "#344E41";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(percentageText, width / 2, height / 2 - 10);
+      ctx.fillText(percentageText, x, y - 20);
 
       // Draw label
       ctx.font = "14px Arial";
       ctx.fillStyle = "#888888";
-      ctx.fillText(labelText, width / 2, height / 2 + 15);
+      ctx.fillText(labelText, x, y + 15);
 
       ctx.restore();
     },
   };
+
   return (
-    <div className="chart-container">
-      <Doughnut data={data} options={options} />
-      {/* plugins={[centerTextPlugin]} */}
+    <div className="chart-container" style={{ height: "200px" }}>
+      <Doughnut data={data} options={options} plugins={[centerTextPlugin]} />
     </div>
   );
 };

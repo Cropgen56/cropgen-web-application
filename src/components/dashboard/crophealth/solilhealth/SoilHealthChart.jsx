@@ -10,6 +10,9 @@ import {
   CartesianGrid,
 } from "recharts";
 import "./SoilHealthChart.css";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { fetchSoilMoisture } from "../../../../redux/slices/satelliteSlice";
 
 const data = [
   { day: "D0", moisture: 0, temperature: 0 },
@@ -22,7 +25,17 @@ const data = [
   { day: "D7", moisture: 6, temperature: 10 },
 ];
 
-const SoilHealthChart = () => {
+const SoilHealthChart = ({ selectedFieldsDetials }) => {
+  const dispatch = useDispatch();
+
+  const farmDetails = selectedFieldsDetials[0];
+
+  useEffect(() => {
+    dispatch(fetchSoilMoisture(farmDetails));
+  }, [selectedFieldsDetials]);
+
+  const { SoilMoisture } = useSelector((state) => state.satellite);
+
   return (
     <div className="soil-health-chart-container">
       <h2 className="soil-health-chart-title">Soil Health</h2>

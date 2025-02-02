@@ -2,6 +2,10 @@
   background-color: #f8f9fa !important;
   border-radius: 8px;
 }
+.crop-advisory-title {
+  display: flex;
+  justify-content: space-between;
+}
 
 .crop-advisory-title h2 {
   font-size: 1.2rem;
@@ -48,6 +52,13 @@
   color: #e0e0e0;
 }
 
+.advisory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 10px;
+}
+
 .read-more {
   display: inline-block;
   margin-top: 0.5rem;
@@ -55,9 +66,13 @@
   text-decoration: none;
   font-weight: bold;
   font-size: 0.7rem;
-  float: inline-end;
 }
 
 .read-more:hover {
   text-decoration: underline;
+}
+
+.advisory-card p {
+  padding: 0;
+  margin: 0;
 }

@@ -1,258 +1,229 @@
-import L from "leaflet";
-import React, { useEffect, useRef } from "react";
-import { Layout, Button } from "antd";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   MapContainer,
   TileLayer,
-  Marker,
-  Popup,
   Polygon,
-  useMapEvents,
-  ZoomControl,
-  LayersControl,
+  ImageOverlay,
   useMap,
 } from "react-leaflet";
-import { CurrentLocation } from "../../../assets/Icons";
 import "leaflet/dist/leaflet.css";
-import * as ELG from "esri-leaflet-geocoder";
-import { CiSearch } from "react-icons/ci";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import "./MapView.css";
-import NDVISelector from "./ndviselector/NdviSelector";
 import {
   Calender,
   LeftArrow,
   RightArrow,
 } from "../../../assets/DashboardIcons";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchweatherData } from "../../../redux/slices/weatherSlice";
+import IndexSelector from "./indexdates/IndexDates";
+import { resetState } from "../../../redux/slices/satelliteSlice";
+import Loading from "../../comman/loading/Loading";
 
-const { Content } = Layout;
-const { BaseLayer } = LayersControl;
+// calculate the centroid of the field
+const calculatePolygonCentroid = (coordinates) => {
+  if (coordinates.length < 3) return { centroidLat: null, centroidLng: null };
 
-const MapView = ({
-  markers,
-  setMarkers,
-  isAddingMarkers,
-  selectedField,
-  setSelectedField,
-  fields,
-}) => {
-  const mapRef = useRef(null);
+  let sumX = 0,
+    sumY = 0,
+    area = 0;
 
-  const [selectedLocation, setSelectedLocation] = useState({});
-  const [selectedIcon, setSelectedIcon] = useState("");
-
-  const navigate = useNavigate();
-
-  // Extract Field Coordinates
-  const selectedFieldCoordinates = fields
-    .filter((item) => item?._id === selectedField)
-    .map((item) => item?.field?.map((point) => [point.lat, point.lng]));
-
-  // Custom Marker Icon
-  const customMarkerIcon = new L.Icon({
-    iconUrl: markerIcon,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowUrl: markerShadow,
-    shadowSize: [41, 41],
+  coordinates.forEach((current, i) => {
+    const next = coordinates[(i + 1) % coordinates.length];
+    const crossProduct = current.lat * next.lng - next.lat * current.lng;
+    area += crossProduct;
+    sumX += (current.lat + next.lat) * crossProduct;
+    sumY += (current.lng + next.lng) * crossProduct;
   });
 
-  // Handle Field Selection
-  const handleFieldChange = (event) => {
-    setSelectedField(event.target.value);
-  };
+  area /= 2;
+  return { centroidLat: sumX / (6 * area), centroidLng: sumY / (6 * area) };
+};
 
-  // Map Interaction for Markers
-  const Markers = () => {
-    useMapEvents({
-      click: (e) => {
-        if (isAddingMarkers) {
-          const { lat, lng } = e.latlng;
-          setMarkers((current) => {
-            const updatedMarkers = [...current, { lat, lng }];
-            return updatedMarkers.length > 12
-              ? updatedMarkers.slice(-12)
-              : updatedMarkers;
-          });
-        }
-      },
-    });
-    return null;
-  };
+// calculate the bounds for render the image
+const calculatePolygonBounds = (coordinates) => {
+  if (coordinates.length === 0) return null;
+  const lats = coordinates.map(({ lat }) => lat);
+  const lngs = coordinates.map(({ lng }) => lng);
+  return [
+    [Math.min(...lats), Math.min(...lngs)],
+    [Math.max(...lats), Math.max(...lngs)],
+  ];
+};
 
-  // Esri Geocoder for Search Control
+// move the map to the selected field
+const MoveMapToField = ({ lat, lng }) => {
+  const map = useMap();
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (lat !== null && lng !== null) map.setView([lat, lng], 17);
+  }, [lat, lng, map]);
+  return null;
+};
 
-    const searchControl = new ELG.Geosearch({
-      useMapBounds: false,
-      expanded: true,
-      placeholder: "Search for a location...",
-    }).addTo(mapRef.current);
+const FarmMap = ({
+  fields,
+  selectedField,
+  setSelectedField,
+  selectedFieldsDetials,
+}) => {
+  const [polygonBounds, setPolygonBounds] = useState(null);
+  const [image, setImage] = useState(null);
+  const mapRef = useRef(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { indexData, loading } = useSelector((state) => state.satellite);
 
-    searchControl.on("results", (data) => {
-      if (data.results.length > 0) {
-        const { latlng } = data.results[0];
-        setMarkers((current) => [...current, latlng]);
-        mapRef.current.setView(latlng, 12);
-      }
-    });
-  }, [setMarkers]);
+  useEffect(() => {
+    const indexImage = indexData?.result?.dense_index_image;
+    setImage(indexImage ? `data:image/png;base64,${indexImage}` : null);
+  }, [indexData]);
 
-  // get the currenct location
-  const CurrentLocationButton = ({ onLocationFound }) => {
-    console.log("Location found:");
-    const map = useMap();
-    const handleCurrentLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            onLocationFound({
-              lat: latitude,
-              lng: longitude,
-              name: "Your Current Location",
-            });
-            map.setView([latitude, longitude], 18);
-          },
-          () => alert("Unable to fetch your location."),
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-      } else {
-        alert("Geolocation not supported.");
-      }
-    };
+  // Memoized polygon coordinates to avoid unnecessary recalculations
+  const polygonCoordinates = useMemo(
+    () =>
+      fields
+        .find((item) => item?._id === selectedField)
+        ?.field?.map(({ lat, lng }) => ({ lat, lng })) || [],
+    [fields, selectedField]
+  );
 
-    return (
-      <button
-        style={{
-          position: "absolute",
-          top: "40vh",
-          right: "16px",
-          zIndex: 1000,
-          padding: "14px 14px",
-          backgroundColor: "#075a53",
-          color: "#fff",
-          border: "none",
-          borderRadius: "50px",
-          cursor: "pointer",
-        }}
-        className={selectedIcon == "current-location" ? "selected-icon" : ""}
-        onClick={() => {
-          handleCurrentLocation();
-          setSelectedIcon("current-location");
-        }}
-      >
-        <CurrentLocation />
-      </button>
-    );
-  };
+  // Memoized centroid calculation
+  const { centroidLat, centroidLng } = useMemo(
+    () => calculatePolygonCentroid(polygonCoordinates),
+    [polygonCoordinates]
+  );
+
+  // Memoized polygon bounds calculation
+  useEffect(() => {
+    setPolygonBounds(calculatePolygonBounds(polygonCoordinates));
+  }, [polygonCoordinates]);
+
+  // Weather data fetching logic
+  const updateWeatherData = useCallback(() => {
+    if (centroidLat && centroidLng) {
+      dispatch(
+        fetchweatherData({ latitude: centroidLat, longitude: centroidLng })
+      ).then((action) => {
+        if (action.payload) {
+          localStorage.setItem("weatherData", JSON.stringify(action.payload));
+          localStorage.setItem("lastFetchTime", Date.now());
+        }
+      });
+    }
+  }, [dispatch, centroidLat, centroidLng]);
+
+  // chek the before api call
+  useEffect(() => {
+    const storedFetchTime = localStorage.getItem("lastFetchTime");
+    const currentTime = Date.now();
+
+    if (
+      !storedFetchTime ||
+      currentTime - parseInt(storedFetchTime, 10) > 3 * 60 * 60 * 1000
+    ) {
+      updateWeatherData();
+    }
+  }, [updateWeatherData]);
+
+  // Reset state when the selectedField changes
+  useEffect(() => {
+    dispatch(resetState());
+  }, [selectedField, dispatch]);
 
   return (
-    <Layout className="map-layout-dashboard">
-      <Content style={{ height: "100%", position: "relative" }}>
-        {/* Map Container */}
-        <MapContainer
-          center={[20.1360471, 77.157196]}
-          zoom={17}
-          zoomControl={true}
-          style={{ height: "90vh", width: "100%", borderRadius: "1rem" }}
-          whenCreated={(mapInstance) => {
-            mapRef.current = mapInstance;
-          }}
-        >
-          <LayersControl position="topright">
-            <BaseLayer checked name="Satellite">
-              <TileLayer
-                attribution="© Google Maps"
-                url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
-                subdomains={["mt0", "mt1", "mt2", "mt3"]}
-                maxZoom={50}
-              />
-            </BaseLayer>
-            <BaseLayer name="Road">
-              <TileLayer
-                url="http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
-                subdomains={["mt0", "mt1", "mt2", "mt3"]}
-              />
-            </BaseLayer>
-          </LayersControl>
-
-          {/* Field Polygon */}
-          <Polygon
-            positions={selectedFieldCoordinates}
-            pathOptions={{ color: "#EBF7AB", fillOpacity: 0.7 }}
-          />
-
-          {/* Markers */}
-          {markers.map((marker, idx) => (
-            <Marker
-              key={idx}
-              position={[marker.lat, marker.lng]}
-              icon={customMarkerIcon}
-            >
-              <Popup>
-                Marker Location: [{marker.lat.toFixed(4)},{" "}
-                {marker.lng.toFixed(4)}]
-              </Popup>
-            </Marker>
-          ))}
-          {markers.length > 2 && (
-            <Polygon positions={markers.map((m) => [m.lat, m.lng])} />
-          )}
-
-          <CurrentLocationButton onLocationFound={setSelectedLocation} />
-          <Markers />
-        </MapContainer>
-
-        {/* Map Controls */}
-        <div className="map-controls">
-          {/* Dropdown to Change Field */}
-          {fields.length > 0 && (
-            <select id="field-dropdown" onChange={handleFieldChange}>
-              {fields.map((field, index) => (
-                <option key={field?._id} value={field?._id}>
-                  {field.fieldName + " " + (index + 1)}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-
-        {/* NDVI Selector */}
-        {fields.length > 0 ? (
-          <NDVISelector />
-        ) : (
-          <div
-            className="add-field-button"
-            style={{ cursor: "pointer" }}
-            onClick={() => navigate("/addfield")}
+    <div className="farm-map">
+      {centroidLat !== null && centroidLng !== null ? (
+        <>
+          <MapContainer
+            center={[centroidLat, centroidLng]}
+            zoom={20}
+            zoomControl={false}
+            className="farm-map-container"
+            whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
           >
-            <div className="d-flex justify-content-between mx-auto">
-              <div className="add-field-left-arrow">
-                <button>
-                  <Calender />
-                </button>
-                <button>
-                  <LeftArrow />
-                </button>
+            {loading.indexData && (
+              <div className="farm-map-spinner-overlay">
+                <Loading />
               </div>
-              <button className="add-field">
-                {isAddingMarkers ? "Stop Adding Markers" : "Add Field"}
-              </button>
-              <button className="add-field-right-arrow">
-                <RightArrow />
-              </button>
-            </div>
+            )}
+            <TileLayer
+              attribution="© Google Maps"
+              url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+              subdomains={["mt0", "mt1", "mt2", "mt3"]}
+              maxZoom={50}
+            />
+            <Polygon
+              pathOptions={{ fillColor: "transparent", fillOpacity: 0 }}
+              positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
+            />
+            {polygonBounds && image && (
+              <ImageOverlay
+                url={image}
+                bounds={polygonBounds}
+                opacity={1}
+                interactive
+              />
+            )}
+            <MoveMapToField lat={centroidLat} lng={centroidLng} />
+          </MapContainer>
+          <div className="map-controls">
+            {fields.length > 0 && (
+              <select
+                id="field-dropdown"
+                onChange={(e) => {
+                  console.log(e.target.value);
+                  setSelectedField(e.target.value);
+                }}
+                value={selectedField}
+              >
+                {fields.map((field) => (
+                  <option key={field?._id} value={field?._id}>
+                    {field.fieldName}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
-        )}
-      </Content>
-    </Layout>
+
+          {fields.length > 0 ? (
+            <IndexSelector selectedFieldsDetials={selectedFieldsDetials} />
+          ) : (
+            <div className="add-new-field-container">
+              <div className="field-actions">
+                <div className="actions-container d-flex justify-content-between mx-auto">
+                  <div className="action-left">
+                    <button>
+                      <Calender />
+                    </button>
+                    <button>
+                      <LeftArrow />
+                    </button>
+                  </div>
+                  <button
+                    className="add-new-field"
+                    onClick={() => navigate("/addfield")}
+                  >
+                    Add Field
+                  </button>
+                  <button className="action-right">
+                    <RightArrow />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <div>Loading Map...</div>
+      )}
+    </div>
   );
 };
 
-export default MapView;
+export default FarmMap;

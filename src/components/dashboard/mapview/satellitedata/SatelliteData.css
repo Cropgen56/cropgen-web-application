@@ -39,10 +39,10 @@ body {
   font-weight: 500;
   cursor: pointer;
 }
-.ndvi-btn {
+.selected {
   background-color: #344e41;
 }
-.ndvi-btn:hover {
+.selected:hover {
   background-color: #344e41 !important;
 }
 .button:hover {

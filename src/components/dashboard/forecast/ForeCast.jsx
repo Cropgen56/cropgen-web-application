@@ -8,31 +8,42 @@ import {
   WindSpeedIcon,
 } from "../../../assets/DashboardIcons";
 import { Dots } from "../../../assets/DashboardIcons";
+import { useSelector } from "react-redux";
 
 function ForeCast() {
-  const weatherData = {
-    today: {
-      temperature: 27,
-      icon: "🌧️",
-      wind: "14 km/h",
-      humidity: "86%",
-      pressure: "1007 hPa",
-    },
-    week: [
-      { day: "MON", temperature: 45, icon: "☀️", chanceOfRain: "36%" },
-      { day: "TUE", temperature: 21, icon: "🌧️", chanceOfRain: "65%" },
-      {
-        day: "WED",
-        temperature: 20,
-        icon: "⛅",
-        chanceOfRain: "12%",
-        isHighlighted: true,
-      },
-      { day: "THU", temperature: 32, icon: "⛅", chanceOfRain: "51%" },
-      { day: "FRI", temperature: 32, icon: "⛅", chanceOfRain: "52%" },
-      { day: "SAT", temperature: 36, icon: "☀️", chanceOfRain: "95%" },
-      { day: "SUN", temperature: 23, icon: "🌧️", chanceOfRain: "21%" },
-    ],
+  const weather = JSON.parse(localStorage.getItem("weatherData"))
+    ?.currentConditions || {
+    temp: null,
+    humidity: null,
+    pressure: null,
+    windspeed: null,
+    precipitation: null,
+  };
+
+  function fahrenheitToCelsius(fahrenheit) {
+    return ((fahrenheit - 32) * 5) / 9;
+  }
+
+  const weekForcast = JSON.parse(localStorage.getItem("weatherData")).days;
+
+  const getWeatherIcon = (temperature, condition) => {
+    if (condition.toLowerCase().includes("rain")) return "🌧️";
+    if (condition.toLowerCase().includes("snow")) return "❄️";
+    if (condition.toLowerCase().includes("storm")) return "⛈️";
+    if (
+      condition.toLowerCase().includes("clear") ||
+      condition.toLowerCase().includes("sunny")
+    )
+      return "☀️";
+    if (condition.toLowerCase().includes("cloud")) return "☁️";
+    if (condition.toLowerCase().includes("fog")) return "🌫️";
+
+    if (temperature >= 35) return "🔥";
+    if (temperature >= 25) return "☀️";
+    if (temperature >= 15) return "⛅";
+    if (temperature >= 5) return "🌥️";
+    if (temperature >= -5) return "❄️";
+    return "🧊";
   };
 
   return (
@@ -50,23 +61,30 @@ function ForeCast() {
           <div className="forecast-today">
             <h2 className="mb-3">Weather's Today</h2>
             <div className="today-weather px-5">
-              <span className="weather-icon">{<RainCloudIcon />}</span>
+              <span className="weather-icon">
+                {" "}
+                {getWeatherIcon(
+                  Math.round(fahrenheitToCelsius(weather?.temp)),
+                  weather?.conditions
+                )}
+              </span>
               <div className="temperature">
-                {weatherData.today.temperature}°C
+                {" "}
+                {Math.round(fahrenheitToCelsius(weather?.temp)) || 30}°C
               </div>
             </div>
             <div className="today-details ">
               <div className="px-1">
                 <WindSpeedIcon />
-                {weatherData.today.wind}
+                <p>{weather?.windspeed} km/h</p>
               </div>
               <div className="px-1">
                 <DropIcon />
-                {weatherData.today.humidity}
+                <p>{weather?.humidity}%</p>
               </div>
               <div className="px-1">
                 <WaveIcon />
-                {weatherData.today.pressure}
+                <p>{weather?.pressure} h/pa</p>
               </div>
             </div>
           </div>
@@ -79,7 +97,7 @@ function ForeCast() {
               </div>
 
               <div className="weather-data-container">
-                {weatherData.week.map((day, index) => (
+                {weekForcast?.slice(0, 6)?.map((day, index) => (
                   <div
                     key={index}
                     className={`day-forecast ${
@@ -91,16 +109,23 @@ function ForeCast() {
                         day.isHighlighted ? "highlighted" : ""
                       } `}
                     >
-                      {day.day}
+                      {new Date(day.datetime)
+                        .toLocaleDateString("en-US", { weekday: "short" })
+                        .toUpperCase()}
                     </div>
                     <div className="icon w-100 m-0 p-0">
-                      <span className="day-icon">{day.icon}</span>
+                      <span className="day-icon">
+                        {getWeatherIcon(
+                          Math.round(fahrenheitToCelsius(day?.temp)),
+                          day?.description
+                        )}
+                      </span>
                       <span
                         className={`day-temperature ${
                           day.isHighlighted ? "highlighted" : ""
                         } `}
                       >
-                        {day.temperature}°C
+                        {Math.round(fahrenheitToCelsius(day?.temp))}°C
                       </span>
                     </div>
                     {/* <div className="temp"></div> */}
@@ -109,7 +134,7 @@ function ForeCast() {
                         day.isHighlighted ? "highlighted" : ""
                       } `}
                     >
-                      {day.chanceOfRain}
+                      {day.precipprob || 0}%
                     </div>
                   </div>
                 ))}

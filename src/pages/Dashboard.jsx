@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getFarmFields } from "../redux/slices/farmSlice";
-import MapView from "../components/dashboard/mapview/MapViewNew";
+import MapView from "../components/dashboard/mapview/MapView";
 import CropHealth from "../components/dashboard/crophealth/CropHealth";
 import ForeCast from "../components/dashboard/forecast/ForeCast";
 import PlantGrowthActivity from "../components/dashboard/plantgrowthactivity/PlantGrowthActivity";
@@ -49,6 +49,7 @@ const Dashboard = () => {
         setIsAddingMarkers={setIsAddingMarkers}
         selectedField={selectedField}
         setSelectedField={setSelectedField}
+        selectedFieldsDetials={selectedFieldsDetials}
         fields={fields}
       />
       <CropHealth
@@ -58,7 +59,7 @@ const Dashboard = () => {
       <ForeCast />
       <NdviGraph />
       <Insights />
-      <CropAdvisory />
+      <CropAdvisory selectedFieldsDetials={selectedFieldsDetials} />
       <PlantGrowthActivity />
     </div>
   );

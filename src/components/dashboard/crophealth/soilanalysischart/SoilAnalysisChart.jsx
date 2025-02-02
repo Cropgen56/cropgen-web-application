@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -9,20 +9,53 @@ import {
   Legend,
 } from "recharts";
 import "./SoilAnalysisChart.css";
+import { useDispatch, useSelector } from "react-redux";
+import { fetcNpkData } from "../../../../redux/slices/satelliteSlice";
 
-const data = [
-  { nutrient: "N", current: 23.4, lastYear: 15.6, label: "Nitrogen" },
-  { nutrient: "P", current: 28.1, lastYear: 12.5, label: "Phosphorous" },
-  { nutrient: "K", current: 10.4, lastYear: 8.1, label: "Potassium" },
-];
+const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
+  const dispatch = useDispatch();
 
-const SoilAnalysisChart = () => {
+  const farmDetails = selectedFieldsDetials[0];
+
+  useEffect(() => {
+    dispatch(fetcNpkData(farmDetails));
+  }, [selectedFieldsDetials]);
+
+  const { NpkData } = useSelector((state) => state.satellite);
+
+  const data = [
+    {
+      nutrient: "N",
+      current: NpkData?.NPK_Available_kg?.N,
+      lastYear: NpkData?.NPK_Required_at_Stage_kg?.N,
+      label: "Nitrogen",
+    },
+    {
+      nutrient: "P",
+      current: NpkData?.NPK_Available_kg?.P,
+      lastYear: NpkData?.NPK_Required_at_Stage_kg?.P,
+      label: "Phosphorous",
+    },
+    {
+      nutrient: "K",
+      current: NpkData?.NPK_Available_kg?.K,
+      lastYear: NpkData?.NPK_Required_at_Stage_kg?.K,
+      label: "Potassium",
+    },
+  ];
+
+  // Prevent rendering of bars with negative values by default
+  const formattedData = data.map((item) => ({
+    ...item,
+    current: item.current < 0 ? null : item.current,
+    require: item.require < 0 ? null : item.require,
+  }));
   return (
     <div className="soil-analysis-chart-container">
       <h2 className="soil-analysis-chart-title">Soil analysis</h2>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
-          data={data}
+          data={formattedData}
           layout="vertical"
           margin={{ top: 0, right: 40, bottom: 20, left: 10 }}
         >

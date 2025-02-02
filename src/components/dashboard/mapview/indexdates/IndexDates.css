@@ -50,6 +50,7 @@
   align-items: center;
   color: #fff;
   font-weight: 500;
+  cursor: pointer;
 }
 .date-data {
   display: flex;

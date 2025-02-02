@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./SatelliteData.css";
 import { RightArrow } from "../../../../assets/DashboardIcons";
 import { GratterThan } from "../../../../assets/Icons";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchIndexData } from "../../../../redux/slices/satelliteSlice";
+import { removeSelectedIndexData } from "../../../../redux/slices/satelliteSlice";
 
-const SatelliteData = () => {
+const SatelliteData = ({ selectedFieldsDetials, selectedDate }) => {
   const colorData = [
     { color: "#ffffff", range: "Clouds" },
     { color: "#79c875", range: "0.30 - 0.35" },
@@ -26,6 +29,37 @@ const SatelliteData = () => {
     { color: "#007E49", range: "0.20 - 0.25" },
   ];
 
+  const [seletedIndex, setSelectedIndex] = useState(null);
+  const dispatch = useDispatch();
+  const { field, sowingDate } = selectedFieldsDetials[0];
+  const coordinates = [field.map(({ lat, lng }) => [lng, lat])];
+
+  const handelFetchIndex = () => {
+    if (sowingDate && selectedDate && coordinates && seletedIndex) {
+      dispatch(
+        fetchIndexData({
+          startDate: sowingDate,
+          endDate: selectedDate,
+          geometry: coordinates,
+          index: seletedIndex,
+        })
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (sowingDate && selectedDate && coordinates && seletedIndex) {
+      dispatch(
+        fetchIndexData({
+          startDate: sowingDate,
+          endDate: selectedDate,
+          geometry: coordinates,
+          index: seletedIndex,
+        })
+      );
+    }
+  }, [selectedDate]);
+
   return (
     <div className="satellite-data-main-container">
       {/* First Row */}
@@ -38,14 +72,102 @@ const SatelliteData = () => {
         </select>
 
         {/* Buttons */}
-        <button class="button ndvi-btn">NDVI</button>
-        <button class="button evi-btn">EVI</button>
-        <button class="button ndre-btn">NDRE</button>
-        <button class="button ndwi-btn">NDWI</button>
-        <button class="button ndmi-btn">NDMI</button>
-        <button class="button savi-btn">SAVI</button>
-        <button class="button smi-btn">SMI</button>
-        <button class="button soc-btn">SOC</button>
+        <button
+          className={`button ndvi-btn ${
+            seletedIndex == "NDVI" ? "selected" : null
+          }`}
+          onClick={() => {
+            dispatch(removeSelectedIndexData());
+            setSelectedIndex("NDVI");
+            handelFetchIndex("NDVI");
+          }}
+        >
+          NDVI
+        </button>
+        <button
+          className={`button evi-btn ${
+            seletedIndex == "EVI" ? "selected" : null
+          }`}
+          onClick={() => {
+            dispatch(removeSelectedIndexData());
+            setSelectedIndex("EVI");
+            handelFetchIndex("EVI");
+          }}
+        >
+          EVI
+        </button>
+        <button
+          className={`button ndre-btn ${
+            seletedIndex == "NDRE" ? "selected" : null
+          }`}
+          onClick={() => {
+            dispatch(removeSelectedIndexData());
+            setSelectedIndex("NDRE");
+            handelFetchIndex("NDRE");
+          }}
+        >
+          NDRE
+        </button>
+        <button
+          className={`button ndwi-btn ${
+            seletedIndex == "NDWI" ? "selected" : null
+          }`}
+          onClick={() => {
+            dispatch(removeSelectedIndexData());
+            setSelectedIndex("NDWI");
+            handelFetchIndex("NDWI");
+          }}
+        >
+          NDWI
+        </button>
+        <button
+          className={`button ndmi-btn ${
+            seletedIndex == "NDMI" ? "selected" : null
+          }`}
+          onClick={() => {
+            dispatch(removeSelectedIndexData());
+            setSelectedIndex("NDMI");
+            handelFetchIndex("NDMI");
+          }}
+        >
+          NDMI
+        </button>
+        <button
+          className={`button savi-btn ${
+            seletedIndex == "SAVI" ? "selected" : null
+          }`}
+          onClick={() => {
+            dispatch(removeSelectedIndexData());
+            setSelectedIndex("SAVI");
+            handelFetchIndex("SAVI");
+          }}
+        >
+          SAVI
+        </button>
+        <button
+          className={`button smi-btn ${
+            seletedIndex == "SMI" ? "selected" : null
+          }`}
+          onClick={() => {
+            dispatch(removeSelectedIndexData());
+            setSelectedIndex("SMI");
+            handelFetchIndex("SMI");
+          }}
+        >
+          SMI
+        </button>
+        <button
+          className={`button soc-btn ${
+            seletedIndex == "SOC" ? "selected" : null
+          }`}
+          onClick={() => {
+            dispatch(removeSelectedIndexData());
+            setSelectedIndex("SOC");
+            handelFetchIndex("SOC");
+          }}
+        >
+          SOC
+        </button>
 
         {/* Static Arrow Button */}
         <button className="arrow-button">

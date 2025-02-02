@@ -5,6 +5,8 @@ import cropImage from "../../../assets/image/dashboard/crop-image.jpg";
 import SoilHealthChart from "./solilhealth/SoilHealthChart.jsx";
 import SoilAnalysisChart from "./soilanalysischart/SoilAnalysisChart.jsx";
 import * as turf from "@turf/turf";
+import SoilMoistureTemperature from "./soil-moisture-temperature/SoilMoistureTemperature.jsx";
+import Daughnut from "../../../";
 
 const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials[0];
@@ -102,16 +104,19 @@ const CropHealth = ({ selectedFieldsDetials }) => {
           </table>
         </div>
         <div style={{ marginLeft: "10rem" }}>
-          <DaughnutChart />
+          <DaughnutChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
       </div>
 
       <div className="d-flex justify-content-between align-items-center mt-5">
         <div style={{ width: "50%" }}>
-          <SoilAnalysisChart />
+          <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
         <div style={{ width: "50%" }}>
-          <SoilHealthChart />
+          {/* <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} /> */}
+          <SoilMoistureTemperature
+            selectedFieldsDetials={selectedFieldsDetials}
+          />
         </div>
       </div>
     </Card>
