@@ -30,9 +30,10 @@ const SatelliteData = ({ selectedFieldsDetials, selectedDate }) => {
   ];
 
   const [seletedIndex, setSelectedIndex] = useState(null);
+
   const dispatch = useDispatch();
-  const { field, sowingDate } = selectedFieldsDetials[0];
-  const coordinates = [field.map(({ lat, lng }) => [lng, lat])];
+  const { field, sowingDate } = selectedFieldsDetials[0] || [];
+  const coordinates = [field?.map(({ lat, lng }) => [lng, lat])];
 
   const handelFetchIndex = () => {
     if (sowingDate && selectedDate && coordinates && seletedIndex) {
@@ -90,6 +91,7 @@ const SatelliteData = ({ selectedFieldsDetials, selectedDate }) => {
           }`}
           onClick={() => {
             dispatch(removeSelectedIndexData());
+            console.log("test o1");
             setSelectedIndex("EVI");
             handelFetchIndex("EVI");
           }}

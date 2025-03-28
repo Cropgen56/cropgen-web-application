@@ -138,90 +138,86 @@ const FarmMap = ({
 
   return (
     <div className="farm-map">
-      {centroidLat !== null && centroidLng !== null ? (
-        <>
-          <MapContainer
-            center={[centroidLat, centroidLng]}
-            zoom={20}
-            zoomControl={false}
-            className="farm-map-container"
-            whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
-          >
-            {loading.indexData && (
-              <div className="farm-map-spinner-overlay">
-                <Loading />
-              </div>
-            )}
-            <TileLayer
-              attribution="© Google Maps"
-              url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
-              subdomains={["mt0", "mt1", "mt2", "mt3"]}
-              maxZoom={50}
-            />
-            <Polygon
-              pathOptions={{ fillColor: "transparent", fillOpacity: 0 }}
-              positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
-            />
-            {polygonBounds && image && (
-              <ImageOverlay
-                url={image}
-                bounds={polygonBounds}
-                opacity={1}
-                interactive
-              />
-            )}
-            <MoveMapToField lat={centroidLat} lng={centroidLng} />
-          </MapContainer>
-          <div className="map-controls">
-            {fields.length > 0 && (
-              <select
-                id="field-dropdown"
-                onChange={(e) => {
-                  console.log(e.target.value);
-                  setSelectedField(e.target.value);
-                }}
-                value={selectedField}
-              >
-                {fields.map((field) => (
-                  <option key={field?._id} value={field?._id}>
-                    {field.fieldName}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          {fields.length > 0 ? (
-            <IndexSelector selectedFieldsDetials={selectedFieldsDetials} />
-          ) : (
-            <div className="add-new-field-container">
-              <div className="field-actions">
-                <div className="actions-container d-flex justify-content-between mx-auto">
-                  <div className="action-left">
-                    <button>
-                      <Calender />
-                    </button>
-                    <button>
-                      <LeftArrow />
-                    </button>
-                  </div>
-                  <button
-                    className="add-new-field"
-                    onClick={() => navigate("/addfield")}
-                  >
-                    Add Field
-                  </button>
-                  <button className="action-right">
-                    <RightArrow />
-                  </button>
-                </div>
-              </div>
+      <>
+        <MapContainer
+          center={[centroidLat ?? 20.135245, centroidLng ?? 77.156935]}
+          zoom={17}
+          zoomControl={false}
+          className="farm-map-container"
+          whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
+        >
+          {loading.indexData && (
+            <div className="farm-map-spinner-overlay">
+              <Loading />
             </div>
           )}
-        </>
-      ) : (
-        <div>Loading Map...</div>
-      )}
+          <TileLayer
+            attribution="© Google Maps"
+            url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+            subdomains={["mt0", "mt1", "mt2", "mt3"]}
+            maxZoom={50}
+          />
+          <Polygon
+            pathOptions={{ fillColor: "transparent", fillOpacity: 0 }}
+            positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
+          />
+          {polygonBounds && image && (
+            <ImageOverlay
+              url={image}
+              bounds={polygonBounds}
+              opacity={1}
+              interactive
+            />
+          )}
+          <MoveMapToField lat={centroidLat} lng={centroidLng} />
+        </MapContainer>
+        <div className="map-controls">
+          {fields.length > 0 && (
+            <select
+              id="field-dropdown"
+              onChange={(e) => {
+                console.log(e.target.value);
+                setSelectedField(e.target.value);
+              }}
+              value={selectedField}
+            >
+              {fields.map((field) => (
+                <option key={field?._id} value={field?._id}>
+                  {field.fieldName}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {fields.length > 0 ? (
+          <IndexSelector selectedFieldsDetials={selectedFieldsDetials} />
+        ) : (
+          <div className="add-new-field-container">
+            <div className="field-actions">
+              <div className="actions-container d-flex justify-content-between mx-auto">
+                <div className="action-left">
+                  <button>
+                    <Calender />
+                  </button>
+                  <button>
+                    <LeftArrow />
+                  </button>
+                </div>
+                <button
+                  className="add-new-field"
+                  onClick={() => navigate("/addfield")}
+                >
+                  Add Field
+                </button>
+                <button className="action-right">
+                  <RightArrow />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     </div>
   );
 };

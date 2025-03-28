@@ -1,68 +1,47 @@
-import React from "react";
-import "./SocialButton.css";
-import { GoogleIcon } from "../../../../assets/Globalicon";
-import { useGoogleLogin } from "@react-oauth/google";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const SocialButtons = () => {
-  const navigate = useNavigate();
-  // Google Login handler
-  const login = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      try {
-        // Fetch user profile info using Axios
-        const userResponse = await axios.get(
-          "https://www.googleapis.com/oauth2/v1/userinfo",
-          {
-            params: {
-              alt: "json",
-              access_token: tokenResponse.access_token,
-            },
-          }
-        );
-        const user = userResponse.data;
+const clientId =
+  "411399230985-p5tioee7chgpij247th5v51uqpeuj382.apps.googleusercontent.com";
 
-        // Send to backend using Axios
-        const backendResponse = await axios
-          .post(
-            "https://server.cropgenapp.com/api/auth/google-login",
-            {
-              access_token: tokenResponse.access_token,
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          )
-          .then((res) => {
-            if (res.data.success) {
-              localStorage.setItem("authToken", res.data.token);
-              navigate("/");
-            }
-          });
-      } catch (error) {
-        console.error("Error during login:", error);
+function SocialButtons() {
+  const navigate = useNavigate();
+
+  const handleGoogleLogin = async (response) => {
+    try {
+      const { credential } = response;
+
+      // Send ID token to the backend
+      const res = await axios.post(
+        "https://server.cropgenapp.com/v1/api/auth/google",
+        {
+          token: credential,
+        }
+      );
+
+      if (res.data.success) {
+        // Save JWT token in local storage
+        localStorage.setItem("authToken", res.data.accessToken);
+
+        // Redirect to home page
+        navigate("/");
+      } else {
+        console.error("Login Failed: ", res.data.message);
       }
-    },
-    onError: () => {
-      alert("Login field try again !");
-    },
-    scope: "profile email https://www.googleapis.com/auth/contacts.readonly",
-  });
+    } catch (error) {
+      console.error("Google Login Error:", error);
+    }
+  };
 
   return (
-    <div className="social-buttons pt-1">
-      {/* Google Button */}
-      <button className="google-btn" onClick={() => login()}>
-        <span className="mx-4">
-          <GoogleIcon />
-        </span>
-        Connect with Google
-      </button>
-    </div>
+    <GoogleOAuthProvider clientId={clientId}>
+      <GoogleLogin
+        onSuccess={handleGoogleLogin}
+        onError={() => console.log("Login Failed")}
+      />
+    </GoogleOAuthProvider>
   );
-};
+}
 
 export default SocialButtons;

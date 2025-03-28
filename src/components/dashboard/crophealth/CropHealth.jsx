@@ -10,6 +10,7 @@ import Daughnut from "../../../";
 
 const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials[0];
+
   const sowingDate = cropDetials?.sowingDate;
   const corrdinatesPoint = cropDetials?.field;
   let totalArea = 0;
@@ -19,10 +20,10 @@ const CropHealth = ({ selectedFieldsDetials }) => {
     const targetDate = new Date(input);
 
     // Check if the input date is valid
-    if (isNaN(targetDate)) {
-      console.error("Invalid date input");
-      return null;
-    }
+    // if (isNaN(targetDate)) {
+    //   console.error("Invalid date input");
+    //   return null;
+    // }
 
     // Get the current date
     const currentDate = new Date();
@@ -97,7 +98,9 @@ const CropHealth = ({ selectedFieldsDetials }) => {
                 <tr>
                   {" "}
                   <th>Total Area :-</th>
-                  <td>{totalArea?.toFixed(2) + " Acre"}</td>
+                  <td>
+                    {cropDetials ? cropDetials?.acre?.toFixed(2) : null} acre
+                  </td>
                 </tr>
               </td>
             </tr>

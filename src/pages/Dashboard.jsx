@@ -36,9 +36,8 @@ const Dashboard = () => {
   }, [fields]);
 
   // Extract seleted field detials
-  const selectedFieldsDetials = fields.filter(
-    (item) => item?._id === selectedField
-  );
+  const selectedFieldsDetials =
+    fields.filter((item) => item?._id === selectedField) || [];
 
   return (
     <div className="dashboard float-end p-3">
@@ -52,6 +51,7 @@ const Dashboard = () => {
         selectedFieldsDetials={selectedFieldsDetials}
         fields={fields}
       />
+
       <CropHealth
         selectedFieldsDetials={selectedFieldsDetials}
         fields={fields}

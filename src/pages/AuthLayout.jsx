@@ -73,7 +73,7 @@ const AuthLayout = () => {
               <button onClick={() => setActiveTab("Login")}>Login</button>
             </div>
           </div>
-          <div className="login-body">
+          <div className="login-body py-2">
             <SocialButtons
               handleSuccess={handleSuccess}
               handleError={handleError}

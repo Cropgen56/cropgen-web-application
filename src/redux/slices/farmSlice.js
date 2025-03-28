@@ -55,6 +55,7 @@ export const getFarmFields = createAsyncThunk(
 // Initial state for the farm fields slice
 const initialState = {
   fields: [],
+  selectedField: null,
   status: "idle",
   error: null,
 };
@@ -80,7 +81,6 @@ const farmSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-
       // Get Farm Fields
       .addCase(getFarmFields.pending, (state) => {
         state.status = "loading";

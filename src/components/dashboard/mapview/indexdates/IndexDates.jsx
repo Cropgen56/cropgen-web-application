@@ -11,14 +11,14 @@ import { fetchSatelliteDates } from "../../../../redux/slices/satelliteSlice.js"
 
 const IndexSelector = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
-  const { field } = selectedFieldsDetials[0];
-  const coordinates = [field.map(({ lat, lng }) => [lng, lat])];
+  const { field } = selectedFieldsDetials[0] || [];
+  const coordinates = [field?.map(({ lat, lng }) => [lng, lat])];
 
   useEffect(() => {
-    if (coordinates) {
+    if (coordinates && coordinates.length) {
       dispatch(fetchSatelliteDates(coordinates));
     }
-  }, [dispatch]);
+  }, [dispatch, coordinates]);
 
   const { satelliteDates } = useSelector((state) => state?.satellite);
 

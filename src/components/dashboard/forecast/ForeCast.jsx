@@ -8,7 +8,6 @@ import {
   WindSpeedIcon,
 } from "../../../assets/DashboardIcons";
 import { Dots } from "../../../assets/DashboardIcons";
-import { useSelector } from "react-redux";
 
 function ForeCast() {
   const weather = JSON.parse(localStorage.getItem("weatherData"))
@@ -24,19 +23,19 @@ function ForeCast() {
     return ((fahrenheit - 32) * 5) / 9;
   }
 
-  const weekForcast = JSON.parse(localStorage.getItem("weatherData")).days;
+  const weekForcast = JSON.parse(localStorage?.getItem("weatherData"))?.days;
 
   const getWeatherIcon = (temperature, condition) => {
-    if (condition.toLowerCase().includes("rain")) return "🌧️";
-    if (condition.toLowerCase().includes("snow")) return "❄️";
-    if (condition.toLowerCase().includes("storm")) return "⛈️";
+    if (condition?.toLowerCase()?.includes("rain")) return "🌧️";
+    if (condition?.toLowerCase()?.includes("snow")) return "❄️";
+    if (condition?.toLowerCase()?.includes("storm")) return "⛈️";
     if (
-      condition.toLowerCase().includes("clear") ||
-      condition.toLowerCase().includes("sunny")
+      condition?.toLowerCase()?.includes("clear") ||
+      condition?.toLowerCase()?.includes("sunny")
     )
       return "☀️";
-    if (condition.toLowerCase().includes("cloud")) return "☁️";
-    if (condition.toLowerCase().includes("fog")) return "🌫️";
+    if (condition?.toLowerCase()?.includes("cloud")) return "☁️";
+    if (condition?.toLowerCase()?.includes("fog")) return "🌫️";
 
     if (temperature >= 35) return "🔥";
     if (temperature >= 25) return "☀️";
