@@ -71,7 +71,7 @@ export const AddFieldIcon = () => {
       width="25"
       height="25"
       viewBox="0 0 33 33"
-      className="me-2"
+      className="me-2 w-6 h-6 text-white"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
