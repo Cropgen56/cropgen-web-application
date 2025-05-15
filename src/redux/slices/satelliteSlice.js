@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { formatDate } from "../../utility/formatdate";
 import axios from "axios";
 
 const initialState = {
@@ -46,14 +47,22 @@ export const fetchSatelliteDates = createAsyncThunk(
 export const fetchIndexData = createAsyncThunk(
   "satellite/fetchIndexData",
   async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
+    // console.log({ startDate, endDate, geometry, index });
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/get-index-data`,
+        `${process.env.REACT_APP_API_URL_SATELLITE}/get-vegetation-index`,
+        // {
+        //   start_date: startDate,
+        //   end_date: endDate,
+        //   geometry,
+        //   index,
+        //   dataset: "HARMONIZED",
+        // }
         {
-          start_date: startDate,
-          end_date: endDate,
+          start_date: "2025-04-01",
+          end_date: "2025-04-30",
           geometry,
-          index,
+          index: "NDVI",
           dataset: "HARMONIZED",
         }
       );
@@ -164,7 +173,7 @@ export const fetcNpkData = createAsyncThunk(
 
     const payload = {
       crop_name: cropName,
-      sowing_date: sowingDate,
+      sowing_date: formatDate(sowingDate),
       geometry: {
         type: "Polygon",
         coordinates: coordinates,
@@ -186,7 +195,7 @@ export const fetcNpkData = createAsyncThunk(
   }
 );
 
-// Async thunk for NPK API
+// Async thunk for Advisory API
 export const genrateAdvisory = createAsyncThunk(
   "satellite/genrateAdvisory",
   async ({ farmDetails, SoilMoisture, NpkData }, { rejectWithValue }) => {
@@ -203,19 +212,21 @@ export const genrateAdvisory = createAsyncThunk(
 
     const payload = {
       crop_name: cropName,
-      sowing_date: sowingDate,
+      sowing_date: formatDate(sowingDate),
       bbch_stage: NpkData?.Crop_Growth_Stage,
       variety,
       irrigation_type,
       humidity: Math.round(weatherData?.humidity),
       temp: Math.round(weatherData?.temp),
-      rain: weatherData?.precipprob,
+      rain: Math.round(weatherData?.precipprob) || 0,
       soil_temp: Math.round(
         SoilMoisture?.data?.Soil_Temperature?.Soil_Temperature_max || 0
       ),
       soil_moisture: Math.round(
         SoilMoisture?.data?.Soil_Moisture?.Soil_Moisture_max || 0
       ),
+      language: "en",
+      type_of_farming: "organic",
     };
 
     try {
@@ -268,10 +279,12 @@ const satelliteSlice = createSlice({
       })
       .addCase(fetchIndexData.fulfilled, (state, action) => {
         state.loading.indexData = false;
+        console.log("index data", action.payload);
         state.indexData = action.payload;
       })
       .addCase(fetchIndexData.rejected, (state, action) => {
         state.loading.indexData = false;
+        console.log("index data error", action.payload);
         state.error = action.payload;
       })
 

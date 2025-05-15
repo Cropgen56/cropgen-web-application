@@ -1,62 +1,84 @@
 .crop-advisory {
   background-color: #f8f9fa !important;
   border-radius: 8px;
+  padding: 1rem;
+  margin: 0.5rem;
 }
+
 .crop-advisory-title {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .crop-advisory-title h2 {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 4vw, 1.5rem);
   font-weight: bold;
   color: #344e41;
+  margin: 0;
 }
 
-.horizontal-scroll {
+.day-selector {
+  width: 100%;
+  max-width: 150px;
+  font-size: clamp(0.8rem, 3vw, 0.9rem);
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.advisory-grid {
   display: flex;
+  flex-direction: row;
   overflow-x: auto;
   gap: 1rem;
+  padding: 0.5rem;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #cccccc #f0f0f0;
 }
 
-.horizontal-scroll::-webkit-scrollbar {
-  height: 8px;
+.advisory-grid::-webkit-scrollbar {
+  height: 6px;
 }
 
-.horizontal-scroll::-webkit-scrollbar-thumb {
+.advisory-grid::-webkit-scrollbar-thumb {
   background-color: #cccccc;
   border-radius: 10px;
 }
 
-.horizontal-scroll::-webkit-scrollbar-track {
+.advisory-grid::-webkit-scrollbar-track {
   background-color: #f0f0f0;
 }
 
 .advisory-card {
-  min-width: 18rem;
+  flex: 0 0 auto;
+  width: 250px;
   background-color: #5a7c6bb2;
   color: #ffffff;
   border-radius: 8px;
-  padding: 0.1rem;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .advisory-card .card-title {
-  font-size: 0.8rem;
+  font-size: clamp(0.9rem, 3vw, 1rem);
   font-weight: bold;
   color: #344e41;
+  margin-bottom: 0.5rem;
 }
 
 .advisory-card .card-text {
-  font-size: 0.7rem;
+  font-size: clamp(0.7rem, 2.5vw, 0.85rem);
   color: #e0e0e0;
+  line-height: 1.4;
 }
 
-.advisory-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding: 10px;
+.advisory-card p {
+  margin: 0;
+  padding: 0.2rem 0;
 }
 
 .read-more {
@@ -65,14 +87,31 @@
   color: #e0e0e0;
   text-decoration: none;
   font-weight: bold;
-  font-size: 0.7rem;
+  font-size: clamp(0.7rem, 2.5vw, 0.8rem);
 }
 
 .read-more:hover {
   text-decoration: underline;
 }
 
-.advisory-card p {
-  padding: 0;
-  margin: 0;
+/* Prevent text overflow */
+.advisory-card .card-text p {
+  overflow-wrap: break-word;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .advisory-card {
+    width: 200px;
+  }
+  .advisory-grid {
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .advisory-grid {
+    justify-content: flex-start;
+  }
 }

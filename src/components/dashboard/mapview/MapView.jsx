@@ -80,7 +80,7 @@ const FarmMap = ({
   const { indexData, loading } = useSelector((state) => state.satellite);
 
   useEffect(() => {
-    const indexImage = indexData?.result?.dense_index_image;
+    const indexImage = indexData?.image_base64;
     setImage(indexImage ? `data:image/png;base64,${indexImage}` : null);
   }, [indexData]);
 
@@ -176,7 +176,6 @@ const FarmMap = ({
             <select
               id="field-dropdown"
               onChange={(e) => {
-                console.log(e.target.value);
                 setSelectedField(e.target.value);
               }}
               value={selectedField}
@@ -190,6 +189,7 @@ const FarmMap = ({
           )}
         </div>
 
+        {/* date selector bar  */}
         {fields.length > 0 ? (
           <IndexSelector selectedFieldsDetials={selectedFieldsDetials} />
         ) : (
