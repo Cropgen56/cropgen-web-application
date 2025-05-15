@@ -46,6 +46,7 @@ const IndexSelector = ({ selectedFieldsDetials }) => {
     }
   }, [satelliteDates]);
 
+  // update the data
   const handleArrowClick = (direction) => {
     if (!dates.length) return;
 
