@@ -77,7 +77,7 @@ const IndexDates = ({ selectedFieldsDetials }) => {
     }
   }, [satelliteDates]);
 
-  // Navigate dates left or right
+  // update the data vishal
   const handleArrowClick = (direction) => {
     if (!dates.length) return;
 
