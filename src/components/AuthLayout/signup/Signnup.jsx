@@ -15,6 +15,7 @@ const Signup = ({ setActiveTab }) => {
     email: "",
     phone: "",
     password: "",
+    organizationCode: "",
     terms: false,
   });
 
@@ -170,6 +171,26 @@ const Signup = ({ setActiveTab }) => {
                 className="form-input"
                 value={formData.password}
                 onChange={handleChange}
+              />
+            </div>
+            {/* Organization code  Field */}
+            <div>
+              <label htmlFor="organizationCode" className="form-label">
+                Organization Code (Optional)
+              </label>
+              <input
+                type="text"
+                id="organizationCode"
+                name="organizationCode"
+                placeholder="Enter Referral Code example: CROP458"
+                className="form-input"
+                value={formData.organizationCode}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    organizationCode: e.target.value.toUpperCase(),
+                  })
+                }
               />
             </div>
 

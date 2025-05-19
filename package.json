@@ -22,6 +22,7 @@
     "echarts-for-react": "^3.0.2",
     "esri-leaflet": "^3.0.13",
     "esri-leaflet-geocoder": "^3.1.5",
+    "idb-keyval": "^6.2.2",
     "leaflet": "^1.9.4",
     "leaflet-control-geocoder": "^2.4.0",
     "leaflet-distortableimage": "^0.21.9",
