@@ -14,6 +14,7 @@ export const addFieldAPI = async ({
   typeOfIrrigation,
   farmName,
   acre,
+  typeOfFarming,
 }) => {
   try {
     const response = await axios.post(
@@ -26,6 +27,7 @@ export const addFieldAPI = async ({
         typeOfIrrigation,
         farmName,
         acre,
+        typeOfFarming,
       },
       {
         headers: {

@@ -13,6 +13,7 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
   const [variety, setVariety] = useState("");
   const [sowingDate, setSowingDate] = useState("");
   const [typeOfIrrigation, setTypeOfIrrigation] = useState("");
+  const [typeOfFarming, setTypeOfFarming] = useState("");
 
   const toggleSidebarVisibility = () => {
     setIsSidebarVisible(!isSidebarVisible);
@@ -58,6 +59,7 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
       sowingDate,
       typeOfIrrigation,
       farmName,
+      typeOfFarming,
     });
 
     // Clear the form
@@ -66,6 +68,7 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
     setVariety("");
     setSowingDate("");
     setTypeOfIrrigation("");
+    setTypeOfFarming("");
   };
 
   return (
@@ -238,6 +241,20 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
                   <option value="open-irrigation">Open Irrigation</option>
                   <option value="drip-irrigation">Drip Irrigation</option>
                   <option value="sprinkler">Sprinkler Irrigation</option>
+                </select>
+              </div>
+              <div className="crop-name-container">
+                <label htmlFor="cropName">Type Of Farming</label>
+                <select
+                  className="select"
+                  value={typeOfFarming}
+                  onChange={(e) => setTypeOfFarming(e.target.value)}
+                >
+                  {" "}
+                  <option value="">Select Farming Type</option>
+                  <option value="Organic">Organic</option>
+                  <option value="Inorganic">Inorganic</option>
+                  <option value="Integrated">Integrated</option>
                 </select>
               </div>
             </form>

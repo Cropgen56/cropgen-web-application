@@ -32,6 +32,7 @@ const AddField = () => {
     sowingDate,
     typeOfIrrigation,
     farmName,
+    typeOfFarming,
   }) => {
     if (markers.length === 0) {
       alert("No markers added. Please add some markers first.");
@@ -48,7 +49,6 @@ const AddField = () => {
       const polygon = turf.polygon([coordinates]);
       const area = turf.area(polygon);
 
-      console.log(area);
       return area / 4046.86;
     };
 
@@ -62,6 +62,7 @@ const AddField = () => {
         typeOfIrrigation,
         farmName,
         acre: calculateArea(markers),
+        typeOfFarming,
       })
     ).then((result) => {
       if (result?.payload?.success) {
