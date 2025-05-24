@@ -28,14 +28,14 @@ const Dashboard = () => {
     }
   }, [dispatch, userId]);
 
-  // Set initial selected field when fields load
+  // Set initial selected field to the last field when fields load
   useEffect(() => {
     if (fields.length > 0) {
-      setSelectedField(fields[0]?._id);
+      setSelectedField(fields[fields?.length - 1]?._id);
     }
   }, [fields]);
 
-  // Extract seleted field detials
+  // Extract selected field details
   const selectedFieldsDetials =
     fields.filter((item) => item?._id === selectedField) || [];
 

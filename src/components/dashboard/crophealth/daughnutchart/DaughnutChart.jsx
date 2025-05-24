@@ -8,21 +8,32 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const DoughnutChart = ({ selectedFieldsDetials }) => {
   const farmDetails = selectedFieldsDetials[0];
-
   const dispatch = useDispatch();
+  const { cropHealth, isLoading } = useSelector((state) => state?.satellite);
+
+  // Fetch crop health data when farmDetails changes
   useEffect(() => {
-    dispatch(fetchCropHealth(farmDetails));
-  }, [selectedFieldsDetials]);
+    if (farmDetails) {
+      dispatch(fetchCropHealth(farmDetails));
+    }
+  }, [dispatch, farmDetails]);
 
-  const { cropHealth } = useSelector((state) => state?.satellite);
-  const { Health_Percentage = {}, Crop_Health = {} } = cropHealth || {};
+  const { Health_Percentage = 0, Crop_Health = "Unknown" } = cropHealth || {};
 
+  // Prepare data for the doughnut chart
   const data = {
-    labels: ["Good", "Moderate", "Bad"],
+    labels: ["Good", "Moderate", "Poor"],
     datasets: [
       {
-        label: "Dataset",
-        data: [60, 10, 30],
+        label: "Crop Health",
+        data:
+          Crop_Health === "Good"
+            ? [Health_Percentage, 0, 100 - Health_Percentage]
+            : Crop_Health === "Moderate"
+            ? [0, Health_Percentage, 100 - Health_Percentage]
+            : Crop_Health === "Poor"
+            ? [0, 0, Health_Percentage]
+            : [0, 0, 0], // Fallback if Crop_Health is unknown
         backgroundColor: ["#344E41", "#78A3AD", "#5A7C6B"],
         hoverOffset: 4,
       },
@@ -49,7 +60,9 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
             const dataset = tooltipItem.dataset;
             const currentValue = dataset.data[tooltipItem.dataIndex];
             const total = dataset.data.reduce((a, b) => a + b, 0);
-            const percentage = ((currentValue / total) * 100).toFixed(1);
+            const percentage = total
+              ? ((currentValue / total) * 100).toFixed(1)
+              : 0;
             return `${tooltipItem.label}: ${percentage}%`;
           },
         },
@@ -63,41 +76,34 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
       const { ctx } = chart;
       ctx.save();
 
-      // Check if chart area is available
       if (!chart.chartArea) {
         ctx.restore();
         return;
       }
 
-      // Calculate center point of the chart
       const x = (chart.chartArea.left + chart.chartArea.right) / 2;
       const y = (chart.chartArea.top + chart.chartArea.bottom) / 2;
 
-      // Calculate total and percentage
-      const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
-      const percentage = Math.round((data.datasets[0].data[0] / total) * 100);
-      const percentageText = `${percentage}%`;
-      const labelText = "Normal";
+      // Display Health_Percentage in the center
+      const percentageText = `${Health_Percentage}%`;
 
-      // Draw percentage
       ctx.font = "bold 24px Arial";
       ctx.fillStyle = "#344E41";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(percentageText, x, y - 20);
-
-      // Draw label
-      ctx.font = "14px Arial";
-      ctx.fillStyle = "#888888";
-      ctx.fillText(labelText, x, y + 15);
+      ctx.fillText(percentageText, x, y);
 
       ctx.restore();
     },
   };
 
   return (
-    <div className="chart-container" style={{ height: "200px" }}>
-      <Doughnut data={data} options={options} plugins={[centerTextPlugin]} />
+    <div className="chart-container">
+      {isLoading || !cropHealth ? (
+        <div className="spinner"></div>
+      ) : (
+        <Doughnut data={data} options={options} plugins={[centerTextPlugin]} />
+      )}
     </div>
   );
 };

@@ -14,14 +14,18 @@ import { fetcNpkData } from "../../../../redux/slices/satelliteSlice";
 
 const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
-
   const farmDetails = selectedFieldsDetials[0];
+  const { NpkData } = useSelector((state) => state?.satellite);
 
   useEffect(() => {
     dispatch(fetcNpkData(farmDetails));
   }, [selectedFieldsDetials]);
 
-  const { NpkData } = useSelector((state) => state.satellite);
+  // Check if crop is at Final Harvest stage with null NPK data
+  const isFinalHarvest =
+    NpkData?.Crop_Growth_Stage === "Final Harvest" &&
+    NpkData?.NPK_Required_at_Stage_kg === null &&
+    NpkData?.NPK_Available_kg === null;
 
   const data = [
     {
@@ -45,11 +49,23 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
   ];
 
   // Prevent rendering of bars with negative values by default
-  const formattedData = data.map((item) => ({
+  const formattedData = data?.map((item) => ({
     ...item,
     current: item.current < 0 ? null : item.current,
-    require: item.require < 0 ? null : item.require,
+    lastYear: item.lastYear < 0 ? null : item.lastYear,
   }));
+
+  if (isFinalHarvest) {
+    return (
+      <div className="soil-analysis-chart-container">
+        <h2 className="soil-analysis-chart-title">Soil analysis</h2>
+        <div className="no-data-message">
+          No NPK data available: Crop at final harvesting stage
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="soil-analysis-chart-container">
       <h2 className="soil-analysis-chart-title">Soil analysis</h2>
@@ -59,7 +75,6 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
           layout="vertical"
           margin={{ top: 0, right: 40, bottom: 20, left: 10 }}
         >
-          {/* Hide Cartesian Gridlines */}
           <XAxis type="number" hide />
           <YAxis
             type="category"
@@ -115,7 +130,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
         </BarChart>
       </ResponsiveContainer>
       <div className="nutrient-names">
-        {data.map((item, index) => (
+        {data?.map((item, index) => (
           <div
             key={index}
             className={`nutrient-name nutrient-${item.nutrient}`}

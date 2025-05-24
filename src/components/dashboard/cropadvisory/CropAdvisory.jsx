@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import Card from "react-bootstrap/Card";
-import Form from "react-bootstrap/Form";
-import "./CropAdvisory.css";
+import { Card, Form } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { genrateAdvisory } from "../../../redux/slices/satelliteSlice";
+import "./CropAdvisory.css";
 
 const CropAdvisory = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
@@ -13,23 +12,27 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
   );
 
   useEffect(() => {
-    if (NpkData && SoilMoisture && selectedFieldsDetials.length) {
-      dispatch(
-        genrateAdvisory({
-          farmDetails: selectedFieldsDetials[0],
-          NpkData,
-          SoilMoisture,
-        })
-      );
+    if (NpkData && SoilMoisture && selectedFieldsDetials?.length) {
+      const timer = setTimeout(() => {
+        dispatch(
+          genrateAdvisory({
+            farmDetails: selectedFieldsDetials[0],
+            NpkData,
+            SoilMoisture,
+          })
+        );
+      }, 200);
+      return () => clearTimeout(timer);
     }
   }, [dispatch, NpkData, SoilMoisture, selectedFieldsDetials]);
 
   const advisoryData =
-    advisory &&
-    Object.entries(advisory).map(([day, activities]) => ({
-      day,
-      activities,
-    }));
+    advisory && typeof advisory === "object"
+      ? Object.entries(advisory).map(([day, activities]) => ({
+          day,
+          activities,
+        }))
+      : [];
 
   const categories = [
     "Disease/Pest Control",
@@ -39,54 +42,51 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
   ];
 
   const currentDayData =
-    advisoryData?.find((item) => item.day === selectedDay)?.activities || {};
+    advisoryData.find((item) => item.day === selectedDay)?.activities || {};
 
-  // Function to truncate monitoring text at first dot
-  const truncateAtFirstDot = (text) => {
-    const firstDotIndex = text.indexOf(".");
-    return firstDotIndex !== -1 ? text.substring(0, firstDotIndex + 1) : text;
-  };
+  const renderActivityText = (text) =>
+    text ? (
+      text.split("\n").map((line, i) => <p key={i}>{line}</p>)
+    ) : (
+      <p>No data available</p>
+    );
 
   return (
     <Card body className="mt-2 mb-3 crop-advisory shadow">
       <div className="crop-advisory-title">
-        <div>
-          {" "}
-          <h2>Crop Advisory</h2>
-        </div>
-        <div>
-          {" "}
-          <Form.Control
-            as="select"
-            value={selectedDay}
-            onChange={(e) => setSelectedDay(e.target.value)}
-            className="day-selector"
-          >
-            {advisoryData?.map((item) => (
+        <h2>Crop Advisory</h2>
+        <Form.Select
+          value={selectedDay}
+          onChange={(e) => setSelectedDay(e.target.value)}
+          className="day-selector"
+          aria-label="Select advisory day"
+          style={{
+            width: "120px",
+            height: "30px",
+            fontSize: "14px",
+            padding: "4px",
+          }}
+        >
+          {advisoryData.length > 0 ? (
+            advisoryData.map((item) => (
               <option key={item.day} value={item.day}>
                 {item.day}
               </option>
-            ))}
-          </Form.Control>
-        </div>
+            ))
+          ) : (
+            <option value="Day 1">Day 1</option>
+          )}
+        </Form.Select>
       </div>
 
-      {advisoryData?.length > 0 ? (
+      {advisoryData.length > 0 ? (
         <div className="advisory-grid">
           {categories.map((category) => (
             <Card key={category} className="advisory-card">
               <Card.Body>
                 <Card.Title>{category}</Card.Title>
-                <Card.Text>
-                  {category === "Monitoring"
-                    ? // For Monitoring, show only up to first dot
-                      truncateAtFirstDot(currentDayData[category] || "")
-                        .split("\n")
-                        .map((line, i) => <p key={i}>{line}</p>)
-                    : // Other categories show full text
-                      currentDayData[category]
-                        ?.split("\n")
-                        .map((line, i) => <p key={i}>{line}</p>)}
+                <Card.Text as="div">
+                  {renderActivityText(currentDayData[category])}
                 </Card.Text>
               </Card.Body>
             </Card>

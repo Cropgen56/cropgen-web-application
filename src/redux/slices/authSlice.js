@@ -45,7 +45,6 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.status = "idle";
-      localStorage.removeItem("authToken");
     },
     loadLocalStorage: (state) => {
       const token = localStorage.getItem("authToken");

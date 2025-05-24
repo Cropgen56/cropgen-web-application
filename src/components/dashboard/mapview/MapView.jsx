@@ -22,33 +22,41 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchweatherData } from "../../../redux/slices/weatherSlice";
-import IndexSelector from "./indexdates/IndexDates";
 import { resetState } from "../../../redux/slices/satelliteSlice";
 import Loading from "../../comman/loading/Loading";
+import IndexDates from "./indexdates/IndexDates";
 
-// calculate the centroid of the field
+// Calculate polygon centroid
 const calculatePolygonCentroid = (coordinates) => {
-  if (coordinates.length < 3) return { centroidLat: null, centroidLng: null };
+  if (!coordinates || coordinates.length < 3) {
+    return { lat: null, lng: null };
+  }
 
-  let sumX = 0,
-    sumY = 0,
-    area = 0;
+  let area = 0;
+  let sumX = 0;
+  let sumY = 0;
 
-  coordinates.forEach((current, i) => {
+  for (let i = 0; i < coordinates.length; i++) {
+    const current = coordinates[i];
     const next = coordinates[(i + 1) % coordinates.length];
     const crossProduct = current.lat * next.lng - next.lat * current.lng;
     area += crossProduct;
     sumX += (current.lat + next.lat) * crossProduct;
     sumY += (current.lng + next.lng) * crossProduct;
-  });
+  }
 
   area /= 2;
-  return { centroidLat: sumX / (6 * area), centroidLng: sumY / (6 * area) };
+  return {
+    lat: sumX / (6 * area),
+    lng: sumY / (6 * area),
+  };
 };
 
-// calculate the bounds for render the image
+// Calculate polygon bounds
 const calculatePolygonBounds = (coordinates) => {
-  if (coordinates.length === 0) return null;
+  if (!coordinates || coordinates.length === 0) {
+    return null;
+  }
   const lats = coordinates.map(({ lat }) => lat);
   const lngs = coordinates.map(({ lng }) => lng);
   return [
@@ -57,167 +65,199 @@ const calculatePolygonBounds = (coordinates) => {
   ];
 };
 
-// move the map to the selected field
+// Move map to selected field
 const MoveMapToField = ({ lat, lng }) => {
   const map = useMap();
   useEffect(() => {
-    if (lat !== null && lng !== null) map.setView([lat, lng], 17);
+    if (lat != null && lng != null) {
+      map.setView([lat, lng], 17);
+    }
   }, [lat, lng, map]);
   return null;
 };
 
 const FarmMap = ({
-  fields,
+  fields = [],
   selectedField,
   setSelectedField,
   selectedFieldsDetials,
 }) => {
-  const [polygonBounds, setPolygonBounds] = useState(null);
-  const [image, setImage] = useState(null);
-  const mapRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { indexData, loading } = useSelector((state) => state.satellite);
+  const { indexData, loading } = useSelector((state) => state?.satellite);
+  const mapRef = useRef(null);
+  const [image, setImage] = useState(null);
 
-  useEffect(() => {
-    const indexImage = indexData?.result?.dense_index_image;
-    setImage(indexImage ? `data:image/png;base64,${indexImage}` : null);
-  }, [indexData]);
-
-  // Memoized polygon coordinates to avoid unnecessary recalculations
-  const polygonCoordinates = useMemo(
-    () =>
-      fields
-        .find((item) => item?._id === selectedField)
-        ?.field?.map(({ lat, lng }) => ({ lat, lng })) || [],
+  // Memoized selected field data
+  const selectedFieldData = useMemo(
+    () => fields.find((item) => item?._id === selectedField) || {},
     [fields, selectedField]
   );
 
-  // Memoized centroid calculation
-  const { centroidLat, centroidLng } = useMemo(
+  // Memoized polygon coordinates
+  const polygonCoordinates = useMemo(
+    () => selectedFieldData.field?.map(({ lat, lng }) => ({ lat, lng })) || [],
+    [selectedFieldData]
+  );
+
+  // Memoized centroid
+  const centroid = useMemo(
     () => calculatePolygonCentroid(polygonCoordinates),
     [polygonCoordinates]
   );
 
-  // Memoized polygon bounds calculation
-  useEffect(() => {
-    setPolygonBounds(calculatePolygonBounds(polygonCoordinates));
-  }, [polygonCoordinates]);
+  // Memoized bounds
+  const polygonBounds = useMemo(
+    () => calculatePolygonBounds(polygonCoordinates),
+    [polygonCoordinates]
+  );
 
-  // Weather data fetching logic
-  const updateWeatherData = useCallback(() => {
-    if (centroidLat && centroidLng) {
+  // Update image when indexData changes
+  useEffect(() => {
+    setImage(
+      indexData?.image_base64
+        ? `data:image/png;base64,${indexData.image_base64}`
+        : null
+    );
+  }, [indexData]);
+
+  // Fetch weather data with caching
+  const fetchWeatherData = useCallback(() => {
+    if (!centroid.lat || !centroid.lng) return;
+
+    const lastFetchTime = localStorage.getItem("lastFetchTime");
+    const currentTime = Date.now();
+    const threeHours = 3 * 60 * 60 * 1000;
+
+    if (
+      !lastFetchTime ||
+      currentTime - parseInt(lastFetchTime, 10) > threeHours
+    ) {
       dispatch(
-        fetchweatherData({ latitude: centroidLat, longitude: centroidLng })
+        fetchweatherData({ latitude: centroid.lat, longitude: centroid.lng })
       ).then((action) => {
         if (action.payload) {
-          localStorage.setItem("weatherData", JSON.stringify(action.payload));
-          localStorage.setItem("lastFetchTime", Date.now());
+          try {
+            localStorage.setItem("weatherData", JSON.stringify(action.payload));
+            localStorage.setItem("lastFetchTime", currentTime.toString());
+          } catch (e) {
+            if (e.name === "QuotaExceededError") {
+              console.error("localStorage quota exceeded");
+              localStorage.removeItem("oldWeatherData");
+            }
+          }
         }
       });
     }
-  }, [dispatch, centroidLat, centroidLng]);
+  }, [dispatch, centroid.lat, centroid.lng]);
 
-  // chek the before api call
+  // Trigger weather data fetch
   useEffect(() => {
-    const storedFetchTime = localStorage.getItem("lastFetchTime");
-    const currentTime = Date.now();
+    fetchWeatherData();
+  }, [fetchWeatherData]);
 
-    if (
-      !storedFetchTime ||
-      currentTime - parseInt(storedFetchTime, 10) > 3 * 60 * 60 * 1000
-    ) {
-      updateWeatherData();
-    }
-  }, [updateWeatherData]);
-
-  // Reset state when the selectedField changes
+  // Reset satellite state on field change
   useEffect(() => {
     dispatch(resetState());
   }, [selectedField, dispatch]);
 
+  // Handle field selection
+  const handleFieldChange = useCallback(
+    (e) => {
+      setSelectedField(e.target.value);
+    },
+    [setSelectedField]
+  );
+
+  // Default center for map
+  const defaultCenter = [20.135245, 77.156935];
+
   return (
     <div className="farm-map">
-      <>
-        <MapContainer
-          center={[centroidLat ?? 20.135245, centroidLng ?? 77.156935]}
-          zoom={17}
-          zoomControl={false}
-          className="farm-map-container"
-          whenCreated={(mapInstance) => (mapRef.current = mapInstance)}
-        >
-          {loading.indexData && (
-            <div className="farm-map-spinner-overlay">
-              <Loading />
-            </div>
-          )}
-          <TileLayer
-            attribution="© Google Maps"
-            url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
-            subdomains={["mt0", "mt1", "mt2", "mt3"]}
-            maxZoom={50}
-          />
+      <MapContainer
+        center={
+          centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter
+        }
+        zoom={17}
+        zoomControl={false}
+        className="farm-map-container"
+        ref={mapRef}
+      >
+        {loading.indexData && (
+          <div className="farm-map-spinner-overlay">
+            <Loading />
+          </div>
+        )}
+        <TileLayer
+          attribution="© Google Maps"
+          url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+          subdomains={["mt0", "mt1", "mt2", "mt3"]}
+          maxZoom={15}
+        />
+        {polygonCoordinates.length > 0 && (
           <Polygon
             pathOptions={{ fillColor: "transparent", fillOpacity: 0 }}
             positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
           />
-          {polygonBounds && image && (
-            <ImageOverlay
-              url={image}
-              bounds={polygonBounds}
-              opacity={1}
-              interactive
-            />
-          )}
-          <MoveMapToField lat={centroidLat} lng={centroidLng} />
-        </MapContainer>
-        <div className="map-controls">
-          {fields.length > 0 && (
-            <select
-              id="field-dropdown"
-              onChange={(e) => {
-                console.log(e.target.value);
-                setSelectedField(e.target.value);
-              }}
-              value={selectedField}
-            >
-              {fields.map((field) => (
-                <option key={field?._id} value={field?._id}>
-                  {field.fieldName}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+        )}
+        {polygonBounds && image && (
+          <ImageOverlay
+            url={image}
+            bounds={polygonBounds}
+            opacity={1}
+            interactive
+          />
+        )}
+        <MoveMapToField lat={centroid.lat} lng={centroid.lng} />
+      </MapContainer>
 
-        {fields.length > 0 ? (
-          <IndexSelector selectedFieldsDetials={selectedFieldsDetials} />
-        ) : (
-          <div className="add-new-field-container">
-            <div className="field-actions">
-              <div className="actions-container d-flex justify-content-between mx-auto">
-                <div className="action-left">
-                  <button>
-                    <Calender />
-                  </button>
-                  <button>
-                    <LeftArrow />
-                  </button>
-                </div>
-                <button
-                  className="add-new-field"
-                  onClick={() => navigate("/addfield")}
-                >
-                  Add Field
+      <div className="map-controls">
+        {fields.length > 0 && (
+          <select
+            id="field-dropdown"
+            onChange={handleFieldChange}
+            value={selectedField || ""}
+          >
+            <option value="" disabled>
+              Select a field
+            </option>
+            {fields?.map((field) => (
+              <option key={field?._id} value={field?._id}>
+                {field.fieldName}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {fields?.length > 0 ? (
+        <IndexDates selectedFieldsDetials={selectedFieldsDetials} />
+      ) : (
+        <div className="add-new-field-container">
+          <div className="field-actions">
+            <div className="actions-container d-flex justify-content-between mx-auto">
+              <div className="action-left">
+                <button aria-label="Calendar">
+                  <Calender />
                 </button>
-                <button className="action-right">
-                  <RightArrow />
+                <button aria-label="Previous">
+                  <LeftArrow />
                 </button>
               </div>
+              <button
+                className="add-new-field"
+                onClick={() => navigate("/addfield")}
+                aria-label="Add New Field"
+              >
+                Add Field
+              </button>
+              <button className="action-right" aria-label="Next">
+                <RightArrow />
+              </button>
             </div>
           </div>
-        )}
-      </>
+        </div>
+      )}
     </div>
   );
 };

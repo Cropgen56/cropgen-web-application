@@ -1,10 +1,14 @@
 .crop-advisory {
   background-color: #f8f9fa !important;
   border-radius: 8px;
+  padding: 20px;
 }
+
 .crop-advisory-title {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .crop-advisory-title h2 {
@@ -13,50 +17,41 @@
   color: #344e41;
 }
 
-.horizontal-scroll {
-  display: flex;
-  overflow-x: auto;
-  gap: 1rem;
+.day-selector {
+  width: 150px;
 }
 
-.horizontal-scroll::-webkit-scrollbar {
-  height: 8px;
-}
-
-.horizontal-scroll::-webkit-scrollbar-thumb {
-  background-color: #cccccc;
-  border-radius: 10px;
-}
-
-.horizontal-scroll::-webkit-scrollbar-track {
-  background-color: #f0f0f0;
+.advisory-grid {
+  display: flex; /* Use flexbox for single-row layout */
+  flex-wrap: nowrap; /* Prevent wrapping to keep all cards in one row */
+  gap: 20px;
+  padding: 10px;
 }
 
 .advisory-card {
-  min-width: 18rem;
+  flex: 1; /* Distribute space evenly among cards */
+  min-width: 0; /* Allow cards to shrink below content width if needed */
   background-color: #5a7c6bb2;
   color: #ffffff;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 0.1rem;
+  padding: 15px;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .advisory-card .card-title {
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #344e41;
 }
 
 .advisory-card .card-text {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: #e0e0e0;
 }
 
-.advisory-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding: 10px;
+.advisory-card .card-text p {
+  margin: 5px 0;
 }
 
 .read-more {
@@ -70,9 +65,4 @@
 
 .read-more:hover {
   text-decoration: underline;
-}
-
-.advisory-card p {
-  padding: 0;
-  margin: 0;
 }

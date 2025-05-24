@@ -26,7 +26,7 @@
 
 .dates-container {
   display: flex;
-  width: 97%;
+  width: 98%;
   align-items: center;
   background-color: #5a7c6b;
   border-radius: 5px;
@@ -88,4 +88,116 @@
   height: 40px;
   background-color: #ccc;
   margin: 0 10px;
+}
+
+.loading-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: #fff;
+  padding: 1rem;
+}
+
+.loader-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  margin: 1rem 0;
+}
+
+.loader-bar-inner {
+  width: 30%;
+  height: 100%;
+  background-color: #4caf50;
+  border-radius: 4px;
+  animation: loaderAnimation 1.5s ease-in-out infinite;
+}
+
+@keyframes loaderAnimation {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(333%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.dates-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calendar-icon-container {
+  position: relative;
+}
+
+.calendar-icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.calendar-container {
+  position: absolute;
+  z-index: 10;
+}
+
+.calendar-input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.vertical-line {
+  width: 1px;
+  height: 2rem;
+  background-color: #ccc;
+}
+
+.arrow-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.arrow-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dates-list {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.date-item {
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.date-text {
+  font-weight: bold;
+}
+
+.date-data {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.date-change.positive {
+  color: green;
+}
+
+.date-change.negative {
+  color: red;
 }

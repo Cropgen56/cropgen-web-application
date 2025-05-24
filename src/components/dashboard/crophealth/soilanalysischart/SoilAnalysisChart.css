@@ -64,3 +64,14 @@
   margin-top: 60px !important;
   padding-left: 15px;
 }
+
+.no-data-message {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 16px;
+  font-weight: 500;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  margin: 10px 0;
+}

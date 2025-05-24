@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
+import { logoutUser } from "../../utility/logout";
+
 import {
   AddFieldIcon,
   CropAnalysisIcon,
@@ -46,6 +48,15 @@ const Sidebar = ({ onToggleCollapse }) => {
     navigate(path);
     if (path !== "/cropgen-analytics") {
       handleCollapseToggle(true);
+    }
+  };
+
+  // handle logout function
+  const handelLogout = async () => {
+    const confirmed = window.confirm("Are you sure you want to logout?");
+    if (confirmed) {
+      await logoutUser();
+      navigate("/login");
     }
   };
 
@@ -144,10 +155,7 @@ const Sidebar = ({ onToggleCollapse }) => {
               </li>
             </ul>
           </nav>
-          <div
-            className="offcanvas-footer"
-            onClick={() => handleNavigation("/logout")}
-          >
+          <div className="offcanvas-footer" onClick={handelLogout}>
             <p className="footer-text">
               <Logout />
               {!isCollapsed && <span>Logout</span>}

@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { formatDateToISO } from "../../utility/formatDate";
 import axios from "axios";
 import { get, set } from "idb-keyval";
+import { parseAdvisoryText } from "../../utility/parseAdvisoryText";
 
 // 4 days in milliseconds
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
@@ -58,7 +60,6 @@ export const fetchSatelliteDates = createAsyncThunk(
         `${process.env.REACT_APP_API_URL_SATELLITE}/get-true-color-data`,
         { geometry }
       );
-      console.log("new api call");
 
       await set(cacheKey, { data: response.data, timestamp: now });
       return response.data;
@@ -78,6 +79,7 @@ export const fetchIndexData = createAsyncThunk(
       const now = Date.now();
 
       if (cached && now - cached.timestamp < CACHE_TTL) {
+        // console.log("return the cache", cached);
         return cached.data;
       }
 
@@ -86,16 +88,17 @@ export const fetchIndexData = createAsyncThunk(
       }
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/get-index-data`,
+        `${process.env.REACT_APP_API_URL_SATELLITE}/get-vegetation-index`,
         {
-          start_date: startDate,
+          start_date: formatDateToISO(startDate, endDate),
           end_date: endDate,
-          geometry,
-          index,
+          geometry: geometry,
+          index: index,
           dataset: "HARMONIZED",
         }
       );
 
+      // console.log("cache new data");
       await set(cacheKey, { data: response.data, timestamp: now });
       return response.data;
     } catch (error) {
@@ -118,6 +121,7 @@ export const calculateAiYield = createAsyncThunk(
       }
 
       const { field, cropName } = farmDetails || {};
+
       if (!field || !cropName) {
         return rejectWithValue(
           "Invalid farm details: field or cropName missing"
@@ -158,6 +162,7 @@ export const fetchCropHealth = createAsyncThunk(
       const now = Date.now();
 
       if (cached && now - cached.timestamp < CACHE_TTL) {
+        // console.log("cache data ", cached);
         return cached.data;
       }
 
@@ -177,6 +182,8 @@ export const fetchCropHealth = createAsyncThunk(
         `${process.env.REACT_APP_API_URL_SATELLITE}/crop-health`,
         { geometry: [coordinates] }
       );
+
+      // console.log("new cache corp health");
 
       await set(cacheKey, { data: response.data, timestamp: now });
       return response.data;
@@ -253,15 +260,16 @@ export const fetcNpkData = createAsyncThunk(
         return [lng, lat];
       });
 
-      const payload = {
-        crop_name: cropName,
-        sowing_date: sowingDate,
-        geometry: { type: "Polygon", coordinates },
-      };
-
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL_SATELLITE}/calculate_npk`,
-        payload
+        {
+          crop_name: cropName,
+          sowing_date: formatDateToISO(sowingDate, sowingDate),
+          geometry: {
+            type: "Polygon",
+            coordinates: coordinates,
+          },
+        }
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -288,12 +296,8 @@ export const genrateAdvisory = createAsyncThunk(
       const weatherData = await get("weatherData");
       const currentConditions = weatherData?.data?.currentConditions || {};
 
-      const {
-        cropName,
-        sowingDate,
-        variety,
-        typeOfIrrigation: irrigation_type,
-      } = farmDetails || {};
+      const { cropName, sowingDate, variety, typeOfIrrigation, typeOfFarming } =
+        farmDetails || {};
       if (!cropName || !sowingDate) {
         return rejectWithValue(
           "Invalid farm details: cropName or sowingDate missing"
@@ -302,10 +306,11 @@ export const genrateAdvisory = createAsyncThunk(
 
       const payload = {
         crop_name: cropName,
-        sowing_date: sowingDate,
+        sowing_date: formatDateToISO(sowingDate),
         bbch_stage: NpkData?.Crop_Growth_Stage || "BBCH 00",
         variety,
-        irrigation_type,
+        irrigation_type: typeOfIrrigation,
+        type_of_farming: typeOfFarming,
         humidity: Math.round(currentConditions.humidity || 0),
         temp: Math.round(currentConditions.temp || 0),
         rain: currentConditions.precipprob || 0,
@@ -315,6 +320,7 @@ export const genrateAdvisory = createAsyncThunk(
         soil_moisture: Math.round(
           SoilMoisture?.data?.Soil_Moisture?.Soil_Moisture_max || 0
         ),
+        language: "en",
       };
 
       const response = await axios.post(
@@ -367,6 +373,7 @@ const satelliteSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // fetch satellite dates
       .addCase(fetchSatelliteDates.pending, (state) => {
         state.loading.satelliteDates = true;
         state.error = null;
@@ -379,6 +386,7 @@ const satelliteSlice = createSlice({
         state.loading.satelliteDates = false;
         state.error = action.payload;
       })
+      // fetch index data
       .addCase(fetchIndexData.pending, (state) => {
         state.loading.indexData = true;
         state.error = null;
@@ -391,6 +399,8 @@ const satelliteSlice = createSlice({
         state.loading.indexData = false;
         state.error = action.payload;
       })
+
+      // fetch the crop health data
       .addCase(fetchCropHealth.pending, (state) => {
         state.loading.cropHealth = true;
         state.error = null;
@@ -403,6 +413,8 @@ const satelliteSlice = createSlice({
         state.loading.cropHealth = false;
         state.error = action.payload;
       })
+
+      // fetch the soil moisture data
       .addCase(fetchSoilMoisture.pending, (state) => {
         state.loading.soilMoisture = true;
         state.error = null;
@@ -415,6 +427,7 @@ const satelliteSlice = createSlice({
         state.loading.soilMoisture = false;
         state.error = action.payload;
       })
+      // fetch the npk data
       .addCase(fetcNpkData.pending, (state) => {
         state.loading.npkData = true;
         state.error = null;
@@ -427,6 +440,8 @@ const satelliteSlice = createSlice({
         state.loading.npkData = false;
         state.error = action.payload;
       })
+
+      // fetch the or calculate the ai yeild data
       .addCase(calculateAiYield.pending, (state) => {
         state.loading.cropYield = true;
         state.error = null;
@@ -439,18 +454,21 @@ const satelliteSlice = createSlice({
         state.loading.cropYield = false;
         state.error = action.payload;
       })
+
+      //fetch the advisory
       .addCase(genrateAdvisory.pending, (state) => {
         state.loading.advisory = true;
         state.error = null;
       })
       .addCase(genrateAdvisory.fulfilled, (state, action) => {
         state.loading.advisory = false;
-        state.advisory = action.payload.Advisory;
+        state.advisory = parseAdvisoryText(action.payload.advisory);
       })
       .addCase(genrateAdvisory.rejected, (state, action) => {
         state.loading.advisory = false;
         state.error = action.payload;
       })
+      // featch weather data
       .addCase(fetchWeatherData.pending, (state) => {
         state.loading.weatherData = true;
         state.error = null;

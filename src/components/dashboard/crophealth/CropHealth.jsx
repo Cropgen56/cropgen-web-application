@@ -93,7 +93,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
                 <tr>
                   {" "}
                   <th>Standerd Yield Data :-</th>
-                  <td> 460.00 kg/acer</td>
+                  <td></td>
                 </tr>
                 <tr>
                   {" "}

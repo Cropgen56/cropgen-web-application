@@ -5,28 +5,15 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
+  position: relative;
+  overflow: visible; /* Prevent clipping of dropdown */
 }
 
-.map-header {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  z-index: 1000;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
 .add-field-main-container {
   width: 100%;
   height: 100vh;
   position: relative;
   margin: auto;
-}
-
-.map-header .back-btn {
-  cursor: pointer;
 }
 
 /* Map Container */
@@ -35,6 +22,59 @@
   width: 100%;
   margin: 0;
   padding: 0;
+  position: relative;
+  z-index: 1000; /* Lower than the search dropdown */
+}
+
+/* Search Field Container */
+.search-field-container {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 400px;
+  z-index: 2000; /* Higher than the map container */
+}
+
+/* Style the search input */
+.search-field-container .search-form {
+  width: 100%;
+}
+
+.search-field-container .search-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Style the leaflet-geosearch dropdown */
+.leaflet-control-geosearch .results {
+  z-index: 2000; /* Ensure dropdown is above the map */
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto; /* Allow scrolling if too many results */
+  width: 100%;
+}
+
+/* Style the dropdown items */
+.search-field-container .search-results {
+  margin-top: 5px;
+  padding: 5px 0;
+}
+
+.search-field-container .search-results > * {
+  padding: 8px;
+  cursor: pointer;
+  color: #333;
+}
+
+.search-field-container .search-results > *:hover {
+  background-color: #f0f0f0;
 }
 
 /* Map Controls */
@@ -64,63 +104,23 @@
   background-color: #064841;
 }
 
-/* Create Farm Button */
-.create-farm-container {
+/* Add Field Button Section */
+.add-field-button {
+  width: 100%;
   position: absolute;
-  bottom: 20px;
-  width: 30%;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  z-index: 1000;
+  padding: 5px 10px;
+}
+
+.add-field-button .d-flex {
   display: flex;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.create-farm-container button {
-  background-color: #075a53;
-  border: none;
-  color: #fff;
-  font-weight: 600;
-  width: 50%;
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.create-farm-container button:hover {
-  background-color: #064841;
-}
-
-.add-field .add-field-button {
-  width: 100%;
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  text-align: center;
-  z-index: 1000;
-}
-
-.add-field .add-field {
-  color: #fff;
-  font-size: 1rem;
-  background-color: #5a7c6b;
-  border-radius: 5px;
-  padding: 0.5rem 1rem;
-  border: none;
-  cursor: pointer;
-}
-
-.add-field-button {
-  width: 100%;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  text-align: center;
-  z-index: 1000;
-  padding: 5px 10px;
-}
-
-.add-field-button img {
-  height: 1.5rem;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .add-field-button .add-field {
@@ -132,50 +132,38 @@
   border: none;
   cursor: pointer;
 }
-.add-field-right-arrow {
-  border-left: 1px solid hsl(0, 0%, 100%) !important;
+
+.add-field-button .add-field-left-arrow,
+.add-field-button .add-field-right-arrow {
+  display: flex;
+  gap: 5px;
+}
+
+.add-field-button .add-field-left-arrow {
+  border-right: 1px solid #fff;
+  padding-right: 0.5rem;
+}
+
+.add-field-button .add-field-right-arrow {
+  border-left: 1px solid #fff;
   padding-left: 0.5rem;
-}
-.add-field-left-arrow {
-  border-right: 1px solid #fff !important;
-}
-.add-field-button {
-  width: 100%;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  text-align: center;
-  z-index: 1000;
-  padding: 5px 10px;
-}
-.add-field-button :nth-child(1) {
-  padding: 3px 4px;
-  background-color: #5a7c6b;
-  border-radius: 5px;
-}
-.add-field-button .add-field {
-  color: #fff;
-  font-size: 1rem;
 }
 
 .add-field-button button {
   background-color: transparent;
   border: none;
 }
+
 .add-field-button button img {
   height: 1.5rem;
-  background-color: transparent !important;
 }
 
+/* Save Farm Button (if used) */
 .save-farm-button {
   position: absolute;
   top: 450px;
   left: 10px;
   z-index: 1000;
-}
-.save-farm-btn:hover {
-  background-color: #5a7c6ba6 !important;
-  color: #fff !important;
 }
 
 .save-farm-btn {
@@ -188,4 +176,9 @@
 .save-farm-btn:hover {
   background-color: #5a7c6b !important;
   color: #fff;
+}
+
+/* Selected Icon Style */
+.selected-icon {
+  background-color: #064841 !important;
 }
