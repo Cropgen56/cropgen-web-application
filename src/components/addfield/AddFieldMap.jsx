@@ -127,7 +127,8 @@ const AddFieldMap = ({ setMarkers, markers }) => {
         style={{
           position: "absolute",
           top: "60vh",
-          left: 5,
+          right: 10,
+          // left: 5,
           zIndex: 1000,
           padding: "8px 8px",
           backgroundColor: "#075a53",
@@ -152,13 +153,28 @@ const AddFieldMap = ({ setMarkers, markers }) => {
     const map = useMap();
 
     useEffect(() => {
-      const provider = new OpenStreetMapProvider();
+      const provider = new OpenStreetMapProvider({
+        params: {
+          countrycodes: "in",
+          viewbox: "67.0,6.0,99.0,37.0",
+        },
+      });
+
       const searchControl = new GeoSearchControl({
         provider,
         style: "bar",
         showMarker: true,
         retainZoomLevel: false,
         autoComplete: true,
+        autoCompleteDelay: 250,
+        classNames: {
+          container: "custom-geosearch-container",
+          form: "custom-geosearch-form",
+          input: "custom-geosearch-input",
+          results: "custom-geosearch-results",
+          result: "custom-geosearch-result",
+        },
+        resultFormat: ({ result }) => result.label,
       });
 
       map.addControl(searchControl);
@@ -170,6 +186,7 @@ const AddFieldMap = ({ setMarkers, markers }) => {
       });
 
       return () => {
+        map.off("geosearch/showlocation");
         map.removeControl(searchControl);
       };
     }, [map, onLocationSelect]);
@@ -180,7 +197,6 @@ const AddFieldMap = ({ setMarkers, markers }) => {
       </div>
     );
   };
-
   return (
     <div className="add-field-map-layout">
       <div className="add-field-main-container">
@@ -189,7 +205,7 @@ const AddFieldMap = ({ setMarkers, markers }) => {
             <MapContainer
               center={[selectedLocation.lat, selectedLocation.lng]}
               zoom={17}
-              zoomControl={false}
+              zoomControl={true}
               className="map-container"
             >
               <TileLayer
@@ -251,7 +267,7 @@ const AddFieldMap = ({ setMarkers, markers }) => {
             </div>
             {/* Add Field Button Section */}
             <div className="add-field-button">
-              <div className="d-flex justify-content-between mx-auto">
+              <div className="button-container">
                 <div className="add-field-left-arrow">
                   <button>
                     <Calender />
@@ -262,9 +278,7 @@ const AddFieldMap = ({ setMarkers, markers }) => {
                 </div>
                 <button
                   className="add-field"
-                  onClick={() => {
-                    setIsAddingMarkers(!isAddingMarkers);
-                  }}
+                  onClick={() => setIsAddingMarkers(!isAddingMarkers)}
                 >
                   {isAddingMarkers ? "Stop Adding Markers" : "Add Field"}
                 </button>

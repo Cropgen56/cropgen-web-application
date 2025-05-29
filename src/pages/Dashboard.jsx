@@ -57,10 +57,10 @@ const Dashboard = () => {
         fields={fields}
       />
       <ForeCast />
-      <NdviGraph />
+      <NdviGraph selectedFieldsDetials={selectedFieldsDetials} />
       <Insights />
       <CropAdvisory selectedFieldsDetials={selectedFieldsDetials} />
-      <PlantGrowthActivity />
+      <PlantGrowthActivity selectedFieldsDetials={selectedFieldsDetials} />
     </div>
   );
 };

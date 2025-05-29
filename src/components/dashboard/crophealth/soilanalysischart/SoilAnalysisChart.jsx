@@ -104,9 +104,9 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
             label={{
               position: "right",
               fill: "#000",
-              formatter: (value) => `${value}`,
+              formatter: (value) => `${value} kg/acre`,
               style: {
-                fontSize: "12px",
+                fontSize: "7px",
                 fontWeight: "700",
               },
             }}
@@ -120,10 +120,10 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
             label={{
               position: "right",
               fill: "#A2A2A2",
-              formatter: (value) => `${value}`,
+              formatter: (value) => `${value} kg/acre`,
               style: {
                 fontSize: "7px",
-                fontWeight: "bold",
+                fontWeight: "700",
               },
             }}
           />

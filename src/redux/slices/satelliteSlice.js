@@ -3,6 +3,7 @@ import { formatDateToISO } from "../../utility/formatDate";
 import axios from "axios";
 import { get, set } from "idb-keyval";
 import { parseAdvisoryText } from "../../utility/parseAdvisoryText";
+import { getSixMonthsBefore } from "../../utility/formatDate";
 
 // 4 days in milliseconds
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
@@ -27,6 +28,7 @@ const initialState = {
   SoilMoisture: null,
   NpkData: null,
   cropYield: null,
+  indexTimeSeriesSummary: null,
   error: null,
   loading: {
     satelliteDates: false,
@@ -36,6 +38,7 @@ const initialState = {
     npkData: false,
     cropYield: false,
     advisory: false,
+    indexTimeSeriesSummary: false,
   },
 };
 
@@ -94,7 +97,7 @@ export const fetchIndexData = createAsyncThunk(
           end_date: endDate,
           geometry: geometry,
           index: index,
-          dataset: "HARMONIZED",
+          dataset: "COPERNICUS/S2_SR_HARMONIZED",
         }
       );
 
@@ -293,8 +296,10 @@ export const genrateAdvisory = createAsyncThunk(
         return cached.data;
       }
 
-      const weatherData = await get("weatherData");
-      const currentConditions = weatherData?.data?.currentConditions || {};
+      const rawWeatherData = localStorage?.getItem("weatherData");
+      const weatherData = rawWeatherData ? JSON.parse(rawWeatherData) : null;
+
+      const currentConditions = weatherData?.currentConditions || {};
 
       const { cropName, sowingDate, variety, typeOfIrrigation, typeOfFarming } =
         farmDetails || {};
@@ -313,7 +318,7 @@ export const genrateAdvisory = createAsyncThunk(
         type_of_farming: typeOfFarming,
         humidity: Math.round(currentConditions.humidity || 0),
         temp: Math.round(currentConditions.temp || 0),
-        rain: currentConditions.precipprob || 0,
+        rain: Math.round(currentConditions.precipprob || 0),
         soil_temp: Math.round(
           SoilMoisture?.data?.Soil_Temperature?.Soil_Temperature_max || 0
         ),
@@ -350,6 +355,48 @@ export const fetchWeatherData = createAsyncThunk(
 
       // Replace with your actual weather API endpoint
       const response = await axios.get("https://api.weather.com/data"); // Placeholder
+
+      await set(cacheKey, { data: response.data, timestamp: now });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const fetchIndexTimeSeriesSummary = createAsyncThunk(
+  "satellite/fetchIndexTimeSeriesSummary",
+  async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
+    try {
+      const input = { startDate, endDate, geometry, index };
+      const cacheKey = generateCacheKey("indexTimeSeriesSummary", null, input);
+      const cached = await get(cacheKey);
+      const now = Date.now();
+
+      if (!startDate || !endDate || !geometry || !index) {
+        return rejectWithValue("Missing required parameters");
+      }
+
+      if (cached && now - cached.timestamp < CACHE_TTL) {
+        return cached;
+      }
+
+      const coordinates = geometry?.map(({ lat, lng }) => {
+        if (typeof lat !== "number" || typeof lng !== "number") {
+          throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
+        }
+        return [lng, lat];
+      });
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL_SATELLITE}/index-timeseries-summary`,
+        {
+          start_date: startDate,
+          end_date: endDate,
+          geometry: coordinates,
+          index: index,
+        }
+      );
 
       await set(cacheKey, { data: response.data, timestamp: now });
       return response.data;
@@ -479,6 +526,19 @@ const satelliteSlice = createSlice({
       })
       .addCase(fetchWeatherData.rejected, (state, action) => {
         state.loading.weatherData = false;
+        state.error = action.payload;
+      })
+      // fetch index time series summary
+      .addCase(fetchIndexTimeSeriesSummary.pending, (state) => {
+        state.loading.indexTimeSeriesSummary = true;
+        state.error = null;
+      })
+      .addCase(fetchIndexTimeSeriesSummary.fulfilled, (state, action) => {
+        state.loading.indexTimeSeriesSummary = false;
+        state.indexTimeSeriesSummary = action.payload;
+      })
+      .addCase(fetchIndexTimeSeriesSummary.rejected, (state, action) => {
+        state.loading.indexTimeSeriesSummary = false;
         state.error = action.payload;
       });
   },

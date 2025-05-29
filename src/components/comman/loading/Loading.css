@@ -5,6 +5,7 @@
   height: 100vh;
   animation: fadeIn 1s ease-in-out;
   background: transparent;
+  z-index: 1000;
 }
 
 .loading-content {
@@ -14,13 +15,14 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   animation: bounceIn 1s ease-in-out;
   background: #ffffff;
+  color: black;
 }
 
 .loading-text {
   margin-top: 5px;
-  color: #6c757d;
   font-size: 1.2rem;
   animation: pulsate 1.5s infinite ease-in-out;
+  z-index: 1001;
 }
 
 @keyframes fadeIn {

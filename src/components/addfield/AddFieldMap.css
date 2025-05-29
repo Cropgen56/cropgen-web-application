@@ -6,7 +6,7 @@
   align-items: center;
   width: 100%;
   position: relative;
-  overflow: visible; /* Prevent clipping of dropdown */
+  overflow: visible;
 }
 
 .add-field-main-container {
@@ -23,7 +23,7 @@
   margin: 0;
   padding: 0;
   position: relative;
-  z-index: 1000; /* Lower than the search dropdown */
+  z-index: 1000;
 }
 
 /* Search Field Container */
@@ -34,47 +34,56 @@
   transform: translateX(-50%);
   width: 80%;
   max-width: 400px;
-  z-index: 2000; /* Higher than the map container */
+  z-index: 2000;
+}
+
+/* Style the leaflet-geosearch container */
+.leaflet-control.geosearch {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Style the search input */
-.search-field-container .search-form {
-  width: 100%;
-}
-
-.search-field-container .search-input {
+.leaflet-control.geosearch input {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
+  color: #000 !important;
+  background-color: #fff !important;
 }
 
-/* Style the leaflet-geosearch dropdown */
-.leaflet-control-geosearch .results {
-  z-index: 2000; /* Ensure dropdown is above the map */
-  background-color: white;
+/* Style the suggestions dropdown */
+.leaflet-control.geosearch .results {
+  z-index: 2000;
+  background-color: #fff !important;
   border: 1px solid #ccc;
   border-radius: 4px;
   max-height: 200px;
-  overflow-y: auto; /* Allow scrolling if too many results */
+  overflow-y: auto;
   width: 100%;
 }
 
-/* Style the dropdown items */
-.search-field-container .search-results {
-  margin-top: 5px;
-  padding: 5px 0;
-}
-
-.search-field-container .search-results > * {
+/* Style each suggestion item */
+.leaflet-control.geosearch .results > * {
   padding: 8px;
   cursor: pointer;
-  color: #333;
+  color: #333 !important;
+  font-size: 14px;
 }
 
-.search-field-container .search-results > *:hover {
-  background-color: #f0f0f0;
+/* Hover effect for suggestion items */
+.leaflet-control.geosearch .results > *:hover {
+  background-color: #f0f0f0 !important;
+  color: #000 !important;
+}
+
+/* Active suggestion (if any) */
+.leaflet-control.geosearch .results .active {
+  background-color: #e0e0e0 !important;
+  color: #000 !important;
 }
 
 /* Map Controls */
@@ -105,80 +114,149 @@
 }
 
 /* Add Field Button Section */
+/* Wrapper styling */
 .add-field-button {
-  width: 100%;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  text-align: center;
+  width: 95%;
+  margin: auto;
+  border-radius: 8px;
+  background-color: #5a7c6b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  padding: 5px 10px;
+  position: absolute;
+  bottom: 10px;
+  margin-left: 3%;
 }
 
-.add-field-button .d-flex {
+/* Flex container for buttons */
+.button-container {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  max-width: 400px;
+  max-width: 1000px;
   margin: 0 auto;
+  gap: 12px;
 }
 
-.add-field-button .add-field {
-  color: #fff;
-  font-size: 1rem;
-  background-color: #5a7c6b;
-  border-radius: 5px;
-  padding: 0.5rem 1rem;
-  border: none;
-  cursor: pointer;
-}
-
-.add-field-button .add-field-left-arrow,
-.add-field-button .add-field-right-arrow {
+/* Left arrow group */
+.add-field-left-arrow {
   display: flex;
-  gap: 5px;
+  gap: 8px;
 }
 
-.add-field-button .add-field-left-arrow {
-  border-right: 1px solid #fff;
-  padding-right: 0.5rem;
-}
-
-.add-field-button .add-field-right-arrow {
-  border-left: 1px solid #fff;
-  padding-left: 0.5rem;
-}
-
-.add-field-button button {
-  background-color: transparent;
+/* Button styles */
+.add-field,
+.add-field-left-arrow button,
+.add-field-right-arrow {
+  padding: 10px 16px;
+  font-size: 16px;
   border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.add-field-button button img {
-  height: 1.5rem;
-}
-
-/* Save Farm Button (if used) */
-.save-farm-button {
-  position: absolute;
-  top: 450px;
-  left: 10px;
-  z-index: 1000;
-}
-
-.save-farm-btn {
+/* Main Add Field button */
+.add-field {
+  background-color: #5a7c6b;
   color: white;
-  border: none;
-  outline: none;
-  background-color: #5a7c6ba6;
+  font-weight: 600;
 }
 
-.save-farm-btn:hover {
-  background-color: #5a7c6b !important;
-  color: #fff;
+.add-field:hover {
+  background-color: #5a7c6b;
 }
 
-/* Selected Icon Style */
-.selected-icon {
-  background-color: #064841 !important;
+/* Arrow buttons */
+.add-field-left-arrow button,
+.add-field-right-arrow {
+  background-color: #5a7c6b;
+}
+
+.add-field-left-arrow button:hover,
+.add-field-right-arrow:hover {
+  background-color: #5a7c6b;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .button-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .add-field,
+  .add-field-left-arrow,
+  .add-field-right-arrow {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .add-field-left-arrow {
+    justify-content: center;
+  }
+
+  .add-field-left-arrow button,
+  .add-field-right-arrow {
+    flex: 1;
+  }
+}
+/* Search Field Container */
+.search-field-container {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 400px;
+  z-index: 2000;
+}
+
+/* Style the search container */
+.custom-geosearch-container {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Style the search input */
+.custom-geosearch-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
+/* Style the suggestions dropdown */
+.custom-geosearch-results {
+  z-index: 2000;
+  background-color: #fff !important;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+/* Style each suggestion item */
+.custom-geosearch-result {
+  padding: 8px;
+  cursor: pointer;
+  color: #333 !important;
+  font-size: 14px;
+}
+
+/* Hover effect for suggestion items */
+.custom-geosearch-result:hover {
+  background-color: #f0f0f0 !important;
+  color: #000 !important;
+}
+
+/* Active suggestion (if any) */
+.custom-geosearch-results .active {
+  background-color: #e0e0e0 !important;
+  color: #000 !important;
 }

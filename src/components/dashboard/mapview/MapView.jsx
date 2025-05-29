@@ -66,13 +66,15 @@ const calculatePolygonBounds = (coordinates) => {
 };
 
 // Move map to selected field
-const MoveMapToField = ({ lat, lng }) => {
+const MoveMapToField = ({ lat, lng, bounds }) => {
   const map = useMap();
   useEffect(() => {
-    if (lat != null && lng != null) {
-      map.setView([lat, lng], 17);
+    if (lat != null && lng != null && bounds) {
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+    } else if (lat != null && lng != null) {
+      map.setView([lat, lng], 15);
     }
-  }, [lat, lng, map]);
+  }, [lat, lng, bounds, map]);
   return null;
 };
 
@@ -87,6 +89,21 @@ const FarmMap = ({
   const { indexData, loading } = useSelector((state) => state?.satellite);
   const mapRef = useRef(null);
   const [image, setImage] = useState(null);
+
+  // console.log(indexData);
+
+  // close the legend dropdown on click the any where other on screen
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".legend-dropdown-wrapper")) {
+        setShowLegend(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const [showLegend, setShowLegend] = useState(false);
 
   // Memoized selected field data
   const selectedFieldData = useMemo(
@@ -179,9 +196,10 @@ const FarmMap = ({
           centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter
         }
         zoom={17}
-        zoomControl={false}
+        zoomControl={true}
         className="farm-map-container"
         ref={mapRef}
+        maxZoom={20}
       >
         {loading.indexData && (
           <div className="farm-map-spinner-overlay">
@@ -192,12 +210,12 @@ const FarmMap = ({
           attribution="© Google Maps"
           url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
           subdomains={["mt0", "mt1", "mt2", "mt3"]}
-          maxZoom={15}
+          maxZoom={20}
         />
         {polygonCoordinates.length > 0 && (
           <Polygon
             pathOptions={{ fillColor: "transparent", fillOpacity: 0 }}
-            positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
+            positions={polygonCoordinates?.map(({ lat, lng }) => [lat, lng])}
           />
         )}
         {polygonBounds && image && (
@@ -208,9 +226,14 @@ const FarmMap = ({
             interactive
           />
         )}
-        <MoveMapToField lat={centroid.lat} lng={centroid.lng} />
+        <MoveMapToField
+          lat={centroid.lat}
+          lng={centroid.lng}
+          bounds={polygonBounds}
+        />
       </MapContainer>
 
+      {/* map contorls */}
       <div className="map-controls">
         {fields.length > 0 && (
           <select
@@ -228,6 +251,34 @@ const FarmMap = ({
             ))}
           </select>
         )}
+
+        <div className="legend-dropdown-wrapper">
+          <strong
+            onClick={() => setShowLegend(!showLegend)}
+            className="legend-button-map"
+          >
+            🗺️ Legend
+          </strong>
+
+          {showLegend && indexData?.legend && indexData?.area_summary_ha && (
+            <div className="legend-dropdown">
+              {indexData.legend.map((item) => (
+                <div key={item.label} className="legend-item">
+                  <span
+                    className="legend-color"
+                    style={{ backgroundColor: item.color }}
+                  ></span>
+                  <span className="legend-key">{item.label}</span>
+                  <span className="legend-area">
+                    {indexData.area_summary_ha[item.label]?.toFixed(2) ||
+                      "0.00"}{" "}
+                    ha
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {fields?.length > 0 ? (

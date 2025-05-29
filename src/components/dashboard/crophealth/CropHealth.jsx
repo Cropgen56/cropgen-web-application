@@ -106,7 +106,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
             </tr>
           </table>
         </div>
-        <div style={{ marginLeft: "10rem" }}>
+        <div style={{ marginLeft: "13rem" }}>
           <DaughnutChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
       </div>

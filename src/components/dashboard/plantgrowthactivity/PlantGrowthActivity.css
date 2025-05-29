@@ -7,9 +7,6 @@
   justify-content: space-between;
   align-items: center;
 }
-.heading-container {
-  padding: 5px 0px 10px 40px;
-}
 
 .header-title {
   font-size: 1.4rem;
@@ -52,4 +49,137 @@
 .custom-dropdown {
   position: relative;
   width: 60%;
+}
+
+.plant-growth-card {
+  border: none;
+  border-radius: 8px;
+  background: #fff;
+  padding: 1rem;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.heading-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.subheader-text {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.growth-stage-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b970f;
+}
+
+.dropdown-container {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.custom-dropdown select {
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #f9f9f9;
+  cursor: pointer;
+}
+
+.chart-container {
+  width: 100%;
+  height: 200px;
+  position: relative;
+}
+
+.custom-tooltip {
+  background: #fff;
+  border: 1px solid #4b970f;
+  border-radius: 5px;
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  /* transform: translate(-50%, -100%); */
+}
+
+.tooltip-week {
+  margin: 0;
+  font-weight: bold;
+  color: #333;
+}
+
+.tooltip-stage {
+  margin: 0.25rem 0 0;
+  color: #4b970f;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .header-title {
+    font-size: 1rem;
+  }
+
+  .subheader-text,
+  .growth-stage-text {
+    font-size: 0.75rem;
+  }
+
+  .custom-dropdown select {
+    font-size: 0.75rem;
+    padding: 0.4rem;
+  }
+
+  .custom-tooltip {
+    font-size: 0.7rem;
+    padding: 0.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .plant-growth-card {
+    padding: 0.5rem;
+  }
+
+  .header-title {
+    font-size: 0.875rem;
+  }
+
+  .dropdown-container {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .custom-dropdown select {
+    width: 100%;
+    font-size: 0.7rem;
+  }
+
+  .custom-tooltip {
+    font-size: 0.65rem;
+    padding: 0.3rem;
+  }
 }

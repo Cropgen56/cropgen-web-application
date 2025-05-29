@@ -1,41 +1,87 @@
 /* Container for the entire page */
 .personal-info-container {
-  max-width: 98%;
-  height: 99%;
-  margin: auto;
+  max-width: 100%;
+  width: 98%;
+  margin: 0 auto;
   border: 2px solid #e0e0e0;
   border-radius: 10px;
-  padding: 5px;
+  padding: 1rem;
   background-color: #fff;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+  min-height: 80vh;
 }
 
 /* Header styling */
 .personal-info-header {
   text-align: start;
-  margin-bottom: 10px;
+  margin-bottom: 1rem;
   border-bottom: 1px solid #00000066;
 }
 
 .personal-info-header h2 {
-  font-size: 1.2rem;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
   color: #344e41;
 }
 
-/* Profile image styling */
-.profile-image-container {
+/* Content section */
+.personal-info-content {
+  padding: 1rem;
+  flex-grow: 1;
+}
+
+/* Profile section */
+.profile-section {
   display: flex;
-  justify-content: start;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.profile-image-container {
+  position: relative;
+  margin-right: 1rem;
 }
 
 .profile-image-container img {
-  width: 80px;
-  height: 80px;
+  width: clamp(60px, 15vw, 80px);
+  height: clamp(60px, 15vw, 80px);
   border-radius: 50%;
+}
+
+.edit-profile-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: clamp(10px, 1vw, 5px);
+  height: clamp(10px, 1vw, 5px);
+  cursor: pointer;
+}
+
+.profile-details h3 {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  margin: 0;
+  color: #344e41;
+}
+
+.profile-details .role {
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  color: #666;
+  margin: 0.3rem 0;
+}
+
+.stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stats p {
+  font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+  color: #344e41;
+  margin: 0.3rem 0;
 }
 
 /* Form layout and styling */
@@ -43,49 +89,77 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  height: 77%;
-  padding: 10px;
 }
 
 /* Layout for form fields */
 .form-layout {
   display: flex;
-  justify-content: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 /* Columns for the form */
 .form-column {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 100%;
 }
 
+/* Form group styling */
 .form-group {
   display: flex;
   flex-direction: column;
   justify-content: start;
-  width: 15rem;
+  width: 100%;
+  max-width: 15rem;
+  margin-bottom: 1rem;
 }
 
 .form-group label {
-  font-size: 0.8rem;
-  margin-bottom: 5px;
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+  margin-bottom: 0.3rem;
   width: 100%;
   color: #344e41;
 }
 
-.form-group input {
-  padding: 5px;
+.input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.5rem;
   border: 1px solid #344e41;
   border-radius: 5px;
   outline: none;
-  font-size: 14px;
+  font-size: clamp(0.8rem, 1.8vw, 1rem);
   width: 100%;
+  background-color: #f5f5f5;
+}
+
+.form-group select {
+  appearance: none;
+  padding-right: 1.5rem;
+}
+
+.edit-icon {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(12px, 3vw, 16px);
+  height: clamp(12px, 3vw, 16px);
+  cursor: pointer;
 }
 
 /* Save button styling */
 .form-actions {
   display: flex;
   justify-content: center;
+  margin-top: 1rem;
 }
 
 .save-button {
@@ -93,13 +167,67 @@
   color: #fff;
   font-weight: 500;
   border: none;
-  padding: 5px 80px;
-  font-size: 16px;
+  padding: 0.5rem clamp(2rem, 10vw, 5rem);
+  font-size: clamp(0.9rem, 2vw, 1rem);
   border-radius: 5px;
   cursor: pointer;
-  margin-top: 10px;
 }
 
 .save-button:hover {
-  background-color: #344e41;
+  background-color: #2e4539;
+}
+
+/* Media Queries for Responsiveness */
+
+/* Tablets and smaller screens */
+@media (max-width: 768px) {
+  .personal-info-container {
+    width: 95%;
+    padding: 0.5rem;
+  }
+
+  .profile-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-image-container {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+
+  .form-layout {
+    flex-direction: column;
+  }
+
+  .form-column {
+    min-width: 100%;
+  }
+
+  .form-group {
+    max-width: 100%;
+  }
+}
+
+/* Mobile screens */
+@media (max-width: 480px) {
+  .personal-info-container {
+    width: 98%;
+    padding: 0.5rem;
+    border: 1px solid #e0e0e0;
+  }
+
+  .personal-info-header h2 {
+    font-size: 1rem;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .save-button {
+    width: 100%;
+    padding: 0.5rem;
+  }
 }

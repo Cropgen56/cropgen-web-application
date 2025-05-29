@@ -7,8 +7,27 @@ import {
   removeSelectedIndexData,
 } from "../../../../redux/slices/satelliteSlice";
 
+// Mapping of indices to their display names
+const index_name_mapping = {
+  NDVI: "Crop Health",
+  EVI: "Improved Crop Health",
+  EVI2: "Crop Health (Simplified)",
+  SAVI: "Crop Health (Early Stage)",
+  MSAVI: "Crop Health (Dry Land)",
+  NDMI: "Water in Crop",
+  NDWI: "Plant Water Level",
+  SMI: "Soil Moisture",
+  CCC: "Leaf Greenness",
+  NITROGEN: "Nitrogen Level",
+  SOC: "Soil Fertility",
+  NDRE: "Crop Stress / Maturity",
+  RECI: "Leaf Richness",
+  TRUE_COLOR: "True Color Image",
+};
+
 // Available indices for buttons
 const indices = [
+  "TRUE_COLOR",
   "NDVI",
   "EVI",
   "EVI2",
@@ -109,7 +128,8 @@ const SatelliteIndexList = ({
               setSelectedIndex(index);
             }}
           >
-            {index}
+            {index_name_mapping[index] || index}{" "}
+            {/* Use mapped name or fallback to index */}
           </button>
         ))}
 
@@ -118,7 +138,7 @@ const SatelliteIndexList = ({
         </button>
       </div>
 
-      <div className="color-palette">
+      {/* <div className="color-palette">
         {indexData?.legend ? (
           Object.entries(indexData.legend).map(([name, color], index) => (
             <div key={index} className="color-block">
@@ -129,7 +149,7 @@ const SatelliteIndexList = ({
         ) : (
           <div className="spinner"></div>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -11,6 +11,8 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
     (state) => state.satellite
   );
 
+  // console.log(advisory);
+
   useEffect(() => {
     if (NpkData && SoilMoisture && selectedFieldsDetials?.length) {
       const timer = setTimeout(() => {
@@ -79,9 +81,9 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
         </Form.Select>
       </div>
 
-      {advisoryData.length > 0 ? (
+      {advisoryData?.length > 0 ? (
         <div className="advisory-grid">
-          {categories.map((category) => (
+          {categories?.map((category) => (
             <Card key={category} className="advisory-card">
               <Card.Body>
                 <Card.Title>{category}</Card.Title>

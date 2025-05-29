@@ -24,6 +24,7 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
   ];
 
   const handleAddField = () => {
+    const today = new Date();
     // Check if all required fields are filled
     if (!farmName.trim()) {
       alert("Please enter the Farm Name.");
@@ -39,6 +40,13 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
     }
     if (!sowingDate.trim()) {
       alert("Please select the Sowing Date.");
+      return;
+    }
+    const sowing = new Date(sowingDate);
+    if (sowing > today) {
+      alert(
+        "Sowing Date cannot be in the future. Please select a date on or before today."
+      );
       return;
     }
     if (!typeOfIrrigation.trim()) {

@@ -33,15 +33,15 @@
   height: 80%;
 }
 #field-dropdown {
-  background-color: #5a7c6bb2 !important;
+  background-color: #010704b2 !important;
   outline: none;
   border: none;
   border-radius: 5px;
   color: #fff;
   padding: 5px 10px;
   position: absolute;
-  left: -10rem;
-  top: 1rem;
+  left: -20rem;
+  top: 0.8rem;
   cursor: pointer;
 }
 
@@ -51,7 +51,7 @@
 }
 
 #field-dropdown:hover {
-  background-color: #5a7c6ba6 !important;
+  background-color: #010704b2 !important;
 }
 
 #field-dropdown option {
@@ -119,4 +119,142 @@
 .actions-container button img {
   height: 1.5rem;
   background-color: transparent !important;
+}
+
+/* legeds dropdown */
+.legend-dropdown-wrapper {
+  position: absolute;
+  top: 15px;
+  left: -10rem;
+  z-index: 1100;
+}
+.legend-button-map {
+  background-color: #010704b2 !important;
+  outline: none;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  padding: 6px 20px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.legend-dropdown {
+  position: absolute;
+  top: 100%;
+  left: -5rem;
+  margin-top: 2rem;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 200px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1200;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: pointer;
+}
+
+.legend-dropdown::-webkit-scrollbar {
+  display: none;
+}
+
+.legend-item {
+  padding: 4px 8px;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.legend-dropdown {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 15px;
+  z-index: 1000;
+  max-width: 300px;
+  animation: slideIn 0.5s ease-in-out;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.legend-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.legend-color {
+  width: 30px;
+  height: 20px;
+  border-radius: 4px;
+  background-color: inherit;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-key {
+  flex: 1;
+}
+
+.legend-area {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .legend-dropdown {
+    top: 10px;
+    right: 10px;
+    max-width: 250px;
+    padding: 10px;
+  }
+
+  .legend-item {
+    font-size: 0.85rem;
+    padding: 8px;
+  }
+
+  .legend-color {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .legend-dropdown {
+    max-width: 200px;
+  }
+
+  .legend-item {
+    font-size: 0.8rem;
+    gap: 8px;
+  }
+
+  .legend-color {
+    width: 14px;
+    height: 14px;
+  }
 }

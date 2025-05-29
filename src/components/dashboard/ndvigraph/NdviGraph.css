@@ -1,16 +1,16 @@
-.ndvi-graph {
+.ndvi-graph-main {
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   background-color: #fff !important;
 }
 
 .ndvi-container {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .ndvi-left {
   margin-right: 20px;
-  width: 250px;
+  width: 300px;
   text-align: center;
 }
 
@@ -60,7 +60,8 @@
 }
 
 .ndvi-right {
-  flex-grow: 1;
-  display: flex;
+  /* flex-grow: 1; */
+  /* display: flex; */
   flex-direction: column;
+  width: 75%;
 }
