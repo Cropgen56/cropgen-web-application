@@ -17,7 +17,11 @@ const Dashboard = () => {
 
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
-  const [selectedField, setSelectedField] = useState("");
+  const [selectedField, setSelectedField] = useState(() => {
+    // Get selected field from localStorage, or empty string if not set
+    return localStorage.getItem("selectedFieldId") || "";
+  });
+  const [prevFieldsLength, setPrevFieldsLength] = useState(0);
 
   const userId = user?.id;
 
@@ -28,12 +32,31 @@ const Dashboard = () => {
     }
   }, [dispatch, userId]);
 
-  // Set initial selected field to the last field when fields load
+  // Set default selected field when fields change
   useEffect(() => {
     if (fields.length > 0) {
-      setSelectedField(fields[fields?.length - 1]?._id);
+      // Check if a new field was added
+      if (fields.length > prevFieldsLength && prevFieldsLength !== 0) {
+        const latestField = fields[fields.length - 1]?._id;
+        setSelectedField(latestField);
+        localStorage.setItem("selectedFieldId", latestField);
+      } else if (!selectedField && prevFieldsLength === 0) {
+        // Set latest field as default only on initial load with no prior selection
+        const latestField = fields[fields.length - 1]?._id;
+        setSelectedField(latestField);
+        localStorage.setItem("selectedFieldId", latestField);
+      }
+      // Update previous fields length
+      setPrevFieldsLength(fields.length);
     }
-  }, [fields]);
+  }, [fields, prevFieldsLength, selectedField]);
+
+  // Update localStorage when selectedField changes
+  useEffect(() => {
+    if (selectedField) {
+      localStorage.setItem("selectedFieldId", selectedField);
+    }
+  }, [selectedField]);
 
   // Extract selected field details
   const selectedFieldsDetials =
@@ -51,7 +74,6 @@ const Dashboard = () => {
         selectedFieldsDetials={selectedFieldsDetials}
         fields={fields}
       />
-
       <CropHealth
         selectedFieldsDetials={selectedFieldsDetials}
         fields={fields}

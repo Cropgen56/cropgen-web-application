@@ -112,9 +112,9 @@ export const fetchIndexData = createAsyncThunk(
 
 export const calculateAiYield = createAsyncThunk(
   "satellite/calculateAiYield",
-  async (farmDetails, { rejectWithValue }) => {
+  async ({ cropDetials, Crop_Growth_Stage }, { rejectWithValue }) => {
     try {
-      const farmId = farmDetails?._id;
+      const farmId = cropDetials?._id;
       const cacheKey = generateCacheKey("aiYield", farmId);
       const cached = await get(cacheKey);
       const now = Date.now();
@@ -123,7 +123,7 @@ export const calculateAiYield = createAsyncThunk(
         return cached.data;
       }
 
-      const { field, cropName } = farmDetails || {};
+      const { field, cropName } = cropDetials || {};
 
       if (!field || !cropName) {
         return rejectWithValue(
@@ -142,7 +142,7 @@ export const calculateAiYield = createAsyncThunk(
         `${process.env.REACT_APP_API_URL_SATELLITE}/ai-yield`,
         {
           crop_name: cropName,
-          crop_growth_stage: "Harvesting",
+          crop_growth_stage: Crop_Growth_Stage,
           geometry: [coordinates],
         }
       );

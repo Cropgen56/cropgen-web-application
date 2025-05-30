@@ -1,70 +1,52 @@
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Card from "react-bootstrap/Card";
-import DaughnutChart from "./daughnutchart/DaughnutChart.jsx";
-import "./CropHealth.css";
-import cropImage from "../../../assets/image/dashboard/crop-image.jpg";
-import SoilHealthChart from "./solilhealth/SoilHealthChart.jsx";
-import SoilAnalysisChart from "./soilanalysischart/SoilAnalysisChart.jsx";
 import * as turf from "@turf/turf";
+import DaughnutChart from "./daughnutchart/DaughnutChart.jsx";
+import SoilAnalysisChart from "./soilanalysischart/SoilAnalysisChart.jsx";
 import SoilMoistureTemperature from "./soil-moisture-temperature/SoilMoistureTemperature.jsx";
-import Daughnut from "../../../";
+import { calculateAiYield } from "../../../redux/slices/satelliteSlice.js";
+import cropImage from "../../../assets/image/dashboard/crop-image.jpg";
+import "./CropHealth.css";
 
 const CropHealth = ({ selectedFieldsDetials }) => {
-  const cropDetials = selectedFieldsDetials[0];
-
+  const cropDetials = selectedFieldsDetials?.[0];
   const sowingDate = cropDetials?.sowingDate;
   const corrdinatesPoint = cropDetials?.field;
-  let totalArea = 0;
 
-  function calculateDaysFromDate(input) {
-    // Parse the input date string into a Date object
-    const targetDate = new Date(input);
+  const dispatch = useDispatch();
+  const { cropYield, NpkData } = useSelector((state) => state?.satellite);
 
-    // Check if the input date is valid
-    // if (isNaN(targetDate)) {
-    //   console.error("Invalid date input");
-    //   return null;
-    // }
-
-    // Get the current date
+  // Memoize the calculation of days from sowing date
+  const daysFromSowing = React.useMemo(() => {
+    if (!sowingDate) return 0;
+    const targetDate = new Date(sowingDate);
     const currentDate = new Date();
-
-    // Set the time part of both dates to midnight for accurate comparison
     targetDate.setHours(0, 0, 0, 0);
     currentDate.setHours(0, 0, 0, 0);
-
-    // Calculate the difference in milliseconds
     const timeDifference = currentDate - targetDate;
+    return Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+  }, [sowingDate]);
 
-    // Convert the difference to days
-    const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-
-    return daysDifference;
-  }
-
-  const calculateArea = (corrdinatesPoint) => {
-    // Transform backend data into Turf.js-compatible format
-    const coordinates = corrdinatesPoint?.map((point) => [
-      point.lng,
-      point.lat,
-    ]);
-
-    // Close the polygon by adding the first point at the end
+  // Memoize the calculation of area
+  const totalArea = React.useMemo(() => {
+    if (!corrdinatesPoint || corrdinatesPoint.length < 3) return 0;
+    const coordinates = corrdinatesPoint.map((point) => [point.lng, point.lat]);
     coordinates.push(coordinates[0]);
-
-    // Create the polygon
     const polygon = turf.polygon([coordinates]);
-
-    // Calculate area in square meters
     const area = turf.area(polygon);
+    return area / 4046.86;
+  }, [corrdinatesPoint]);
 
-    // Convert to hectares and acres
-    const areaHectares = area / 10000;
-    totalArea = area / 4046.86;
-  };
+  // Extract Crop_Growth_Stage
+  const { Crop_Growth_Stage } = NpkData || {};
 
-  if (corrdinatesPoint) {
-    calculateArea(corrdinatesPoint);
-  }
+  // Dispatch calculateAiYield only when Crop_Growth_Stage changes
+  useEffect(() => {
+    if (Crop_Growth_Stage && cropDetials) {
+      dispatch(calculateAiYield({ cropDetials, Crop_Growth_Stage }));
+    }
+  }, [dispatch, cropDetials, Crop_Growth_Stage]);
 
   return (
     <Card body className="mt-4 mb-3 crop-health shadow">
@@ -83,24 +65,19 @@ const CropHealth = ({ selectedFieldsDetials }) => {
               <td className="crop-information ps-4">
                 <tr>
                   <th>Crop Name :-</th>
-                  <td>{cropDetials?.cropName}</td>
+                  <td>{cropDetials?.cropName || " "}</td>
                 </tr>
                 <tr>
-                  {" "}
                   <th>Crop Age :-</th>
-                  <td>{`${calculateDaysFromDate(sowingDate)} days`}</td>
+                  <td>{daysFromSowing} days</td>
                 </tr>
                 <tr>
-                  {" "}
-                  <th>Standerd Yield Data :-</th>
-                  <td></td>
+                  <th>Standard Yield Data :-</th>
+                  <td>{cropYield?.Standard_Yield_units || "N/A"}</td>
                 </tr>
                 <tr>
-                  {" "}
                   <th>Total Area :-</th>
-                  <td>
-                    {cropDetials ? cropDetials?.acre?.toFixed(2) : null} acre
-                  </td>
+                  <td>{totalArea.toFixed(2)} acres</td>
                 </tr>
               </td>
             </tr>
@@ -116,7 +93,6 @@ const CropHealth = ({ selectedFieldsDetials }) => {
           <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
         <div style={{ width: "50%" }}>
-          {/* <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} /> */}
           <SoilMoistureTemperature
             selectedFieldsDetials={selectedFieldsDetials}
           />
