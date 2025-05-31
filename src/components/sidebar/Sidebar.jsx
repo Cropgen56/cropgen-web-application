@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
 import { logoutUser } from "../../utility/logout";
-
 import {
   AddFieldIcon,
   CropAnalysisIcon,
@@ -24,53 +23,90 @@ import "./Sidebar.css";
 import { decodeToken, loadLocalStorage } from "../../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 
+// Navigation items configuration
+const NAV_ITEMS = [
+  {
+    path: "/cropgen-analytics",
+    label: "CropGen Analytics",
+    Icon: CropAnalysisIcon,
+  },
+  { path: "/addfield", label: "Add Field", Icon: AddFieldIcon },
+  { path: "/weather", label: "Weather", Icon: Weather },
+  { path: "/operation", label: "Operation", Icon: Operation },
+  {
+    path: "/disease-detection",
+    label: "Disease Detection",
+    Icon: DieaseDetaction,
+  },
+  { path: "/smart-advisory", label: "Smart Advisory", Icon: SmartAdvisory },
+  { path: "/soil-report", label: "Soil Report", Icon: SoilReportIcon },
+  { path: "/farm-report", label: "Farm Report", Icon: FarmReport },
+  {
+    path: "/personalise-crop-shedule",
+    label: "Personalise Crop Schedule",
+    Icon: PersonaliseCropShedule,
+  },
+  { path: "/setting", label: "Setting", Icon: Setting },
+];
+
 const Sidebar = ({ onToggleCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const user = useSelector((state) => state?.auth?.user);
 
-  // handle to collaps the sidebar
-  const handleCollapseToggle = (collapse) => {
-    const newCollapsedState = collapse || !isCollapsed;
-    setIsCollapsed(newCollapsedState);
-    onToggleCollapse(newCollapsedState);
-  };
-
-  // load the loadLocalStorage data
+  // Load local storage and decode token on mount
   useEffect(() => {
     dispatch(loadLocalStorage());
     dispatch(decodeToken());
   }, [dispatch]);
 
-  // handel to navigate
-  const handleNavigation = (path) => {
-    navigate(path);
-    if (path !== "/cropgen-analytics") {
-      handleCollapseToggle(true);
+  // Set initial sidebar state based on current path
+  useEffect(() => {
+    if (location.pathname === "/cropgen-analytics") {
+      setIsCollapsed(false);
+      onToggleCollapse(false);
     }
+  }, [location.pathname, onToggleCollapse]);
+
+  // Handle sidebar collapse toggle
+  const handleCollapseToggle = (collapse) => {
+    const newCollapsedState = collapse ?? !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    onToggleCollapse(newCollapsedState);
   };
 
-  // handle logout function
-  const handelLogout = async () => {
-    const confirmed = window.confirm("Are you sure you want to logout?");
-    if (confirmed) {
+  // Handle navigation
+  const handleNavigation = (path) => {
+    navigate(path);
+    // If navigating to /cropgen-analytics, ensure sidebar is open
+    if (path === "/cropgen-analytics") {
+      handleCollapseToggle(false);
+    }
+    // If navigating away from /cropgen-analytics to another page, collapse sidebar
+    else if (location.pathname === "/cropgen-analytics") {
+      handleCollapseToggle(true);
+    }
+    // If already on a non-/cropgen-analytics page, do not change collapse state
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    if (window.confirm("Are you sure you want to logout?")) {
       await logoutUser();
       navigate("/login");
     }
   };
 
-  // get the user data formt he redux store
-  const user = useSelector((state) => state?.auth?.user);
-
   return (
     <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
       <Offcanvas
         show={true}
-        onHide={() => {}}
         scroll={true}
         backdrop={false}
         className={`offcanvas ${isCollapsed ? "collapsed" : ""}`}
+        résultats
       >
         <Offcanvas.Body className="p-0 m-0">
           <div
@@ -83,11 +119,11 @@ const Sidebar = ({ onToggleCollapse }) => {
 
           {!isCollapsed && (
             <Card
-              style={{ width: isCollapsed ? "4rem" : "13rem" }}
-              onClick={() => handleNavigation("/profile")}
+              style={{ width: "13rem" }}
+              onClick={() => handleNavigation("/setting")}
               className="profile-card"
             >
-              <img variant="top" src={profile} className="profile-image" />
+              <img src={profile} className="profile-image" alt="User profile" />
               <Card.Body className="text-center">
                 <Card.Title className="profile-user-name">
                   {user?.firstName} {user?.lastName}
@@ -109,53 +145,19 @@ const Sidebar = ({ onToggleCollapse }) => {
                   <Hammer />
                 </li>
               )}
-              <li
-                onClick={() => {
-                  handleNavigation("/cropgen-analytics");
-                }}
-              >
-                <CropAnalysisIcon />
-                {!isCollapsed && "CropGen Analytics"}
-              </li>
-              <li onClick={() => handleNavigation("/addfield")}>
-                <AddFieldIcon />
-                {!isCollapsed && "Add Field"}
-              </li>
-              <li onClick={() => handleNavigation("/weather")}>
-                <Weather />
-                {!isCollapsed && "Weather"}
-              </li>
-              <li onClick={() => handleNavigation("/operation")}>
-                <Operation />
-                {!isCollapsed && "Operation"}
-              </li>
-              <li onClick={() => handleNavigation("/disease-detection")}>
-                <DieaseDetaction />
-                {!isCollapsed && "Disease Detection"}
-              </li>
-              <li onClick={() => handleNavigation("/smart-advisory")}>
-                <SmartAdvisory />
-                {!isCollapsed && "Smart Advisory"}
-              </li>
-              <li onClick={() => handleNavigation("/soil-report")}>
-                <SoilReportIcon />
-                {!isCollapsed && "Soil Report"}
-              </li>
-              <li onClick={() => handleNavigation("/farm-report")}>
-                <FarmReport />
-                {!isCollapsed && "Farm Report"}
-              </li>
-              <li onClick={() => handleNavigation("/personalise-crop-shedule")}>
-                <PersonaliseCropShedule />
-                {!isCollapsed && "Personalise Crop Schedule"}
-              </li>
-              <li onClick={() => handleNavigation("/setting")}>
-                <Setting />
-                {!isCollapsed && "Setting"}
-              </li>
+              {NAV_ITEMS.map(({ path, label, Icon }) => (
+                <li
+                  key={path}
+                  onClick={() => handleNavigation(path)}
+                  className={location.pathname === path ? "active" : ""}
+                >
+                  <Icon />
+                  {!isCollapsed && label}
+                </li>
+              ))}
             </ul>
           </nav>
-          <div className="offcanvas-footer" onClick={handelLogout}>
+          <div className="offcanvas-footer" onClick={handleLogout}>
             <p className="footer-text">
               <Logout />
               {!isCollapsed && <span>Logout</span>}
@@ -167,4 +169,4 @@ const Sidebar = ({ onToggleCollapse }) => {
   );
 };
 
-export default Sidebar;
+export default memo(Sidebar);

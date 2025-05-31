@@ -1,0 +1,42 @@
+/* Styles for the dual-ring spinner */
+.dual-ring-spinner {
+  display: inline-block;
+  position: relative;
+  width: var(--spinner-size, 64px);
+  height: var(--spinner-size, 64px);
+}
+
+.dual-ring-spinner:after {
+  content: " ";
+  display: block;
+  width: calc(var(--spinner-size, 64px) - 18px);
+  height: calc(var(--spinner-size, 64px) - 18px);
+  margin: 9px;
+  border-radius: 50%;
+  border: 5px solid var(--spinner-color, #86d72f);
+  border-color: var(--spinner-color, #86d72f) transparent
+    var(--spinner-color, #86d72f) transparent;
+  animation: dual-ring 1.2s linear infinite;
+}
+
+@keyframes dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Styles for the backdrop when blurBackground is true */
+.spinner-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(225, 225, 225, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 1010;
+  animation: pulse-blur 2s ease-in-out infinite;
+}

@@ -373,12 +373,12 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
       const cached = await get(cacheKey);
       const now = Date.now();
 
-      if (!startDate || !endDate || !geometry || !index) {
-        return rejectWithValue("Missing required parameters");
-      }
-
       if (cached && now - cached.timestamp < CACHE_TTL) {
         return cached;
+      }
+
+      if (!startDate || !endDate || !geometry || !index) {
+        return rejectWithValue("Missing required parameters");
       }
 
       const coordinates = geometry?.map(({ lat, lng }) => {

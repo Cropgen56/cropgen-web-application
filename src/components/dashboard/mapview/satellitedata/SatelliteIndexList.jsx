@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import "./SatelliteIndexList.css";
 import { GratterThan } from "../../../../assets/Icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -50,8 +56,8 @@ const SatelliteIndexList = ({
   const [selectedIndex, setSelectedIndex] = useState("NDVI");
   const dispatch = useDispatch();
   const { field = [], sowingDate = null } = selectedFieldsDetials[0] || {};
-
   const { indexData } = useSelector((state) => state?.satellite);
+  const scrollContainerRef = useRef(null);
 
   // Memoize coordinates to prevent unnecessary reference changes
   const coordinates = useMemo(() => {
@@ -108,6 +114,16 @@ const SatelliteIndexList = ({
     dispatch,
   ]);
 
+  // Handle arrow button click to scroll right
+  const handleArrowClick = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({
+        left: 200,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <div className="satellite-data-main-container">
       <div className="satellite-data-container">
@@ -117,39 +133,27 @@ const SatelliteIndexList = ({
           <option value="satellite3">Satellite 3</option>
         </select>
 
-        {indices?.map((index) => (
-          <button
-            key={index}
-            className={`button ${index.toLowerCase()}-btn ${
-              selectedIndex === index ? "selected" : ""
-            }`}
-            onClick={() => {
-              dispatch(removeSelectedIndexData());
-              setSelectedIndex(index);
-            }}
-          >
-            {index_name_mapping[index] || index}{" "}
-            {/* Use mapped name or fallback to index */}
-          </button>
-        ))}
+        <div className="buttons-scroll-container" ref={scrollContainerRef}>
+          {indices?.map((index) => (
+            <button
+              key={index}
+              className={`button ${index.toLowerCase()}-btn ${
+                selectedIndex === index ? "selected" : ""
+              }`}
+              onClick={() => {
+                dispatch(removeSelectedIndexData());
+                setSelectedIndex(index);
+              }}
+            >
+              {index_name_mapping[index] || index}
+            </button>
+          ))}
+        </div>
 
-        <button className="arrow-button">
+        <button className="index-arrow-button" onClick={handleArrowClick}>
           <GratterThan />
         </button>
       </div>
-
-      {/* <div className="color-palette">
-        {indexData?.legend ? (
-          Object.entries(indexData.legend).map(([name, color], index) => (
-            <div key={index} className="color-block">
-              <div className="color" style={{ backgroundColor: color }}></div>
-              <div className="range-text">{name}</div>
-            </div>
-          ))
-        ) : (
-          <div className="spinner"></div>
-        )}
-      </div> */}
     </div>
   );
 };

@@ -25,7 +25,7 @@ import { fetchweatherData } from "../../../redux/slices/weatherSlice";
 import { resetState } from "../../../redux/slices/satelliteSlice";
 import Loading from "../../comman/loading/Loading";
 import IndexDates from "./indexdates/IndexDates";
-
+import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 // Calculate polygon centroid
 const calculatePolygonCentroid = (coordinates) => {
   if (!coordinates || coordinates.length < 3) {
@@ -195,16 +195,19 @@ const FarmMap = ({
         center={
           centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter
         }
-        zoom={17}
+        zoom={18}
         zoomControl={true}
         className="farm-map-container"
         ref={mapRef}
         maxZoom={20}
       >
         {loading.indexData && (
-          <div className="farm-map-spinner-overlay">
-            <Loading />
-          </div>
+          <LoadingSpinner
+            height="100%"
+            size={64}
+            color="#86D72F"
+            blurBackground={true}
+          />
         )}
         <TileLayer
           attribution="© Google Maps"

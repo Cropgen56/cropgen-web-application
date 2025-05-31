@@ -51,7 +51,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
   return (
     <Card body className="mt-4 mb-3 crop-health shadow">
       <h2 className="crop-health-title">Crop Health</h2>
-      <div className="d-flex align-items-center">
+      <div className="d-flex align-items-center justify-content-between px-5 ">
         <div className="pt-1">
           <table>
             <tr>
@@ -72,23 +72,27 @@ const CropHealth = ({ selectedFieldsDetials }) => {
                   <td>{daysFromSowing} days</td>
                 </tr>
                 <tr>
+                  <th>Total Area :-</th>
+                  <td>{totalArea.toFixed(2)} acres</td>
+                </tr>
+                <tr>
                   <th>Standard Yield Data :-</th>
                   <td>{cropYield?.Standard_Yield_units || "N/A"}</td>
                 </tr>
                 <tr>
-                  <th>Total Area :-</th>
-                  <td>{totalArea.toFixed(2)} acres</td>
+                  <th>AI Yield Data :-</th>
+                  <td>{cropYield?.AI_Predicted_Yield_units || "N/A"}</td>
                 </tr>
               </td>
             </tr>
           </table>
         </div>
-        <div style={{ marginLeft: "13rem" }}>
+        <div style={{ marginRight: "10%" }}>
           <DaughnutChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
       </div>
 
-      <div className="d-flex justify-content-between align-items-center mt-5">
+      <div className="d-flex justify-content-between align-items-center mt-3 ">
         <div style={{ width: "50%" }}>
           <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>

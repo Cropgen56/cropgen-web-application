@@ -1,75 +1,75 @@
-/* Container for the entire page */
 .personal-info-container {
-  max-width: 100%;
+  max-width: 1200px;
   width: 98%;
   margin: 0 auto;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  padding: 1rem;
+  padding: 0.75rem 0.25rem 0.75rem 0;
+  border: 2px solid #c0d6df;
+  border-radius: 8px;
   background-color: #fff;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 80vh;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* Header styling */
 .personal-info-header {
-  text-align: start;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #00000066;
+  text-align: left;
+  padding-bottom: 0.25rem;
+  padding-left: 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .personal-info-header h2 {
-  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
   color: #344e41;
+  margin: 0;
 }
 
-/* Content section */
 .personal-info-content {
-  padding: 1rem;
+  padding: 0.5rem 0.5rem 0.5rem 0;
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-/* Profile section */
 .profile-section {
   display: flex;
   align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
   gap: 1rem;
-}
-
-.profile-image-container {
-  position: relative;
-  margin-right: 1rem;
+  flex-wrap: wrap;
+  padding-left: 0.5rem;
 }
 
 .profile-image-container img {
-  width: clamp(60px, 15vw, 80px);
-  height: clamp(60px, 15vw, 80px);
+  width: clamp(50px, 8vw, 60px);
+  height: clamp(50px, 8vw, 60px);
   border-radius: 50%;
+  object-fit: cover;
 }
 
 .edit-profile-icon {
   position: absolute;
   top: 0;
   right: 0;
-  width: clamp(10px, 1vw, 5px);
-  height: clamp(10px, 1vw, 5px);
+  width: clamp(10px, 1.5vw, 12px);
+  height: clamp(10px, 1.5vw, 12px);
   cursor: pointer;
 }
 
 .profile-details h3 {
-  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-size: clamp(1rem, 2vw, 1.25rem);
   margin: 0;
   color: #344e41;
 }
 
 .profile-details .role {
-  font-size: clamp(0.8rem, 2vw, 1rem);
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
   color: #666;
-  margin: 0.3rem 0;
+  margin: 0.2rem 0;
 }
 
 .stats {
@@ -79,49 +79,42 @@
 }
 
 .stats p {
-  font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+  font-size: clamp(0.625rem, 1.2vw, 0.75rem);
   color: #344e41;
-  margin: 0.3rem 0;
+  margin: 0;
 }
 
-/* Form layout and styling */
 .personal-info-form {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  gap: 0.5rem;
 }
 
-/* Layout for form fields */
 .form-layout {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+  padding-left: 0.5rem;
 }
 
-/* Columns for the form */
 .form-column {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-width: 100%;
+  gap: 0.5rem;
 }
 
-/* Form group styling */
 .form-group {
   display: flex;
   flex-direction: column;
-  justify-content: start;
   width: 100%;
-  max-width: 15rem;
-  margin-bottom: 1rem;
 }
 
 .form-group label {
-  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
-  margin-bottom: 0.3rem;
-  width: 100%;
+  font-size: clamp(0.625rem, 1.2vw, 0.75rem);
+  margin-bottom: 0.2rem;
   color: #344e41;
+  text-align: left;
 }
 
 .input-with-icon {
@@ -131,35 +124,39 @@
 
 .form-group input,
 .form-group select {
-  padding: 0.5rem;
+  padding: 0.4rem 1.5rem 0.4rem 0.5rem;
   border: 1px solid #344e41;
-  border-radius: 5px;
+  border-radius: 4px;
   outline: none;
-  font-size: clamp(0.8rem, 1.8vw, 1rem);
+  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
   width: 100%;
+  box-sizing: border-box;
   background-color: #f5f5f5;
 }
 
 .form-group select {
   appearance: none;
-  padding-right: 1.5rem;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24"><path fill="%23344e41" d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 0.4rem center;
+  background-size: 10px;
 }
 
 .edit-icon {
   position: absolute;
-  right: 0.5rem;
+  right: 0.4rem;
   top: 50%;
   transform: translateY(-50%);
-  width: clamp(12px, 3vw, 16px);
-  height: clamp(12px, 3vw, 16px);
+  width: clamp(10px, 1.5vw, 12px);
+  height: clamp(10px, 1.5vw, 12px);
   cursor: pointer;
 }
 
-/* Save button styling */
 .form-actions {
   display: flex;
   justify-content: center;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  padding-bottom: 0.75rem;
 }
 
 .save-button {
@@ -167,67 +164,98 @@
   color: #fff;
   font-weight: 500;
   border: none;
-  padding: 0.5rem clamp(2rem, 10vw, 5rem);
-  font-size: clamp(0.9rem, 2vw, 1rem);
-  border-radius: 5px;
+  padding: 0.5rem clamp(1.5rem, 4vw, 2rem);
+  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
+  border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .save-button:hover {
   background-color: #2e4539;
 }
 
-/* Media Queries for Responsiveness */
+@media (max-width: 1024px) {
+  .personal-info-container {
+    padding: 0.5rem 0.2rem 0.5rem 0;
+  }
 
-/* Tablets and smaller screens */
+  .form-layout {
+    grid-template-columns: 1fr;
+    padding-left: 0.4rem;
+  }
+}
+
 @media (max-width: 768px) {
   .personal-info-container {
-    width: 95%;
-    padding: 0.5rem;
+    padding: 0.4rem 0.15rem 0.4rem 0;
+  }
+
+  .personal-info-content {
+    padding: 0.4rem 0.4rem 0.4rem 0;
   }
 
   .profile-section {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.5rem;
+    padding-left: 0.4rem;
   }
 
   .profile-image-container {
-    margin-right: 0;
-    margin-bottom: 1rem;
-  }
-
-  .form-layout {
-    flex-direction: column;
-  }
-
-  .form-column {
-    min-width: 100%;
-  }
-
-  .form-group {
-    max-width: 100%;
-  }
-}
-
-/* Mobile screens */
-@media (max-width: 480px) {
-  .personal-info-container {
-    width: 98%;
-    padding: 0.5rem;
-    border: 1px solid #e0e0e0;
-  }
-
-  .personal-info-header h2 {
-    font-size: 1rem;
+    margin-bottom: 0.4rem;
   }
 
   .stats {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .form-layout {
+    padding-left: 0.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .personal-info-header h2 {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+  }
+
+  .profile-details h3 {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+  }
+
+  .form-layout {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+    padding-left: 0.2rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 0.3rem 1.2rem 0.3rem 0.4rem;
+    font-size: clamp(0.625rem, 1vw, 0.75rem);
   }
 
   .save-button {
     width: 100%;
     padding: 0.5rem;
   }
+}
+
+.update-message {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.update-message.success {
+  background-color: #e6ffed;
+  color: #28a745;
+}
+
+.update-message.error {
+  background-color: #ffe6e6;
+  color: #dc3545;
 }

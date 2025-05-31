@@ -3,13 +3,14 @@ import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCropHealth } from "../../../../redux/slices/satelliteSlice";
+import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const DoughnutChart = ({ selectedFieldsDetials }) => {
   const farmDetails = selectedFieldsDetials[0];
   const dispatch = useDispatch();
-  const { cropHealth, isLoading } = useSelector((state) => state?.satellite);
+  const { cropHealth, loading } = useSelector((state) => state?.satellite);
 
   // Fetch crop health data when farmDetails changes
   useEffect(() => {
@@ -22,19 +23,29 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
 
   // Prepare data for the doughnut chart
   const data = {
-    labels: ["Good", "Moderate", "Poor"],
+    labels: ["Excellent", "Very Good", "Good", "Moderate", "Poor"],
     datasets: [
       {
         label: "Crop Health",
         data:
-          Crop_Health === "Good"
-            ? [Health_Percentage, 0, 100 - Health_Percentage]
+          Crop_Health === "Excellent"
+            ? [Health_Percentage, 0, 0, 0, 100 - Health_Percentage]
+            : Crop_Health === "Very Good"
+            ? [0, Health_Percentage, 0, 0, 100 - Health_Percentage]
+            : Crop_Health === "Good"
+            ? [0, 0, Health_Percentage, 0, 100 - Health_Percentage]
             : Crop_Health === "Moderate"
-            ? [0, Health_Percentage, 100 - Health_Percentage]
+            ? [0, 0, 0, Health_Percentage, 100 - Health_Percentage]
             : Crop_Health === "Poor"
-            ? [0, 0, Health_Percentage]
-            : [0, 0, 0], // Fallback if Crop_Health is unknown
-        backgroundColor: ["#344E41", "#78A3AD", "#5A7C6B"],
+            ? [0, 0, 0, 0, Health_Percentage]
+            : [0, 0, 0, 0, 0],
+        backgroundColor: [
+          "#2A3F2F",
+          "#3E5C4A",
+          "#344E41",
+          "#78A3AD",
+          "#5A7C6B",
+        ],
         hoverOffset: 4,
       },
     ],
@@ -99,8 +110,11 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
 
   return (
     <div className="chart-container">
-      {isLoading || !cropHealth ? (
-        <div className="spinner"></div>
+      {loading?.cropHealth ? (
+        <div className="w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+          <LoadingSpinner height="110px" size={64} color="#86D72F" />
+          <p className="loading-text-new">Crop Health Loading...</p>
+        </div>
       ) : (
         <Doughnut data={data} options={options} plugins={[centerTextPlugin]} />
       )}

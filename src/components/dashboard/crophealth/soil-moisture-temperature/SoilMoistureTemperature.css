@@ -27,7 +27,8 @@
   width: 100%;
 }
 .soil-stat .data-container p {
-  font-size: 0.7rem;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: #fff;
 }
 .soil-stat .data-container strong {

@@ -27,11 +27,19 @@ export function formatDateToISO(dateString, endDate) {
   const start = new Date(formattedStartDate);
   const end = new Date(endDate);
 
-  // Check if start date is greater than end date OR start date is today
-  if (start > end || formattedStartDate === todayISO) {
-    // Set start date to 5 days before end date
+  // Calculate the date 5 days before today
+  const fiveDaysBeforeToday = new Date(today);
+  fiveDaysBeforeToday.setDate(today.getDate() - 5);
+
+  // Check if start date is greater than end date, is today, or is within the last 5 days from today
+  if (
+    start > end ||
+    formattedStartDate === todayISO ||
+    (start <= today && start >= fiveDaysBeforeToday)
+  ) {
+    // Set start date to 7 days before end date
     const adjustedStart = new Date(end);
-    adjustedStart.setDate(end.getDate() - 5);
+    adjustedStart.setDate(end.getDate() - 7);
     return adjustedStart.toISOString().split("T")[0];
   }
 

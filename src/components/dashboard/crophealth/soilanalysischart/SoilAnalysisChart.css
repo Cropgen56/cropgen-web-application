@@ -8,10 +8,9 @@
 
 .soil-analysis-chart-title {
   text-align: start;
-  font-size: 0.9rem;
-  font-weight: 600;
   color: #344e41;
-  margin-left: 2rem;
+  font-size: 1.3rem;
+  font-weight: 600;
 }
 
 .y-axis-label {
