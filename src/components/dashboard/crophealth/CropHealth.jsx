@@ -4,11 +4,12 @@ import Card from "react-bootstrap/Card";
 import * as turf from "@turf/turf";
 import DaughnutChart from "./daughnutchart/DaughnutChart.jsx";
 import SoilAnalysisChart from "./soilanalysischart/SoilAnalysisChart.jsx";
-import SoilMoistureTemperature from "./soil-moisture-temperature/SoilMoistureTemperature.jsx";
+// import SoilMoistureTemperature from "./soil-moisture-temperature/SoilMoistureTemperature.jsx";
 import { calculateAiYield } from "../../../redux/slices/satelliteSlice.js";
 import cropImage from "../../../assets/image/dashboard/crop-image.jpg";
-import "./CropHealth.css";
 import SoilHealthChart from "./solilhealth/SoilHealthChart.jsx";
+import "./CropHealth.css";
+import { fetchSoilData } from "../../../redux/slices/satelliteSlice.js";
 
 const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials?.[0];
@@ -48,6 +49,13 @@ const CropHealth = ({ selectedFieldsDetials }) => {
       dispatch(calculateAiYield({ cropDetials, Crop_Growth_Stage }));
     }
   }, [dispatch, cropDetials, Crop_Growth_Stage]);
+
+  // Fetch soil data when farm details are available and soilData is empty
+  useEffect(() => {
+    if (cropDetials) {
+      dispatch(fetchSoilData({ farmDetails: cropDetials }));
+    }
+  }, [cropDetials, dispatch]);
 
   return (
     <Card body className="mt-4 mb-3 crop-health shadow">
@@ -98,9 +106,10 @@ const CropHealth = ({ selectedFieldsDetials }) => {
           <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
         <div style={{ width: "50%" }}>
-          <SoilMoistureTemperature
+          {/* <SoilMoistureTemperature
             selectedFieldsDetials={selectedFieldsDetials}
-          />
+          /> */}
+          <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
       </div>
     </Card>

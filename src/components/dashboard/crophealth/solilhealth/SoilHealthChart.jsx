@@ -1,86 +1,99 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   AreaChart,
   Area,
   XAxis,
   YAxis,
-  Tooltip,
+  CartesianGrid,
   Legend,
   ResponsiveContainer,
-  CartesianGrid,
 } from "recharts";
 import "./SoilHealthChart.css";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
-import { fetchSoilMoisture } from "../../../../redux/slices/satelliteSlice";
+import { fetchSoilData } from "../../../../redux/slices/satelliteSlice";
 
-const data = [
-  { day: "D0", moisture: 0, temperature: 0 },
-  { day: "D1", moisture: 5, temperature: 10 },
-  { day: "D2", moisture: 2, temperature: 8 },
-  { day: "D3", moisture: 7, temperature: 12 },
-  { day: "D4", moisture: 3, temperature: 6 },
-  { day: "D5", moisture: 8, temperature: 14 },
-  { day: "D6", moisture: 4, temperature: 8 },
-  { day: "D7", moisture: 6, temperature: 10 },
-];
-
-const SoilHealthChart = ({ selectedFieldsDetials }) => {
+const SoilHealthChart = () => {
   const dispatch = useDispatch();
+  const { soilData } = useSelector((state) => state.satellite);
 
-  const farmDetails = selectedFieldsDetials[0];
+  // Process soilData to aggregate by date and prepare for chart
+  const processSoilData = (data) => {
+    // Group data by date
+    const groupedByDate = data.reduce((acc, entry) => {
+      const date = entry.date;
+      if (!acc[date]) {
+        acc[date] = { moisture: [], temperature: [] };
+      }
+      acc[date].moisture.push(entry.Soil_Moisture.mean);
+      acc[date].temperature.push(entry.Soil_Temperature.mean);
+      return acc;
+    }, {});
 
-  useEffect(() => {
-    dispatch(fetchSoilMoisture(farmDetails));
-  }, [selectedFieldsDetials]);
+    // Calculate average for each date and format for chart
+    const uniqueDates = Object.keys(groupedByDate).sort().slice(-7);
+    return uniqueDates.map((date, index) => {
+      const moistureValues = groupedByDate[date].moisture;
+      const temperatureValues = groupedByDate[date].temperature;
+      const avgMoisture =
+        moistureValues.reduce((sum, val) => sum + val, 0) /
+        moistureValues.length;
+      const avgTemperature =
+        temperatureValues.reduce((sum, val) => sum + val, 0) /
+        temperatureValues.length;
+      return {
+        day: `D${index}`,
+        date,
+        moisture: avgMoisture.toFixed(2),
+        temperature: avgTemperature.toFixed(2),
+      };
+    });
+  };
 
-  const { SoilMoisture } = useSelector((state) => state.satellite);
+  const chartData = soilData ? processSoilData(soilData) : [];
 
   return (
     <div className="soil-health-chart-container">
-      <h2 className="soil-health-chart-title">Soil Health</h2>
+      <h2 className="soil-health-chart-title">Soil Health </h2>
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart
-          data={data}
-          margin={{ top: 30, right: 30, left: 0, bottom: 0 }}
+          data={chartData}
+          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
         >
-          <defs>
-            {/* Gradient for Soil Moisture */}
-            <linearGradient id="colorMoisture" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#A0D57E" stopOpacity={1} />
-              <stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
-            </linearGradient>
-            {/* Gradient for Soil Temperature */}
-            <linearGradient id="colorTemperature" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6EC5E9" stopOpacity={1} />
-              <stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          {/* Enable horizontal grid lines */}
-          <CartesianGrid stroke="#e0e0e0" horizontal={false} vertical={false} />
-          <XAxis
-            dataKey="day"
-            tick={{ fontSize: 8, fill: "#000000", fontWeight: 600 }}
-            padding={{ top: 10 }}
+          <XAxis dataKey="day" tick={{ fill: "#666", fontSize: 12 }} />
+          <YAxis
+            axisLine={true}
+            tick={false}
+            domain={[
+              0,
+              Math.max(
+                30,
+                ...chartData.map((item) =>
+                  Math.max(item.moisture, item.temperature)
+                )
+              ),
+            ]}
           />
-          <YAxis tick={false} axisLine={true} />
-          <Tooltip />
-          <Legend verticalAlign="top" align="right" className="custom-legend" />
+          <Legend
+            align="right"
+            verticalAlign="top"
+            iconType="line"
+            wrapperStyle={{ fontSize: 12, color: "#666" }}
+          />
           <Area
             type="monotone"
             dataKey="moisture"
-            stroke="#A0D57E"
-            fillOpacity={1}
-            fill="url(#colorMoisture)"
-            name="Soil Moisture"
+            name="Soil Moisture (%)"
+            stroke="#00C4B4"
+            fill="#00C4B4"
+            fillOpacity={0.3}
           />
           <Area
             type="monotone"
             dataKey="temperature"
-            stroke="#6EC5E9"
-            fillOpacity={1}
-            fill="url(#colorTemperature)"
-            name="Soil Temperature"
+            name="Soil Temperature (°C)"
+            stroke="#32CD32"
+            fill="#32CD32"
+            fillOpacity={0.3}
           />
         </AreaChart>
       </ResponsiveContainer>

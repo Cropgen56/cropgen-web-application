@@ -3,7 +3,10 @@ import { formatDateToISO } from "../../utility/formatDate";
 import axios from "axios";
 import { get, set } from "idb-keyval";
 import { parseAdvisoryText } from "../../utility/parseAdvisoryText";
-import { getSixMonthsBefore } from "../../utility/formatDate";
+import {
+  getSixMonthsBefore,
+  getTodayAndFifteenDaysAgo,
+} from "../../utility/formatDate";
 
 // 4 days in milliseconds
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
@@ -30,6 +33,7 @@ const initialState = {
   cropYield: null,
   indexTimeSeriesSummary: null,
   waterIndexData: null,
+  soilData: null,
   error: null,
   loading: {
     satelliteDates: false,
@@ -41,6 +45,7 @@ const initialState = {
     advisory: false,
     indexTimeSeriesSummary: false,
     waterIndexData: false,
+    soilData: false,
   },
 };
 
@@ -450,6 +455,52 @@ export const fetchWaterIndexData = createAsyncThunk(
   }
 );
 
+export const fetchSoilData = createAsyncThunk(
+  "satellite/fetchSoilData",
+  async ({ farmDetails }, { rejectWithValue }) => {
+    try {
+      const farmId = farmDetails?._id;
+      const cacheKey = generateCacheKey("soilData", farmId);
+      const cached = await get(cacheKey);
+      const now = Date.now();
+
+      if (cached && now - cached.timestamp < CACHE_TTL) {
+        return cached.data;
+      }
+
+      const { today, fifteenDaysAgo } = getTodayAndFifteenDaysAgo();
+
+      const { field } = farmDetails || {};
+      if (!field) {
+        return rejectWithValue("Invalid farm details: field missing");
+      }
+
+      const coordinates = [
+        field.map(({ lat, lng }) => {
+          if (typeof lat !== "number" || typeof lng !== "number") {
+            throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
+          }
+          return [lat, lng];
+        }),
+      ];
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL_SATELLITE}/get-soil-stats`,
+        {
+          coordinates: coordinates,
+          start_date: fifteenDaysAgo,
+          end_date: today,
+        }
+      );
+
+      await set(cacheKey, { data: response.data, timestamp: now });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 const satelliteSlice = createSlice({
   name: "satellite",
   initialState,
@@ -595,6 +646,19 @@ const satelliteSlice = createSlice({
       })
       .addCase(fetchWaterIndexData.rejected, (state, action) => {
         state.loading.waterIndexData = false;
+        state.error = action.payload;
+      })
+      // fetch soil data
+      .addCase(fetchSoilData.pending, (state) => {
+        state.loading.soilData = true;
+        state.error = null;
+      })
+      .addCase(fetchSoilData.fulfilled, (state, action) => {
+        state.loading.soilData = false;
+        state.soilData = action.payload.data;
+      })
+      .addCase(fetchSoilData.rejected, (state, action) => {
+        state.loading.soilData = false;
         state.error = action.payload;
       });
   },
