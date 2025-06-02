@@ -9,7 +9,7 @@ import Insights from "../components/dashboard/insights/Insights";
 import CropAdvisory from "../components/dashboard/cropadvisory/CropAdvisory";
 import "../style/Dashboard.css";
 import NdviGraph from "../components/dashboard/satellite-index/vegitation-index/VegetationIndex";
-// import WaterIndex from "../components/dashboard/satellite-index/water-index/WaterIndex";
+import WaterIndex from "../components/dashboard/satellite-index/water-index/WaterIndex";
 
 // Constants
 const SELECTED_FIELD_KEY = "selectedFieldId";
@@ -130,7 +130,7 @@ const Dashboard = () => {
       <CropHealth {...cropHealthProps} />
       <ForeCast />
       <NdviGraph {...ndviGraphProps} />
-      {/* <WaterIndex {...ndviGraphProps} /> */}
+      <WaterIndex {...ndviGraphProps} />
       <Insights />
       <CropAdvisory {...cropAdvisoryProps} />
       <PlantGrowthActivity {...plantGrowthProps} />

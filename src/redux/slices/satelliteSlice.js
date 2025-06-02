@@ -29,6 +29,7 @@ const initialState = {
   NpkData: null,
   cropYield: null,
   indexTimeSeriesSummary: null,
+  waterIndexData: null,
   error: null,
   loading: {
     satelliteDates: false,
@@ -39,6 +40,7 @@ const initialState = {
     cropYield: false,
     advisory: false,
     indexTimeSeriesSummary: false,
+    waterIndexData: false,
   },
 };
 
@@ -406,12 +408,12 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
   }
 );
 
-export const waterIndexData = createAsyncThunk(
-  "satellite/fetchIndexTimeSeriesSummary",
+export const fetchWaterIndexData = createAsyncThunk(
+  "satellite/fetchWaterIndexData",
   async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
     try {
       const input = { startDate, endDate, geometry, index };
-      const cacheKey = generateCacheKey("indexTimeSeriesSummary", null, input);
+      const cacheKey = generateCacheKey("fetchWaterIndexData", null, input);
       const cached = await get(cacheKey);
       const now = Date.now();
 
@@ -431,11 +433,11 @@ export const waterIndexData = createAsyncThunk(
       });
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/index-timeseries-summary`,
+        `${process.env.REACT_APP_API_URL_SATELLITE}/get-moisture-index-graph`,
         {
+          coordinates: [coordinates],
           start_date: startDate,
           end_date: endDate,
-          geometry: coordinates,
           index: index,
         }
       );
@@ -581,6 +583,18 @@ const satelliteSlice = createSlice({
       })
       .addCase(fetchIndexTimeSeriesSummary.rejected, (state, action) => {
         state.loading.indexTimeSeriesSummary = false;
+        state.error = action.payload;
+      }) // fetch index time series summary
+      .addCase(fetchWaterIndexData.pending, (state) => {
+        state.loading.waterIndexData = true;
+        state.error = null;
+      })
+      .addCase(fetchWaterIndexData.fulfilled, (state, action) => {
+        state.loading.waterIndexData = false;
+        state.waterIndexData = action.payload;
+      })
+      .addCase(fetchWaterIndexData.rejected, (state, action) => {
+        state.loading.waterIndexData = false;
         state.error = action.payload;
       });
   },

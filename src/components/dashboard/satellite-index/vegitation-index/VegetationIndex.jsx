@@ -182,7 +182,6 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
             changes over time.
           </div>
         </div>
-
         {/* Right Panel */}
         <div className="ndvi-right">
           <div className="ndvi-select">
@@ -190,6 +189,9 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
               <option value="NDVI">NDVI</option>
               <option value="EVI">EVI</option>
               <option value="SAVI">SAVI</option>
+              <option value="NDMI">NDMI</option>
+              <option value="NDWI">NDWI</option>
+              <option value="SUCROSE">SUCROSE</option>
             </select>
           </div>
 
