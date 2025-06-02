@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
-import logoutUser from "../../utility/logout";
+import useLogout from "../../utility/logout";
 import {
   AddFieldIcon,
   CropAnalysisIcon,
@@ -54,6 +54,7 @@ const Sidebar = ({ onToggleCollapse }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const logout = useLogout();
   const user = useSelector((state) => state?.auth?.user);
 
   // Load local storage and decode token on mount
@@ -93,18 +94,14 @@ const Sidebar = ({ onToggleCollapse }) => {
 
   // Handle logout
   const handleLogout = async () => {
-    const logout = logoutUser();
-
-    const handleLogout = async () => {
-      const result = await logout();
-      if (result.success) {
-        console.log("Logout successful");
-        // Optionally show a success message to the user
-      } else {
-        console.error("Logout failed:", result.error);
-        // Optionally show an error message to the user
-      }
-    };
+    const result = await logout();
+    if (result.success) {
+      alert("Logout successful");
+      // Optionally show a success message (e.g., using react-toastify)
+    } else {
+      console.error("Logout failed:", result.error);
+      // Optionally show an error message
+    }
   };
 
   return (
