@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
-import { Modal, Form, Input, Select, Button, Row, Col } from "antd";
+import { Modal, Form, Input, Select, Button, Row, Col, message } from "antd";
 import "./EventForm.css";
+import { useDispatch } from "react-redux";
+import { createOperation } from "../../../redux/slices/operationSlice";
 
 const { Option } = Select;
 const { TextArea } = Input;
 
-// Define operation types and progress options as constants for reusability
 const OPERATION_TYPES = [
   { value: "tillage", label: "Tillage" },
   { value: "cultivator", label: "Cultivator" },
@@ -27,14 +28,13 @@ const PROGRESS_OPTIONS = [
   { value: "started", label: "Started" },
 ];
 
-// Form field configurations for reusability and maintainability
 const FORM_FIELDS = [
   {
     name: "supervisorName",
     label: "Supervisor Name",
     span: 12,
     component: <Input />,
-    rules: [{ message: "Please enter the supervisor name!" }],
+    rules: [],
   },
   {
     name: "operationType",
@@ -49,14 +49,14 @@ const FORM_FIELDS = [
         ))}
       </Select>
     ),
-    rules: [{ message: "Please select the operation type!" }],
+    rules: [{ required: true, message: "Please select the operation type!" }],
   },
   {
     name: "chemicalUsed",
     label: "Chemical Used",
     span: 12,
     component: <Input />,
-    rules: [{ message: "Please enter the chemical used!" }],
+    rules: [],
   },
   {
     name: "progress",
@@ -71,46 +71,54 @@ const FORM_FIELDS = [
         ))}
       </Select>
     ),
-    rules: [{ message: "Please select the progress!" }],
+    rules: [],
   },
   {
     name: "chemicalQuantity",
     label: "Chemical Quantity",
     span: 12,
     component: <Input />,
-    rules: [{ message: "Please enter the quantity!" }],
+    rules: [],
   },
   {
     name: "labourMale",
     label: "Labour (Male)",
     span: 6,
-    component: <Input type="number" />,
-    rules: [{ message: "Please enter male labour count!" }],
+    component: <Input type="number" min={0} />,
+    rules: [],
   },
   {
     name: "labourFemale",
     label: "Labour (Female)",
     span: 6,
-    component: <Input type="number" />,
-    rules: [{ message: "Please enter female labour count!" }],
+    component: <Input type="number" min={0} />,
+    rules: [],
   },
   {
     name: "estimatedCost",
-    label: "Estimated Cost",
+    label: "Estimated Cost (Rs)",
     span: 12,
-    component: <Input type="number" />,
-    rules: [{ message: "Please enter the estimated cost!" }],
+    component: <Input type="number" min={0} />,
+    rules: [],
   },
   {
     name: "comments",
     label: "Add Comment",
     span: 12,
     component: <TextArea rows={4} />,
+    rules: [],
   },
 ];
 
-const EventForm = ({ visible, onClose, onSave, initialData }) => {
+const EventForm = ({
+  visible,
+  onClose,
+  onSave,
+  initialData,
+  selectedField,
+}) => {
   const [form] = Form.useForm();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (initialData) {
@@ -120,9 +128,38 @@ const EventForm = ({ visible, onClose, onSave, initialData }) => {
     }
   }, [initialData, form]);
 
-  const handleSubmit = (values) => {
-    onSave(values);
-    form.resetFields();
+  const handleSubmit = async (values) => {
+    if (!selectedField?.selectedField) {
+      message.error("Invalid or missing FarmField ID");
+      return;
+    }
+
+    // Add operationDate and operationTime to the form values before submission
+    const submissionValues = {
+      ...values,
+      operationDate: initialData?.date,
+      operationTime: initialData?.time,
+    };
+
+    try {
+      const result = await dispatch(
+        createOperation({
+          farmId: selectedField?.selectedField,
+          operationData: submissionValues,
+        })
+      ).unwrap();
+
+      if (result.success) {
+        message.success("Operation created successfully!");
+        onSave(submissionValues);
+        form.resetFields();
+        onClose();
+      } else {
+        message.error("Failed to create operation. Please try again.");
+      }
+    } catch (error) {
+      message.error("An error occurred while creating the operation.");
+    }
   };
 
   return (

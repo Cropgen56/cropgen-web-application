@@ -29,6 +29,7 @@
 
 .map-controls {
   position: absolute;
+  right: 10px !important;
   z-index: 1000;
   height: 80%;
 }
@@ -40,7 +41,7 @@
   color: #fff;
   padding: 5px 10px;
   position: absolute;
-  left: -20rem;
+  left: -22rem;
   top: 0.8rem;
   cursor: pointer;
 }
@@ -48,6 +49,16 @@
 #field-dropdown option:checked {
   background-color: #5a7c6ba6 !important;
   color: white;
+}
+
+select {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+select::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 #field-dropdown:hover {

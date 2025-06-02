@@ -46,20 +46,27 @@ export function formatDateToISO(dateString, endDate) {
   return formattedStartDate;
 }
 
-export function getSixMonthsBefore(date) {
-  // Convert input to Date object
-  const inputDate = date instanceof Date ? date : new Date(date);
+export function getOneYearBefore(date) {
+  let inputDate;
+
+  // If the date is a string in DD/MM/YYYY format, convert it
+  if (typeof date === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+    const [day, month, year] = date.split("/");
+    inputDate = new Date(`${year}-${month}-${day}`);
+  } else {
+    inputDate = date instanceof Date ? date : new Date(date);
+  }
 
   // Check if the date is valid
   if (isNaN(inputDate.getTime())) {
     throw new Error("Invalid date input");
   }
 
-  // Create a new Date object to avoid mutating the input
+  // Create a copy to avoid mutating the original
   const resultDate = new Date(inputDate);
 
-  // Subtract 6 months
-  resultDate.setMonth(resultDate.getMonth() - 6);
+  // Subtract 12 months (1 year)
+  resultDate.setMonth(resultDate.getMonth() - 12);
 
   // Format to YYYY-MM-DD
   const year = resultDate.getFullYear();
@@ -83,4 +90,14 @@ export function getDaysAgo(timestamp) {
   const daysAgo = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   return daysAgo;
+}
+
+export function getTodayDate() {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }

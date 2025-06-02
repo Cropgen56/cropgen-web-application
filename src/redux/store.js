@@ -3,6 +3,7 @@ import weatherSlice from "./slices/weatherSlice/index";
 import authSlice from "./slices/authSlice";
 import farmSlice from "./slices/farmSlice";
 import satelliteSlice from "./slices/satelliteSlice";
+import operationSlice from "./slices/operationSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     auth: authSlice,
     farmfield: farmSlice,
     satellite: satelliteSlice,
+    operation: operationSlice,
   },
 });
 

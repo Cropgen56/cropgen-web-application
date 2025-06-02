@@ -406,6 +406,48 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
   }
 );
 
+export const waterIndexData = createAsyncThunk(
+  "satellite/fetchIndexTimeSeriesSummary",
+  async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
+    try {
+      const input = { startDate, endDate, geometry, index };
+      const cacheKey = generateCacheKey("indexTimeSeriesSummary", null, input);
+      const cached = await get(cacheKey);
+      const now = Date.now();
+
+      if (cached && now - cached.timestamp < CACHE_TTL) {
+        return cached;
+      }
+
+      if (!startDate || !endDate || !geometry || !index) {
+        return rejectWithValue("Missing required parameters");
+      }
+
+      const coordinates = geometry?.map(({ lat, lng }) => {
+        if (typeof lat !== "number" || typeof lng !== "number") {
+          throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
+        }
+        return [lng, lat];
+      });
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL_SATELLITE}/index-timeseries-summary`,
+        {
+          start_date: startDate,
+          end_date: endDate,
+          geometry: coordinates,
+          index: index,
+        }
+      );
+
+      await set(cacheKey, { data: response.data, timestamp: now });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 const satelliteSlice = createSlice({
   name: "satellite",
   initialState,

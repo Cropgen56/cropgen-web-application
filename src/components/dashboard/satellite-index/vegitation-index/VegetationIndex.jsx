@@ -11,10 +11,14 @@ import {
 } from "recharts";
 import Card from "react-bootstrap/Card";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchIndexTimeSeriesSummary } from "../../../redux/slices/satelliteSlice";
-import { getDaysAgo, getSixMonthsBefore } from "../../../utility/formatDate";
-import LoadingSpinner from "../../comman/loading/LoadingSpinner";
-import "./NdviGraph.css";
+import { fetchIndexTimeSeriesSummary } from "../../../../redux/slices/satelliteSlice";
+import {
+  getDaysAgo,
+  getOneYearBefore,
+  getTodayDate,
+} from "../../../../utility/formatDate";
+import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
+import "./VegetationIndex.css";
 
 const NdviGraph = ({ selectedFieldsDetials }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
@@ -32,8 +36,8 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
     if (!field || !sowingDate) return null;
 
     return {
-      startDate: getSixMonthsBefore(sowingDate),
-      endDate: sowingDate,
+      startDate: getOneYearBefore(getTodayDate()),
+      endDate: getTodayDate(),
       geometry: field,
       index,
     };
@@ -128,7 +132,7 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
     return {
       width: Math.max(dataLength * 30, 300),
-      interval: Math.max(Math.floor(dataLength / 10), 0),
+      interval: 3,
     };
   }, [chartData.length]);
 
@@ -205,7 +209,10 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
               </Card.Body>
             </Card>
           ) : (
-            <div style={{ overflowX: "auto", maxWidth: "100%" }}>
+            <div
+              style={{ overflowX: "auto", maxWidth: "100%" }}
+              className="hide-scrollbar"
+            >
               <ResponsiveContainer width={chartConfig.width} height={200}>
                 <LineChart
                   data={chartData}
@@ -236,6 +243,7 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
                     wrapperStyle={{
                       paddingBottom: "10px",
                       paddingLeft: "50px",
+                      fontWeight: "bold",
                     }}
                   />
                   <Line
@@ -245,6 +253,24 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
                     dot={{ r: 3 }}
                     activeDot={{ r: 5 }}
                     connectNulls={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey={`${index} ( Day 2 )`}
+                    stroke="#344E41"
+                    dot={{ r: 2 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey={`${index} ( Day 3)`}
+                    stroke="#344E41"
+                    dot={{ r: 2 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey={`${index} ( Day 4 )`}
+                    stroke="#344E41"
+                    dot={{ r: 2 }}
                   />
                 </LineChart>
               </ResponsiveContainer>

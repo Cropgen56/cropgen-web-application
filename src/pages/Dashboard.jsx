@@ -8,7 +8,8 @@ import PlantGrowthActivity from "../components/dashboard/plantgrowthactivity/Pla
 import Insights from "../components/dashboard/insights/Insights";
 import CropAdvisory from "../components/dashboard/cropadvisory/CropAdvisory";
 import "../style/Dashboard.css";
-import NdviGraph from "../components/dashboard/ndvigraph/NdviGraph";
+import NdviGraph from "../components/dashboard/satellite-index/vegitation-index/VegetationIndex";
+// import WaterIndex from "../components/dashboard/satellite-index/water-index/WaterIndex";
 
 // Constants
 const SELECTED_FIELD_KEY = "selectedFieldId";
@@ -63,7 +64,6 @@ const Dashboard = () => {
         handleFieldSelection(latestField);
       }
     } else if (isInitialLoad) {
-      // Only on initial load, select the latest field if no field is selected
       const latestField = fields[fields.length - 1]?._id;
       if (latestField) {
         handleFieldSelection(latestField);
@@ -130,6 +130,7 @@ const Dashboard = () => {
       <CropHealth {...cropHealthProps} />
       <ForeCast />
       <NdviGraph {...ndviGraphProps} />
+      {/* <WaterIndex {...ndviGraphProps} /> */}
       <Insights />
       <CropAdvisory {...cropAdvisoryProps} />
       <PlantGrowthActivity {...plantGrowthProps} />

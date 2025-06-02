@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -6,21 +7,45 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { FilterIcon } from "../../../assets/Icons";
 import EventForm from "../operationform/EventForm";
 import moment from "moment";
+import { getOperationsByFarmField } from "../../../redux/slices/operationSlice";
 import "./OperationCalender.css";
 
-const FarmerScheduler = () => {
+const FarmerScheduler = (selectedField) => {
+  const dispatch = useDispatch();
+  const { operations, loading, error } = useSelector(
+    (state) => state.operation
+  );
+
   const [view, setView] = useState("timeGridThreeDay");
   const [date, setDate] = useState(new Date());
-  const [events, setEvents] = useState([
-    {
-      title: "Example Task 2",
-      start: "2024-11-28T12:00:00",
-      end: "2024-11-28T14:00:00",
-    },
-  ]);
-
+  const [events, setEvents] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+
+  // Map operations to FullCalendar events using operationDate and operationTime
+  useEffect(() => {
+    const mappedEvents = operations.reduce((acc, operation) => {
+      const startDateTime = moment(
+        `${operation.operationDate} ${operation.operationTime}`,
+        "YYYY-MM-DD HH:mm:ss"
+      ).toISOString();
+      const endDateTime = moment(startDateTime).add(1, "hour").toISOString();
+
+      // Check if an event with the same ID already exists to avoid duplicates
+      if (!acc.some((event) => event.id === operation._id)) {
+        acc.push({
+          id: operation._id,
+          title: operation.operationType.replace(/_/g, " ").toUpperCase(),
+          start: startDateTime,
+          end: endDateTime,
+          extendedProps: { ...operation },
+        });
+      }
+      return acc;
+    }, []);
+
+    setEvents(mappedEvents);
+  }, [operations]);
 
   const handleNavigate = (action) => {
     const increment = view === "timeGridThreeDay" ? 3 : 1;
@@ -40,18 +65,26 @@ const FarmerScheduler = () => {
   };
 
   const handleDateSelect = (selectInfo) => {
+    const selectedDate = moment(selectInfo.startStr).format("YYYY-MM-DD");
+    const selectedTime = moment(selectInfo.startStr).format("HH:mm:ss");
     setSelectedEvent({
       start: selectInfo.startStr,
       end: selectInfo.endStr,
+      date: selectedDate,
+      time: selectedTime,
     });
     setIsModalVisible(true);
   };
 
   const handleEventClick = (info) => {
+    const selectedDate = moment(info.event.startStr).format("YYYY-MM-DD");
+    const selectedTime = moment(info.event.startStr).format("HH:mm:ss");
     setSelectedEvent({
       ...info.event.extendedProps,
       start: info.event.startStr,
       end: info.event.endStr,
+      date: selectedDate,
+      time: selectedTime,
     });
     setIsModalVisible(true);
   };
@@ -61,17 +94,47 @@ const FarmerScheduler = () => {
     setDate(newDate);
   };
 
-  const handleSave = (newEvent) => {
-    setEvents((prevEvents) => [
-      ...prevEvents,
-      {
-        title: newEvent.title,
-        start: moment(newEvent.start).format(),
-        end: moment(newEvent.end).format(),
-      },
-    ]);
+  // Debounced handleSave to prevent multiple rapid calls
+  const handleSave = useCallback((newEvent) => {
+    setEvents((prevEvents) => {
+      const filteredEvents = prevEvents.filter(
+        (event) =>
+          event.id !== (newEvent._id || `new-${Date.now()}`) &&
+          event.start !==
+            moment(
+              `${newEvent.operationDate || newEvent.date} ${
+                newEvent.operationTime || newEvent.time
+              }`,
+              "YYYY-MM-DD HH:mm:ss"
+            ).toISOString()
+      );
+
+      // Create the new event
+      const startDateTime = moment(
+        `${newEvent.operationDate || newEvent.date} ${
+          newEvent.operationTime || newEvent.time
+        }`,
+        "YYYY-MM-DD HH:mm:ss"
+      ).toISOString();
+      const endDateTime = moment(startDateTime).add(1, "hour").toISOString();
+
+      const eventToAdd = {
+        id: newEvent._id || `new-${Date.now()}`,
+        title:
+          newEvent.operationType?.replace(/_/g, " ").toUpperCase() ||
+          newEvent.title,
+        start: startDateTime,
+        end: endDateTime,
+        extendedProps: { ...newEvent },
+      };
+
+      // Add the new event to the filtered list
+      const updatedEvents = [...filteredEvents, eventToAdd];
+      return updatedEvents;
+    });
     setIsModalVisible(false);
-  };
+    setSelectedEvent(null);
+  }, []);
 
   const handleClose = () => {
     setIsModalVisible(false);
@@ -133,7 +196,6 @@ const FarmerScheduler = () => {
               {">"}
             </button>
           </div>
-
           <button
             onClick={() => setIsModalVisible(true)}
             className="add-option-button"
@@ -183,6 +245,7 @@ const FarmerScheduler = () => {
             onClose={handleClose}
             onSave={handleSave}
             initialData={selectedEvent}
+            selectedField={selectedField}
           />
         )}
       </div>

@@ -8,6 +8,13 @@ import {
   WindSpeedIcon,
   Dots,
 } from "../../../assets/DashboardIcons";
+import {
+  Sun,
+  RainSun,
+  CloudeElectric,
+  Cloudesun,
+  RainCloude,
+} from "../../../assets/image/weather/index.js";
 
 function ForeCast() {
   const [weatherData, setWeatherData] = useState(() => {
@@ -26,7 +33,6 @@ function ForeCast() {
         };
   });
 
-  // Listen for changes in localStorage
   useEffect(() => {
     const handleStorageChange = () => {
       const data = localStorage.getItem("weatherData");
@@ -46,10 +52,7 @@ function ForeCast() {
       );
     };
 
-    // Listen for storage events (triggered when localStorage changes in another tab/window)
     window.addEventListener("storage", handleStorageChange);
-
-    // Also check localStorage on mount or when component updates
     handleStorageChange();
 
     return () => {
@@ -63,27 +66,29 @@ function ForeCast() {
 
   const getWeatherIcon = (temperature, condition) => {
     if (!condition && !temperature) return "🧊";
-    if (condition?.toLowerCase()?.includes("rain")) return "🌧️";
+    if (condition?.toLowerCase()?.includes("rain")) return <RainCloude />;
     if (condition?.toLowerCase()?.includes("snow")) return "❄️";
-    if (condition?.toLowerCase()?.includes("storm")) return "⛈️";
+    if (condition?.toLowerCase()?.includes("storm")) return <CloudeElectric />;
     if (
       condition?.toLowerCase()?.includes("clear") ||
       condition?.toLowerCase()?.includes("sunny")
     )
-      return "☀️";
-    if (condition?.toLowerCase()?.includes("cloud")) return "☁️";
+      return <Sun />;
+    if (condition?.toLowerCase()?.includes("cloud")) return <RainSun />;
     if (condition?.toLowerCase()?.includes("fog")) return "🌫️";
 
-    if (temperature >= 35) return "🔥";
-    if (temperature >= 25) return "☀️";
-    if (temperature >= 15) return "⛅";
-    if (temperature >= 5) return "🌥️";
+    if (temperature >= 35) return <Sun />;
+    if (temperature >= 25) return <Sun />;
+    if (temperature >= 15) return <Cloudesun />;
+    if (temperature >= 5) return <Cloudesun />;
     if (temperature >= -5) return "❄️";
     return "🧊";
   };
 
   const { currentConditions: weather = {}, days: weekForecast = [] } =
     weatherData;
+
+  const today = new Date().toISOString().split("T")[0];
 
   return (
     <Card body className="mt-4 mb-3 forecast shadow">
@@ -132,7 +137,7 @@ function ForeCast() {
                     key={index}
                     className={`day-forecast ${
                       day.isHighlighted ? "highlighted" : ""
-                    }`}
+                    } ${day.datetime === today ? "current-day" : ""}`}
                   >
                     <div
                       className={`day ${

@@ -98,7 +98,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
           <Bar
             dataKey="current"
             fill="#36A534"
-            barSize={5}
+            barSize={6}
             name="Current"
             radius={[10, 10, 10, 10]}
             label={{
@@ -106,7 +106,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
               fill: "#000",
               formatter: (value) => `${value} kg/acre`,
               style: {
-                fontSize: "8px",
+                fontSize: "9px",
                 fontWeight: "700",
               },
             }}
@@ -114,7 +114,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
           <Bar
             dataKey="lastYear"
             fill="#C4E930"
-            barSize={5}
+            barSize={6}
             name="Required"
             radius={[10, 10, 10, 10]}
             label={{
@@ -122,7 +122,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
               fill: "#A2A2A2",
               formatter: (value) => `${value} kg/acre`,
               style: {
-                fontSize: "8px",
+                fontSize: "9px",
                 fontWeight: "700",
               },
             }}

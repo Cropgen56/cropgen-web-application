@@ -1,18 +1,20 @@
 .operation-sidebar {
-  width: 20vw;
+  width: 22vw;
   height: 100vh;
   margin: 0;
-  padding: 0;
+  padding: 20px;
   background-color: #fff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
+
 .operation-heading {
   display: flex;
   flex-direction: column;
   border-bottom: 1px solid #344e41;
+  gap: 10px;
 }
+
 .operation-firt-row {
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -31,7 +33,6 @@
 .search-icon {
   position: absolute;
   font-size: 1.2rem;
-  padding: 2;
   margin-top: 0.5rem;
   margin-left: 2rem;
   color: #fff;
@@ -57,12 +58,9 @@
 .operation-info.selected-operation {
   background-color: #5a7c6b;
 }
+
 .selected-title {
-  color: #fff !important;
-}
-.operation-heading:nth-child(0) {
-  display: flex;
-  flex-direction: row;
+  color: #fff;
 }
 
 .operation-heading h2 {
@@ -95,6 +93,9 @@
 
 .operation-sidebar .operation-info .operation-details {
   display: flex;
+  gap: 10px;
+  font-size: 0.7rem;
+  color: #a2a2a2;
 }
 
 .operation-sidebar .operation-info .ha {
@@ -106,7 +107,38 @@
 }
 
 .operation-sidebar .operation-info .operation-details p {
-  font-size: 0.7rem;
-  color: #a2a2a2;
   margin-right: 1rem;
+}
+
+.operation-field {
+  margin-top: 20px;
+}
+
+.operation-field-scrollable {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.operation-field-scrollable::-webkit-scrollbar {
+  width: 8px;
+  display: none;
+}
+
+.operation-field-scrollable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.operation-field-scrollable::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.operation-field-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.operations {
+  margin-left: 10px;
 }

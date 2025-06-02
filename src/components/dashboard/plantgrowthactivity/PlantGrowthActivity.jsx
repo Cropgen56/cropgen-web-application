@@ -11,17 +11,27 @@ import Card from "react-bootstrap/Card";
 import "./PlantGrowthActivity.css";
 import { useSelector } from "react-redux";
 
-// Generate linear data for a straight line from (Week 1, 0) to (Week 11, 6)
-const generateLinearData = (currentWeek, cropGrowthStage) => {
-  const data = Array.from({ length: 11 }, (_, i) => {
-    const week = i + 1;
-    return {
-      week: `Week ${week}`,
-      height: (week / 11) * 6,
-      growthStage: week === currentWeek ? cropGrowthStage || "Unknown" : "",
-      weekNumber: week,
-    };
-  });
+// Generate data to match the curve in the image
+const generateCurveData = (currentWeek, cropGrowthStage) => {
+  const data = [
+    { week: "Week 1", height: 0, weekNumber: 1 },
+    { week: "Week 2", height: 0.9, weekNumber: 2 },
+    { week: "Week 3", height: 1.5, weekNumber: 3 },
+    { week: "Week 4", height: 1.8, weekNumber: 4 },
+    { week: "Week 5", height: 2.5, weekNumber: 5 },
+    { week: "Week 6", height: 4, weekNumber: 6 },
+    { week: "Week 7", height: 4.9, weekNumber: 7 },
+    { week: "Week 8", height: 5, weekNumber: 8 },
+    { week: "Week 9", height: 6, weekNumber: 9 },
+    { week: "Week 10", height: 6.5, weekNumber: 10 },
+    { week: "Week 11", height: 7, weekNumber: 11 },
+    { week: "Week 12", height: 7.5, weekNumber: 12 },
+    { week: "Week 13", height: 8, weekNumber: 13 },
+  ].map((item) => ({
+    ...item,
+    growthStage:
+      item.weekNumber === currentWeek ? cropGrowthStage || "Unknown" : "",
+  }));
   return data;
 };
 
@@ -30,25 +40,20 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
   const { NpkData } = useSelector((state) => state.satellite);
   const { Crop_Growth_Stage } = NpkData || {};
 
-  // Current date and time: May 29, 2025, 02:25 PM IST
   const today = new Date("2025-05-29T14:25:00+05:30");
   const sowing = sowingDate ? new Date(sowingDate) : null;
   let currentWeek = 1;
 
-  // Calculate current week
   if (sowing) {
     const timeDiff = today.getTime() - sowing.getTime();
     const daysSinceSowing = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
     currentWeek = Math.min(
       Math.max(Math.floor(daysSinceSowing / 7) + 1, 1),
-      11
+      13
     );
   }
 
-  // Generate chart data
-  const data = generateLinearData(currentWeek, Crop_Growth_Stage);
-
-  // Find the current week's data point
+  const data = generateCurveData(currentWeek, Crop_Growth_Stage);
   const currentWeekData = data.find((d) => d.weekNumber === currentWeek);
 
   return (
@@ -57,16 +62,11 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
         <div className="heading-container">
           <h2 className="header-title">Plant Growth Activity</h2>
           <div className="subheader-text">{cropName || "Unknown Crop"}</div>
-          {Crop_Growth_Stage && (
-            <div className="growth-stage-text">
-              Current Stage: {Crop_Growth_Stage} (Week {currentWeek})
-            </div>
-          )}
         </div>
         <div className="dropdown-container">
           <div className="custom-dropdown">
             <select aria-label="Select Activity Phase">
-              <option>Planning/Sowing</option>
+              <option>Planting/Sowing</option>
               <option>Sowing</option>
               <option>Growth</option>
             </select>
@@ -74,9 +74,8 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
           <div className="custom-dropdown">
             <select aria-label="Select Time Period">
               <option>Days</option>
-              <option>Week 1</option>
-              <option>Week 2</option>
-              <option>Week 3</option>
+              <option>Weeks</option>
+              <option>Months</option>
             </select>
           </div>
         </div>
@@ -90,20 +89,44 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
           >
             <defs>
               <linearGradient id="colorHeight" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4B970F" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#4B970F" stopOpacity={0} />
+                <stop offset="5%" stopColor="#3A8B0A" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#3A8B0A" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="#ccc" vertical={false} />
-            <XAxis hide />
+            <XAxis
+              dataKey="week"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "#000", fontSize: "12px", fontWeight: "bold" }}
+            />
             <YAxis hide />
             <Area
-              type="linear"
+              type="monotone"
               dataKey="height"
-              stroke="#4B970F"
+              stroke="#3A8B0A"
               fillOpacity={1}
               fill="url(#colorHeight)"
               name="Plant Height"
+              dot={(props) => {
+                const { cx, cy, payload } = props;
+                if (
+                  payload.weekNumber === currentWeek ||
+                  payload.weekNumber === data.length
+                ) {
+                  return (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={4}
+                      fill="#4B970F"
+                      stroke="#fff"
+                      strokeWidth={2}
+                    />
+                  );
+                }
+                return null;
+              }}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -112,21 +135,18 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
             className="custom-tooltip"
             style={{
               position: "absolute",
-              left: `${(currentWeekData.weekNumber / 11) * 100}%`,
-              top: `${100 - (currentWeekData.height / 6) * 100 - 5}%`,
+              left: `${(currentWeekData.weekNumber / 13) * 100}%`,
+              top: `${100 - (currentWeekData.height / 6) * 100 - 10}%`,
               transform: "translateX(-50%) translateY(-100%)",
-              backgroundColor: "#fff",
-              border: "1px solid #ccc",
-              padding: "5px",
+              backgroundColor: "#7BB34F",
+              color: "#fff",
+              padding: "5px 10px",
               borderRadius: "4px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
               zIndex: 1000,
             }}
           >
-            <p className="tooltip-week">{currentWeekData.week}</p>
-            <p className="tooltip-stage">
-              Growth Stage: {currentWeekData.growthStage || "Unknown"}
-            </p>
+            <p className="tooltip-stage">{Crop_Growth_Stage}</p>
+            {/* <p className="tooltip-info">Fertilization, pest control</p> */}
           </div>
         )}
       </div>

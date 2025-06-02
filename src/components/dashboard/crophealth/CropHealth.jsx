@@ -8,6 +8,7 @@ import SoilMoistureTemperature from "./soil-moisture-temperature/SoilMoistureTem
 import { calculateAiYield } from "../../../redux/slices/satelliteSlice.js";
 import cropImage from "../../../assets/image/dashboard/crop-image.jpg";
 import "./CropHealth.css";
+import SoilHealthChart from "./solilhealth/SoilHealthChart.jsx";
 
 const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials?.[0];
