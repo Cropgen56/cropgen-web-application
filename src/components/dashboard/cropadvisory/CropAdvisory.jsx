@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Card, Form } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { genrateAdvisory } from "../../../redux/slices/satelliteSlice";
+import { fetchSoilMoisture } from "../../../redux/slices/satelliteSlice";
 import "./CropAdvisory.css";
+import LoadingSpinner from "../../../components/comman/loading/LoadingSpinner";
 
 const CropAdvisory = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
@@ -11,7 +13,11 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
     (state) => state.satellite
   );
 
-  // console.log(advisory);
+  const farmDetails = selectedFieldsDetials[0];
+
+  useEffect(() => {
+    dispatch(fetchSoilMoisture(farmDetails));
+  }, [selectedFieldsDetials]);
 
   useEffect(() => {
     if (NpkData && SoilMoisture && selectedFieldsDetials?.length) {
@@ -95,7 +101,10 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
           ))}
         </div>
       ) : (
-        <p className="text-center text-muted">Advisory Loading...</p>
+        <p className="text-center text-muted">
+          <LoadingSpinner />
+          <strong>Generating Advisory</strong>
+        </p>
       )}
     </Card>
   );

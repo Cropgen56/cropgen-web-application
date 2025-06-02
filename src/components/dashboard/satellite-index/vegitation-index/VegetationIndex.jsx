@@ -166,6 +166,7 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
   return (
     <Card body className="ndvi-graph-main">
+      <h6 style={{ color: "#5a7c6b" }}>Vegetation Index</h6>
       <div className="ndvi-container p-0 m-0">
         {/* Left Panel */}
         <div className="ndvi-left">
@@ -196,7 +197,10 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
           </div>
 
           {isLoading ? (
-            <LoadingSpinner height="200px" size={64} color="#86D72F" />
+            <div className="text-center text-muted">
+              <LoadingSpinner height="200px" size={64} color="#86D72F" />
+              <strong>Vegetation Index</strong>
+            </div>
           ) : !hasData ? (
             <Card className="no-data-card mx-auto mt-4 max-w-md">
               <Card.Body className="text-center">

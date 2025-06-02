@@ -166,6 +166,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
 
   return (
     <Card body className="ndvi-graph-main">
+      <h6 style={{ color: "#1E90FF" }}>Water Index</h6>
       <div className="ndvi-container p-0 m-0">
         {/* Left Panel */}
         <div className="ndvi-left">
@@ -195,7 +196,10 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
             </select>
           </div>
           {isLoading ? (
-            <LoadingSpinner height="200px" size={64} color="#86D72F" />
+            <div className="text-center text-muted">
+              <LoadingSpinner height="200px" size={64} color="#86D72F" />
+              <strong>Water Index</strong>
+            </div>
           ) : !hasData ? (
             <Card className="no-data-card mx-auto mt-4 max-w-md">
               <Card.Body className="text-center">
