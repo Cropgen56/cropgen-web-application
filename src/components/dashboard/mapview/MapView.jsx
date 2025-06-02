@@ -22,7 +22,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchweatherData } from "../../../redux/slices/weatherSlice";
-import { resetState } from "../../../redux/slices/satelliteSlice";
+import { resetSatelliteState } from "../../../redux/slices/satelliteSlice";
 import Loading from "../../comman/loading/Loading";
 import IndexDates from "./indexdates/IndexDates";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
@@ -175,7 +175,7 @@ const FarmMap = ({
 
   // Reset satellite state on field change
   useEffect(() => {
-    dispatch(resetState());
+    dispatch(resetSatelliteState());
   }, [selectedField, dispatch]);
 
   // Handle field selection

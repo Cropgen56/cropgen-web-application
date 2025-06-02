@@ -164,6 +164,16 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   const isLoading = loading?.waterIndexData || false;
   const hasData = chartData.length > 0;
 
+  // Define index descriptions
+  const indexDescriptions = {
+    NDMI: "NDMI values can be used to monitor vegetation water content and drought conditions over time.",
+    NDWI: "NDWI values help assess water presence in vegetation and detect surface water or irrigation zones.",
+    SMI: "SMI (Soil Moisture Index) helps track surface soil moisture to support irrigation and drought planning.",
+    MSI: "MSI values indicate water stress; higher values suggest drier vegetation or moisture deficit.",
+    WI: "WI (Water Index) highlights moisture content in crops and helps assess water availability trends.",
+    NMDI: "NMDI helps detect moisture variations in soil and vegetation, especially under stress or dry spells.",
+  };
+
   return (
     <Card body className="ndvi-graph-main">
       <h6 style={{ color: "#1E90FF" }}>Water Index</h6>
@@ -179,8 +189,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
               : "N/A"}
           </p>
           <div style={{ borderColor: "#1E90FF" }}>
-            {index} values help in mapping vegetation and detecting cover
-            changes over time.
+            {indexDescriptions[index]}
           </div>
         </div>
         {/* Right Panel */}

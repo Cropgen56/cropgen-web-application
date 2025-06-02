@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
-import { logoutUser } from "../../utility/logout";
+import logoutUser from "../../utility/logout";
 import {
   AddFieldIcon,
   CropAnalysisIcon,
@@ -93,10 +93,18 @@ const Sidebar = ({ onToggleCollapse }) => {
 
   // Handle logout
   const handleLogout = async () => {
-    if (window.confirm("Are you sure you want to logout?")) {
-      await logoutUser();
-      navigate("/login");
-    }
+    const logout = logoutUser();
+
+    const handleLogout = async () => {
+      const result = await logout();
+      if (result.success) {
+        console.log("Logout successful");
+        // Optionally show a success message to the user
+      } else {
+        console.error("Logout failed:", result.error);
+        // Optionally show an error message to the user
+      }
+    };
   };
 
   return (

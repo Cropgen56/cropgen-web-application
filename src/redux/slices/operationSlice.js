@@ -45,7 +45,7 @@ const operationSlice = createSlice({
   name: "operation",
   initialState,
   reducers: {
-    // Add any synchronous actions here if needed
+    resetOperationState: () => initialState,
   },
   extraReducers: (builder) => {
     builder
@@ -78,4 +78,5 @@ const operationSlice = createSlice({
   },
 });
 
+export const { resetOperationState } = operationSlice.actions;
 export default operationSlice.reducer;

@@ -1,76 +1,91 @@
-.soil-analysis-chart-container {
+.container {
   width: 100%;
-  max-width: 600px;
-  margin: auto;
+  padding: 0 15px;
   box-sizing: border-box;
-  position: relative;
 }
 
-.soil-analysis-chart-title {
-  text-align: start;
-  color: #344e41;
-  font-size: 1.3rem;
+.nutrient-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.npk-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: #075a53;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+  margin-bottom: -15px;
+}
+
+.icon-text {
+  color: #fff;
+  font-weight: bold;
+  font-size: 10px;
+}
+
+.info-container {
+  flex: 1;
+}
+
+.label {
   font-weight: 600;
+  font-size: 1.1rem;
+  color: #000;
+  margin-bottom: 5px;
+  display: block;
 }
 
-.y-axis-label {
+.bar-wrapper {
+  background-color: #eee;
+  height: 6px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 6px;
+  border-radius: 4px;
+}
+
+.values-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background-color: #86d72f;
-  color: white;
+  padding-top: 1.4rem;
+  padding-left: 1rem;
+}
+
+.current-text {
   font-weight: bold;
-  font-size: 1rem;
-  border-radius: 50%;
-  position: relative;
+  font-size: 0.7rem;
+  color: #1c1c1c;
 }
 
-.y-axis-label p {
-  font-size: 0.75rem;
-  margin-top: 5px;
-  text-align: center;
-  color: #344e41;
-}
-
-.nutrient-names {
-  position: absolute;
-  top: -25px;
-  left: 60px;
-  width: calc(100% - 100px);
-}
-
-.nutrient-name {
-  font-size: 0.9rem;
-  font-weight: bold;
-  text-align: left;
-  color: #344e41;
-  margin-bottom: 50px;
-}
-
-.nutrient-N {
-  margin-top: 80px !important;
-  padding-left: 10px;
-}
-.nutrient-P {
-  margin-top: 70px !important;
-  padding-left: 15px;
-}
-
-.nutrient-K {
-  margin-top: 60px !important;
-  padding-left: 15px;
-}
-
-.no-data-message {
-  text-align: center;
-  padding: 20px;
-  color: #666;
-  font-size: 16px;
+.required-text {
+  font-size: 0.7rem;
   font-weight: 500;
-  background-color: #f8f8f8;
+  color: #777;
+}
+
+.message-container {
+  background-color: #fff3e0;
+  padding: 15px;
   border-radius: 8px;
-  margin: 10px 0;
+  margin-bottom: 20px;
+  border: 1px solid #ffca28;
+}
+
+.message-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #d84315;
+  text-align: center;
+  display: block;
 }

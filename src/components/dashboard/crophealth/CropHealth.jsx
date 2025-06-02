@@ -85,7 +85,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
                   <td>{totalArea.toFixed(2)} acres</td>
                 </tr>
                 <tr>
-                  <th>Standard Yield Data :-</th>
+                  <th>Standard Yield :-</th>
                   <td>{cropYield?.Standard_Yield_units || "N/A"}</td>
                 </tr>
                 <tr>
@@ -103,6 +103,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
 
       <div className="d-flex justify-content-between align-items-center mt-3 ">
         <div style={{ width: "50%" }}>
+          <h2 className="soil-health-chart-title">Soil Analysis </h2>
           <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
         <div style={{ width: "50%" }}>

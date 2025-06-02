@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   Legend,
   ResponsiveContainer,
+  Tooltip,
 } from "recharts";
 import "./SoilHealthChart.css";
 import { useDispatch, useSelector } from "react-redux";
@@ -51,6 +52,34 @@ const SoilHealthChart = () => {
 
   const chartData = soilData ? processSoilData(soilData) : [];
 
+  // Custom Tooltip component
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div
+          className="custom-tooltip"
+          style={{
+            backgroundColor: "#fff",
+            border: "1px solid #ccc",
+            padding: "5px",
+            borderRadius: "4px",
+            textAlign: "center",
+            width: "130px",
+            padding: "10px",
+          }}
+        >
+          {payload.map((entry, index) => (
+            <p key={index} style={{ margin: 0, color: "#666" }}>
+              {entry.name === "Soil Moisture (%)" ? "Moisture" : "Temperature"}:{" "}
+              {entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="soil-health-chart-container">
       <h2 className="soil-health-chart-title">Soil Health </h2>
@@ -79,6 +108,7 @@ const SoilHealthChart = () => {
             iconType="line"
             wrapperStyle={{ fontSize: 12, color: "#666" }}
           />
+          <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
             dataKey="moisture"

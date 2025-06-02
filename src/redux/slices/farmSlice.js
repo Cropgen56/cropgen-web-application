@@ -66,7 +66,9 @@ const initialState = {
 const farmSlice = createSlice({
   name: "farm",
   initialState,
-  reducers: {},
+  reducers: {
+    resetFarmState: () => initialState,
+  },
   extraReducers: (builder) => {
     builder
       // Add Farm Field
@@ -100,4 +102,5 @@ const farmSlice = createSlice({
   },
 });
 
+export const { resetFarmState } = farmSlice.actions;
 export default farmSlice.reducer;

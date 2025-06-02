@@ -508,10 +508,10 @@ const satelliteSlice = createSlice({
     setSelectedIndex: (state, action) => {
       state.selectedIndex = action.payload;
     },
-    resetState: () => initialState,
     removeSelectedIndexData: (state) => {
       state.indexData = null;
     },
+    resetSatelliteState: () => initialState,
   },
   extraReducers: (builder) => {
     builder
@@ -664,7 +664,11 @@ const satelliteSlice = createSlice({
   },
 });
 
-export const { setSelectedIndex, resetState, removeSelectedIndexData } =
-  satelliteSlice.actions;
+export const {
+  setSelectedIndex,
+  resetState,
+  removeSelectedIndexData,
+  resetSatelliteState,
+} = satelliteSlice.actions;
 
 export default satelliteSlice.reducer;
