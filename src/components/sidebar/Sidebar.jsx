@@ -84,12 +84,9 @@ const Sidebar = ({ onToggleCollapse }) => {
     // If navigating to /cropgen-analytics, ensure sidebar is open
     if (path === "/cropgen-analytics") {
       handleCollapseToggle(false);
-    }
-    // If navigating away from /cropgen-analytics to another page, collapse sidebar
-    else if (location.pathname === "/cropgen-analytics") {
+    } else if (location.pathname === "/cropgen-analytics") {
       handleCollapseToggle(true);
     }
-    // If already on a non-/cropgen-analytics page, do not change collapse state
   };
 
   // Handle logout
