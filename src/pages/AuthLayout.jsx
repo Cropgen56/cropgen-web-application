@@ -1,94 +1,74 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../style/AuthLayout.css";
-import SignUp from "../components/AuthLayout/signup/Signnup";
+import Signnup from "../components/AuthLayout/signup/Signup";
 import Login from "../components/AuthLayout/login/Login";
-import SocialButtons from "../components/AuthLayout/shared/socialbuttons/SocialButton";
 import { Logo } from "../assets/Icons.jsx";
 import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice.js";
-import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 const AuthLayout = () => {
   const [activeTab, setActiveTab] = useState("SignUp");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   useEffect(() => {
     dispatch(loadLocalStorage());
     dispatch(decodeToken());
   }, [dispatch]);
 
-  const handleSuccess = (credentialResponse) => {
-    console.log("Encoded JWT ID token:", credentialResponse.credential);
-    // Decode and use JWT to fetch user data
-  };
-
-  const handleError = () => {
-    console.log("Login Failed");
-  };
   return (
-    <div className="auth-container">
-      {/* Left Side with Image and Text */}
-      <div className="auth-image">
-        <div className="overlay">
-          <span className="logo">
-            {" "}
-            <Logo /> CropGen
-          </span>
-          <div className="auth-image-text ">
-            <h4>Manage your fields remotely</h4>
-            <p>
-              Monitor the state of your crops right from the office, learn about
-              the slightest changes on-the-spot, and make fast and reliable
-              decisions on field treatment.
-            </p>
+    <div className="auth-container flex flex-row min-h-screen w-full">
+      {/* Left Side - Image with overlay and content */}
+      <div className="auth-image relative w-1/2 h-auto">
+        {/* Dark green overlay */}
+        <div className="absolute inset-0 bg-green-900 bg-opacity-60 z-10" />
+
+        <div className="relative z-20 h-full flex flex-col justify-start px-10 py-10">
+          {/* Logo */}
+          <div className="flex items-center gap-2 text-white text-xl font-semibold">
+            <Logo />
+          </div>
+
+          {/* Text: Smart Farming, Simple Access */}
+          <div className="mt-10">
+            <h2 className="text-white text-3xl font-bold leading-tight">
+              Smart Farming,<br />Simple Access.
+            </h2>
+          </div>
+
+          {/* Testimonial Card */}
+          <div className="mt-auto pb-10 w-full flex justify-center">
+            <div className="bg-white/20 p-3 sm:p-4 rounded-xl max-w-sm w-full text-white text-sm backdrop-blur-md">
+              <p className="text-xs sm:text-sm mb-3 leading-relaxed">
+                With CropGen, I now manage my crops without stepping into the field every day.
+                I get instant crop health updates, weather alerts, and expert advice all on my phone.
+                It saves me time, water, and effort. This is the future of farming.
+              </p>
+              <div className="flex items-center gap-2 mt-3">
+                <img
+                  src="https://randomuser.me/api/portraits/men/32.jpg"
+                  alt="Ram Kishan"
+                  className="w-8 h-8 rounded-full"
+                />
+                <div>
+                  <p className="text-sm font-semibold">Ram Kishan</p>
+                  <p className="text-xs text-white/80">Rajasthan Farmer</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Right Side with Forms */}
-      <div className="auth-form">
-        <div>
-          {/* <LanguageSwitcher /> */}
-          <p className="auth-form-text">
-            Manage your field easier - Moniter online. Detect in real-time. Act
-            smart.
-          </p>
-        </div>
-        <div className="form-header row mx-auto">
-          <div className="signup-login-button-container p-0 m-0">
-            <div
-              className={`signup-button ${
-                activeTab === "SignUp" ? "active-tab" : ""
-              }`}
-            >
-              <button onClick={() => setActiveTab("SignUp")}>Sign Up</button>
-            </div>
-            <div
-              className={`signin-button ${
-                activeTab === "Login" ? "active-tab" : ""
-              }`}
-            >
-              {" "}
-              <button onClick={() => setActiveTab("Login")}>Login</button>
-            </div>
-          </div>
-          <div className="login-body py-2">
-            <SocialButtons
-              handleSuccess={handleSuccess}
-              handleError={handleError}
-            />
-            <div className="or ">
-              <hr />
-              <span>OR</span>
-              <hr />
-            </div>
-            {activeTab === "SignUp" ? (
-              <SignUp setActiveTab={setActiveTab} />
-            ) : (
-              <Login />
-            )}
-          </div>
+      {/* Right Side - Signup/Login Form */}
+      <div className="auth-form w-1/2 flex items-center justify-center px-4 py-10 bg-white">
+        <div className="w-full max-w-md">
+          {activeTab === "SignUp" ? (
+            <Signnup setActiveTab={setActiveTab} />
+          ) : (
+            <Login setActiveTab={setActiveTab} />
+          )}
         </div>
       </div>
     </div>

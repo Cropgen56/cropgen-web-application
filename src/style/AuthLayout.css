@@ -1,111 +1,66 @@
 .auth-container {
   display: flex;
   height: 100vh;
-}
-.auth-form-text {
-  font-size: 0.9rem;
-  text-align: center;
-  font-weight: 600;
-  margin-bottom: 10px;
-  margin-top: 3rem;
+  overflow: hidden;
 }
 
 .auth-image {
   flex: 1;
-  background: url("/src/assets/image/login/posterimage.jpg") no-repeat center
-    center;
+  background: url("../assets/image/login/bg.png") no-repeat center center;
   background-size: cover;
   position: relative;
-}
-.auth-image .logo {
-  font-size: 1.4rem;
-  font-weight: 600;
-}
-.auth-image-text {
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  margin-top: 18rem;
 }
 
 .overlay {
   position: absolute;
-  color: white;
-  padding: 40px;
-  background: rgba(0, 0, 0, 0.5);
-  height: 100%;
-  width: 100%;
+  inset: 0;
+  background-color: rgba(11, 80, 57, 0.8);
 }
 
 .auth-form {
   flex: 1;
-  background-color: #075a53;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 40px;
-  color: white;
+  background: white;
+  padding: 2rem;
+  overflow-y: auto;
 }
 
-/* from main container style */
-.form-header {
-  display: flex;
-  flex-direction: row;
-  width: 60%;
-  height: auto;
-  border-radius: 20px;
-  margin-bottom: 2rem;
-  border: 1px solid #fff;
+.auth-form-text {
+  text-align: center;
+  color: #444;
+  margin-bottom: 1rem;
 }
-.login-body {
-  background-color: #2e7670;
-  border-radius: 0 0 20px 20px;
-}
+
 .signup-login-button-container {
   display: flex;
-  flex-direction: row;
-}
-
-.active-tab {
-  background-color: #2e7670 !important;
-  border-bottom: none;
-  border-left: 1px solid white;
-  border-right: 1px solid white;
-}
-
-/* signup and signin toggle buttton */
-.signin-button,
-.signup-button {
-  padding: 10px 0px;
-  width: 50%;
-  display: flex;
   justify-content: center;
-}
-.signin-button {
-  border-top-right-radius: 19px;
-}
-.signup-button {
-  border-top-left-radius: 19px;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .signup-button button,
 .signin-button button {
+  background: none;
   border: none;
-  background-color: transparent;
-  color: #fff;
-  font-weight: 700;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.active-tab button {
+  color: green;
+  border-bottom: 2px solid green;
 }
 
 .or {
   display: flex;
-  justify-content: space-around;
   align-items: center;
-  padding: 0 !important;
-  margin: 0 !important;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
 }
+
 .or hr {
-  border: 1px solid #ffffff;
-  width: 100px;
-  padding: 0 5px !important;
-  margin: 1px 0;
+  flex: 1;
+  border: none;
+  border-top: 1px solid #ccc;
 }
