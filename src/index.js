@@ -12,6 +12,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <GoogleOAuthProvider clientId={process.env.REACT_APP_CLIENT_ID}>
     <Provider store={store}>
+      {/* implement the telwind css and add new login page  */}
       <App />
     </Provider>
   </GoogleOAuthProvider>
