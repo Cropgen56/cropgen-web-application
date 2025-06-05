@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "../style/AuthLayout.css";
-import Signnup from "../components/AuthLayout/signup/Signup";
+import Signup from "../components/AuthLayout/signup/Signup";
 import Login from "../components/AuthLayout/login/Login";
 import { Logo } from "../assets/Icons.jsx";
 import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice.js";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
 
 const AuthLayout = () => {
   const [activeTab, setActiveTab] = useState("SignUp");
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(loadLocalStorage());
@@ -18,19 +16,18 @@ const AuthLayout = () => {
   }, [dispatch]);
 
   return (
-    <div className="auth-container flex flex-row min-h-screen w-full">
-      {/* Left Side - Image with overlay and content */}
-      <div className="auth-image relative w-1/2 h-auto">
-        {/* Dark green overlay */}
+    <div className="auth-container flex flex-col md:flex-row min-h-screen w-full">
+      
+      {/* Left Side - Image/Testimonial - hidden on mobile */}
+      <div className="auth-image hidden md:block relative w-1/2 h-full">
         <div className="absolute inset-0 bg-green-900 bg-opacity-60 z-10" />
-
         <div className="relative z-20 h-full flex flex-col justify-start px-10 py-10">
           {/* Logo */}
           <div className="flex items-center gap-2 text-white text-xl font-semibold">
             <Logo />
           </div>
 
-          {/* Text: Smart Farming, Simple Access */}
+          {/* Heading */}
           <div className="mt-10">
             <h2 className="text-white text-3xl font-bold leading-tight">
               Smart Farming,<br />Simple Access.
@@ -62,10 +59,10 @@ const AuthLayout = () => {
       </div>
 
       {/* Right Side - Signup/Login Form */}
-      <div className="auth-form w-1/2 flex items-center justify-center px-4 py-10 bg-white">
+      <div className="auth-form w-full md:w-1/2 flex flex-col justify-center items-center px-4 py-6 bg-white min-h-screen">
         <div className="w-full max-w-md">
           {activeTab === "SignUp" ? (
-            <Signnup setActiveTab={setActiveTab} />
+            <Signup setActiveTab={setActiveTab} />
           ) : (
             <Login setActiveTab={setActiveTab} />
           )}

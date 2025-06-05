@@ -4,6 +4,7 @@
   min-height: 100vh;
   transition: width 0.3s ease;
 }
+
 /* cropgen title and logo style  */
 .collapse-button {
   background: none;
@@ -13,6 +14,7 @@
   opacity: 1 !important;
   visibility: visible !important;
 }
+
 .collapse-button img {
   width: 1.5rem !important;
   height: 1.3rem !important;
@@ -49,6 +51,7 @@
   width: 240px !important;
   transition: width 0.3s ease;
 }
+
 .offcanvas.collapsed {
   width: 60px !important;
   text-align: center;
@@ -56,12 +59,14 @@
   padding: 0px;
   transition: width 0.3s ease;
 }
+
 /* card profile css style */
 .card {
   margin: 20px auto;
   background-color: #5a7c6b !important;
   cursor: pointer;
 }
+
 .profile-image {
   width: 80px !important;
   height: 80px;
@@ -69,6 +74,7 @@
   margin: auto;
   z-index: 1000;
 }
+
 .active {
   padding: 2px 0 3px 5px;
   font-size: 0.9rem !important;
@@ -77,12 +83,14 @@
   text-align: left;
   color: #f8f8f8 !important;
 }
+
 .profile-user-name {
   font-size: 25px;
   font-weight: 600;
   line-height: 30.26px;
   color: #f8f8f8 !important;
 }
+
 .profile-user-email {
   font-size: 0.9rem;
   font-weight: 200;
@@ -112,9 +120,11 @@ nav li {
   line-height: 2rem;
   color: #f5f5f5 !important;
   cursor: pointer;
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+
+  /* ✅ Make icon and label inline */
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
 }
 
 nav a {
@@ -123,15 +133,12 @@ nav a {
 }
 
 /* logout feature style */
-
 .offcanvas-footer {
   text-align: center;
 }
 
 .footer-text {
   display: flex;
-  /* align-items: center; */
-  /* justify-content: center; */
   gap: 8px;
   font-size: 1rem;
   color: #fff;
