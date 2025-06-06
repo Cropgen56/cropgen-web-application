@@ -1,4 +1,3 @@
-// Signnup.jsx
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { signupUser } from "../../../redux/slices/authSlice";
@@ -17,27 +16,62 @@ const Signup = ({ setActiveTab }) => {
     organizationCode: "",
     terms: false,
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? checked : value,
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === "checkbox"
+          ? checked
+          : name === "organizationCode"
+          ? value.toUpperCase()
+          : value,
+    }));
   };
 
   const validate = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\d{10}$/;
-    if (!formData.firstName || !formData.lastName)
-      return alert("Name is required.");
-    if (!formData.email || !emailRegex.test(formData.email))
-      return alert("Invalid email.");
-    if (!formData.phone || !phoneRegex.test(formData.phone))
-      return alert("Phone must be 10 digits.");
-    if (!formData.password || formData.password.length < 6)
-      return alert("Password must be at least 6 characters.");
-    if (!formData.terms) return alert("You must accept the terms.");
+
+    if (!formData.firstName) {
+      alert("First name is required.");
+      return false;
+    }
+    if (!formData.lastName) {
+      alert("Last name is required.");
+      return false;
+    }
+    if (!formData.email) {
+      alert("Email is required.");
+      return false;
+    }
+    if (!emailRegex.test(formData.email)) {
+      alert("Invalid email format.");
+      return false;
+    }
+    if (!formData.phone) {
+      alert("Phone number is required.");
+      return false;
+    }
+    if (!phoneRegex.test(formData.phone)) {
+      alert("Phone must be 10 digits.");
+      return false;
+    }
+    if (!formData.password) {
+      alert("Password is required.");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      alert("Password must be at least 6 characters.");
+      return false;
+    }
+    if (!formData.terms) {
+      alert("You must accept the terms.");
+      return false;
+    }
+
     return true;
   };
 
@@ -56,44 +90,24 @@ const Signup = ({ setActiveTab }) => {
   };
 
   return (
-    <>
-      {/* Style override for small screens */}
-      <style>{`
-        @media (max-width: 389px) {
-          .fix-h2-mobile {
-            position: static !important;
-            top: auto !important;
-            z-index: 9999 !important;
-            background-color: white !important;
-            margin-top: 1rem;
-          }
+    <div className="w-full  max-w-md p-6 py-5  rounded-lg">
+      {/* Heading */}
+      <div className="text-left">
+        <h2 className="text-xl font-100 text-gray-800">
+          Get started with cropgen
+        </h2>
+        <p className="text-xs text-gray-500 mt-1">
+          Enter your personal data to create your account
+        </p>
+      </div>
 
-          form, .form-container, .container, .parent {
-            overflow: visible !important;
-          }
-        }
-      `}</style>
-
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md space-y-4 px-4 mt-12 md:mt-2"
-      >
-        {/* Heading */}
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900 md:text-left fix-h2-mobile">
-            Get started with CropGen
-          </h2>
-          <p className="text-sm text-gray-600 md:text-left">
-            Enter your personal data to create your account.
-          </p>
-        </div>
-
+      <div className="space-y-2">
         {/* First and Last Name */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full md:w-1/2">
+        <div className="flex gap-3">
+          <div className="w-1/2">
             <label
               htmlFor="firstName"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-medium text-gray-700 mb-2"
             >
               First Name
             </label>
@@ -101,16 +115,16 @@ const Signup = ({ setActiveTab }) => {
               type="text"
               name="firstName"
               id="firstName"
-              placeholder="First Name"
-              className="w-full border border-gray-200 rounded-md px-3 py-1 text-sm"
+              placeholder="fname"
+              className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
               value={formData.firstName}
               onChange={handleChange}
             />
           </div>
-          <div className="w-full md:w-1/2">
+          <div className="w-1/2">
             <label
               htmlFor="lastName"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-xs font-medium text-gray-700 mb-2"
             >
               Last Name
             </label>
@@ -118,8 +132,8 @@ const Signup = ({ setActiveTab }) => {
               type="text"
               name="lastName"
               id="lastName"
-              placeholder="Last Name"
-              className="w-full border border-gray-200 rounded-md px-3 py-1 text-sm"
+              placeholder="last name"
+              className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
               value={formData.lastName}
               onChange={handleChange}
             />
@@ -130,7 +144,7 @@ const Signup = ({ setActiveTab }) => {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-xs font-medium text-gray-700 mb-2"
           >
             Email
           </label>
@@ -138,56 +152,110 @@ const Signup = ({ setActiveTab }) => {
             type="email"
             name="email"
             id="email"
-            placeholder="Email"
-            className="w-full border border-gray-200 rounded-md px-3 py-1 text-sm"
+            placeholder="example@gmail.com"
+            className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs  text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
             value={formData.email}
             onChange={handleChange}
           />
         </div>
 
         {/* Phone */}
-        <div>
+        <div className="relative">
           <label
             htmlFor="phone"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-xs font-medium text-gray-700 mb-2"
           >
             Phone Number
           </label>
+          <span className="absolute left-3 top-9 transform -translate-y-1/2 text-gray-500 text-xs">
+            +91
+          </span>
           <input
             type="tel"
             name="phone"
             id="phone"
-            placeholder="+91 **********"
-            className="w-full border border-gray-200 rounded-md px-3 py-1 text-sm"
+            placeholder="Phone Number"
+            className="w-full border-0 bg-gray-200 rounded-md pl-12 pr-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
             value={formData.phone}
             onChange={handleChange}
           />
         </div>
 
         {/* Password */}
-        <div>
+        <div className="relative">
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-xs font-medium text-gray-700 mb-2"
           >
             Password
           </label>
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             id="password"
             placeholder="Password"
-            className="w-full border border-gray-200 rounded-md px-3 py-1 text-sm"
+            className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
             value={formData.password}
             onChange={handleChange}
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-3 top-9 transform -translate-y-1/2 text-gray-500"
+          >
+            {showPassword ? (
+              // Eye Off Icon
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 012.328-3.682m2.53-1.91A9.965 9.965 0 0112 5c4.477 0 8.268 2.943 9.542 7a10.05 10.05 0 01-4.207 5.137M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 3l18 18"
+                />
+              </svg>
+            ) : (
+              // Eye Icon
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+            )}
+          </button>
         </div>
 
         {/* Organization Code */}
         <div>
           <label
             htmlFor="organizationCode"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-xs font-medium text-gray-700 mb-2"
           >
             Organization Code (Optional)
           </label>
@@ -196,63 +264,62 @@ const Signup = ({ setActiveTab }) => {
             name="organizationCode"
             id="organizationCode"
             placeholder="Organization Code (Optional)"
-            className="w-full border border-gray-200 rounded-md px-3 py-1 text-sm"
+            className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
             value={formData.organizationCode}
-            onChange={(e) =>
-              setFormData({ ...formData, organizationCode: e.target.value.toUpperCase() })
-            }
+            onChange={handleChange}
           />
         </div>
 
         {/* Terms */}
-        <div className="flex items-start gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
             name="terms"
             id="terms"
-            className="mt-1 accent-green-600"
+            className="w-4 h-4 accent-gray-600 border-gray-300 rounded focus:ring-0 cursor-pointer"
             checked={formData.terms}
             onChange={handleChange}
           />
-          <label htmlFor="terms" className="text-gray-700">
+          <label htmlFor="terms" className="text-gray-700 text-xs">
             I agree to the{" "}
-            <a href="#" className="text-green-600 underline">
-              Terms
-            </a>{" "}
-            and{" "}
-            <a href="#" className="text-green-600 underline">
-              Privacy Policy
+            <a
+              href="https://www.cropgenapp.com/terms-conditions"
+              className="text-green-600"
+              target="_blank"
+            >
+              Terms and Privacy Policy
             </a>
-            .
           </label>
         </div>
 
         {/* Submit Button */}
         <button
-          type="submit"
-          className="w-full bg-green-800 text-white py-2 rounded-md text-sm hover:bg-green-700"
+          type="button"
+          onClick={handleSubmit}
+          className="w-full bg-[#265A48] text-white py-2 rounded-md text-sm uppercase hover:bg-[#265A48] focus:outline-none"
           disabled={status === "loading"}
         >
           {status === "loading" ? "Signing Up..." : "Sign Up"}
         </button>
 
         {/* Google Sign-In */}
-        <div className="w-full text-white py-2 rounded-md text-sm ">
+        <div className="w-full">
           <SocialButtons />
         </div>
 
         {/* Switch to Login */}
         <p className="text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <span
+          <button
+            type="button"
             onClick={() => setActiveTab("Login")}
-            className="text-green-700 font-medium cursor-pointer"
+            className="text-green-700 font-medium hover:underline focus:outline-none"
           >
             Login
-          </span>
+          </button>
         </p>
-      </form>
-    </>
+      </div>
+    </div>
   );
 };
 
