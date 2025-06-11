@@ -90,24 +90,24 @@ const Signup = ({ setActiveTab }) => {
   };
 
   return (
-    <div className="w-full  max-w-md p-6 py-5  rounded-lg">
+    <div className="w-full max-w-md mx-auto px-2 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-1">
       {/* Heading */}
-      <div className="text-left">
-        <h2 className="text-xl font-100 text-gray-800">
+      <div className="text-left mb-6">
+        <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium text-gray-800">
           Get started with cropgen
         </h2>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs sm:text-sm md:text-base text-gray-500 mt-2">
           Enter your personal data to create your account
         </p>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-4 sm:space-y-5">
         {/* First and Last Name */}
-        <div className="flex gap-3">
-          <div className="w-1/2">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="w-full sm:w-1/2">
             <label
               htmlFor="firstName"
-              className="block text-xs font-medium text-gray-700 mb-2"
+              className="block text-xs sm:text-sm md:text-base font-medium text-gray-700 mb-2"
             >
               First Name
             </label>
@@ -115,16 +115,16 @@ const Signup = ({ setActiveTab }) => {
               type="text"
               name="firstName"
               id="firstName"
-              placeholder="fname"
-              className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
+              placeholder="First Name"
+              className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 sm:py-3 text-xs sm:text-sm md:text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
               value={formData.firstName}
               onChange={handleChange}
             />
           </div>
-          <div className="w-1/2">
+          <div className="w-full sm:w-1/2">
             <label
               htmlFor="lastName"
-              className="block text-xs font-medium text-gray-700 mb-2"
+              className="block text-xs sm:text-sm md:text-base font-medium text-gray-700 mb-2"
             >
               Last Name
             </label>
@@ -132,8 +132,8 @@ const Signup = ({ setActiveTab }) => {
               type="text"
               name="lastName"
               id="lastName"
-              placeholder="last name"
-              className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
+              placeholder="Last Name"
+              className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 sm:py-3 text-xs sm:text-sm md:text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
               value={formData.lastName}
               onChange={handleChange}
             />
@@ -144,7 +144,7 @@ const Signup = ({ setActiveTab }) => {
         <div>
           <label
             htmlFor="email"
-            className="block text-xs font-medium text-gray-700 mb-2"
+            className="block text-xs sm:text-sm md:text-base font-medium text-gray-700 mb-2"
           >
             Email
           </label>
@@ -153,7 +153,7 @@ const Signup = ({ setActiveTab }) => {
             name="email"
             id="email"
             placeholder="example@gmail.com"
-            className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs  text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
+            className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 sm:py-3 text-xs sm:text-sm md:text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
             value={formData.email}
             onChange={handleChange}
           />
@@ -163,11 +163,11 @@ const Signup = ({ setActiveTab }) => {
         <div className="relative">
           <label
             htmlFor="phone"
-            className="block text-xs font-medium text-gray-700 mb-2"
+            className="block text-xs sm:text-sm md:text-base font-medium text-gray-700 mb-2"
           >
             Phone Number
           </label>
-          <span className="absolute left-3 top-9 transform -translate-y-1/2 text-gray-500 text-xs">
+          <span className="absolute left-3 top-[2.5rem] sm:top-[2.8rem] md:top-[3rem] transform -translate-y-1/2 text-gray-500 text-xs sm:text-sm md:text-base">
             +91
           </span>
           <input
@@ -175,7 +175,7 @@ const Signup = ({ setActiveTab }) => {
             name="phone"
             id="phone"
             placeholder="Phone Number"
-            className="w-full border-0 bg-gray-200 rounded-md pl-12 pr-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
+            className="w-full border-0 bg-gray-200 rounded-md pl-12 pr-3 py-2 sm:py-3 text-xs sm:text-sm md:text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
             value={formData.phone}
             onChange={handleChange}
           />
@@ -185,7 +185,7 @@ const Signup = ({ setActiveTab }) => {
         <div className="relative">
           <label
             htmlFor="password"
-            className="block text-xs font-medium text-gray-700 mb-2"
+            className="block text-xs sm:text-sm md:text-base font-medium text-gray-700 mb-2"
           >
             Password
           </label>
@@ -194,19 +194,19 @@ const Signup = ({ setActiveTab }) => {
             name="password"
             id="password"
             placeholder="Password"
-            className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
+            className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 sm:py-3 text-xs sm:text-sm md:text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
             value={formData.password}
             onChange={handleChange}
           />
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 top-9 transform -translate-y-1/2 text-gray-500"
+            className="absolute right-3 top-[2.5rem] sm:top-[2.8rem] md:top-[3rem] transform -translate-y-1/2 text-gray-500"
           >
             {showPassword ? (
               // Eye Off Icon
               <svg
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -228,7 +228,7 @@ const Signup = ({ setActiveTab }) => {
             ) : (
               // Eye Icon
               <svg
-                className="w-5 h-5"
+                className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -255,7 +255,7 @@ const Signup = ({ setActiveTab }) => {
         <div>
           <label
             htmlFor="organizationCode"
-            className="block text-xs font-medium text-gray-700 mb-2"
+            className="block text-xs sm:text-sm md:text-base font-medium text-gray-700 mb-2"
           >
             Organization Code (Optional)
           </label>
@@ -264,27 +264,30 @@ const Signup = ({ setActiveTab }) => {
             name="organizationCode"
             id="organizationCode"
             placeholder="Organization Code (Optional)"
-            className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 text-xs text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
+            className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 sm:py-3 text-xs sm:text-sm md:text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
             value={formData.organizationCode}
             onChange={handleChange}
           />
         </div>
 
         {/* Terms */}
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-xs sm:text-sm md:text-base">
           <input
             type="checkbox"
             name="terms"
             id="terms"
-            className="w-4 h-4 accent-gray-600 border-gray-300 rounded focus:ring-0 cursor-pointer"
+            className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 accent-gray-600 border-gray-300 rounded focus:ring-0 cursor-pointer"
             checked={formData.terms}
             onChange={handleChange}
           />
-          <label htmlFor="terms" className="text-gray-700 text-xs">
+          <label
+            htmlFor="terms"
+            className="text-gray-700 text-xs sm:text-sm md:text-base"
+          >
             I agree to the{" "}
             <a
               href="https://www.cropgenapp.com/terms-conditions"
-              className="text-green-600"
+              className="text-green-600 hover:underline"
               target="_blank"
             >
               Terms and Privacy Policy
@@ -296,7 +299,7 @@ const Signup = ({ setActiveTab }) => {
         <button
           type="button"
           onClick={handleSubmit}
-          className="w-full bg-[#265A48] text-white py-2 rounded-md text-sm uppercase hover:bg-[#265A48] focus:outline-none"
+          className="w-full bg-[#265A48] text-white py-2 sm:py-3 rounded-md text-sm md:text-base uppercase hover:bg-[#1f4a3a] focus:outline-none transition-colors duration-200"
           disabled={status === "loading"}
         >
           {status === "loading" ? "Signing Up..." : "Sign Up"}
@@ -308,7 +311,7 @@ const Signup = ({ setActiveTab }) => {
         </div>
 
         {/* Switch to Login */}
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-xs sm:text-sm md:text-base text-gray-600">
           Already have an account?{" "}
           <button
             type="button"
