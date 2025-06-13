@@ -7,7 +7,8 @@ import ForeCast from "../components/dashboard/forecast/ForeCast";
 import PlantGrowthActivity from "../components/dashboard/plantgrowthactivity/PlantGrowthActivity";
 import Insights from "../components/dashboard/insights/Insights";
 import CropAdvisory from "../components/dashboard/cropadvisory/CropAdvisory";
-import "../style/Dashboard.css";
+import 'leaflet/dist/leaflet.css';
+// import "../style/Dashboard.css";
 import NdviGraph from "../components/dashboard/satellite-index/vegitation-index/VegetationIndex";
 import WaterIndex from "../components/dashboard/satellite-index/water-index/WaterIndex";
 
@@ -125,16 +126,33 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="dashboard float-end p-3">
-      <MapView {...mapViewProps} />
-      <CropHealth {...cropHealthProps} />
-      <ForeCast />
-      <NdviGraph {...ndviGraphProps} />
-      <WaterIndex {...ndviGraphProps} />
-      <Insights />
-      <CropAdvisory {...cropAdvisoryProps} />
-      <PlantGrowthActivity {...plantGrowthProps} />
-    </div>
+   <div className="h-screen w-full flex flex-col p-3 space-y-4 overflow-y-scroll scrollbar-hide">
+      <div className="w-full h-[400px]">
+        <MapView {...mapViewProps} />
+      </div>
+      
+        <div className="w-full ">
+           <CropHealth {...cropHealthProps} />
+        </div>
+        <div className="w-full ">
+           <ForeCast />
+        </div>
+        <div className="w-full ">
+          <NdviGraph {...ndviGraphProps} />
+        </div>
+        <div className="w-full ">
+          <WaterIndex {...ndviGraphProps} />
+        </div>
+        <div className="w-full ">
+           <Insights />
+        </div>
+        <div className="w-full ">
+           <CropAdvisory {...cropAdvisoryProps} />
+        </div>
+        <div className="w-full ">
+           <PlantGrowthActivity {...plantGrowthProps} />
+        </div>
+      </div>
   );
 };
 

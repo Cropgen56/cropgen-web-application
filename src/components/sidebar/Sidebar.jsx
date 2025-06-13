@@ -25,27 +25,15 @@ import { useDispatch, useSelector } from "react-redux";
 
 // Navigation items configuration
 const NAV_ITEMS = [
-  {
-    path: "/cropgen-analytics",
-    label: "CropGen Analytics",
-    Icon: CropAnalysisIcon,
-  },
+  { path: "/cropgen-analytics", label: "CropGen Analytics", Icon: CropAnalysisIcon },
   { path: "/addfield", label: "Add Field", Icon: AddFieldIcon },
   { path: "/weather", label: "Weather", Icon: Weather },
   { path: "/operation", label: "Operation", Icon: Operation },
-  {
-    path: "/disease-detection",
-    label: "Disease Detection",
-    Icon: DieaseDetaction,
-  },
+  { path: "/disease-detection", label: "Disease Detection", Icon: DieaseDetaction },
   { path: "/smart-advisory", label: "Smart Advisory", Icon: SmartAdvisory },
   { path: "/soil-report", label: "Soil Report", Icon: SoilReportIcon },
   { path: "/farm-report", label: "Farm Report", Icon: FarmReport },
-  {
-    path: "/personalise-crop-shedule",
-    label: "Personalise Crop Schedule",
-    Icon: PersonaliseCropShedule,
-  },
+  { path: "/personalise-crop-shedule", label: "Personalise Crop Schedule", Icon: PersonaliseCropShedule },
   { path: "/setting", label: "Setting", Icon: Setting },
 ];
 
@@ -57,91 +45,90 @@ const Sidebar = ({ onToggleCollapse }) => {
   const logout = useLogout();
   const user = useSelector((state) => state?.auth?.user);
 
-  // Load local storage and decode token on mount
   useEffect(() => {
     dispatch(loadLocalStorage());
     dispatch(decodeToken());
   }, [dispatch]);
 
-  // Set initial sidebar state based on current path
-  useEffect(() => {
-    if (location.pathname === "/cropgen-analytics") {
-      setIsCollapsed(false);
-      onToggleCollapse(false);
-    }
-  }, [location.pathname, onToggleCollapse]);
+  // useEffect(() => {
+  //   if (location.pathname === "/cropgen-analytics") {
+  //     setIsCollapsed(false);
+  //     onToggleCollapse(false);
+  //   }
+  // }, [location.pathname, onToggleCollapse]);
 
-  // Handle sidebar collapse toggle
   const handleCollapseToggle = (collapse) => {
     const newCollapsedState = collapse ?? !isCollapsed;
     setIsCollapsed(newCollapsedState);
     onToggleCollapse(newCollapsedState);
   };
 
-  // Handle navigation
   const handleNavigation = (path) => {
     navigate(path);
-    // If navigating to /cropgen-analytics, ensure sidebar is open
     if (path === "/cropgen-analytics") {
-      handleCollapseToggle(false);
+      handleCollapseToggle(true);
     } else if (location.pathname === "/cropgen-analytics") {
       handleCollapseToggle(true);
     }
   };
 
-  // Handle logout
   const handleLogout = async () => {
     const result = await logout();
     if (result.success) {
       alert("Logout successful");
-      // Optionally show a success message (e.g., using react-toastify)
     } else {
       console.error("Logout failed:", result.error);
-      // Optionally show an error message
     }
   };
 
   return (
-    <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+    <div
+      className={`sidebar ${isCollapsed ? "collapsed" : ""} flex min-h-screen transition-[width] duration-300 ease-in-out`}
+    >
       <Offcanvas
         show={true}
         scroll={true}
         backdrop={false}
-        className={`offcanvas ${isCollapsed ? "collapsed" : ""}`}
-        résultats
+        className={`offcanvas ${isCollapsed ? "collapsed" : ""} fixed top-0 left-0 h-full z-[1030] border-r border-gray-300 bg-[#344e41] overflow-y-auto transition-[width] duration-300 ease-in-out`}
       >
-        <Offcanvas.Body className="p-0 m-0">
+        <Offcanvas.Body className="p-0 m-0 scrollbar-none">
           <div
-            className="title-container"
+            className="title-container flex items-center mb-3 pl-12 cursor-pointer"
             onClick={() => handleNavigation("/")}
           >
             {!isCollapsed && <Logo />}
-            {!isCollapsed && <span className="title-text">CropGen</span>}
+            {!isCollapsed && (
+              <span className="title-text text-[1.2rem] text-[#f8f8f8] ml-1">CropGen</span>
+            )}
           </div>
 
           {!isCollapsed && (
             <Card
               style={{ width: "13rem" }}
               onClick={() => handleNavigation("/setting")}
-              className="profile-card"
+              className="profile-card mx-20px auto my-5 bg-[#5a7c6b] cursor-pointer"
             >
-              <img src={profile} className="profile-image" alt="User profile" />
+              <img
+                src={profile}
+                className="profile-image w-[80px] h-[80px] m-auto z-50"
+                alt="User profile"
+              />
               <Card.Body className="text-center">
-                <Card.Title className="profile-user-name">
+                <Card.Title className="profile-user-name text-[25px] font-semibold text-[#f8f8f8]">
                   {user?.firstName} {user?.lastName}
                 </Card.Title>
-                <Card.Text className="profile-user-email">
+                <Card.Text className="profile-user-email text-[0.9rem] font-light leading-[18.15px] text-[#d9d9d9]">
                   {user?.email}
                 </Card.Text>
               </Card.Body>
             </Card>
           )}
 
-          <nav className="sidebar-nav">
-            <ul>
+          <nav className="sidebar-nav px-2">
+            <ul className="list-none p-0">
               {isCollapsed && (
                 <li
-                  className="collapse-button mb-3"
+                  className="collapse-button mb-3 bg-transparent border-none cursor-pointer block opacity-100 visible"
                   onClick={() => handleCollapseToggle(false)}
                 >
                   <Hammer />
@@ -151,7 +138,9 @@ const Sidebar = ({ onToggleCollapse }) => {
                 <li
                   key={path}
                   onClick={() => handleNavigation(path)}
-                  className={location.pathname === path ? "active" : ""}
+                  className={`${
+                    location.pathname === path ? "active" : ""
+                  } flex items-center gap-2 my-2 text-[0.85rem] font-normal leading-8 text-[#f5f5f5] cursor-pointer`}
                 >
                   <Icon />
                   {!isCollapsed && label}
@@ -159,8 +148,9 @@ const Sidebar = ({ onToggleCollapse }) => {
               ))}
             </ul>
           </nav>
-          <div className="offcanvas-footer" onClick={handleLogout}>
-            <p className="footer-text">
+
+          <div className="offcanvas-footer text-center mt-auto" onClick={handleLogout}>
+            <p className="footer-text flex items-center gap-2 text-white text-base pl-4 cursor-pointer">
               <Logout />
               {!isCollapsed && <span>Logout</span>}
             </p>

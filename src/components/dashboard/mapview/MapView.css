@@ -3,17 +3,20 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-  height: 95%;
+  height: 100vh;  /* or 100vh for full viewport height */
   position: relative;
+  /* z-index: 10;  */
 }
 
 .farm-map-container {
+  background-color: lightblue;
   width: 100%;
   height: 100%;
   border-radius: 20px;
   overflow: hidden;
 }
 
+/* Optional: style for loading overlay */
 .farm-map-spinner-overlay {
   position: absolute;
   top: 0;

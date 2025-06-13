@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchweatherData } from "../../../redux/slices/weatherSlice";
 import { resetSatelliteState } from "../../../redux/slices/satelliteSlice";
-import Loading from "../../comman/loading/Loading";
+// import Loading from "../../comman/loading/Loading";
 import IndexDates from "./indexdates/IndexDates";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 // Calculate polygon centroid
@@ -172,6 +172,9 @@ const FarmMap = ({
   useEffect(() => {
     fetchWeatherData();
   }, [fetchWeatherData]);
+  useEffect(() => {
+  console.log("MapContainer mounted");
+}, []);
 
   // Reset satellite state on field change
   useEffect(() => {
