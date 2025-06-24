@@ -2,14 +2,12 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Card from "react-bootstrap/Card";
 import * as turf from "@turf/turf";
-import DaughnutChart from "./daughnutchart/DaughnutChart.jsx";
-import SoilAnalysisChart from "./soilanalysischart/SoilAnalysisChart.jsx";
-// import SoilMoistureTemperature from "./soil-moisture-temperature/SoilMoistureTemperature.jsx";
+import DaughnutChart from "./DaughnutChart.jsx";
+import SoilAnalysisChart from "./SoilAnalysisChart.jsx";
+import SoilHealthChart from "./SoilHealthChart.jsx";
 import { calculateAiYield } from "../../../redux/slices/satelliteSlice.js";
-import cropImage from "../../../assets/image/dashboard/crop-image.jpg";
-import SoilHealthChart from "./solilhealth/SoilHealthChart.jsx";
-import "./CropHealth.css";
 import { fetchSoilData } from "../../../redux/slices/satelliteSlice.js";
+import CropDetials from "./CropDetials.jsx";
 
 const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials?.[0];
@@ -50,7 +48,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
     }
   }, [dispatch, cropDetials, Crop_Growth_Stage]);
 
-  // Fetch soil data when farm details are available and soilData is empty
+  // Fetch soil data when farm details are available
   useEffect(() => {
     if (cropDetials) {
       dispatch(fetchSoilData({ farmDetails: cropDetials }));
@@ -58,58 +56,31 @@ const CropHealth = ({ selectedFieldsDetials }) => {
   }, [cropDetials, dispatch]);
 
   return (
-    <Card body className="mt-4 mb-3 crop-health shadow">
-      <h2 className="crop-health-title">Crop Health</h2>
-      <div className="d-flex align-items-center justify-content-between px-5 ">
-        <div className="pt-1">
-          <table>
-            <tr>
-              <th>
-                <img
-                  src={cropImage}
-                  alt="crop image"
-                  className="crop-health-crop-image"
-                />
-              </th>
-              <td className="crop-information ps-4">
-                <tr>
-                  <th>Crop Name :-</th>
-                  <td>{cropDetials?.cropName || " "}</td>
-                </tr>
-                <tr>
-                  <th>Crop Age :-</th>
-                  <td>{daysFromSowing} days</td>
-                </tr>
-                <tr>
-                  <th>Total Area :-</th>
-                  <td>{totalArea.toFixed(2)} acres</td>
-                </tr>
-                <tr>
-                  <th>Standard Yield :-</th>
-                  <td>{cropYield?.Standard_Yield_units || "N/A"}</td>
-                </tr>
-                <tr>
-                  <th>AI Yield Data :-</th>
-                  <td>{cropYield?.AI_Predicted_Yield_units || "N/A"}</td>
-                </tr>
-              </td>
-            </tr>
-          </table>
+    <Card body className="mt-2 mb-3 shadow-md rounded-lg bg-white">
+      <h2 className="text-lg sm:text-xl font-semibold text-[#344E41] mb-4 px-4 sm:px-6">
+        Crop Health
+      </h2>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between px-4 sm:px-6 gap-4">
+        <div className="w-full sm:w-1/2 md:w-auto">
+          <CropDetials
+            cropDetials={selectedFieldsDetials}
+            daysFromSowing={daysFromSowing}
+            totalArea={totalArea}
+            cropYield={cropYield}
+          />
         </div>
-        <div style={{ marginRight: "10%" }}>
+        <div className="w-full sm:w-1/2 md:w-1/3 md:mr-8">
           <DaughnutChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
       </div>
-
-      <div className="d-flex justify-content-between align-items-center mt-3 ">
-        <div style={{ width: "50%" }}>
-          <h2 className="soil-health-chart-title">Soil Analysis </h2>
+      <div className="flex flex-col lg:flex-row lg:justify-between mt-6 px-4 sm:px-6 gap-4">
+        <div className="w-full sm:w-1/2 lg:w-1/2">
+          <h2 className="text-lg sm:text-xl font-semibold text-[#344E41] mb-4">
+            Soil Analysis
+          </h2>
           <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
-        <div style={{ width: "50%" }}>
-          {/* <SoilMoistureTemperature
-            selectedFieldsDetials={selectedFieldsDetials}
-          /> */}
+        <div className="w-full sm:w-1/2 lg:w-1/2">
           <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
       </div>

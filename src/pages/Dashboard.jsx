@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getFarmFields } from "../redux/slices/farmSlice";
 import MapView from "../components/dashboard/mapview/MapView";
-import CropHealth from "../components/dashboard/crophealth/CropHealth";
+import CropHealth from "../components/dashboard/crophealth/CropHealthCard";
 import ForeCast from "../components/dashboard/forecast/ForeCast";
 import PlantGrowthActivity from "../components/dashboard/plantgrowthactivity/PlantGrowthActivity";
 import Insights from "../components/dashboard/insights/Insights";

@@ -2,17 +2,17 @@ import React, { useEffect } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCropHealth } from "../../../../redux/slices/satelliteSlice";
-import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
+import { fetchCropHealth } from "../../../redux/slices/satelliteSlice";
+import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const DoughnutChart = ({ selectedFieldsDetials }) => {
-  const farmDetails = selectedFieldsDetials[0];
+  const farmDetails = selectedFieldsDetials?.[0];
   const dispatch = useDispatch();
   const { cropHealth, loading } = useSelector((state) => state?.satellite);
 
-  // Fetch crop health data when farmDetails changes
+  // Fetch crop health data
   useEffect(() => {
     if (farmDetails) {
       dispatch(fetchCropHealth(farmDetails));
@@ -38,7 +38,7 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
             ? [0, 0, 0, Health_Percentage, 100 - Health_Percentage]
             : Crop_Health === "Poor"
             ? [0, 0, 0, 0, Health_Percentage]
-            : [0, 0, 0, 0, 0],
+            : [0, 0, 0, 0, 100], // Default to show "Poor" if unknown
         backgroundColor: [
           "#2A3F2F",
           "#3E5C4A",
@@ -46,6 +46,7 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
           "#78A3AD",
           "#5A7C6B",
         ],
+        borderWidth: 1,
         hoverOffset: 4,
       },
     ],
@@ -58,12 +59,13 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
       legend: {
         position: "right",
         labels: {
-          padding: 20,
-          boxWidth: 20,
+          padding: 10,
+          boxWidth: 15,
           font: {
-            size: 14,
+            size: 12,
           },
         },
+        maxWidth: 150,
       },
       tooltip: {
         callbacks: {
@@ -84,39 +86,46 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
   const centerTextPlugin = {
     id: "centerText",
     beforeDraw: (chart) => {
-      const { ctx } = chart;
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return;
+
       ctx.save();
-
-      if (!chart.chartArea) {
-        ctx.restore();
-        return;
-      }
-
-      const x = (chart.chartArea.left + chart.chartArea.right) / 2;
-      const y = (chart.chartArea.top + chart.chartArea.bottom) / 2;
-
-      // Display Health_Percentage in the center
+      const x = (chartArea.left + chartArea.right) / 2;
+      const y = (chartArea.top + chartArea.bottom) / 2;
       const percentageText = `${Health_Percentage}%`;
 
-      ctx.font = "bold 24px Arial";
-      ctx.fillStyle = "#344E41";
+      ctx.font = "bold 40px sm:80px Arial";
+      ctx.fillStyle = "#000000";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(percentageText, x, y);
-
       ctx.restore();
     },
   };
 
   return (
-    <div className="chart-container">
+    <div className="w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px] h-[160px] sm:h-[180px] md:h-[200px] flex justify-center items-center">
       {loading?.cropHealth ? (
-        <div className="w-100 h-100 d-flex flex-column align-items-center justify-content-center">
-          <LoadingSpinner height="110px" size={64} color="#86D72F" />
-          <p className="loading-text-new">Crop Health Loading...</p>
+        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+          <LoadingSpinner
+            height="100px"
+            size={40}
+            sm={48}
+            md={56}
+            color="#86D72F"
+          />
+          <p className="text-sm sm:text-base md:text-lg text-green-500 animate-fade-in">
+            Crop Health Loading...
+          </p>
         </div>
       ) : (
-        <Doughnut data={data} options={options} plugins={[centerTextPlugin]} />
+        <div className="w-full h-full">
+          <Doughnut
+            data={data}
+            options={options}
+            plugins={[centerTextPlugin]}
+          />
+        </div>
       )}
     </div>
   );

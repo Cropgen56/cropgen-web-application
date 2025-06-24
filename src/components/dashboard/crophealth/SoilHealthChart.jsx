@@ -9,9 +9,8 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import "./SoilHealthChart.css";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchSoilData } from "../../../../redux/slices/satelliteSlice";
+import { fetchSoilData } from "../../../redux/slices/satelliteSlice";
 
 const SoilHealthChart = () => {
   const dispatch = useDispatch();
@@ -56,20 +55,9 @@ const SoilHealthChart = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div
-          className="custom-tooltip"
-          style={{
-            backgroundColor: "#fff",
-            border: "1px solid #ccc",
-            padding: "5px",
-            borderRadius: "4px",
-            textAlign: "center",
-            width: "130px",
-            padding: "10px",
-          }}
-        >
+        <div className="bg-white border border-gray-300 rounded-md p-2 sm:p-3 text-center w-32 sm:w-36">
           {payload.map((entry, index) => (
-            <p key={index} style={{ margin: 0, color: "#666" }}>
+            <p key={index} className="m-0 text-gray-600 text-xs sm:text-sm">
               {entry.name === "Soil Moisture (%)" ? "Moisture" : "Temperature"}:{" "}
               {entry.value}
             </p>
@@ -81,14 +69,19 @@ const SoilHealthChart = () => {
   };
 
   return (
-    <div className="soil-health-chart-container">
-      <h2 className="soil-health-chart-title">Soil Health </h2>
-      <ResponsiveContainer width="100%" height={300}>
+    <div className="w-full max-w-[500px] sm:max-w-[600px] mx-auto">
+      <h2 className="text-left text-lg sm:text-xl font-semibold text-[#344E41] mb-2 sm:mb-3">
+        Soil Health
+      </h2>
+      <ResponsiveContainer width="100%" height={300} sm={280} md={300}>
         <AreaChart
           data={chartData}
-          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
         >
-          <XAxis dataKey="day" tick={{ fill: "#666", fontSize: 12 }} />
+          <XAxis
+            dataKey="day"
+            tick={{ fill: "#4B5563", fontSize: 10, sm: 12 }}
+          />
           <YAxis
             axisLine={true}
             tick={false}
@@ -97,7 +90,7 @@ const SoilHealthChart = () => {
               Math.max(
                 30,
                 ...chartData.map((item) =>
-                  Math.max(item.moisture, item.temperature)
+                  Math.max(Number(item.moisture), Number(item.temperature))
                 )
               ),
             ]}
@@ -106,7 +99,7 @@ const SoilHealthChart = () => {
             align="right"
             verticalAlign="top"
             iconType="line"
-            wrapperStyle={{ fontSize: 12, color: "#666" }}
+            wrapperStyle={{ fontSize: 10, sm: 12, color: "#4B5563" }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Area

@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import Card from "react-bootstrap/Card";
-import "./ForeCast.css";
 import {
   DropIcon,
   RainCloudIcon,
@@ -91,81 +89,106 @@ function ForeCast() {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <Card body className="mt-4 mb-3 forecast shadow">
-      <div className="forecast-container d-flex row">
-        <div className="p-0 m-0 d-flex justify-content-between">
-          <h3 className="ps-2 float-start">Forecast</h3>
+    <div className="mt-4 mb-3 bg-white p-3 sm:p-4 rounded-lg shadow-md">
+      <style>
+        {`
+          .no-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}
+      </style>
+      <div className="flex flex-col font-sans text-gray-800">
+        <div className="flex justify-between items-center p-0 m-0">
+          <h3 className="text-lg sm:text-xl font-bold text-[#344E41] pl-2">
+            Forecast
+          </h3>
           <Dots />
         </div>
-        <div className="d-flex">
+        <div className="flex flex-row overflow-hidden">
           {/* Today's Weather */}
-          <div className="forecast-today">
-            <h2 className="mb-3">Today's Weather</h2>
-            <div className="today-weather px-5">
-              <span className="weather-icon">
+          <div className="flex flex-col items-center justify-center border-r border-[#344E41] text-center w-1/2 sm:w-2/5 md:w-1/3 lg:w-1/4 py-4 shrink-0">
+            <h2 className="text-base sm:text-sm md:text-base text-[#A2A2A2] mb-3">
+              Weather's Today
+            </h2>
+            <div className="flex flex-col sm:flex-row items-center justify-center px-4 sm:px-5">
+              <span className="text-2xl sm:text-xl md:text-2xl mr-0 sm:mr-2">
                 {getWeatherIcon(
                   fahrenheitToCelsius(weather.temp),
                   weather.conditions
                 )}
               </span>
-              <div className="temperature">
+              <div className="text-lg sm:text-base md:text-lg font-bold text-[#344E41]">
                 {fahrenheitToCelsius(weather.temp)}°C
               </div>
             </div>
-            <div className="today-details">
-              <div className="px-1">
+            <div className="flex flex-col sm:flex-row justify-center mx-auto w-full sm:w-auto mt-4 text-gray-600 text-sm sm:text-xs md:text-sm">
+              <div className="flex items-center px-1">
                 <WindSpeedIcon />
                 <p>{weather.windspeed ?? "--"} km/h</p>
               </div>
-              <div className="px-1">
+              <div className="flex items-center px-1">
                 <DropIcon />
                 <p>{weather.humidity ?? "--"}%</p>
               </div>
-              <div className="px-1">
+              <div className="flex items-center px-1">
                 <WaveIcon />
                 <p>{weather.pressure ?? "--"} hPa</p>
               </div>
             </div>
           </div>
           {/* Weekly Weather */}
-          <div className="week-weather">
-            <div className="forecast-week w-100 py-2">
-              <h2 className="ps-4 py-0 float-start">This Week</h2>
-              <div className="weather-data-container">
-                {weekForecast?.slice(0, 6).map((day, index) => (
+          <div className="w-1/2 sm:w-3/5 md:w-2/3 lg:w-3/4 pl-4 pt-2 overflow-x-auto no-scrollbar">
+            <div className="flex flex-col">
+              <h2 className="text-base sm:text-sm md:text-base text-[#A2A2A2] ps-4 py-0">
+                This Week
+              </h2>
+              <div className="flex flex-row space-x-4 sm:space-x-6 md:space-x-8 justify-start">
+                {weekForecast?.slice(0, 7).map((day, index) => (
                   <div
                     key={index}
-                    className={`day-forecast ${
-                      day.isHighlighted ? "highlighted" : ""
-                    } ${day.datetime === today ? "current-day" : ""}`}
+                    className={`flex flex-col items-center text-center w-20 sm:w-24 md:w-28 rounded-lg p-2 sm:p-3 shrink-0 ${
+                      day.isHighlighted || day.datetime === today
+                        ? "bg-[#5A7C6B] text-white"
+                        : ""
+                    }`}
                   >
                     <div
-                      className={`day ${
-                        day.isHighlighted ? "highlighted" : ""
+                      className={`font-semibold mb-1 text-xs sm:text-sm ${
+                        day.isHighlighted || day.datetime === today
+                          ? "text-white"
+                          : "text-black"
                       }`}
                     >
                       {new Date(day.datetime)
                         .toLocaleDateString("en-US", { weekday: "short" })
                         .toUpperCase()}
                     </div>
-                    <div className="icon w-100 m-0 p-0">
-                      <span className="day-icon">
+                    <div className="flex items-center w-full">
+                      <span className="text-base sm:text-lg md:text-xl">
                         {getWeatherIcon(
                           fahrenheitToCelsius(day.temp),
                           day.description
                         )}
                       </span>
                       <span
-                        className={`day-temperature ${
-                          day.isHighlighted ? "highlighted" : ""
+                        className={`text-sm sm:text-base md:text-lg font-bold ml-2 ${
+                          day.isHighlighted || day.datetime === today
+                            ? "text-white"
+                            : "text-[#344E41]"
                         }`}
                       >
                         {fahrenheitToCelsius(day.temp)}°C
                       </span>
                     </div>
                     <div
-                      className={`rain-chance ${
-                        day.isHighlighted ? "highlighted" : ""
+                      className={`mt-2 text-xs sm:text-sm font-bold ${
+                        day.isHighlighted || day.datetime === today
+                          ? "text-white"
+                          : "text-[#5A7C6B]"
                       }`}
                     >
                       {day.precipprob ?? 0}%
@@ -177,7 +200,7 @@ function ForeCast() {
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 

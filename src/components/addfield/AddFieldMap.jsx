@@ -62,7 +62,7 @@ const AddFieldMap = ({ setMarkers, markers }) => {
 
   const yellowMarkerIcon = new L.divIcon({
     className: "yellow-marker",
-    html: '<div style="background-color: yellow; border-radius: 50%; width: 15px; height: 15px; border: 1px solid #ffcc00;"></div>',
+    html: '<div style="background-color: yellow; border-radius: 50%; width: 15px; height: 15px; border: 1px solid #ffcc00; "></div>',
     iconSize: [25, 25],
     iconAnchor: [12, 12],
     shadowUrl: markerShadow,

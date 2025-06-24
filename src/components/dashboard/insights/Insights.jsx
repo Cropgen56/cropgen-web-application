@@ -1,5 +1,4 @@
 import React from "react";
-import "./Insights.css";
 import Card from "react-bootstrap/Card";
 import { FcCheckmark } from "react-icons/fc";
 import { FaXmark } from "react-icons/fa6";
@@ -13,26 +12,20 @@ import {
 
 const Insight = ({ icon, title, description, actions }) => {
   return (
-    <div className="insight-container">
-      <div className="insight-icon">{icon}</div>
-      <div className="insight-details col-5">
-        <div className="insight-title">{title}</div>
-        <div className="insight-description">{description}</div>
+    <div className="flex items-center py-2 px-4 sm:px-6 border-b border-gray-200 last:border-b-0">
+      <div className="mr-4">{icon}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm sm:text-base font-semibold text-gray-800">
+          {title}
+        </div>
+        <div className="text-xs sm:text-sm text-gray-500">{description}</div>
       </div>
-      <div className="insight-actions">
-        {/* {actions.map((action, index) => (
-          <button
-            key={index}
-            className={`action-button ${action.active ? "active" : ""}`}
-          >
-            {action.label}
-          </button>
-        ))} */}
-        <button className="action-button d-flex align-items-center justify-content-center">
-          <FcCheckmark />
+      <div className="flex gap-4 ml-auto">
+        <button className="p-2 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
+          <FcCheckmark className="text-lg" />
         </button>
-        <button className="action-button">
-          <FaXmark color="red" />
+        <button className="p-2 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
+          <FaXmark className="text-red-500 text-lg" />
         </button>
       </div>
     </div>
@@ -44,7 +37,7 @@ const Insights = () => {
   const insights = [
     {
       icon: (
-        <div className="icon-stress">
+        <div className="w-8 h-8 bg-red-300 rounded-full flex items-center justify-center">
           <Drop />
         </div>
       ),
@@ -58,10 +51,10 @@ const Insights = () => {
     },
     {
       icon: (
-        <div className="icon-shallow-irrigation">
+        <div className="w-8 h-8 bg-yellow-300 rounded-full flex items-center justify-center relative">
           <Drop />
           <sup>
-            <SmallDrop />
+            <SmallDrop className="absolute -top-1 -right-1" />
           </sup>
         </div>
       ),
@@ -74,7 +67,7 @@ const Insights = () => {
     },
     {
       icon: (
-        <div className="icon-add-irrigation">
+        <div className="w-8 h-8 bg-yellow-300 rounded-full flex items-center justify-center">
           <Lite />
         </div>
       ),
@@ -88,27 +81,33 @@ const Insights = () => {
   ];
 
   return (
-    <Card body className="mt-1 mb-3 forecast shadow">
-      <div className="d-flex flex-direction-row justify-content-between align-items-center mb-1">
-        <div className="insights-titel-container">
-          <div className="insights-titel">Insights</div>
-          <div className="dropdown-arrow">
-            <UpArrow />
-            <DownArrow />
+    <Card body className="mt-1 mb-3 shadow-md rounded-lg bg-white">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
+        <div className="flex items-center">
+          <div className="text-lg sm:text-xl font-semibold text-gray-800">
+            Insights
+          </div>
+          <div className="flex flex-col items-center ml-2 sm:ml-3 mt-1">
+            <UpArrow className="w-3 h-3" />
+            <DownArrow className="w-3 h-3" />
           </div>
         </div>
-        <div className="d-flex">
-          <div className="action-title-container">
-            <div className="insights-titel">Action</div>
-            <div className="dropdown-arrow">
-              <UpArrow />
-              <DownArrow />
+        <div className="flex items-center mt-2 sm:mt-0">
+          <div className="flex items-center mr-4 sm:mr-8">
+            <div className="text-lg sm:text-xl font-semibold text-gray-800">
+              Action
+            </div>
+            <div className="flex flex-col items-center ml-2 sm:ml-3 mt-1">
+              <UpArrow className="w-3 h-3" />
+              <DownArrow className="w-3 h-3" />
             </div>
           </div>
-          <div className="insight-see-all">See all</div>
+          <div className="text-sm text-gray-400 cursor-pointer hover:text-gray-600">
+            See all
+          </div>
         </div>
       </div>
-      <div className="insights-container ">
+      <div className="flex flex-col">
         {insights.map((insight, index) => (
           <Insight key={index} {...insight} />
         ))}
