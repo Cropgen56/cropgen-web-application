@@ -10,17 +10,17 @@ import {
   UpArrow,
 } from "../../../assets/DashboardIcons";
 
-const Insight = ({ icon, title, description, actions }) => {
+const Insight = ({ icon, title, description }) => {
   return (
-    <div className="flex items-center py-2 px-4 sm:px-6 border-b border-gray-200 last:border-b-0">
-      <div className="mr-4">{icon}</div>
+    <div className="flex flex-col sm:flex-row sm:items-center py-2 px-4 sm:px-6 border-b border-gray-200 last:border-b-0 gap-3 sm:gap-0">
+      <div className="mr-0 sm:mr-4">{icon}</div>
       <div className="flex-1 min-w-0">
         <div className="text-sm sm:text-base font-semibold text-gray-800">
           {title}
         </div>
         <div className="text-xs sm:text-sm text-gray-500">{description}</div>
       </div>
-      <div className="flex gap-4 ml-auto">
+      <div className="flex justify-start sm:justify-end gap-4 mt-2 sm:mt-0">
         <button className="p-2 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
           <FcCheckmark className="text-lg" />
         </button>
@@ -33,7 +33,6 @@ const Insight = ({ icon, title, description, actions }) => {
 };
 
 const Insights = () => {
-  // insights from the backend
   const insights = [
     {
       icon: (
@@ -44,10 +43,6 @@ const Insights = () => {
       title: "Stress is building up!",
       description:
         "4 hours of -80 stress was measured. Rain is not forecasted for the next 3 days.",
-      actions: [
-        { label: "X", active: true },
-        { label: "X", active: false },
-      ],
     },
     {
       icon: (
@@ -60,10 +55,6 @@ const Insights = () => {
       ),
       title: "Shallow irrigation detected in the 7 days",
       description: "We detected an anomaly with stress and low temperature.",
-      actions: [
-        { label: "x", active: true },
-        { label: "X", active: false },
-      ],
     },
     {
       icon: (
@@ -73,16 +64,14 @@ const Insights = () => {
       ),
       title: "You should add 1mm to your irrigation",
       description: "We detected an anomaly with stress and low temperature.",
-      actions: [
-        { label: "X", active: true },
-        { label: "X", active: false },
-      ],
     },
   ];
 
   return (
     <Card body className="mt-1 mb-3 shadow-md rounded-lg bg-white">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6 gap-4 sm:gap-0">
+        {/* Left: Insights Label */}
         <div className="flex items-center">
           <div className="text-lg sm:text-xl font-semibold text-gray-800">
             Insights
@@ -92,8 +81,10 @@ const Insights = () => {
             <DownArrow className="w-3 h-3" />
           </div>
         </div>
-        <div className="flex items-center mt-2 sm:mt-0">
-          <div className="flex items-center mr-4 sm:mr-8">
+
+        {/* Right: Action Label + See all */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 w-full sm:w-auto">
+          <div className="flex items-center">
             <div className="text-lg sm:text-xl font-semibold text-gray-800">
               Action
             </div>
@@ -102,11 +93,13 @@ const Insights = () => {
               <DownArrow className="w-3 h-3" />
             </div>
           </div>
-          <div className="text-sm text-gray-400 cursor-pointer hover:text-gray-600">
+          <div className="text-sm text-gray-400 hover:text-gray-600 cursor-pointer text-right sm:text-left">
             See all
           </div>
         </div>
       </div>
+
+      {/* Insight List */}
       <div className="flex flex-col">
         {insights.map((insight, index) => (
           <Insight key={index} {...insight} />

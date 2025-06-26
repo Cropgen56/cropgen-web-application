@@ -15,22 +15,25 @@ const NutrientBar = ({
   const requiredWidth = `${(required / max) * 100}%`;
 
   return (
-    <div className="flex items-center mb-3 sm:mb-8">
-      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-teal-700 rounded-full flex items-center justify-center mr-2 sm:mr-3">
+    <div className="flex flex-col sm:flex-row sm:items-center mb-4 sm:mb-6">
+      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-teal-700 rounded-full flex items-center justify-center mb-2 sm:mb-0 sm:mr-3">
         <span className="text-white font-bold text-xs sm:text-sm">
           {symbol}
         </span>
       </div>
-      <div className="flex-1">
-        <span className="block text-sm sm:text-base font-semibold text-black mb-1 sm:mb-2">
+
+      <div className="flex-1 w-full">
+        <span className="block text-sm sm:text-base font-semibold text-black mb-1">
           {label}
         </span>
-        <div className="bg-gray-200 h-1.5 sm:h-2 rounded-full mb-1.5 sm:mb-2 overflow-hidden">
+
+        <div className="bg-gray-200 h-1.5 sm:h-2 rounded-full mb-1.5 overflow-hidden">
           <div
             className="h-full rounded-full"
             style={{ backgroundColor: colorCurrent, width: currentWidth }}
           />
         </div>
+
         <div className="bg-gray-200 h-1.5 sm:h-2 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full"
@@ -38,7 +41,8 @@ const NutrientBar = ({
           />
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center pl-2 sm:pl-4 pt-4 sm:pt-5">
+
+      <div className="flex sm:flex-col items-start sm:items-center justify-center pt-2 sm:pt-0 pl-0 sm:pl-4 text-left sm:text-center">
         <span className="text-xs sm:text-sm font-bold text-gray-900">{`${current} kg/acre`}</span>
         <span className="text-xs sm:text-sm font-medium text-gray-500">{`${required} kg/acre`}</span>
       </div>
@@ -91,18 +95,20 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
           </span>
         </div>
       )}
+
       {!isFinalHarvest && (
         <>
-          <div className="flex justify-end items-center sm:mb-2">
-            <div className="flex items-center mr-4 sm:mr-6">
-              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-600 rounded-sm mr-1 sm:mr-2"></div>
+          <div className="flex flex-col sm:flex-row justify-end items-center gap-2 sm:gap-6 mb-4">
+            <div className="flex items-center">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-600 rounded-sm mr-2" />
               <span className="text-xs sm:text-sm text-gray-700">Current</span>
             </div>
             <div className="flex items-center">
-              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-lime-400 rounded-sm mr-1 sm:mr-2"></div>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-lime-400 rounded-sm mr-2" />
               <span className="text-xs sm:text-sm text-gray-700">Required</span>
             </div>
           </div>
+
           {data.map((item, index) => (
             <NutrientBar
               key={index}
@@ -110,8 +116,8 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
               symbol={item.symbol}
               current={item.current}
               required={item.required}
-              colorCurrent="#36A534" // Green for current
-              colorRequired="#C4E930" // Lime for required
+              colorCurrent="#36A534"
+              colorRequired="#C4E930"
             />
           ))}
         </>

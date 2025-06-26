@@ -18,23 +18,19 @@ import {
   getTodayDate,
 } from "../../../../utility/formatDate";
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
-import "./WaterIndex.css";
 
 const WaterIndex = ({ selectedFieldsDetials }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const {
     waterIndexData = null,
     loading,
-    error,
   } = useSelector((state) => state.satellite) || {};
 
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDMI");
 
-  // Memoize the fetch parameters to prevent unnecessary API calls
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
-
     return {
       startDate: getOneYearBefore(getTodayDate()),
       endDate: getTodayDate(),
@@ -43,38 +39,20 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
     };
   }, [field, sowingDate, index]);
 
-  // Fetch data only when parameters actually change
   useEffect(() => {
     if (!fetchParams) return;
-
     dispatch(fetchWaterIndexData(fetchParams));
   }, [dispatch, fetchParams]);
 
-  // Memoize chart data transformation to prevent unnecessary recalculations
   const chartData = useMemo(() => {
-    // Return empty if no summary data at all
-    if (!waterIndexData) {
-      return [];
-    }
+    if (!waterIndexData) return [];
 
-    // Try different possible data structures
-    let timeseries = null;
+    let timeseries =
+      waterIndexData?.data?.timeseries ||
+      waterIndexData?.timeseries ||
+      (Array.isArray(waterIndexData) ? waterIndexData : []);
 
-    // Check common data structure patterns
-    if (waterIndexData.data?.timeseries) {
-      timeseries = waterIndexData.data.timeseries;
-    } else if (waterIndexData.timeseries) {
-      timeseries = waterIndexData.timeseries;
-    } else if (Array.isArray(waterIndexData)) {
-      timeseries = waterIndexData;
-    } else {
-      return [];
-    }
-
-    // Validate timeseries data
-    if (!Array.isArray(timeseries) || timeseries.length === 0) {
-      return [];
-    }
+    if (!Array.isArray(timeseries) || timeseries.length === 0) return [];
 
     return timeseries.map((item) => ({
       date: new Date(item.date).toLocaleDateString("en-US", {
@@ -85,32 +63,18 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
     }));
   }, [waterIndexData, index]);
 
-  // Memoize summary data extraction
   const summaryData = useMemo(() => {
-    if (!waterIndexData) {
+    if (!waterIndexData)
       return { min: -0.1, mean: 0.2, max: 0.4, timestamp: null };
-    }
 
-    // Handle different data structures
-    let summary, timestamp;
-
-    if (waterIndexData.data?.summary) {
-      summary = waterIndexData.data.summary;
-      timestamp = waterIndexData.timestamp;
-    } else if (waterIndexData.summary) {
-      summary = waterIndexData.summary;
-      timestamp = waterIndexData.timestamp;
-    } else {
-      summary = {};
-      timestamp = waterIndexData.timestamp;
-    }
+    const summary =
+      waterIndexData?.data?.summary || waterIndexData?.summary || {};
+    const timestamp = waterIndexData?.timestamp;
 
     const { min = -0.1, mean = 0.2, max = 0.4 } = summary;
-
     return { min, mean, max, timestamp };
   }, [waterIndexData]);
 
-  // Memoize Y-axis configuration
   const yAxisConfig = useMemo(() => {
     const { min, mean, max } = summaryData;
 
@@ -119,44 +83,36 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
       Math.ceil(max * 10) / 10 + 0.1,
     ];
 
-    const ticks = [min, mean, max, domain[0], domain[1]]
+    const ticks = [min, mean, max, ...domain]
       .sort((a, b) => a - b)
-      .filter((value, index, array) => array.indexOf(value) === index);
+      .filter((value, idx, arr) => arr.indexOf(value) === idx);
 
     return { domain, ticks };
   }, [summaryData]);
 
-  // Memoize chart configuration
   const chartConfig = useMemo(() => {
     const dataLength = chartData.length;
-
     return {
       width: Math.max(dataLength * 30, 300),
       interval: 3,
     };
   }, [chartData.length]);
 
-  // Memoized tick formatter to prevent function recreation
-  const tickFormatter = useCallback(
-    (value) => {
-      const { min, mean, max } = summaryData;
+  const tickFormatter = useCallback((value) => {
+    const { min, mean, max } = summaryData;
+    if (Math.abs(value - min) < 0.001) return `Min: ${value.toFixed(3)}`;
+    if (Math.abs(value - mean) < 0.001) return `Mean: ${value.toFixed(3)}`;
+    if (Math.abs(value - max) < 0.001) return `Max: ${value.toFixed(3)}`;
+    return value.toFixed(2);
+  }, [summaryData]);
 
-      if (Math.abs(value - min) < 0.001) return `Min: ${value.toFixed(3)}`;
-      if (Math.abs(value - mean) < 0.001) return `Mean: ${value.toFixed(3)}`;
-      if (Math.abs(value - max) < 0.001) return `Max: ${value.toFixed(3)}`;
-      return value.toFixed(2);
-    },
-    [summaryData]
-  );
-
-  // Memoized tooltip formatter
   const tooltipFormatter = useCallback(
     (value) => [value.toFixed(3), index],
     [index]
   );
+
   const labelFormatter = useCallback((label) => `Date: ${label}`, []);
 
-  // Memoized select handler
   const handleIndexChange = useCallback((e) => {
     setIndex(e.target.value);
   }, []);
@@ -164,7 +120,6 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   const isLoading = loading?.waterIndexData || false;
   const hasData = chartData.length > 0;
 
-  // Define index descriptions
   const indexDescriptions = {
     NDMI: "NDMI values can be used to monitor vegetation water content and drought conditions over time.",
     NDWI: "NDWI values help assess water presence in vegetation and detect surface water or irrigation zones.",
@@ -175,27 +130,35 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   };
 
   return (
-    <Card body className="ndvi-graph-main">
-      <h6 style={{ color: "#1E90FF" }}>Water Index</h6>
-      <div className="ndvi-container p-0 m-0">
+    <Card body className="shadow-md bg-white">
+      <h6 className="text-blue-600 text-base font-semibold">Water Index</h6>
+
+      <div className="flex flex-col lg:flex-row items-start gap-4 mt-2">
         {/* Left Panel */}
-        <div className="ndvi-left">
-          <h2 style={{ color: "#1E90FF" }}>{index}</h2>
-          <button style={{ color: "#1E90FF" }}>+0.15</button>
-          <p>
+        <div className="lg:w-[300px] text-center">
+          <h2 className="text-blue-600 text-xl font-bold">{index}</h2>
+          <button className="bg-[#5a7c6b] text-blue-600 px-5 py-1 rounded-md font-semibold text-base mt-2">
+            +0.15
+          </button>
+          <p className="text-[#344e41] mt-2 text-sm">
             Last Update{" "}
             {summaryData.timestamp
               ? `${getDaysAgo(summaryData?.timestamp)} days Ago`
               : "N/A"}
           </p>
-          <div style={{ borderColor: "#1E90FF" }}>
+          <div className="border border-blue-600 text-[#344e41] p-3 rounded-md text-sm mt-2">
             {indexDescriptions[index]}
           </div>
         </div>
+
         {/* Right Panel */}
-        <div className="ndvi-right">
-          <div className="ndvi-select">
-            <select value={index} onChange={handleIndexChange}>
+        <div className="flex-grow w-full">
+          <div className="flex justify-end mb-2">
+            <select
+              value={index}
+              onChange={handleIndexChange}
+              className="border border-[#5a7c6b] rounded-full px-4 py-1 text-gray-600 text-sm outline-none"
+            >
               <option value="NDMI">NDMI</option>
               <option value="NDWI">NDWI</option>
               <option value="SMI">SMI</option>
@@ -204,13 +167,14 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
               <option value="NMDI">NMDI</option>
             </select>
           </div>
+
           {isLoading ? (
-            <div className="text-center text-muted">
+            <div className="text-center text-gray-500">
               <LoadingSpinner height="200px" size={64} color="#86D72F" />
               <strong>Water Index</strong>
             </div>
           ) : !hasData ? (
-            <Card className="no-data-card mx-auto mt-4 max-w-md">
+            <Card className="mx-auto mt-4 max-w-md">
               <Card.Body className="text-center">
                 <Card.Title className="text-lg font-semibold text-gray-700">
                   No Data Available
@@ -223,10 +187,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
               </Card.Body>
             </Card>
           ) : (
-            <div
-              style={{ overflowX: "auto", maxWidth: "100%" }}
-              className="hide-scrollbar"
-            >
+            <div className="overflow-x-auto max-w-full scrollbar-hide">
               <ResponsiveContainer width={chartConfig.width} height={200}>
                 <LineChart
                   data={chartData}
@@ -241,10 +202,9 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
                   />
                   <YAxis
                     domain={yAxisConfig.domain}
-                    tick={{ fontSize: 12 }}
                     ticks={yAxisConfig.ticks}
                     tickFormatter={tickFormatter}
-                    type="number"
+                    tick={{ fontSize: 12 }}
                   />
                   <Tooltip
                     formatter={tooltipFormatter}

@@ -63,13 +63,6 @@ const Sidebar = ({ onToggleCollapse }) => {
     dispatch(decodeToken());
   }, [dispatch]);
 
-  // Set initial sidebar state based on current path
-  useEffect(() => {
-    if (location.pathname === "/cropgen-analytics") {
-      setIsCollapsed(false);
-      onToggleCollapse(false);
-    }
-  }, [location.pathname, onToggleCollapse]);
 
   // Handle sidebar collapse toggle
   const handleCollapseToggle = (collapse) => {
@@ -78,16 +71,11 @@ const Sidebar = ({ onToggleCollapse }) => {
     onToggleCollapse(newCollapsedState);
   };
 
-  // Handle navigation
   const handleNavigation = (path) => {
-    navigate(path);
-    // If navigating to /cropgen-analytics, ensure sidebar is open
-    if (path === "/cropgen-analytics") {
-      handleCollapseToggle(false);
-    } else if (location.pathname === "/cropgen-analytics") {
-      handleCollapseToggle(true);
-    }
-  };
+  navigate(path);
+  handleCollapseToggle(true); // Collapse sidebar after navigation
+};
+
 
   // Handle logout
   const handleLogout = async () => {

@@ -5,14 +5,14 @@ const CropDetials = ({ cropDetials, daysFromSowing, totalArea, cropYield }) => {
   const crop = cropDetials?.[0]; // Access the first item in the array
 
   return (
-    <div className="flex flex-col sm:flex-row items-center mb-4 md:mb-0">
+    <div className="flex flex-col md:flex-row items-center md:items-start gap-4 mb-4 w-full">
       <img
         src={cropImage}
         alt="crop image"
-        className="w-24 h-24 sm:w-32 sm:h-32 border-2 border-green-600 rounded-md p-1 object-cover"
+        className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border-2 border-green-600 rounded-md p-1 object-cover"
       />
-      <div className="mt-4 sm:mt-0 sm:ml-4 flex flex-col gap-2">
-        <div className="flex items-center">
+      <div className="w-full md:w-auto flex flex-col gap-3 sm:gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center">
           <span className="text-sm sm:text-base font-semibold text-[#344E41] min-w-[120px]">
             Crop Name:
           </span>
@@ -20,7 +20,7 @@ const CropDetials = ({ cropDetials, daysFromSowing, totalArea, cropYield }) => {
             {crop?.cropName || "N/A"}
           </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center">
           <span className="text-sm sm:text-base font-semibold text-[#344E41] min-w-[120px]">
             Crop Age:
           </span>
@@ -28,7 +28,7 @@ const CropDetials = ({ cropDetials, daysFromSowing, totalArea, cropYield }) => {
             {daysFromSowing || 0} days
           </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center">
           <span className="text-sm sm:text-base font-semibold text-[#344E41] min-w-[120px]">
             Total Area:
           </span>
@@ -36,7 +36,7 @@ const CropDetials = ({ cropDetials, daysFromSowing, totalArea, cropYield }) => {
             {totalArea?.toFixed(2) || "0.00"} acres
           </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center">
           <span className="text-sm sm:text-base font-semibold text-[#344E41] min-w-[120px]">
             Standard Yield:
           </span>
@@ -44,7 +44,7 @@ const CropDetials = ({ cropDetials, daysFromSowing, totalArea, cropYield }) => {
             {cropYield?.Standard_Yield_units || "N/A"}
           </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center">
           <span className="text-sm sm:text-base font-semibold text-[#344E41] min-w-[120px]">
             AI Yield Data:
           </span>

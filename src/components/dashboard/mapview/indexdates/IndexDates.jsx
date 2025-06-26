@@ -7,18 +7,15 @@ import {
 } from "../../../../assets/DashboardIcons";
 import SatelliteIndexList from "../satellitedata/SatelliteIndexList";
 import { fetchSatelliteDates } from "../../../../redux/slices/satelliteSlice";
-import "./IndexDates.css";
 
-// Constants
 const VISIBLE_DATES_COUNT = 6;
+
 const DATE_FORMAT_OPTIONS = {
   day: "numeric",
   month: "short",
   year: "numeric",
 };
-const DEBOUNCE_DELAY = 500;
 
-// Utility function to format dates
 const formatDate = (date) => {
   try {
     return new Date(date).toLocaleDateString("en-US", DATE_FORMAT_OPTIONS);
@@ -27,7 +24,6 @@ const formatDate = (date) => {
   }
 };
 
-// Utility to standardize date to ISO string
 const toISODateString = (date) => {
   try {
     const d = new Date(date);
@@ -39,7 +35,14 @@ const toISODateString = (date) => {
   }
 };
 
-// Utility for deep comparison of arrays
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
+
 const areArraysEqual = (arr1, arr2) => {
   if (!arr1 || !arr2 || arr1.length !== arr2.length) return false;
   return arr1.every((item, index) =>
@@ -49,16 +52,6 @@ const areArraysEqual = (arr1, arr2) => {
   );
 };
 
-// Debounce utility
-const debounce = (func, delay) => {
-  let timeoutId;
-  return (...args) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
-};
-
-// Main component
 const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   const dispatch = useDispatch();
   const { satelliteDates = [], loading } = useSelector(
@@ -70,31 +63,27 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   const [visibleDates, setVisibleDates] = useState([]);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
 
-  // Memoize coordinates to prevent unnecessary reference changes
   const coordinates = useMemo(() => {
     return (
       selectedFieldsDetials[0]?.field?.map(({ lat, lng }) => [lng, lat]) ?? []
     );
   }, [selectedFieldsDetials]);
 
-  // Debounced fetch function
   const debouncedFetchSatelliteDates = useMemo(
     () =>
       debounce((coords) => {
         if (coords?.length > 0) {
           dispatch(fetchSatelliteDates([coords]));
         }
-      }, DEBOUNCE_DELAY),
+      }, 500),
     [dispatch]
   );
 
-  // Fetch satellite dates when coordinates change
   useEffect(() => {
     debouncedFetchSatelliteDates(coordinates);
     return () => debouncedFetchSatelliteDates.cancel?.();
   }, [coordinates, debouncedFetchSatelliteDates]);
 
-  // Process satellite dates
   useEffect(() => {
     if (!satelliteDates?.length) {
       setDates([]);
@@ -118,7 +107,6 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     const processedDates = Array.from(uniqueDatesMap.values());
     setDates(processedDates);
 
-    // Only update visibleDates if it's empty or the current range is invalid
     if (
       visibleDates.length === 0 ||
       !visibleDates.every((vd) =>
@@ -128,17 +116,13 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
       setVisibleDates(processedDates.slice(0, VISIBLE_DATES_COUNT));
     }
 
-    // Set default selected date only if not already set
     if (processedDates.length > 0 && !selectedDate) {
       setSelectedDate(toISODateString(satelliteDates[0].date));
     }
   }, [satelliteDates]);
 
-  // Handle arrow navigation
   const handleArrowClick = useCallback(
     (direction) => {
-      if (!dates?.length) return;
-
       const currentStartIndex = dates.findIndex(
         (d) => d.date === visibleDates[0]?.date
       );
@@ -165,7 +149,6 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     [dates, visibleDates]
   );
 
-  // Handle date selection
   const handleDateClick = useCallback((date) => {
     const formattedDate = toISODateString(date);
     if (formattedDate) {
@@ -173,111 +156,98 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     }
   }, []);
 
-  // Toggle calendar visibility
   const toggleCalendar = useCallback(() => {
     setIsCalendarVisible((prev) => !prev);
   }, []);
 
   return (
-    <div className="ndvi-selector">
+    <div className="absolute bottom-0 w-full flex flex-col items-center font-sans z-[1000] py-1">
       <SatelliteIndexList
         selectedFieldsDetials={selectedFieldsDetials}
         selectedDate={selectedDate}
       />
-      <div className="dates-container px-2">
+      <div className="flex items-center bg-[#5a7c6b] rounded gap-2 px-2 w-[98%]">
         {loading.satelliteDates ? (
-          <div className="loader-bar" aria-live="polite">
-            <div className="loader-bar-inner"></div>
+          <div className="w-full h-2 bg-gray-300 rounded overflow-hidden my-4 relative">
+            <div className="w-1/3 h-full bg-green-600 rounded animate-pulse absolute inset-0" />
           </div>
         ) : (
           <>
-            <div className="calendar-icon-container">
+            <div className="relative flex items-center">
               <button
                 type="button"
-                className="calendar-icon-button"
                 onClick={toggleCalendar}
-                aria-label="Toggle calendar"
-                aria-expanded={isCalendarVisible}
+                className="bg-transparent border-none cursor-pointer"
               >
                 <Calender />
               </button>
               {isCalendarVisible && (
-                <div className="calendar-container">
+                <div className="absolute top-10 z-10">
                   <input
                     type="date"
-                    className="calendar-input"
+                    className="p-2 border border-gray-300 rounded"
                     onChange={(e) => handleDateClick(e.target.value)}
-                    aria-label="Select date"
                   />
                 </div>
               )}
             </div>
-            <div className="vertical-line" aria-hidden="true" />
+            <div className="w-px h-8 bg-gray-300 mx-2" />
             <button
               type="button"
-              className="arrow-button"
               onClick={() => handleArrowClick("prev")}
-              aria-label="Previous dates"
               disabled={
                 !dates.length ||
                 dates.findIndex((d) => d.date === visibleDates[0]?.date) <= 0
               }
+              className="bg-transparent border-none disabled:opacity-50"
             >
               <LeftArrow />
             </button>
-            <div className="vertical-line" aria-hidden="true" />
-            <div
-              className="dates-list"
-              role="listbox"
-              aria-label="Available dates"
-            >
+            <div className="w-px h-8 bg-gray-300 mx-2" />
+
+            <div className="flex gap-2 overflow-x-auto">
               {visibleDates.map((dateItem, index) => {
                 const isSelected =
                   formatDate(dateItem.date) === formatDate(selectedDate);
                 return (
                   <div
                     key={`${dateItem.date}-${index}`}
-                    className={`date-item ${isSelected ? "selected" : ""}`}
+                    className={`flex flex-col text-center rounded p-1 px-3 text-white text-sm font-medium cursor-pointer ${
+                      isSelected ? "bg-[#344e41]" : "bg-transparent"
+                    }`}
                     onClick={() => handleDateClick(dateItem.date)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleDateClick(dateItem.date);
-                      }
-                    }}
+                    tabIndex={0}
                     role="option"
                     aria-selected={isSelected}
-                    tabIndex={0}
                   >
-                    <div className="date-text">{dateItem.date}</div>
-                    <div className="date-data">
-                      <div>{dateItem.value.toFixed(2)}</div>
-                      <div
-                        className={`date-change ${
-                          dateItem.change >= 0 ? "positive" : "negative"
+                    <div className="font-bold">{dateItem.date}</div>
+                    <div className="flex justify-between text-xs w-full">
+                      <span>{dateItem.value.toFixed(2)}</span>
+                      <span
+                        className={`${
+                          dateItem.change >= 0 ? "text-green-500" : "text-red-500"
                         }`}
                       >
                         {dateItem.change >= 0
                           ? `+${dateItem.change}`
                           : dateItem.change}
-                      </div>
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
-            <div className="vertical-line" aria-hidden="true" />
+            <div className="w-px h-8 bg-gray-300 mx-2" />
             <button
               type="button"
-              className="arrow-button"
               onClick={() => handleArrowClick("next")}
-              aria-label="Next dates"
               disabled={
                 !dates.length ||
                 dates.findIndex((d) => d.date === visibleDates[0]?.date) +
                   VISIBLE_DATES_COUNT >=
                   dates.length
               }
+              className="bg-transparent border-none disabled:opacity-50"
             >
               <RightArrow />
             </button>
@@ -288,7 +258,6 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   );
 };
 
-// Memoize component
 export default memo(IndexSelector, (prevProps, nextProps) => {
   return areArraysEqual(
     prevProps.selectedFieldsDetials[0]?.field,

@@ -8,10 +8,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Card from "react-bootstrap/Card";
-import "./PlantGrowthActivity.css";
 import { useSelector } from "react-redux";
 
-// Generate data to match the curve in the image
+// Generate data for curve
 const generateCurveData = (currentWeek, cropGrowthStage) => {
   const data = [
     { week: "Week 1", height: 0, weekNumber: 1 },
@@ -47,32 +46,48 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
   if (sowing) {
     const timeDiff = today.getTime() - sowing.getTime();
     const daysSinceSowing = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-    currentWeek = Math.min(
-      Math.max(Math.floor(daysSinceSowing / 7) + 1, 1),
-      13
-    );
+    currentWeek = Math.min(Math.max(Math.floor(daysSinceSowing / 7) + 1, 1), 13);
   }
 
   const data = generateCurveData(currentWeek, Crop_Growth_Stage);
   const currentWeekData = data.find((d) => d.weekNumber === currentWeek);
 
   return (
-    <Card body className="plant-growth-card shadow">
-      <div className="header-container">
-        <div className="heading-container">
-          <h2 className="header-title">Plant Growth Activity</h2>
-          <div className="subheader-text">{cropName || "Unknown Crop"}</div>
+    <Card body className="bg-white rounded-lg p-4 sm:p-4 md:p-5 shadow-md">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-lg sm:text-xl font-semibold text-[#344e41] m-0">
+            Plant Growth Activity
+          </h2>
+          <p className="text-sm sm:text-base text-gray-600 m-0">
+            {cropName || "Unknown Crop"}
+          </p>
         </div>
-        <div className="dropdown-container">
-          <div className="custom-dropdown">
-            <select aria-label="Select Activity Phase">
+
+        {/* Dropdowns */}
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto">
+            <select
+              className="w-full py-2 px-6 text-sm border border-[#5a7c6b] rounded-full text-gray-700 appearance-none pr-8 bg-transparent bg-no-repeat bg-[right_0.75rem_center] bg-[length:1em] cursor-pointer"
+              style={{
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
+              }}
+            >
               <option>Planting/Sowing</option>
               <option>Sowing</option>
               <option>Growth</option>
             </select>
           </div>
-          <div className="custom-dropdown">
-            <select aria-label="Select Time Period">
+          <div className="relative w-full sm:w-auto">
+            <select
+              className="w-full py-2 px-6 text-sm border border-[#5a7c6b] rounded-full text-gray-700 appearance-none pr-8 bg-transparent bg-no-repeat bg-[right_0.75rem_center] bg-[length:1em] cursor-pointer"
+              style={{
+                backgroundImage:
+                  "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
+              }}
+            >
               <option>Days</option>
               <option>Weeks</option>
               <option>Months</option>
@@ -81,24 +96,23 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
         </div>
       </div>
 
-      <div className="chart-container" style={{ position: "relative" }}>
-        <ResponsiveContainer width="100%" height={200}>
-          <AreaChart
-            data={data}
-            margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
-          >
+      {/* Chart */}
+      <div className="relative w-full h-[200px] sm:h-[240px] md:h-[280px] bg-white">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorHeight" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3A8B0A" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#3A8B0A" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#ccc" vertical={false} />
+
+            <CartesianGrid stroke="#E5E7EB" strokeDasharray="3 3" horizontal vertical={false} />
             <XAxis
               dataKey="week"
               axisLine={false}
               tickLine={false}
-              tick={{ fill: "#000", fontSize: "12px", fontWeight: "bold" }}
+              tick={{ fill: "#000", fontSize: 12, fontWeight: "bold" }}
             />
             <YAxis hide />
             <Area
@@ -108,8 +122,7 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
               fillOpacity={1}
               fill="url(#colorHeight)"
               name="Plant Height"
-              dot={(props) => {
-                const { cx, cy, payload } = props;
+              dot={({ cx, cy, payload }) => {
                 if (
                   payload.weekNumber === currentWeek ||
                   payload.weekNumber === data.length
@@ -130,23 +143,18 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
             />
           </AreaChart>
         </ResponsiveContainer>
+
+        {/* Tooltip */}
         {currentWeekData && (
           <div
-            className="custom-tooltip"
+            className="absolute z-50 bg-[#7BB34F] text-white text-xs sm:text-sm px-3 py-1 rounded-md text-center whitespace-nowrap"
             style={{
-              position: "absolute",
               left: `${(currentWeekData.weekNumber / 13) * 100}%`,
               top: `${100 - (currentWeekData.height / 6) * 100 - 10}%`,
               transform: "translateX(-50%) translateY(-100%)",
-              backgroundColor: "#7BB34F",
-              color: "#fff",
-              padding: "5px 10px",
-              borderRadius: "4px",
-              zIndex: 1000,
             }}
           >
-            <p className="tooltip-stage">{Crop_Growth_Stage}</p>
-            {/* <p className="tooltip-info">Fertilization, pest control</p> */}
+            <p className="font-bold m-0">{Crop_Growth_Stage}</p>
           </div>
         )}
       </div>

@@ -12,7 +12,6 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
   const { cropHealth, loading } = useSelector((state) => state?.satellite);
 
-  // Fetch crop health data
   useEffect(() => {
     if (farmDetails) {
       dispatch(fetchCropHealth(farmDetails));
@@ -21,7 +20,6 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
 
   const { Health_Percentage = 0, Crop_Health = "Unknown" } = cropHealth || {};
 
-  // Prepare data for the doughnut chart
   const data = {
     labels: ["Excellent", "Very Good", "Good", "Moderate", "Poor"],
     datasets: [
@@ -38,7 +36,7 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
             ? [0, 0, 0, Health_Percentage, 100 - Health_Percentage]
             : Crop_Health === "Poor"
             ? [0, 0, 0, 0, Health_Percentage]
-            : [0, 0, 0, 0, 100], // Default to show "Poor" if unknown
+            : [0, 0, 0, 0, 100],
         backgroundColor: [
           "#2A3F2F",
           "#3E5C4A",
@@ -94,7 +92,10 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
       const y = (chartArea.top + chartArea.bottom) / 2;
       const percentageText = `${Health_Percentage}%`;
 
-      ctx.font = "bold 40px sm:80px Arial";
+      ctx.font = "bold 20px Arial";
+      if (window.innerWidth >= 640) ctx.font = "bold 26px Arial";
+      if (window.innerWidth >= 768) ctx.font = "bold 32px Arial";
+
       ctx.fillStyle = "#000000";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -104,7 +105,7 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
   };
 
   return (
-    <div className="w-full max-w-[280px] sm:max-w-[320px] md:max-w-[360px] lg:max-w-[400px] h-[160px] sm:h-[180px] md:h-[200px] flex justify-center items-center">
+    <div className="w-full h-[200px] sm:h-[240px] md:h-[260px] lg:h-[280px] flex justify-center items-center">
       {loading?.cropHealth ? (
         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
           <LoadingSpinner
