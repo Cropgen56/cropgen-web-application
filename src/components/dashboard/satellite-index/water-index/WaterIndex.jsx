@@ -135,7 +135,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
 
       <div className="flex flex-col lg:flex-row items-start gap-4 mt-2">
         {/* Left Panel */}
-        <div className="lg:w-[300px] text-center">
+        <div className="w-full lg:w-[300px] text-center">
           <h2 className="text-blue-600 text-xl font-bold">{index}</h2>
           <button className="bg-[#5a7c6b] text-blue-600 px-5 py-1 rounded-md font-semibold text-base mt-2">
             +0.15

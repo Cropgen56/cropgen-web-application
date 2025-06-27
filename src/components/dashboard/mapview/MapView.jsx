@@ -204,7 +204,7 @@ const FarmMap = ({
         <div className="legend-dropdown-wrapper absolute top-[15px] left-[-10rem] z-[1100]">
           <strong
             onClick={() => setShowLegend(!showLegend)}
-            className="bg-[#010704b2] text-white px-5 py-1.5 rounded cursor-pointer"
+            className="bg-[#010704b2] text-white px-2 py-1.5 rounded cursor-pointer "
           >
             🗺️ Legend
           </strong>
@@ -216,7 +216,7 @@ const FarmMap = ({
                   key={item.label}
                   className="flex items-center justify-between gap-2 p-2.5 mb-2 rounded font-medium text-sm hover:shadow transition-transform duration-200 hover:-translate-y-0.5 w-full"
                 >
-                  <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                  <div className="flex items-center gap-2 min-w-0 overflow-hidden ">
                     <span
                       className="w-[30px] h-[20px] rounded border border-black/10 shrink-0"
                       style={{ backgroundColor: item.color }}
@@ -236,8 +236,8 @@ const FarmMap = ({
       {fields.length > 0 ? (
         <IndexDates selectedFieldsDetials={selectedFieldsDetials} />
       ) : (
-        <div className="absolute z-[1000] w-full mt-[33rem] text-center">
-          <div className="w-[95%] mx-auto bg-[#5a7c6b] rounded px-3 py-2 text-white flex justify-between items-center">
+        <div className="absolute bottom-5 left-0 right-0 z-[1000] px-4">
+          <div className="w-full max-w-[95%] mx-auto bg-[#5a7c6b] rounded px-3 py-2 text-white flex justify-between items-center">
             <div className="flex gap-2 items-center border-r border-white pr-2">
               <button aria-label="Calendar"><Calender /></button>
               <button aria-label="Previous"><LeftArrow /></button>
