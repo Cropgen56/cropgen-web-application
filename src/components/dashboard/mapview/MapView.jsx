@@ -13,7 +13,6 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import "./MapView.css";
 import {
   Calender,
   LeftArrow,
@@ -23,19 +22,14 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchweatherData } from "../../../redux/slices/weatherSlice";
 import { resetSatelliteState } from "../../../redux/slices/satelliteSlice";
-import Loading from "../../comman/loading/Loading";
-import IndexDates from "./indexdates/IndexDates";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
-// Calculate polygon centroid
+import IndexDates from "./indexdates/IndexDates";
+
 const calculatePolygonCentroid = (coordinates) => {
-  if (!coordinates || coordinates.length < 3) {
-    return { lat: null, lng: null };
-  }
-
-  let area = 0;
-  let sumX = 0;
-  let sumY = 0;
-
+  if (!coordinates || coordinates.length < 3) return { lat: null, lng: null };
+  let area = 0,
+    sumX = 0,
+    sumY = 0;
   for (let i = 0; i < coordinates.length; i++) {
     const current = coordinates[i];
     const next = coordinates[(i + 1) % coordinates.length];
@@ -44,7 +38,6 @@ const calculatePolygonCentroid = (coordinates) => {
     sumX += (current.lat + next.lat) * crossProduct;
     sumY += (current.lng + next.lng) * crossProduct;
   }
-
   area /= 2;
   return {
     lat: sumX / (6 * area),
@@ -52,11 +45,8 @@ const calculatePolygonCentroid = (coordinates) => {
   };
 };
 
-// Calculate polygon bounds
 const calculatePolygonBounds = (coordinates) => {
-  if (!coordinates || coordinates.length === 0) {
-    return null;
-  }
+  if (!coordinates?.length) return null;
   const lats = coordinates.map(({ lat }) => lat);
   const lngs = coordinates.map(({ lng }) => lng);
   return [
@@ -65,7 +55,6 @@ const calculatePolygonBounds = (coordinates) => {
   ];
 };
 
-// Move map to selected field
 const MoveMapToField = ({ lat, lng, bounds }) => {
   const map = useMap();
   useEffect(() => {
@@ -78,81 +67,46 @@ const MoveMapToField = ({ lat, lng, bounds }) => {
   return null;
 };
 
-const FarmMap = ({
-  fields = [],
-  selectedField,
-  setSelectedField,
-  selectedFieldsDetials,
-}) => {
+const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsDetials }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { indexData, loading } = useSelector((state) => state?.satellite);
   const mapRef = useRef(null);
   const [image, setImage] = useState(null);
+  const [showLegend, setShowLegend] = useState(false);
 
-  // console.log(indexData);
-
-  // close the legend dropdown on click the any where other on screen
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest(".legend-dropdown-wrapper")) {
-        setShowLegend(false);
-      }
+      if (!e.target.closest(".legend-dropdown-wrapper")) setShowLegend(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const [showLegend, setShowLegend] = useState(false);
-
-  // Memoized selected field data
   const selectedFieldData = useMemo(
     () => fields.find((item) => item?._id === selectedField) || {},
     [fields, selectedField]
   );
-
-  // Memoized polygon coordinates
   const polygonCoordinates = useMemo(
     () => selectedFieldData.field?.map(({ lat, lng }) => ({ lat, lng })) || [],
     [selectedFieldData]
   );
+  const centroid = useMemo(() => calculatePolygonCentroid(polygonCoordinates), [polygonCoordinates]);
+  const polygonBounds = useMemo(() => calculatePolygonBounds(polygonCoordinates), [polygonCoordinates]);
 
-  // Memoized centroid
-  const centroid = useMemo(
-    () => calculatePolygonCentroid(polygonCoordinates),
-    [polygonCoordinates]
-  );
-
-  // Memoized bounds
-  const polygonBounds = useMemo(
-    () => calculatePolygonBounds(polygonCoordinates),
-    [polygonCoordinates]
-  );
-
-  // Update image when indexData changes
   useEffect(() => {
     setImage(
-      indexData?.image_base64
-        ? `data:image/png;base64,${indexData.image_base64}`
-        : null
+      indexData?.image_base64 ? `data:image/png;base64,${indexData.image_base64}` : null
     );
   }, [indexData]);
 
-  // Fetch weather data with caching
   const fetchWeatherData = useCallback(() => {
     if (!centroid.lat || !centroid.lng) return;
-
     const lastFetchTime = localStorage.getItem("lastFetchTime");
     const currentTime = Date.now();
     const threeHours = 3 * 60 * 60 * 1000;
-
-    if (
-      !lastFetchTime ||
-      currentTime - parseInt(lastFetchTime, 10) > threeHours
-    ) {
-      dispatch(
-        fetchweatherData({ latitude: centroid.lat, longitude: centroid.lng })
-      ).then((action) => {
+    if (!lastFetchTime || currentTime - parseInt(lastFetchTime, 10) > threeHours) {
+      dispatch(fetchweatherData({ latitude: centroid.lat, longitude: centroid.lng })).then((action) => {
         if (action.payload) {
           try {
             localStorage.setItem("weatherData", JSON.stringify(action.payload));
@@ -168,46 +122,32 @@ const FarmMap = ({
     }
   }, [dispatch, centroid.lat, centroid.lng]);
 
-  // Trigger weather data fetch
   useEffect(() => {
     fetchWeatherData();
   }, [fetchWeatherData]);
 
-  // Reset satellite state on field change
   useEffect(() => {
     dispatch(resetSatelliteState());
   }, [selectedField, dispatch]);
 
-  // Handle field selection
-  const handleFieldChange = useCallback(
-    (e) => {
-      setSelectedField(e.target.value);
-    },
-    [setSelectedField]
-  );
+  const handleFieldChange = useCallback((e) => {
+    setSelectedField(e.target.value);
+  }, [setSelectedField]);
 
-  // Default center for map
   const defaultCenter = [20.135245, 77.156935];
 
   return (
-    <div className="farm-map">
+    <div className="flex flex-col items-center w-full h-[70%] lg:h-[95%] relative">
       <MapContainer
-        center={
-          centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter
-        }
+        center={centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter}
         zoom={18}
         zoomControl={true}
-        className="farm-map-container"
+        className="w-full h-full rounded-[20px] overflow-hidden"
         ref={mapRef}
         maxZoom={20}
       >
         {loading.indexData && (
-          <LoadingSpinner
-            height="100%"
-            size={64}
-            color="#86D72F"
-            blurBackground={true}
-          />
+          <LoadingSpinner height="100%" size={64} color="#86D72F" blurBackground={true} />
         )}
         <TileLayer
           attribution="© Google Maps"
@@ -222,60 +162,48 @@ const FarmMap = ({
           />
         )}
         {polygonBounds && image && (
-          <ImageOverlay
-            url={image}
-            bounds={polygonBounds}
-            opacity={1}
-            interactive
-          />
+          <ImageOverlay url={image} bounds={polygonBounds} opacity={1} interactive />
         )}
-        <MoveMapToField
-          lat={centroid.lat}
-          lng={centroid.lng}
-          bounds={polygonBounds}
-        />
+        <MoveMapToField lat={centroid.lat} lng={centroid.lng} bounds={polygonBounds} />
       </MapContainer>
 
-      {/* map contorls */}
-      <div className="map-controls">
+      <div className="absolute right-2 z-[1000] h-[80%]">
         {fields.length > 0 && (
           <select
             id="field-dropdown"
             onChange={handleFieldChange}
             value={selectedField || ""}
+            className="bg-[#010704b2] outline-none border-none rounded px-2 py-1 text-white absolute -left-[22rem] top-3 cursor-pointer scrollbar-none"
           >
-            <option value="" disabled>
-              Select a field
-            </option>
+            <option value="" disabled>Select a field</option>
             {fields?.map((field) => (
-              <option key={field?._id} value={field?._id}>
-                {field.fieldName}
-              </option>
+              <option key={field?._id} value={field?._id}>{field.fieldName}</option>
             ))}
           </select>
         )}
 
-        <div className="legend-dropdown-wrapper">
+        <div className="legend-dropdown-wrapper absolute top-[15px] -left-40 z-[1100]">
           <strong
             onClick={() => setShowLegend(!showLegend)}
-            className="legend-button-map"
+            className="bg-[#010704b2] outline-none border-none rounded text-white px-3 py-[6px] font-normal cursor-pointer"
           >
             🗺️ Legend
           </strong>
 
           {showLegend && indexData?.legend && indexData?.area_summary_ha && (
-            <div className="legend-dropdown">
+            <div className="legend-dropdown absolute top-20 right-5 bg-white rounded-xl p-4 z-[1000] max-w-[300px] animate-slideIn">
               {indexData.legend.map((item) => (
-                <div key={item.label} className="legend-item">
+                <div
+                  key={item.label}
+                  className="flex items-center gap-2.5 p-2.5 mb-2 rounded-lg text-[0.95rem] font-medium hover:-translate-y-[2px] hover:shadow-md transition"
+                >
                   <span
-                    className="legend-color"
+                    className="w-[30px] h-[20px] rounded bg-inherit border border-black/10"
                     style={{ backgroundColor: item.color }}
                   ></span>
-                  <span className="legend-key">{item.label}</span>
-                  <span className="legend-area">
-                    {indexData.area_summary_ha[item.label]?.toFixed(2) ||
-                      "0.00"}{" "}
-                    ha
+                  <span className="flex-1">{item.label}</span>
+                  <span className="text-gray-500 font-normal">
+                    {indexData.area_summary_ha[item.label]?.toFixed(2) || "0.00"} ha
                   </span>
                 </div>
               ))}
@@ -287,16 +215,12 @@ const FarmMap = ({
       {fields?.length > 0 ? (
         <IndexDates selectedFieldsDetials={selectedFieldsDetials} />
       ) : (
-        <div className="add-new-field-container">
-          <div className="field-actions">
-            <div className="actions-container d-flex justify-content-between mx-auto">
-              <div className="action-left">
-                <button aria-label="Calendar">
-                  <Calender />
-                </button>
-                <button aria-label="Previous">
-                  <LeftArrow />
-                </button>
+        <div className="absolute z-[1000] mt-[33rem] w-full text-white text-[1rem] bg-[#5a7c6b] rounded cursor-pointer">
+          <div className="absolute bottom-[10px] left-0 w-full text-center z-[1000]">
+            <div className="w-[95%] mx-auto p-2.5 bg-[#5a7c6b] rounded flex justify-between items-center">
+              <div className="border-r border-white pr-2">
+                <button aria-label="Calendar"><Calender /></button>
+                <button aria-label="Previous"><LeftArrow /></button>
               </div>
               <button
                 className="add-new-field"
@@ -305,7 +229,7 @@ const FarmMap = ({
               >
                 Add Field
               </button>
-              <button className="action-right" aria-label="Next">
+              <button className="border-l border-white pl-2" aria-label="Next">
                 <RightArrow />
               </button>
             </div>

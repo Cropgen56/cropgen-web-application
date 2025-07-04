@@ -5,7 +5,6 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import "./SatelliteIndexList.css";
 import { GratterThan } from "../../../../assets/Icons";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -13,7 +12,6 @@ import {
   removeSelectedIndexData,
 } from "../../../../redux/slices/satelliteSlice";
 
-// Mapping of indices to their display names
 const index_name_mapping = {
   NDVI: "Crop Health",
   EVI: "Improved Crop Health",
@@ -31,7 +29,6 @@ const index_name_mapping = {
   TRUE_COLOR: "True Color Image",
 };
 
-// Available indices for buttons
 const indices = [
   "TRUE_COLOR",
   "NDVI",
@@ -56,16 +53,13 @@ const SatelliteIndexList = ({
   const [selectedIndex, setSelectedIndex] = useState("NDVI");
   const dispatch = useDispatch();
   const { field = [], sowingDate = null } = selectedFieldsDetials[0] || {};
-  const { indexData } = useSelector((state) => state?.satellite);
   const scrollContainerRef = useRef(null);
 
-  // Memoize coordinates to prevent unnecessary reference changes
   const coordinates = useMemo(() => {
     const coords = field?.map(({ lat, lng }) => [lng, lat]) || [];
     return coords;
   }, [field]);
 
-  // Debounce function to limit API calls
   const debounce = (func, wait) => {
     let timeout;
     return (...args) => {
@@ -74,12 +68,9 @@ const SatelliteIndexList = ({
     };
   };
 
-  // Memoized fetch function
   const handleFetchIndex = useCallback(
     (index) => {
-      if (!sowingDate || !selectedDate || !coordinates.length || !index) {
-        return;
-      }
+      if (!sowingDate || !selectedDate || !coordinates.length || !index) return;
       dispatch(
         fetchIndexData({
           startDate: sowingDate,
@@ -92,13 +83,11 @@ const SatelliteIndexList = ({
     [sowingDate, selectedDate, coordinates, dispatch]
   );
 
-  // Debounced version of handleFetchIndex
   const debouncedFetchIndex = useMemo(
     () => debounce(handleFetchIndex, 300),
     [handleFetchIndex]
   );
 
-  // Effect to fetch data on index or date change
   useEffect(() => {
     dispatch(removeSelectedIndexData());
     debouncedFetchIndex(selectedIndex);
@@ -114,7 +103,6 @@ const SatelliteIndexList = ({
     dispatch,
   ]);
 
-  // Handle arrow button click to scroll right
   const handleArrowClick = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({
@@ -125,21 +113,39 @@ const SatelliteIndexList = ({
   };
 
   return (
-    <div className="satellite-data-main-container">
-      <div className="satellite-data-container">
-        <select className="dropdown">
-          <option value="satellite1">Satellite 1</option>
-          <option value="satellite2">Satellite 2</option>
-          <option value="satellite3">Satellite 3</option>
-        </select>
+    <div className="w-[99%] mx-auto my-1 shadow-md overflow-hidden">
+      <div className="flex items-center gap-2 p-2 relative">
+       <select
+        className="text-white bg-[#5a7c6b] font-medium border border-white rounded-md
+                  text-sm h-[40px] min-w-[115px] px-3 py-2
+                  md:min-w-[135px] md:h-[46px] md:px-4 md:py-2 md:text-base"
+        style={{
+          fontSize: "0.8rem",
+        }}
+      >
+        <option style={{ fontSize: "0.8rem" }} value="satellite1">
+          Satellite 1
+        </option>
+        <option style={{ fontSize: "0.8rem" }} value="satellite2">
+          Satellite 2
+        </option>
+        <option style={{ fontSize: "0.8rem" }} value="satellite3">
+          Satellite 3
+        </option>
+      </select>
 
-        <div className="buttons-scroll-container" ref={scrollContainerRef}>
-          {indices?.map((index) => (
+
+        {/* Scrollable Index Buttons */}
+        <div
+          className="flex gap-2 flex-nowrap overflow-x-auto pr-10 scroll-smooth no-scrollbar"
+          ref={scrollContainerRef}
+        >
+          {indices.map((index) => (
             <button
               key={index}
-              className={`button ${index.toLowerCase()}-btn ${
-                selectedIndex === index ? "selected" : ""
-              }`}
+              className={`flex-shrink-0 rounded text-white font-medium px-4 py-2 text-sm h-[46px]
+                sm:h-[44px] sm:px-3 sm:py-2
+                ${selectedIndex === index ? "bg-[#344e41]" : "bg-[#5a7c6b] hover:bg-[#4a6b5a]"}`}
               onClick={() => {
                 dispatch(removeSelectedIndexData());
                 setSelectedIndex(index);
@@ -150,7 +156,12 @@ const SatelliteIndexList = ({
           ))}
         </div>
 
-        <button className="index-arrow-button" onClick={handleArrowClick}>
+        {/* Scroll Right Arrow */}
+        <button
+          className="absolute right-2 bg-[#344e41] text-white p-2 rounded cursor-pointer z-10
+                     sm:p-[6px] sm:right-1"
+          onClick={handleArrowClick}
+        >
           <GratterThan />
         </button>
       </div>

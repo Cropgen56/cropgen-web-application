@@ -52,6 +52,7 @@ export const getFieldAPI = async (userId) => {
           Authorization: `Bearer ${token}`,
         },
       }
+      
     );
     return response.data;
   } catch (error) {
@@ -59,3 +60,5 @@ export const getFieldAPI = async (userId) => {
     throw error;
   }
 };
+console.log("API_URL:", process.env.REACT_APP_API_URL);
+console.log("authToken:", token);
