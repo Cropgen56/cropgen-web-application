@@ -4,7 +4,16 @@ module.exports = {
     "./public/index.html",
   ],
   theme: {
-    extend: {},
+    extend: {
+      screens: {
+      sm: "640px",
+      md: "768px",     // default md
+      tablet: { max: "1023px", min: "768px" }, // custom tablet
+      lg: "1024px",
+      xl: "1280px",
+    },
+    },
   },
-  plugins: [],
-}
+  plugins: [require('tailwind-scrollbar-hide')],
+
+};

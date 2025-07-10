@@ -101,31 +101,34 @@ function ForeCast() {
           }
         `}
       </style>
+
       <div className="flex flex-col font-sans text-gray-800">
-        <div className="flex justify-between items-center p-0 m-0">
+        {/* Header */}
+        <div className="flex justify-between items-center">
           <h3 className="text-lg sm:text-xl font-bold text-[#344E41] pl-2">
             Forecast
           </h3>
           <Dots />
         </div>
+
         <div className="flex flex-row overflow-hidden">
           {/* Today's Weather */}
-          <div className="flex flex-col items-center justify-center border-r border-[#344E41] text-center w-1/2 sm:w-2/5 md:w-1/3 lg:w-1/4 py-4 shrink-0">
-            <h2 className="text-base sm:text-sm md:text-base text-[#A2A2A2] mb-3">
+          <div className="flex flex-col items-center justify-center border-r border-[#344E41] text-center w-1/2 sm:w-2/5 md:w-[32%] lg:w-1/4 py-4 shrink-0">
+            <h2 className="text-sm md:text-xs lg:text-sm text-[#A2A2A2] mb-3">
               Weather's Today
             </h2>
             <div className="flex flex-col sm:flex-row items-center justify-center px-4 sm:px-5">
-              <span className="text-2xl sm:text-xl md:text-2xl mr-0 sm:mr-2">
+              <span className="text-2xl sm:text-xl md:text-lg lg:text-2xl mr-0 sm:mr-2">
                 {getWeatherIcon(
                   fahrenheitToCelsius(weather.temp),
                   weather.conditions
                 )}
               </span>
-              <div className="text-lg sm:text-base md:text-lg font-bold text-[#344E41]">
+              <div className="text-lg sm:text-base md:text-sm lg:text-lg font-bold text-[#344E41]">
                 {fahrenheitToCelsius(weather.temp)}°C
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row justify-center mx-auto w-full sm:w-auto mt-4 text-gray-600 text-sm sm:text-xs md:text-sm">
+            <div className="flex flex-col sm:flex-row justify-center mx-auto w-full sm:w-auto mt-4 text-gray-600 text-xs md:text-[10px] lg:text-sm">
               <div className="flex items-center px-1">
                 <WindSpeedIcon />
                 <p>{weather.windspeed ?? "--"} km/h</p>
@@ -140,61 +143,64 @@ function ForeCast() {
               </div>
             </div>
           </div>
+
           {/* Weekly Weather */}
-          <div className="w-1/2 sm:w-3/5 md:w-2/3 lg:w-3/4 pl-4 pt-2 overflow-x-auto no-scrollbar">
+          <div className="w-1/2 sm:w-3/5 md:w-[68%] lg:w-3/4 pl-4 pt-2 overflow-x-auto no-scrollbar">
             <div className="flex flex-col">
-              <h2 className="text-base sm:text-sm md:text-base text-[#A2A2A2] ps-4 py-0">
+              <h2 className="text-sm md:text-xs lg:text-sm text-[#A2A2A2] ps-4">
                 This Week
               </h2>
-              <div className="flex flex-row space-x-4 sm:space-x-6 md:space-x-8 justify-start">
-                {weekForecast?.slice(0, 7).map((day, index) => (
-                  <div
-                    key={index}
-                    className={`flex flex-col items-center text-center w-20 sm:w-24 md:w-28 rounded-lg p-2 sm:p-3 shrink-0 ${
-                      day.isHighlighted || day.datetime === today
-                        ? "bg-[#5A7C6B] text-white"
-                        : ""
-                    }`}
-                  >
+              <div className="flex flex-row space-x-2 sm:space-x-3 md:space-x-2 lg:space-x-4 justify-start">
+                {weekForecast?.slice(0, 7).map((day, index) => {
+                  const icon = getWeatherIcon(
+                    fahrenheitToCelsius(day.temp),
+                    day.description
+                  );
+                  const temperature = fahrenheitToCelsius(day.temp);
+                  const isToday = day.datetime === today;
+
+                  return (
                     <div
-                      className={`font-semibold mb-1 text-xs sm:text-sm ${
-                        day.isHighlighted || day.datetime === today
-                          ? "text-white"
-                          : "text-black"
-                      }`}
+                      key={index}
+                      className={`flex flex-col items-center text-center 
+                            w-16 sm:w-20 md:w-[60px] lg:w-24 
+                            p-2 sm:p-2.5 md:p-1 lg:p-3 
+                            rounded-lg shrink-0
+                            ${isToday ? "bg-[#5A7C6B] text-white" : ""}`}
                     >
-                      {new Date(day.datetime)
-                        .toLocaleDateString("en-US", { weekday: "short" })
-                        .toUpperCase()}
-                    </div>
-                    <div className="flex items-center w-full">
-                      <span className="text-base sm:text-lg md:text-xl">
-                        {getWeatherIcon(
-                          fahrenheitToCelsius(day.temp),
-                          day.description
-                        )}
-                      </span>
-                      <span
-                        className={`text-sm sm:text-base md:text-lg font-bold ml-2 ${
-                          day.isHighlighted || day.datetime === today
-                            ? "text-white"
-                            : "text-[#344E41]"
+                      <div
+                        className={`font-semibold mb-1 text-[10px] sm:text-xs md:text-[9px] lg:text-sm ${
+                          isToday ? "text-white" : "text-black"
                         }`}
                       >
-                        {fahrenheitToCelsius(day.temp)}°C
-                      </span>
+                        {new Date(day.datetime)
+                          .toLocaleDateString("en-US", {
+                            weekday: "short",
+                          })
+                          .toUpperCase()}
+                      </div>
+                      <div className="flex items-center w-full md:w-[58px]">
+                        <span className="text-base sm:text-lg md:text-[12px] lg:text-xl">
+                          {icon}
+                        </span>
+                        <span
+                          className={`ml-1 text-xs sm:text-sm md:text-[11px] lg:text-base font-bold ${
+                            isToday ? "text-white" : "text-[#344E41]"
+                          }`}
+                        >
+                          {temperature}°C
+                        </span>
+                      </div>
+                      <div
+                        className={`mt-2 text-[10px] sm:text-xs md:text-[9px] lg:text-sm font-bold ${
+                          isToday ? "text-white" : "text-[#5A7C6B]"
+                        }`}
+                      >
+                        {day.precipprob ?? 0}%
+                      </div>
                     </div>
-                    <div
-                      className={`mt-2 text-xs sm:text-sm font-bold ${
-                        day.isHighlighted || day.datetime === today
-                          ? "text-white"
-                          : "text-[#5A7C6B]"
-                      }`}
-                    >
-                      {day.precipprob ?? 0}%
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

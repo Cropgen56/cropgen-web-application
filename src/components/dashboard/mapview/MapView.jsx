@@ -137,7 +137,7 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
   const defaultCenter = [20.135245, 77.156935];
 
   return (
-    <div className="flex flex-col items-center w-full h-[70%] lg:h-[95%] relative">
+    <div className="flex flex-col items-center w-full md:h-[379px] lg:h-[95%] relative">
       <MapContainer
         center={centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter}
         zoom={18}

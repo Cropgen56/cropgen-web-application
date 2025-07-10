@@ -8,10 +8,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Card from "react-bootstrap/Card";
-import "./PlantGrowthActivity.css";
 import { useSelector } from "react-redux";
 
-// Generate data to match the curve in the image
 const generateCurveData = (currentWeek, cropGrowthStage) => {
   const data = [
     { week: "Week 1", height: 0, weekNumber: 1 },
@@ -57,31 +55,74 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
   const currentWeekData = data.find((d) => d.weekNumber === currentWeek);
 
   return (
-    <Card body className="plant-growth-card shadow">
-      <div className="header-container">
-        <div className="heading-container">
-          <h2 className="header-title">Plant Growth Activity</h2>
-          <div className="subheader-text">{cropName || "Unknown Crop"}</div>
+    <Card
+      body
+      className="md:h-[225px] bg-white rounded-lg p-4 md:p-3 sm:p-2 border border-gray-300 shadow plant-growth-card"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="lg:text-xl font-semibold text-[#344e41] md:text-base sm:text-sm m-0">
+            Plant Growth Activity
+          </h2>
+          <div className="text-sm text-gray-600 md:text-xs">
+            {cropName || "Unknown Crop"}
+          </div>
         </div>
-        <div className="dropdown-container">
-          <div className="custom-dropdown">
-            <select aria-label="Select Activity Phase">
+
+        {/* Right dropdowns */}
+        <div className="flex gap-2">
+          {/* Dropdown 1 */}
+          <div className="relative w-[204px] h-[52px]">
+            <select
+              className="w-full h-full px-6 pr-10 py-2 text-sm border border-[#5a7c6b] rounded-full bg-white text-gray-600 appearance-none cursor-pointer"
+            >
               <option>Planting/Sowing</option>
               <option>Sowing</option>
               <option>Growth</option>
             </select>
+            <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+              <svg
+                className="w-4 h-4 text-gray-600"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.08 1.04l-4.25 4.25a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
           </div>
-          <div className="custom-dropdown">
-            <select aria-label="Select Time Period">
+
+          {/* Dropdown 2 */}
+          <div className="relative w-[124px] h-[52px]">
+            <select
+              className="w-full h-full px-6 pr-10 py-2 text-sm border border-[#5a7c6b] rounded-full bg-white text-gray-600 appearance-none cursor-pointer"
+            >
               <option>Days</option>
               <option>Weeks</option>
               <option>Months</option>
             </select>
+            <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center">
+              <svg
+                className="w-4 h-4 text-gray-600"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 011.08 1.04l-4.25 4.25a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="chart-container" style={{ position: "relative" }}>
+      {/* Chart */}
+      <div className="w-full h-[200px] relative">
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart
             data={data}
@@ -130,23 +171,17 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
             />
           </AreaChart>
         </ResponsiveContainer>
+
         {currentWeekData && (
           <div
-            className="custom-tooltip"
+            className="absolute z-10 text-white text-center text-xs p-2 rounded bg-[#7BB34F]"
             style={{
-              position: "absolute",
               left: `${(currentWeekData.weekNumber / 13) * 100}%`,
               top: `${100 - (currentWeekData.height / 6) * 100 - 10}%`,
               transform: "translateX(-50%) translateY(-100%)",
-              backgroundColor: "#7BB34F",
-              color: "#fff",
-              padding: "5px 10px",
-              borderRadius: "4px",
-              zIndex: 1000,
             }}
           >
-            <p className="tooltip-stage">{Crop_Growth_Stage}</p>
-            {/* <p className="tooltip-info">Fertilization, pest control</p> */}
+            <p className="m-0 text-sm font-bold">{Crop_Growth_Stage}</p>
           </div>
         )}
       </div>
