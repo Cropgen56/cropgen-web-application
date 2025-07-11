@@ -1,3 +1,4 @@
+// SoilHealthChart.jsx — compact height + scaling for tablet
 import React, { useEffect } from "react";
 import {
   AreaChart,
@@ -16,53 +17,40 @@ const SoilHealthChart = () => {
   const dispatch = useDispatch();
   const { soilData } = useSelector((state) => state.satellite);
 
-  // Process soilData to aggregate by date and prepare for chart
+  useEffect(() => {
+    dispatch(fetchSoilData());
+  }, [dispatch]);
+
   const processSoilData = (data) => {
     const groupedByDate = data.reduce((acc, entry) => {
       const date = entry.date;
-      if (!acc[date]) {
-        acc[date] = { moisture: [], temperature: [] };
-      }
+      if (!acc[date]) acc[date] = { moisture: [], temperature: [] };
       acc[date].moisture.push(entry.Soil_Moisture.mean);
       acc[date].temperature.push(entry.Soil_Temperature.mean);
       return acc;
     }, {});
 
-    const uniqueDates = Object.keys(groupedByDate).sort().slice(-7);
-    return uniqueDates.map((date, index) => {
-      const moistureValues = groupedByDate[date].moisture;
-      const temperatureValues = groupedByDate[date].temperature;
-      const avgMoisture =
-        moistureValues.reduce((sum, val) => sum + val, 0) /
-        moistureValues.length;
-      const avgTemperature =
-        temperatureValues.reduce((sum, val) => sum + val, 0) /
-        temperatureValues.length;
+    return Object.keys(groupedByDate).sort().slice(-7).map((date, index) => {
+      const moisture = groupedByDate[date].moisture;
+      const temperature = groupedByDate[date].temperature;
       return {
         day: `D${index}`,
         date,
-        moisture: avgMoisture.toFixed(2),
-        temperature: avgTemperature.toFixed(2),
+        moisture: (moisture.reduce((a, b) => a + b, 0) / moisture.length).toFixed(2),
+        temperature: (temperature.reduce((a, b) => a + b, 0) / temperature.length).toFixed(2),
       };
     });
   };
 
   const chartData = soilData ? processSoilData(soilData) : [];
 
-  // Custom Tooltip component
   const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
+    if (active && payload?.length) {
       return (
-        <div className="bg-white border border-gray-300 rounded-md p-2 sm:p-3 md:p-2 text-center w-32 sm:w-36 md:w-32">
-          {payload.map((entry, index) => (
-            <p
-              key={index}
-              className="m-0 text-gray-600 text-xs sm:text-sm md:text-xs"
-            >
-              {entry.name === "Soil Moisture (%)"
-                ? "Moisture"
-                : "Temperature"}
-              : {entry.value}
+        <div className="bg-white border border-gray-300 rounded-md p-2 text-center w-32">
+          {payload.map((entry, i) => (
+            <p key={i} className="text-gray-600 text-xs">
+              {entry.name.includes("Moisture") ? "Moisture" : "Temp"}: {entry.value}
             </p>
           ))}
         </div>
@@ -72,15 +60,11 @@ const SoilHealthChart = () => {
   };
 
   return (
-    <div className="w-full lg:max-w-[500px] sm:max-w-[600px] md:max-w-[269px] md:h-[125px] lg:mx-auto">
-      <h2 className="text-left text-lg sm:text-xl md:text-lg font-semibold text-[#344E41] mb-2 sm:mb-3 md:mb-2">
+    <div className="w-full max-w-[500px] sm:max-w-[600px] md:max-w-[480px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto">
+      <h2 className="text-left text-lg sm:text-xl font-semibold text-[#344E41] mb-2 sm:mb-3">
         Soil Health
       </h2>
-      <ResponsiveContainer
-        width="100%"
-        height={300} 
-        className="md:!h-[240px]" 
-      >
+      <ResponsiveContainer width="100%" height={280}>
         <AreaChart
           data={chartData}
           margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
@@ -88,30 +72,13 @@ const SoilHealthChart = () => {
           <XAxis
             dataKey="day"
             tick={{ fill: "#4B5563", fontSize: 10 }}
-            className="text-[10px] md:text-[9px]"
           />
           <YAxis
-            axisLine={true}
+            axisLine
             tick={false}
-            domain={[
-              0,
-              Math.max(
-                30,
-                ...chartData.map((item) =>
-                  Math.max(Number(item.moisture), Number(item.temperature))
-                )
-              ),
-            ]}
+            domain={[0, Math.max(30, ...chartData.map((d) => Math.max(+d.moisture, +d.temperature)))]}
           />
-          <Legend
-            align="right"
-            verticalAlign="top"
-            iconType="line"
-            wrapperStyle={{
-              fontSize: 10,
-              color: "#4B5563",
-            }}
-          />
+          <Legend align="right" verticalAlign="top" iconType="line" wrapperStyle={{ fontSize: 10, color: "#4B5563" }} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"

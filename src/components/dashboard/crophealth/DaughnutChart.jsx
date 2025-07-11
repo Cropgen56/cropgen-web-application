@@ -12,7 +12,6 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
   const { cropHealth, loading } = useSelector((state) => state?.satellite);
 
-  // Fetch crop health data
   useEffect(() => {
     if (farmDetails) {
       dispatch(fetchCropHealth(farmDetails));
@@ -21,7 +20,6 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
 
   const { Health_Percentage = 0, Crop_Health = "Unknown" } = cropHealth || {};
 
-  // Prepare data for the doughnut chart
   const data = {
     labels: ["Excellent", "Very Good", "Good", "Moderate", "Poor"],
     datasets: [
@@ -38,7 +36,7 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
             ? [0, 0, 0, Health_Percentage, 100 - Health_Percentage]
             : Crop_Health === "Poor"
             ? [0, 0, 0, 0, Health_Percentage]
-            : [0, 0, 0, 0, 100], // Default to show "Poor" if unknown
+            : [0, 0, 0, 0, 100],
         backgroundColor: [
           "#2A3F2F",
           "#3E5C4A",
@@ -83,7 +81,6 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
     },
   };
 
-  // Center text plugin with responsive font size
   const centerTextPlugin = {
     id: "centerText",
     beforeDraw: (chart) => {
@@ -95,17 +92,7 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
       const y = (chartArea.top + chartArea.bottom) / 2;
       const percentageText = `${Health_Percentage}%`;
 
-      // Adjust font size based on chart width
-      const chartWidth = chart.width;
-      let fontSize = 40; // default for desktop
-
-      if (chartWidth < 640) {
-        fontSize = 22; // mobile
-      } else if (chartWidth < 1024) {
-        fontSize = 28; // tablet
-      }
-
-      ctx.font = `bold ${fontSize}px Arial`;
+      ctx.font = "bold 24px Arial"; // Fixed text size
       ctx.fillStyle = "#000000";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -115,8 +102,14 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
   };
 
   return (
-    <div className="w-full md:w-auto max-w-[280px] sm:max-w-[320px] md:max-w-[199px] lg:max-w-[400px] h-[160px]  md:h-[96px] lg:h-[200px] flex items-center md:self-end md:pr-2 lg:pr-0">
-
+    <div className="
+      w-full 
+      max-w-[280px] 
+      sm:max-w-[320px] 
+      md:max-w-[420px] md:h-[220px] md:scale-[1.1]
+      lg:max-w-[500px] lg:h-[240px] lg:scale-100
+      flex justify-center items-center
+    ">
       {loading?.cropHealth ? (
         <div className="w-full h-full flex flex-col items-center justify-center gap-2">
           <LoadingSpinner

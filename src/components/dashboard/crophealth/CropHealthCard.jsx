@@ -1,3 +1,5 @@
+
+// CropHealth.jsx — optimize tablet layout: enlarge doughnut + inline crop details
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Card from "react-bootstrap/Card";
@@ -12,7 +14,6 @@ const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials?.[0];
   const sowingDate = cropDetials?.sowingDate;
   const corrdinatesPoint = cropDetials?.field;
-
   const dispatch = useDispatch();
   const { cropYield, NpkData } = useSelector((state) => state?.satellite);
 
@@ -22,43 +23,36 @@ const CropHealth = ({ selectedFieldsDetials }) => {
     const currentDate = new Date();
     targetDate.setHours(0, 0, 0, 0);
     currentDate.setHours(0, 0, 0, 0);
-    const timeDifference = currentDate - targetDate;
-    return Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+    return Math.floor((currentDate - targetDate) / (1000 * 60 * 60 * 24));
   }, [sowingDate]);
 
   const totalArea = React.useMemo(() => {
     if (!corrdinatesPoint || corrdinatesPoint.length < 3) return 0;
-    const coordinates = corrdinatesPoint.map((point) => [point.lng, point.lat]);
+    const coordinates = corrdinatesPoint.map((p) => [p.lng, p.lat]);
     coordinates.push(coordinates[0]);
     const polygon = turf.polygon([coordinates]);
-    const area = turf.area(polygon);
-    return area / 4046.86;
+    return turf.area(polygon) / 4046.86;
   }, [corrdinatesPoint]);
 
-  const { Crop_Growth_Stage } = NpkData || {};
+  useEffect(() => {
+    if (NpkData?.Crop_Growth_Stage && cropDetials) {
+      dispatch(calculateAiYield({ cropDetials, Crop_Growth_Stage: NpkData.Crop_Growth_Stage }));
+    }
+  }, [dispatch, cropDetials, NpkData?.Crop_Growth_Stage]);
 
   useEffect(() => {
-    if (Crop_Growth_Stage && cropDetials) {
-      dispatch(calculateAiYield({ cropDetials, Crop_Growth_Stage }));
-    }
-  }, [dispatch, cropDetials, Crop_Growth_Stage]);
-
-  useEffect(() => {
-    if (cropDetials) {
-      dispatch(fetchSoilData({ farmDetails: cropDetials }));
-    }
+    if (cropDetials) dispatch(fetchSoilData({ farmDetails: cropDetials }));
   }, [cropDetials, dispatch]);
 
   return (
-    <Card body className="mt-2 mb-3 shadow-md rounded-lg bg-white md:h-[356px]">
-      <h2 className="text-lg sm:text-xl font-semibold text-[#344E41] mb-4 px-4 sm:px-6">
+    <Card body className="mt-2 mb-3 shadow-md rounded-lg bg-white md:h-[350px] md:overflow-y-auto lg:h-auto">
+      <h2 className="text-lg sm:text-xl font-semibold text-[#344E41] lg:mb-4 px-4 sm:px-6">
         Crop Health
       </h2>
 
-      {/* Crop Details & Doughnut */}
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between px-4 md:px-0 lg:px-6 gap-3 md:gap-4 lg:gap-6">
-
-        <div className="w-full md:w-1/2 md:px-0">
+      {/* Top section: CropDetails + Doughnut */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between lg:px-4 md:px-6 sm:px-6 gap-4">
+        <div className="w-full md:w-1/2">
           <CropDetials
             cropDetials={selectedFieldsDetials}
             daysFromSowing={daysFromSowing}
@@ -66,20 +60,20 @@ const CropHealth = ({ selectedFieldsDetials }) => {
             cropYield={cropYield}
           />
         </div>
-        <div className="w-full md:w-[1/2] md:pl-14 md:pr-0">
+        <div className="w-full md:w-1/2 flex justify-center md:justify-end">
           <DaughnutChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
       </div>
 
-      {/* Soil Analysis & Soil Health */}
-      <div className="flex flex-col md:flex-row md:justify-between mt-6 px-4 md:px-2 lg:px-6 gap-3 md:gap-4 lg:gap-6">
+      {/* Bottom section: Soil Charts */}
+      <div className="flex flex-col md:flex-row md:justify-between mt-4 px-4 sm:px-6 lg:px-4 gap-4">
         <div className="w-full md:w-1/2">
-          <h2 className="text-lg sm:text-xl md:text-lg font-semibold text-[#344E41] mb-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-[#344E41] mb-4">
             Soil Analysis
           </h2>
           <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
-        <div className="w-full md:w-full">
+        <div className="w-full md:w-1/2">
           <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
       </div>
