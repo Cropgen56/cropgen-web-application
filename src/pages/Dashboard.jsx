@@ -15,127 +15,128 @@ import WaterIndex from "../components/dashboard/satellite-index/water-index/Wate
 const SELECTED_FIELD_KEY = "selectedFieldId";
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
+    const dispatch = useDispatch();
 
-  // Memoized selectors to prevent unnecessary re-renders
-  const user = useSelector((state) => state?.auth?.user);
-  const fields = useSelector((state) => state?.farmfield?.fields);
-  const userId = user?.id;
+    // Memoized selectors to prevent unnecessary re-renders
+    const user = useSelector((state) => state?.auth?.user);
+    const fields = useSelector((state) => state?.farmfield?.fields);
+    const userId = user?.id;
 
-  // State management
-  const [markers, setMarkers] = useState([]);
-  const [isAddingMarkers, setIsAddingMarkers] = useState(false);
-  const [selectedField, setSelectedField] = useState(() => {
-    return localStorage.getItem(SELECTED_FIELD_KEY) || "";
-  });
-  const [prevFieldsLength, setPrevFieldsLength] = useState(0);
+    // State management
+    const [markers, setMarkers] = useState([]);
+    const [isAddingMarkers, setIsAddingMarkers] = useState(false);
+    const [selectedField, setSelectedField] = useState(() => {
+      return localStorage.getItem(SELECTED_FIELD_KEY) || "";
+    });
 
-  // Memoized computed values
-  const selectedFieldDetails = useMemo(() => {
-    return fields.find((item) => item?._id === selectedField) || null;
-  }, [fields, selectedField]);
+    const [prevFieldsLength, setPrevFieldsLength] = useState(0);
 
-  // Memoized callback for field selection
-  const handleFieldSelection = useCallback((fieldId) => {
-    setSelectedField(fieldId);
-    localStorage.setItem(SELECTED_FIELD_KEY, fieldId);
-  }, []);
+    // Memoized computed values
+    const selectedFieldDetails = useMemo(() => {
+        return fields.find((item) => item?._id === selectedField) || null;
+    }, [fields, selectedField]);
 
-  // Fetch fields on component mount - only when userId changes
-  useEffect(() => {
-    if (userId) {
-      dispatch(getFarmFields(userId));
-    }
-  }, [dispatch, userId]);
+    // Memoized callback for field selection
+    const handleFieldSelection = useCallback((fieldId) => {
+        setSelectedField(fieldId);
+        localStorage.setItem(SELECTED_FIELD_KEY, fieldId);
+    }, []);
 
-  // Optimized field selection logic
-  useEffect(() => {
-    if (fields.length === 0) return;
+    // Fetch fields on component mount - only when userId changes
+    useEffect(() => {
+        if (userId) {
+        dispatch(getFarmFields(userId));
+        }
+    }, [dispatch, userId]);
 
-    const isNewFieldAdded =
-      fields.length > prevFieldsLength && prevFieldsLength > 0;
+    // Optimized field selection logic
+    useEffect(() => {
+        if (fields.length === 0) return;
 
-    const isInitialLoad = !selectedField && prevFieldsLength === 0;
+        const isNewFieldAdded =
+        fields.length > prevFieldsLength && prevFieldsLength > 0;
 
-    // Always select the latest field when a new one is added
-    if (isNewFieldAdded) {
-      const latestField = fields[fields.length - 1]?._id;
-      if (latestField) {
-        handleFieldSelection(latestField);
-      }
-    } else if (isInitialLoad) {
-      const latestField = fields[fields.length - 1]?._id;
-      if (latestField) {
-        handleFieldSelection(latestField);
-      }
-    }
+        const isInitialLoad = !selectedField && prevFieldsLength === 0;
 
-    setPrevFieldsLength(fields.length);
-  }, [fields, prevFieldsLength, selectedField, handleFieldSelection]);
+        // Always select the latest field when a new one is added
+        if (isNewFieldAdded) {
+        const latestField = fields[fields.length - 1]?._id;
+        if (latestField) {
+            handleFieldSelection(latestField);
+        }
+        } else if (isInitialLoad) {
+        const latestField = fields[fields.length - 1]?._id;
+        if (latestField) {
+            handleFieldSelection(latestField);
+        }
+        }
 
-  // Memoized props objects to prevent unnecessary re-renders
-  const mapViewProps = useMemo(
-    () => ({
-      markers,
-      setMarkers,
-      isAddingMarkers,
-      setIsAddingMarkers,
-      selectedField,
-      setSelectedField: handleFieldSelection,
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-      fields,
-    }),
-    [
-      markers,
-      isAddingMarkers,
-      selectedField,
-      handleFieldSelection,
-      selectedFieldDetails,
-      fields,
-    ]
-  );
+        setPrevFieldsLength(fields.length);
+    }, [fields, prevFieldsLength, selectedField, handleFieldSelection]);
 
-  const cropHealthProps = useMemo(
-    () => ({
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-      fields,
-    }),
-    [selectedFieldDetails, fields]
-  );
+    // Memoized props objects to prevent unnecessary re-renders
+    const mapViewProps = useMemo(
+        () => ({
+        markers,
+        setMarkers,
+        isAddingMarkers,
+        setIsAddingMarkers,
+        selectedField,
+        setSelectedField: handleFieldSelection,
+        selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+        fields,
+        }),
+        [
+        markers,
+        isAddingMarkers,
+        selectedField,
+        handleFieldSelection,
+        selectedFieldDetails,
+        fields,
+        ]
+    );
 
-  const ndviGraphProps = useMemo(
-    () => ({
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-    }),
-    [selectedFieldDetails]
-  );
+    const cropHealthProps = useMemo(
+        () => ({
+        selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+        fields,
+        }),
+        [selectedFieldDetails, fields]
+    );
 
-  const cropAdvisoryProps = useMemo(
-    () => ({
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-    }),
-    [selectedFieldDetails]
-  );
+    const ndviGraphProps = useMemo(
+        () => ({
+        selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+        }),
+        [selectedFieldDetails]
+    );
 
-  const plantGrowthProps = useMemo(
-    () => ({
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-    }),
-    [selectedFieldDetails]
-  );
+    const cropAdvisoryProps = useMemo(
+        () => ({
+        selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+        }),
+        [selectedFieldDetails]
+    );
 
-  return (
-    <div className="dashboard float-end p-3">
-      <MapView {...mapViewProps} />
-      <CropHealth {...cropHealthProps} />
-      <ForeCast />
-      <NdviGraph {...ndviGraphProps} />
-      <WaterIndex {...ndviGraphProps} />
-      <Insights />
-      <CropAdvisory {...cropAdvisoryProps} />
-      <PlantGrowthActivity {...plantGrowthProps} />
-    </div>
-  );
+    const plantGrowthProps = useMemo(
+        () => ({
+        selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+        }),
+        [selectedFieldDetails]
+    );
+
+    return (
+        <div className="dashboard float-end p-3">
+            <MapView {...mapViewProps} />
+            <CropHealth {...cropHealthProps} />
+            <ForeCast />
+            <NdviGraph {...ndviGraphProps} />
+            <WaterIndex {...ndviGraphProps} />
+            <Insights />
+            <CropAdvisory {...cropAdvisoryProps} />
+            <PlantGrowthActivity {...plantGrowthProps} />
+        </div>
+    );
 };
 
 export default React.memo(Dashboard);
