@@ -79,7 +79,13 @@ const Signup = ({ setActiveTab }) => {
     e.preventDefault();
     if (!validate()) return;
 
-    dispatch(signupUser(formData)).then((res) => {
+    // Create a copy of formData and prefix phone with +91
+    const dataToSend = {
+      ...formData,
+      phone: `+91${formData.phone}`,
+    };
+
+    dispatch(signupUser(dataToSend)).then((res) => {
       if (res?.payload?.success) {
         alert(res.payload.message || "Signup successful!");
         setActiveTab("Login");
