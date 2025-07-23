@@ -26,12 +26,14 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
 );
 
 const cropOptions = [
-  "Wheat",
-  "Rice",
-  "Corn",
-  "Soybean",
-  "Barley",
-  "Other"
+  "Barley", "Wheat", "Pearl Millet", "Sorghum", "Finger Millet", "Chickpea", "Red Gram", "Green Gram", "Black Gram",
+  "Lentil", "Field Pea", "Horse Gram", "Cowpea", "Groundnut", "Mustard", "Soybean", "Sunflower", "Sesame", "Linseed",
+  "Castor", "Safflower", "Niger", "Sugarcane", "Cotton", "Jute", "Tobacco", "Potato", "Tomato", "Brinjal", "Cabbage",
+  "Cauliflower", "Onion", "Garlic", "Okra", "Carrot", "Radish", "Spinach", "Methi", "Green Peas", "Bitter Gourd",
+  "Bottle Gourd", "Pumpkin", "Cucumber", "Beans", "Mango", "Banana", "Guava", "Apple", "Papaya", "Orange", "Lemon",
+  "Pomegranate", "Grapes", "Pineapple", "Watermelon", "Muskmelon", "Turmeric", "Ginger", "Coriander", "Cumin",
+  "Black Pepper", "Red Chilies", "Tea", "Coffee", "Coconut", "Arecanut", "Rubber", "Dragon Fruit", "Sponge Gourd",
+  "Snake Gourd", "Ash Gourd", "Drumstick", "Chili", "Chia", "Rice", "Kiwi", "Amla", "Capsicum", "Other"
 ];
 
 

@@ -1,4 +1,5 @@
 import React from "react";
+import logo from "../../../assets/image/login/logo.svg"
 
 
 const Report = ({ data }) =>  {
@@ -11,6 +12,10 @@ const Report = ({ data }) =>  {
 
   return (
     <div className="bg-[#2d3f33] text-white p-8 rounded-lg shadow-lg">
+         <div className="flex justify-left items-center mb-6">
+             <img  src={logo} alt="Logo" className=" w-18 p-3" />
+        <h4 className="text-white text-base font-bold">CropGen</h4>
+         </div>
       <h3 className="text-2xl font-bold mb-6">Summary Report</h3>
       <div className="grid grid-cols-2 gap-6 mb-8">
         <div>
