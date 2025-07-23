@@ -25,6 +25,7 @@ const generateCacheKey = (prefix, farmId, input) => {
 
 const initialState = {
   satelliteDates: null,
+
   advisory: null,
   indexData: null,
   cropHealth: null,
@@ -37,6 +38,7 @@ const initialState = {
   error: null,
   loading: {
     satelliteDates: false,
+
     indexData: false,
     cropHealth: false,
     soilMoisture: false,
