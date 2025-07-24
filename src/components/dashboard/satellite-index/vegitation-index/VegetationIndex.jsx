@@ -18,6 +18,7 @@ import {
   getTodayDate,
 } from "../../../../utility/formatDate";
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
+import { Info } from "lucide-react";
 
 const NdviGraph = ({ selectedFieldsDetials }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
@@ -158,7 +159,7 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
         <select
           value={index}
           onChange={handleIndexChange}
-          className="w-[111px] h-[30px] border border-[#5a7c6b] rounded-[25px] px-6 text-[#9a9898] text-sm focus:outline-none"
+          className="border-2 border-[#5A7C6B] rounded-[25px] px-2 py-1 text-gray-500 text-sm focus:outline-none"
         >
           <option value="NDVI">NDVI</option>
           <option value="EVI">EVI</option>
@@ -169,30 +170,33 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
       <h6 className="text-[#5a7c6b] text-base font-semibold mb-2">Vegetation Index</h6>
 
-      <div className="flex flex-row gap-4 mt-[10px]">
+      <div className="flex flex-row gap-3 mt-[10px]">
         {/* Left Side */}
-        <div className="w-[300px] text-center">
-          <h2 className="text-[#86d72f] text-xl font-semibold">{index}</h2>
+        <div className="w-1/3 lg:w-1/4 flex flex-col items-center justify-center ">
+          <h2 className="text-[#86d72f] text-xl font-bold">{index}</h2>
           <button className="bg-[#5a7c6b] text-[#86d72f] px-3 py-2 text-sm font-semibold rounded mt-0">
             +0.15
           </button>
-          <p className="my-2 text-[#344e41] text-sm">
+          <p className="my-2 text-[#344e41] text-xs lg:text-sm">
             Last Update{" "}
             {summaryData.timestamp
               ? `${getDaysAgo(summaryData.timestamp)} days Ago`
               : "N/A"}
           </p>
-          <div className="border border-[#86d72f] p-2 rounded text-[#344e41] text-sm w-[190px] mx-auto">
-            {index} values help in mapping vegetation and detecting cover
-            changes over time.
+          <div className="border-2 border-[#5A7C6B] p-2 rounded text-[#344E41] text-sm lg:mx-auto mx-0 lg:w-2/3">
+            <div className="flex items-start justify-between gap-2">
+              <span className="flex-1">{index} values help in mapping vegetation and detecting cover changes over time.</span>
+              <span className="bg-[#344E41] rounded-full">
+                <Info size={16} strokeWidth={1.5} color="#fff"/>
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Right Graph Section */}
         <div
           ref={scrollRef}
-          className="w-full overflow-x-auto pr-[120px] scrollbar-hide cursor-grab active:cursor-grabbing"
-        >
+          className="w-2/3 lg:w-3/4 overflow-x-auto pr-8 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing" >
           {isLoading ? (
             <div className="text-center text-muted">
               <LoadingSpinner height="200px" size={64} color="#86D72F" />
@@ -201,7 +205,7 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
           ) : !hasData ? (
             <Card className="no-data-card mx-auto mt-4 max-w-md">
               <Card.Body className="text-center">
-                <Card.Title className="text-lg font-semibold text-gray-700">
+                <Card.Title className="text-sm lg:text-lg font-semibold text-gray-700">
                   No Data Available
                 </Card.Title>
                 <Card.Text className="text-sm text-gray-500">

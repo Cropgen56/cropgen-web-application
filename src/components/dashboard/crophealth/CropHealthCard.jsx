@@ -56,8 +56,9 @@ const CropHealth = ({ selectedFieldsDetials }) => {
             </h2>
 
             {/* Top section: CropDetails + Doughnut */}
-            <div className="flex flex-col lg:flex-row md:items-center md:justify-between px-2 md:px-4 gap-2 md:gap-4">
-                <div className="w-full lg:w-1/2">
+            <div className="flex flex-row items-center justify-between px-2 md:px-4 gap-2 md:gap-4">
+            {/* lg:flex-row */}
+                <div className="w-full md:w-3/5 lg:w-3/5">
                     <CropDetials
                         cropDetials={selectedFieldsDetials}
                         daysFromSowing={daysFromSowing}
@@ -65,15 +66,15 @@ const CropHealth = ({ selectedFieldsDetials }) => {
                         cropYield={cropYield}
                     />
                 </div>
-                <div className="w-full md:w-1/2 flex justify-center md:justify-end">
+                <div className="w-full md:w-2/5 lg:w-2/5">
                     <DaughnutChart selectedFieldsDetials={selectedFieldsDetials} />
                 </div>
             </div>
 
             {/* Bottom section: Soil Charts */}
-            <div className="flex flex-col lg:flex-row md:items-center md:justify-between mt-4 px-2 md:px-4 gap-2 md:gap-4">
+            <div className="flex flex-col lg:flex-row md:items-center md:justify-between lg:mt-4 mt-2 px-2 md:px-4 gap-2 md:gap-4">
                 <div className="w-full lg:w-1/3">
-                    <h2 className="text-left text-lg sm:text-xl font-semibold text-[#344E41] mb-4">
+                    <h2 className="text-left text-lg sm:text-xl font-semibold text-[#344E41] lg:mb-4 mt-2">
                         Soil Analysis
                     </h2>
                     <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />

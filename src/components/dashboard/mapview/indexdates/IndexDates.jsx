@@ -143,7 +143,8 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     const handleDateClick = useCallback((date) => {
         const formattedDate = toISODateString(date);
         if (formattedDate) {
-        setSelectedDate(formattedDate);
+            setSelectedDate(formattedDate);
+            setIsCalendarVisible(false); 
         }
     }, []);
 
@@ -152,12 +153,12 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     }, []);
 
     return (
-        <div className="absolute bottom-0 w-full z-[1000] flex flex-col items-center font-sans py-[2px]">
+        <div className="absolute bottom-0 w-full z-[800] flex flex-col items-center font-sans py-[2px]">
         <SatelliteIndexList
             selectedFieldsDetials={selectedFieldsDetials}
             selectedDate={selectedDate} />
             
-        <div className="flex items-center gap-2 w-full px-2 bg-[#5a7c6b] rounded-md">
+        <div className="flex items-center gap-1 lg:gap-2 w-full px-2 bg-[#5a7c6b] rounded-md">
             {loading.satelliteDates ? (
                 <div className="w-full h-2 bg-gray-300 rounded overflow-hidden relative my-4">
                     <div className="w-[30%] h-full bg-green-600 rounded animate-[loaderAnimation_1.5s_ease-in-out_infinite]" />
@@ -184,26 +185,26 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
                         )}
                     </div>
 
-                    <div className="w-[1px] h-8 bg-gray-300 mx-2" aria-hidden="true" />
+                    <div className="w-[1px] h-8 bg-gray-300 mx-1 lg:mx-2" aria-hidden="true" />
 
                     <button type="button"
-                            className="bg-transparent border-none cursor-pointer p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-transparent border-none cursor-pointer py-0 lg:p-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={() => handleArrowClick("prev")}
                             aria-label="Previous dates"
                             disabled={ !dates.length || dates.findIndex((d) => d.date === visibleDates[0]?.date) <= 0 } >
                                 <LeftArrow />
                     </button>
 
-                    <div className="w-[1px] h-8 bg-gray-300 mx-2" aria-hidden="true" />
+                    <div className="w-[1px] h-8 bg-gray-300 mx-1 lg:mx-2" aria-hidden="true" />
 
-                    <div className="flex gap-2 overflow-x-auto w-full justify-between py-[5px] scrollbar-hide"
+                    <div className="flex gap-1 lg:gap-2 overflow-x-auto w-full justify-between py-[5px] scrollbar-hide no-scrollbar scroll-smooth"
                         role="listbox"
                         aria-label="Available dates" >
                             {visibleDates.map((dateItem, index) => {
                                 const isSelected = formatDate(dateItem.date) === formatDate(selectedDate);
                                 return (
                                     <div key={`${dateItem.date}-${index}`}
-                                        className={`flex flex-col items-center text-white font-medium cursor-pointer rounded px-2 py-[10px] h-[60px] min-w-[90px]
+                                        className={`flex flex-col items-center text-white cursor-pointer rounded px-2 py-2.5 h-auto min-w-[90px]
                                         ${isSelected ? "bg-[#344e41]" : "bg-transparent"}`}
                                         onClick={() => handleDateClick(dateItem.date)}
                                         onKeyDown={(e) => {
@@ -216,12 +217,12 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
                                         aria-selected={isSelected}
                                         tabIndex={0} >
                                         
-                                        <div className="font-bold text-sm text-center whitespace-nowrap">
+                                        <div className="font-semibold text-xs lg:text-sm text-center whitespace-nowrap">
                                             {dateItem.date}
                                         </div>
                                         <div className="flex justify-between w-full text-xs gap-2">
-                                            {/* <div>{dateItem.value.toFixed(2)}</div> */}
-                                            {/* <div className={`${
+                                            {/* <div>{dateItem.value.toFixed(2)}</div>
+                                            <div className={`${
                                                 dateItem.change >= 0
                                                     ? "text-green-600"
                                                     : "text-red-600"
@@ -236,11 +237,11 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
                             })}
                     </div>
 
-                    <div className="w-[1px] h-8 bg-gray-300 mx-2" aria-hidden="true" />
+                    <div className="w-[1px] h-8 bg-gray-300 mx-1 lg:mx-2" aria-hidden="true" />
 
                     <button
                         type="button"
-                        className="bg-transparent border-none cursor-pointer p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-transparent border-none cursor-pointer py-0 lg:p-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={() => handleArrowClick("next")}
                         aria-label="Next dates"
                         disabled={

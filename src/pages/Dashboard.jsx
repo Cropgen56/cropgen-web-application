@@ -126,7 +126,7 @@ const Dashboard = () => {
     );
 
     return (
-        <div className="dashboard float-end p-3">
+        <div className="dashboard float-end p-1.5 lg:p-3">
             <MapView {...mapViewProps} />
             <CropHealth {...cropHealthProps} />
             <ForeCast />

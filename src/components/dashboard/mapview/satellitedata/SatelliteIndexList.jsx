@@ -114,33 +114,32 @@ const handleArrowLeftClick = () => {
 
 
 return (
-    <div className="w-[99%] mx-auto my-1 shadow-md overflow-hidden">
-        <div className="flex items-center gap-2 p-2 relative">
-            <select className="text-white bg-[#5a7c6b] font-medium border border-white rounded-md text-sm h-[40px] min-w-[115px] px-3 py-2 md:min-w-[135px] md:h-[40px] md:px-4 md:py-2 md:text-base"
-                style={{ fontSize: "0.8rem"}} >
-                <option style={{ fontSize: "0.8rem" }} value="satellite1">
+    <div className="w-full mx-auto my-1 shadow-md overflow-hidden">
+        <div className="flex items-center gap-1 lg:gap-2 p-1 lg:p-2 relative">
+            <select className="text-white text-xs bg-[#5a7c6b] font-medium border border-white outline-none rounded-md h-[40px] min-w-[110px] px-2 py-2 lg:min-w-[135px] md:h-[40px] md:px-4 md:py-2 lg:text-sm">
+                <option className="text-xs" value="satellite1">
                     Satellite 1
                 </option>
-                <option style={{ fontSize: "0.8rem" }} value="satellite2">
+                <option className="text-xs" value="satellite2">
                     Satellite 2
                 </option>
-                <option style={{ fontSize: "0.8rem" }} value="satellite3">
+                <option className="text-xs" value="satellite3">
                     Satellite 3
                 </option>
             </select>
 
             {/* Scroll left Arrow */}
-            <button className="absolute left-[150px] bg-[#344e41] py-1 text-white rounded cursor-pointer z-10"
+            <button className="absolute left-[120px] lg:left-[150px] bg-[#344e41] py-1 text-white rounded cursor-pointer z-10"
                 onClick={handleArrowLeftClick} >
                     <ChevronLeft size={24} strokeWidth={2} />
             </button>
 
             {/* Scrollable Index Buttons */}
-            <div  className="flex gap-2 flex-nowrap overflow-x-auto pr-10 scroll-smooth no-scrollbar"
+            <div  className="flex gap-1 lg:gap-2 flex-nowrap overflow-x-auto pr-10 scroll-smooth no-scrollbar"
                 ref={scrollContainerRef}> 
                 {indices.map((index) => (
                     <button key={index}
-                            className={`flex-shrink-0 rounded text-white font-medium px-4 py-2 text-sm h-[46px] sm:h-[44px] sm:px-3 sm:py-2 transition-all duration-300 ease-in-out
+                            className={`flex-shrink-0 rounded text-white font-medium px-2 lg:px-4 py-1 lg:py-2 text-xs lg:text-sm h-[46px] sm:h-[44px] sm:px-3 sm:py-2 transition-all duration-300 ease-in-out
                                 ${selectedIndex === index ? "bg-[#344e41]" : "bg-[#5a7c6b] hover:bg-[#4a6b5a]"}`}
                             onClick={() => {
                                 dispatch(removeSelectedIndexData());

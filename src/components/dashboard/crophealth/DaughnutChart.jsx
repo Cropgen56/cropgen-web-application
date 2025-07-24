@@ -85,13 +85,23 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
         beforeDraw: (chart) => {
         const { ctx, chartArea } = chart;
         if (!chartArea) return;
+            
+        const width = chart.width;
 
         ctx.save();
         const x = (chartArea.left + chartArea.right) / 2;
         const y = (chartArea.top + chartArea.bottom) / 2;
         const percentageText = `${Health_Percentage}%`;
 
-        ctx.font = "bold 24px Arial"; // Fixed text size
+        // ctx.font = "bold 24px Arial"; // Fixed text size
+            
+        let fontSize = 24; // Dynamic font sizing
+        if (width < 400) fontSize = 16;
+        else if (width < 600) fontSize = 20;
+        else fontSize = 24;
+
+        ctx.font = `bold ${fontSize}px Arial`;
+
         ctx.fillStyle = "#000000";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -102,22 +112,25 @@ const DoughnutChart = ({ selectedFieldsDetials }) => {
 
     return (
         // <div className=" w-full max-w-[280px] sm:max-w-[320px] md:max-w-[420px] md:h-[220px] md:scale-[1.1] lg:max-w-[500px] lg:h-[240px] lg:scale-100 flex justify-center items-center">
-        <div className="w-full max-w-[300px] h-[220px] md:scale-[1.1] lg:scale-100 flex justify-center items-center">
+        <div className="w-full flex justify-center items-center md:scale-[0.95] lg:scale-[0.85]  transition-transform ease-in-out duration-300">
 
             {loading?.cropHealth ? (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                <div className="w-[220px] h-[220px] flex flex-col items-center justify-center gap-2">
                     <LoadingSpinner
                         height="100px"
                         size={40}
                         sm={48}
                         md={56}
                         color="#86D72F" />
-                    <p className="text-sm sm:text-base md:text-lg text-green-500 animate-fade-in">
+                    <p className="text-sm sm:text-base md:text-sm text-green-500 animate-fade-in">
                         Crop Health Loading...
                     </p>
                 </div>
+
+                
             ) : (
-                <div className="w-full max-w-[300px] md:max-w-[400px] h-full">
+                    // <div className="w-[220px] sm:w-[240px] md:w-[250px] lg:w-full h-[220px]">
+                    <div className="w-[180px] sm:w-[200px] md:w-[220px] lg:w-full h-[180px] sm:h-[200px] lg:h-[220px]">
                     <Doughnut
                         data={data}
                         options={options}
