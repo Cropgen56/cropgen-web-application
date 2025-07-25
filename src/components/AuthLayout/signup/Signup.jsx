@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { signupUser } from "../../../redux/slices/authSlice";
+import { userLoginSignup } from "../../../redux/slices/authSlice";
 import SocialButtons from "../shared/socialbuttons/SocialButton";
+import { useNavigate } from "react-router-dom";
 
-const Signup = ({ setActiveTab }) => {
+const Signup = () => {
   const dispatch = useDispatch();
   const { status } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
     email: "",
-    phone: "",
     password: "",
     organizationCode: "",
     terms: false,
@@ -33,30 +32,13 @@ const Signup = ({ setActiveTab }) => {
 
   const validate = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\d{10}$/;
 
-    if (!formData.firstName) {
-      alert("First name is required.");
-      return false;
-    }
-    if (!formData.lastName) {
-      alert("Last name is required.");
-      return false;
-    }
     if (!formData.email) {
       alert("Email is required.");
       return false;
     }
     if (!emailRegex.test(formData.email)) {
       alert("Invalid email format.");
-      return false;
-    }
-    if (!formData.phone) {
-      alert("Phone number is required.");
-      return false;
-    }
-    if (!phoneRegex.test(formData.phone)) {
-      alert("Phone must be 10 digits.");
       return false;
     }
     if (!formData.password) {
@@ -79,16 +61,10 @@ const Signup = ({ setActiveTab }) => {
     e.preventDefault();
     if (!validate()) return;
 
-    // Create a copy of formData and prefix phone with +91
-    const dataToSend = {
-      ...formData,
-      phone: `+91${formData.phone}`,
-    };
-
-    dispatch(signupUser(dataToSend)).then((res) => {
+    dispatch(userLoginSignup(formData)).then((res) => {
       if (res?.payload?.success) {
         alert(res.payload.message || "Signup successful!");
-        setActiveTab("Login");
+        navigate("/");
       } else {
         alert(res?.payload?.message || "Signup failed. Please try again.");
       }
@@ -100,7 +76,7 @@ const Signup = ({ setActiveTab }) => {
       {/* Heading */}
       <div className="text-left mb-6">
         <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium text-gray-800">
-          Get started with cropgen
+          Get started with CropGen
         </h2>
         <p className="text-xs sm:text-sm md:text-base text-gray-500 mt-2">
           Enter your personal data to create your account
@@ -108,44 +84,6 @@ const Signup = ({ setActiveTab }) => {
       </div>
 
       <div className="space-y-4 sm:space-y-5">
-        {/* First and Last Name */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="w-full sm:w-1/2">
-            <label
-              htmlFor="firstName"
-              className="block text-xs sm:text-sm md:text-base font-medium text-gray-700 mb-2"
-            >
-              First Name
-            </label>
-            <input
-              type="text"
-              name="firstName"
-              id="firstName"
-              placeholder="First Name"
-              className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 sm:py-3 text-xs sm:text-sm md:text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
-              value={formData.firstName}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="w-full sm:w-1/2">
-            <label
-              htmlFor="lastName"
-              className="block text-xs sm:text-sm md:text-base font-medium text-gray-700 mb-2"
-            >
-              Last Name
-            </label>
-            <input
-              type="text"
-              name="lastName"
-              id="lastName"
-              placeholder="Last Name"
-              className="w-full border-0 bg-gray-200 rounded-md px-3 py-2 sm:py-3 text-xs sm:text-sm md:text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
-              value={formData.lastName}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-
         {/* Email */}
         <div>
           <label
@@ -164,29 +102,6 @@ const Signup = ({ setActiveTab }) => {
             onChange={handleChange}
           />
         </div>
-
-        {/* Phone */}
-        <div className="relative">
-          <label
-            htmlFor="phone"
-            className="block text-xs sm:text-sm md:text-base font-medium text-gray-700 mb-2"
-          >
-            Phone Number
-          </label>
-          <span className="absolute left-3 top-[2.5rem] sm:top-[2.8rem] md:top-[3rem] transform -translate-y-1/2 text-gray-500 text-xs sm:text-sm md:text-base">
-            +91
-          </span>
-          <input
-            type="tel"
-            name="phone"
-            id="phone"
-            placeholder="Phone Number"
-            className="w-full border-0 bg-gray-200 rounded-md pl-12 pr-3 py-2 sm:py-3 text-xs sm:text-sm md:text-base text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-0"
-            value={formData.phone}
-            onChange={handleChange}
-          />
-        </div>
-
         {/* Password */}
         <div className="relative">
           <label
@@ -256,7 +171,6 @@ const Signup = ({ setActiveTab }) => {
             )}
           </button>
         </div>
-
         {/* Organization Code */}
         <div>
           <label
@@ -275,7 +189,6 @@ const Signup = ({ setActiveTab }) => {
             onChange={handleChange}
           />
         </div>
-
         {/* Terms */}
         <div className="flex items-center gap-2 text-xs sm:text-sm md:text-base">
           <input
@@ -300,7 +213,6 @@ const Signup = ({ setActiveTab }) => {
             </a>
           </label>
         </div>
-
         {/* Submit Button */}
         <button
           type="button"
@@ -308,25 +220,12 @@ const Signup = ({ setActiveTab }) => {
           className="w-full bg-[#265A48] text-white py-2 sm:py-3 rounded-md text-sm md:text-base uppercase hover:bg-[#1f4a3a] focus:outline-none transition-colors duration-200"
           disabled={status === "loading"}
         >
-          {status === "loading" ? "Signing Up..." : "Sign Up"}
+          {status === "loading" ? "Signing Up..." : "Login / Sign Up"}
         </button>
-
         {/* Google Sign-In */}
         <div className="w-full">
           <SocialButtons />
         </div>
-
-        {/* Switch to Login */}
-        <p className="text-center text-xs sm:text-sm md:text-base text-gray-600">
-          Already have an account?{" "}
-          <button
-            type="button"
-            onClick={() => setActiveTab("Login")}
-            className="text-green-700 font-medium hover:underline focus:outline-none"
-          >
-            Login
-          </button>
-        </p>
       </div>
     </div>
   );

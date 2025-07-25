@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Signup from "../components/AuthLayout/signup/Signup";
-import Login from "../components/AuthLayout/login/Login";
 import { Logo } from "../assets/Icons.jsx";
 import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice.js";
 import { useDispatch } from "react-redux";
@@ -65,11 +64,7 @@ const AuthLayout = () => {
 
       {/* Right Side - Signup/Login Form */}
       <div className="w-full lg:w-1/2 flex items-start justify-center p-4 sm:p-6 lg:p-8 xl:p-10 min-h-screen lg:min-h-0 overflow-y-auto">
-        {activeTab === "SignUp" ? (
-          <Signup setActiveTab={setActiveTab} />
-        ) : (
-          <Login setActiveTab={setActiveTab} />
-        )}
+        <Signup />
       </div>
     </div>
   );

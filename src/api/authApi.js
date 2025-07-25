@@ -2,15 +2,11 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-// Signup API
-export const signup = async (signupData) => {
-  const response = await axios.post(`${API_URL}/api/auth/signup`, signupData);
-  return response.data;
-};
-
-// Signin API
-export const signin = async (signinData) => {
-  const response = await axios.post(`${API_URL}/api/auth/signin`, signinData);
+export const authenticateUser = async (userData) => {
+  const response = await axios.post(
+    `${API_URL}/api/auth/authenticate`,
+    userData
+  );
   return response.data;
 };
 

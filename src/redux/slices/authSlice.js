@@ -1,26 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { signup, signin, getUser, updateUser } from "../../api/authApi";
+import { getUser, updateUser, authenticateUser } from "../../api/authApi";
 import { decodeJWT } from "../../utility/decodetoken";
 
-// Async thunk for signup
-export const signupUser = createAsyncThunk(
-  "auth/signupUser",
-  async (signupData, { rejectWithValue }) => {
-    try {
-      const response = await signup(signupData);
-      return response;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "Signup failed");
-    }
-  }
-);
-
 // Async thunk for signin
-export const signinUser = createAsyncThunk(
-  "auth/signinUser",
-  async (signinData, { rejectWithValue }) => {
+export const userLoginSignup = createAsyncThunk(
+  "auth/userLoginSignup",
+  async (userData, { rejectWithValue }) => {
     try {
-      const response = await signin(signinData);
+      const response = await authenticateUser(userData);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Signin failed");
@@ -87,31 +74,18 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // Signup Reducers
-      .addCase(signupUser.pending, (state) => {
+      .addCase(userLoginSignup.pending, (state) => {
         state.status = "loading";
         state.error = null;
       })
-      .addCase(signupUser.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.error = null;
-      })
-      .addCase(signupUser.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
-      })
-      // Signin Reducers
-      .addCase(signinUser.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(signinUser.fulfilled, (state, action) => {
+      .addCase(userLoginSignup.fulfilled, (state, action) => {
         state.status = "succeeded";
         localStorage.setItem("authToken", action.payload.token);
         state.token = action.payload.token;
         state.user = action.payload.user;
         state.error = null;
       })
-      .addCase(signinUser.rejected, (state, action) => {
+      .addCase(userLoginSignup.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
