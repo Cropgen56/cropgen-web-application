@@ -10,7 +10,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-//we hev to replcae with the actual data from the api
 const mockChartData = [
   { date: "D0", SoilMoisture: 35, SoilTemperature: 39 },
   { date: "D1", SoilMoisture: 29, SoilTemperature: 50 },
@@ -22,27 +21,35 @@ const mockChartData = [
   { date: "D7", SoilMoisture: 30, SoilTemperature: 42 },
 ];
 
-const Soilwaterindex = () => {
+const Soilwaterindex = ({ isdownloading }) => {
   const chartData = useMemo(() => mockChartData, []);
 
+  const isPDF = isdownloading === true;
+
   return (
-    <div className="bg-[#2d473b] p-2 rounded-xl shadow-lg w-full">
-      <h2 className="text-white text-xl font-bold px-4">Soil Health</h2>
+    <div
+      className={`${
+        isPDF ? "bg-white text-black" : "bg-[#2d473b] text-white"
+      } p-2 rounded-xl shadow-lg w-full`}
+    >
+      <h2 className={`text-xl font-bold px-4 ${isPDF ? "text-black" : "text-white"}`}>
+        Soil Health
+      </h2>
 
       <ResponsiveContainer width="100%" height={180}>
         <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-          <CartesianGrid stroke="#ffffff20" strokeDasharray="3 3" />
+          <CartesianGrid stroke={isPDF ? "#00000020" : "#ffffff20"} strokeDasharray="3 3" />
           <XAxis
             dataKey="date"
-            tick={{ fill: "white", fontSize: 14 }}
-            axisLine={{ stroke: "white" }}
+            tick={{ fill: isPDF ? "black" : "white", fontSize: 14 }}
+            axisLine={{ stroke: isPDF ? "black" : "white" }}
             tickLine={false}
           />
           <YAxis
             domain={[25, 55]}
             tickFormatter={(tick) => `${tick}%`}
-            tick={{ fill: "white", fontSize: 14 }}
-            axisLine={{ stroke: "white" }}
+            tick={{ fill: isPDF ? "black" : "white", fontSize: 14 }}
+            axisLine={{ stroke: isPDF ? "black" : "white" }}
             tickLine={false}
           />
           <Tooltip
@@ -54,19 +61,19 @@ const Soilwaterindex = () => {
             verticalAlign="top"
             align="right"
             iconType="line"
-            wrapperStyle={{ color: "white", fontSize: 14 }}
+            wrapperStyle={{ color: isPDF ? "black" : "white", fontSize: 14 }}
           />
           <Line
             type="monotone"
             dataKey="SoilMoisture"
-            stroke="#86D72F"
+            stroke={isPDF ? "#000000" : "#86D72F"}
             strokeWidth={3}
             dot={false}
           />
           <Line
             type="monotone"
             dataKey="SoilTemperature"
-            stroke="#80d3f7"
+            stroke={isPDF ? "#444444" : "#80d3f7"}
             strokeWidth={3}
             dot={false}
           />

@@ -38,7 +38,7 @@ const cropOptions = [
 
 
 
-const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportData }) => {
+const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportData ,downloadPDF}) => {
   const [selectedOperationIndex, setSelectedOperationIndex] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [currentcrop, setcurrentcrop] = useState("");
@@ -191,6 +191,7 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportD
     ) : (
         <div className="absolute left-0 bottom-10 w-full flex justify-center p-4 ">
               <button
+              onClick={downloadPDF}
         className="bg-[#344e41] w-full rounded-md px-3 py-2 text-gray-200 "
       >
         Download Report

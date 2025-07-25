@@ -1,8 +1,8 @@
 .operation-sidebar {
-  width: 22vw;
+  width: 30vw;
   height: 100vh;
   margin: 0;
-  padding: 20px;
+  padding: 0; /* 🔁 CHANGED from 10px to 0 */
   background-color: #fff;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
@@ -19,7 +19,7 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6rem;
+  
   cursor: pointer;
 }
 
@@ -141,4 +141,10 @@
 
 .operations {
   margin-left: 10px;
+}
+
+.operation-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
 }

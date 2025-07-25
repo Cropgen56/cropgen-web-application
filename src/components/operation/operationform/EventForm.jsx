@@ -3,6 +3,7 @@ import { Modal, Form, Input, Select, Button, Row, Col, message } from "antd";
 import "./EventForm.css";
 import { useDispatch } from "react-redux";
 import { createOperation } from "../../../redux/slices/operationSlice";
+import { DatePicker } from "antd"
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -29,6 +30,14 @@ const PROGRESS_OPTIONS = [
 ];
 
 const FORM_FIELDS = [
+
+    {
+    name: "Crop Name",
+    label: "Crop Name",
+    span: 12,
+    component: <Input />,
+    rules: [],
+  },
   {
     name: "supervisorName",
     label: "Supervisor Name",
@@ -94,6 +103,21 @@ const FORM_FIELDS = [
     component: <Input type="number" min={0} />,
     rules: [],
   },
+   {
+    name: "Area",
+    label: "Area (in acres)",
+    span: 6,
+    component: <Input type="text" min={1} />,
+    rules: [],
+  },
+  {
+    name: "Date",
+    label: "Date",
+    span: 6,
+    component:<DatePicker placeholder="" style={{ width: "100%" }} />,
+    rules: [],
+  },
+
   {
     name: "estimatedCost",
     label: "Estimated Cost (Rs)",
@@ -171,6 +195,7 @@ const EventForm = ({
         onFinish={handleSubmit}
         initialValues={initialData}
         style={{ width: "100%" }}
+        centered
       >
         <Row gutter={16}>
           {FORM_FIELDS.map(({ name, label, span, component, rules }) => (

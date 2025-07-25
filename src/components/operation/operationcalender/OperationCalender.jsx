@@ -144,9 +144,9 @@ const FarmerScheduler = (selectedField) => {
   return (
     <div className="calender-container p-1">
       {/* Calendar Header */}
-      <div className="calendar-header">
+      <div className="calendar-header ">
         <div className="top-left">
-          <select
+          <select className="bg-gray-200 text-black"
             onChange={(e) => handleMonthChange(e.target.value)}
             value={moment(date).month()}
           >
@@ -156,11 +156,11 @@ const FarmerScheduler = (selectedField) => {
               </option>
             ))}
           </select>
-          <button className="filter-button" onClick={handleFilter}>
+          <button className="filter-button bg-gray-200 flex text-black justify-between items-center" onClick={handleFilter}>
             <FilterIcon />
             Filter
           </button>
-          <div className="long-button">
+          <div className="long-button bg-gray-200 text-black">
             <button
               onClick={() => handleViewChange("timeGridDay")}
               className={view === "timeGridDay" ? "selected-button" : ""}
@@ -182,23 +182,23 @@ const FarmerScheduler = (selectedField) => {
           </div>
         </div>
         <div className="top-right">
-          <div className="button-group">
+          <div className="button-group flex justify-between">
             <button
               onClick={() => handleNavigate("prev")}
-              className="left-arrow"
+              className="left-arrow bg-gray-100  text-black"
             >
               {"<"}
             </button>
             <button
               onClick={() => handleNavigate("next")}
-              className="right-arrow"
+              className="right-arrow  bg-gray-200 text-black"
             >
               {">"}
             </button>
           </div>
           <button
             onClick={() => setIsModalVisible(true)}
-            className="add-option-button"
+            className="add-option-button px-4 py-2 "
           >
             Add Opp +
           </button>
@@ -207,36 +207,35 @@ const FarmerScheduler = (selectedField) => {
 
       {/* FullCalendar */}
       <div className="calendar-container-body">
-        <FullCalendar
-          key={`${view}-${date}`}
-          plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
-          initialView={view}
-          initialDate={date}
-          headerToolbar={false}
-          views={{
-            timeGridThreeDay: {
-              type: "timeGrid",
-              duration: { days: 3 },
-              buttonText: "3 Days",
-            },
-          }}
-          events={events}
-          selectable
-          select={handleDateSelect}
-          eventClick={handleEventClick}
-          eventColor="#378006"
-          eventTextColor="#ffffff"
-          height="80vh"
-          contentHeight="auto"
-          scrollTime="09:00:00"
-          slotDuration="01:00:00"
-          slotLabelInterval="01:00:00"
-          slotLabelFormat={{
-            hour: "numeric",
-            minute: "2-digit",
-            meridiem: "short",
-          }}
-        />
+<FullCalendar
+  key={`${view}-${date}`}
+  plugins={[timeGridPlugin, interactionPlugin]}
+  initialView={view}
+  initialDate={date}
+  headerToolbar={false}
+  views={{
+    timeGridThreeDay: {
+      type: "timeGrid",
+      duration: { days: 3 },
+      buttonText: "3 Days",
+    },
+  }}
+  events={events}
+  selectable
+  select={handleDateSelect}
+  eventClick={handleEventClick}
+  eventColor="#378006"
+  eventTextColor="#ffffff"
+  height="80vh"
+  contentHeight="auto"
+  slotDuration="01:00:00"
+slotLabelFormat={{
+  hour: undefined,
+  minute: undefined,
+  // this causes the `.format` error
+}} // ✅ disables time labels
+  allDaySlot={false} // ✅ remove "All Day" slot
+/>
 
         {/* Event Form Modal */}
         {isModalVisible && (
@@ -246,6 +245,7 @@ const FarmerScheduler = (selectedField) => {
             onSave={handleSave}
             initialData={selectedEvent}
             selectedField={selectedField}
+
           />
         )}
       </div>
