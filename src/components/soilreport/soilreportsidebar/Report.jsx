@@ -37,8 +37,8 @@ const Report = ({ data, isdownloading }) => {
   return (
     <div className={`${bgMain} p-7 rounded-md shadow-lg mb-0`}>
       <div className="flex justify-left items-center mb-6">
-        <img src={logo} alt="Logo" className="w-18 p-3" />
-        <h4 className={`${isdownloading ? "text-black" : "text-white"} text-base font-bold`}>CropGen</h4>
+        <img src={logo} alt="Logo" className="w-[15%] p-2" />
+        <h4 className={`${isdownloading ? "text-black" : "text-white"} text-3xl font-bold`}>CropGen</h4>
       </div>
 
       <h3 className="text-2xl font-bold mb-6">Summary &nbsp; Report</h3>
@@ -57,24 +57,24 @@ const Report = ({ data, isdownloading }) => {
       </div>
 
       <h4 className="text-lg font-semibold mb-2">Soil Parameters</h4>
-      <table className="w-full text-left border-collapse mb-8">
+      <table className={`w-full text-left border-collapse ${isdownloading ? "text-xs" : ""}`}>
         <thead>
           <tr className="border-b border-gray-500">
-            <th className="py-2">Soil Parameters</th>
-            <th className="py-2">Unit</th>
-            <th className="py-2">Range</th>
-            <th className="py-2">Available</th>
-            <th className="py-2">Remark</th>
+            <th className="py-2 align-middle">Soil Parameters</th>
+            <th className="py-2 align-middle">Unit</th>
+            <th className="py-2 align-middle">Range</th>
+            <th className="py-2 align-middle">Available</th>
+            <th className="py-2 align-middle">Remark</th>
           </tr>
         </thead>
         <tbody>
           {parameters.map((param, idx) => (
             <tr key={idx} className="border-b border-gray-700">
-              <td className="py-2">{param.name}</td>
-              <td className="py-2">{param.unit}</td>
-              <td className="py-2">{param.range}</td>
-              <td className="py-2">{param.value}</td>
-              <td className="py-2">
+              <td className="py-2 align-middle">{param.name}</td>
+              <td className="py-2 align-middle">{param.unit}</td>
+              <td className="py-2 align-middle">{param.range}</td>
+              <td className="py-2 align-middle">{param.value}</td>
+              <td className="py-2 align-middle">
                 <div className="w-full bg-gray-300 h-2 rounded">
                   <div
                     className={`${progressColor} h-2 rounded`}
@@ -89,28 +89,30 @@ const Report = ({ data, isdownloading }) => {
         </tbody>
       </table>
 
-      <div className={`${bgRequiredHeading} py-2 mb-4 mt-8 rounded`}>
-        <h4 className="text-center font-bold text-2xl">Required &nbsp; Data</h4>
-      </div>
+   <div className={`${bgRequiredHeading} py-3 mb-4 mt-8 rounded`}>
+  <h4 className={`text-center font-bold ${isdownloading ? "text-lg" : "text-2xl"}`}>
+    Required Data
+  </h4>
+</div>
 
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="border-b border-gray-500">
-            <th className="py-2">Soil Parameters</th>
-            <th className="py-2">Unit</th>
-            <th className="py-2">Range</th>
-            <th className="py-2">Available</th>
-            <th className="py-2">Remark</th>
+            <th className="py-2 align-middle">Soil Parameters</th>
+            <th className="py-2 align-middle">Unit</th>
+            <th className="py-2 align-middle">Range</th>
+            <th className="py-2 align-middle">Available</th>
+            <th className="py-2 align-middle">Remark</th>
           </tr>
         </thead>
         <tbody>
           {requiredData.map((param, idx) => (
             <tr key={idx} className="border-b border-gray-700">
-              <td className="py-2">{param.name}</td>
-              <td className="py-2">{param.unit}</td>
-              <td className="py-2">{param.range}</td>
-              <td className="py-2">{param.value}</td>
-              <td className="py-2">
+              <td className="py-2 align-middle">{param.name}</td>
+              <td className="py-2 align-middle">{param.unit}</td>
+              <td className="py-2 align-middle">{param.range}</td>
+              <td className="py-2 align-middle">{param.value}</td>
+              <td className="py-2 align-middle">
                 <div className="w-full bg-gray-300 h-2 rounded">
                   <div
                     className={`${progressColor} h-2 rounded`}

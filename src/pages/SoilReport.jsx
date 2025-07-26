@@ -68,7 +68,7 @@ const SoilReport = () => {
         />
       </div>
 
-      <div className="w-100 p-4 overflow-y-auto">
+      <div className="w-100 p-4 h-screen overflow-y-auto">
         {reportdata?.lat && reportdata?.lng && (
           <>
             {/* Map UI only */}
@@ -100,7 +100,7 @@ const SoilReport = () => {
                 <SOCreport isdownloading={isdownloading} />
               </div>
 
-              <div className="mt-4 rounded-lg shadow-md flex justify-between gap-4">
+              <div className="mt-4 rounded-lg shadow-md flex justify-between gap-4 mt-10">
                 <Soilwaterindex isdownloading={isdownloading} selectedFieldsDetials={[selectedOperation]} />
               </div>
 

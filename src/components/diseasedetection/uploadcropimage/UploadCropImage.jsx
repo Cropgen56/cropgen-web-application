@@ -1,21 +1,15 @@
 import React, { useState, useRef } from "react";
 import imageupload from "../../../assets/image/pngimages/imageupload.png";
-import "./UploadCropImage.css";
 import CropDetials from "../cropdetails/CropDetails";
 
 const UploadCropImage = () => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
   const fileInputRef = useRef(null);
-
-  const handleUploadClick = () => {
-    setIsVisible(true);
-  };
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file) {
       console.log("File selected:", file.name);
-      // Handle the file upload process here
     }
   };
 
@@ -24,36 +18,46 @@ const UploadCropImage = () => {
   };
 
   return (
-    <div>
-      {!isVisible ? (
-        <div className="uploadScreen">
-          <div className="uploadBox">
-            <img src={imageupload} alt="Upload crop image placeholder" />
-            <p className="uploadText">
+    <div className="flex h-screen w-full">
+      {/* Sidebar stays — already handled externally */}
+
+      {/* Right-side content */}
+      <div className="flex-1 bg-[#5a7c6b] flex items-center justify-center p-8">
+        {!showCropModal ? (
+          <div className="border-4 border-dotted border-white rounded-lg flex flex-col items-center justify-center w-full h-full">
+            <img src={imageupload} alt="Upload" className="w-56 h-56" />
+            <p className="mt-14 text-center text-white text-lg font-bold">
               Drag and Drop Files <br />
               or{" "}
               <span>
-                <a href="#" className="uploadLink" onClick={triggerFileUpload}>
+                <a
+                  href="#"
+                  className="text-[#00b2eb] mx-1"
+                  onClick={triggerFileUpload}
+                >
                   click here
                 </a>
               </span>{" "}
               to select from your device
             </p>
-            <button className="uploadButton" onClick={handleUploadClick}>
+            <button
+              className="mt-3 px-20 py-2 bg-white text-[#344e41] font-semibold text-lg rounded-md"
+              onClick={() => setShowCropModal(true)}
+            >
               Upload
             </button>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileSelect}
+            />
           </div>
-          <input
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-          />
-        </div>
-      ) : (
-        <CropDetials />
-      )}
+        ) : (
+          <CropDetials closeModal={() => setShowCropModal(false)} />
+        )}
+      </div>
     </div>
   );
 };

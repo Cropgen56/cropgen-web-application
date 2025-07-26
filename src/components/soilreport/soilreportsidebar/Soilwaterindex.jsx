@@ -26,13 +26,21 @@ const Soilwaterindex = ({ isdownloading }) => {
 
   const isPDF = isdownloading === true;
 
+  // Set consistent colors for PDF and screen view
+  const moistureColor = "#86D72F"; // Green
+  const temperatureColor = "#80d3f7"; // Blue
+
   return (
     <div
       className={`${
         isPDF ? "bg-white text-black" : "bg-[#2d473b] text-white"
-      } p-2 rounded-xl shadow-lg w-full`}
+      } p-4 rounded-xl shadow-lg w-full`}
     >
-      <h2 className={`text-xl font-bold px-4 ${isPDF ? "text-black" : "text-white"}`}>
+      <h2
+        className={`text-xl font-bold px-4 ${
+          isPDF ? "text-black" : "text-white"
+        }`}
+      >
         Soil Health
       </h2>
 
@@ -66,14 +74,14 @@ const Soilwaterindex = ({ isdownloading }) => {
           <Line
             type="monotone"
             dataKey="SoilMoisture"
-            stroke={isPDF ? "#000000" : "#86D72F"}
+            stroke={moistureColor}
             strokeWidth={3}
             dot={false}
           />
           <Line
             type="monotone"
             dataKey="SoilTemperature"
-            stroke={isPDF ? "#444444" : "#80d3f7"}
+            stroke={temperatureColor}
             strokeWidth={3}
             dot={false}
           />

@@ -144,66 +144,77 @@ const FarmerScheduler = (selectedField) => {
   return (
     <div className="calender-container p-1">
       {/* Calendar Header */}
-      <div className="calendar-header ">
-        <div className="top-left">
-          <select className="bg-gray-200 text-black"
-            onChange={(e) => handleMonthChange(e.target.value)}
-            value={moment(date).month()}
-          >
-            {moment.monthsShort().map((month, index) => (
-              <option key={month} value={index}>
-                {month}
-              </option>
-            ))}
-          </select>
-          <button className="filter-button bg-gray-200 flex text-black justify-between items-center" onClick={handleFilter}>
-            <FilterIcon />
-            Filter
-          </button>
-          <div className="long-button bg-gray-200 text-black">
-            <button
-              onClick={() => handleViewChange("timeGridDay")}
-              className={view === "timeGridDay" ? "selected-button" : ""}
-            >
-              D
-            </button>
-            <button
-              onClick={() => handleViewChange("timeGridThreeDay")}
-              className={view === "timeGridThreeDay" ? "selected-button" : ""}
-            >
-              3D
-            </button>
-            <button
-              onClick={() => handleViewChange("timeGridWeek")}
-              className={view === "timeGridWeek" ? "selected-button" : ""}
-            >
-              W
-            </button>
-          </div>
-        </div>
-        <div className="top-right">
-          <div className="button-group flex justify-between">
-            <button
-              onClick={() => handleNavigate("prev")}
-              className="left-arrow bg-gray-100  text-black"
-            >
-              {"<"}
-            </button>
-            <button
-              onClick={() => handleNavigate("next")}
-              className="right-arrow  bg-gray-200 text-black"
-            >
-              {">"}
-            </button>
-          </div>
-          <button
-            onClick={() => setIsModalVisible(true)}
-            className="add-option-button px-4 py-2 "
-          >
-            Add Opp +
-          </button>
-        </div>
-      </div>
+  <div className="calendar-header flex flex-col md:flex-row md:items-center md:justify-between gap-2 w-full">
+  {/* Left Controls */}
+  <div className="top-left flex flex-wrap items-center gap-2">
+    <select
+      className="bg-gray-200 text-black"
+      onChange={(e) => handleMonthChange(e.target.value)}
+      value={moment(date).month()}
+    >
+      {moment.monthsShort().map((month, index) => (
+        <option key={month} value={index}>
+          {month}
+        </option>
+      ))}
+    </select>
+
+    <button
+      className="filter-button bg-gray-200 flex text-black justify-between items-center"
+      onClick={handleFilter}
+    >
+      <FilterIcon />
+      Filter
+    </button>
+
+    <div className="long-button bg-gray-200 text-black flex gap-1">
+      <button
+        onClick={() => handleViewChange("timeGridDay")}
+        className={view === "timeGridDay" ? "selected-button" : ""}
+      >
+        D
+      </button>
+      <button
+        onClick={() => handleViewChange("timeGridThreeDay")}
+        className={view === "timeGridThreeDay" ? "selected-button" : ""}
+      >
+        3D
+      </button>
+      <button
+        onClick={() => handleViewChange("timeGridWeek")}
+        className={view === "timeGridWeek" ? "selected-button" : ""}
+      >
+        W
+      </button>
+    </div>
+  </div>
+
+  {/* Right Controls */}
+  <div className="top-right flex flex-wrap items-center gap-2">
+    <div className="button-group flex gap-1">
+      <button
+        onClick={() => handleNavigate("prev")}
+        className="left-arrow bg-gray-100 text-black"
+      >
+        {"<"}
+      </button>
+      <button
+        onClick={() => handleNavigate("next")}
+        className="right-arrow bg-gray-200 text-black"
+      >
+        {">"}
+      </button>
+    </div>
+
+    <button
+      onClick={() => setIsModalVisible(true)}
+      className="add-option-button px-4 py-2"
+    >
+      Add Opp +
+    </button>
+  </div>
+</div>
+
 
       {/* FullCalendar */}
       <div className="calendar-container-body">

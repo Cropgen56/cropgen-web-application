@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import { Operation2 } from "../../../assets/Icons";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
@@ -6,6 +6,7 @@ import "./SoilReportSidebar.css";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { fetchSatelliteDates } from "../../../redux/slices/satelliteSlice";
+import {getFarmFields} from "../../../redux/slices/farmSlice";
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
 
   <div
@@ -24,6 +25,7 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
     </div>
   </div>
 );
+
 
 const cropOptions = [
   "Barley", "Wheat", "Pearl Millet", "Sorghum", "Finger Millet", "Chickpea", "Red Gram", "Green Gram", "Black Gram",
@@ -45,7 +47,7 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportD
   const [nextcrop, setnextcrop] = useState("");
   const [reportGenerated,setReportGenerated] = useState(false);
   const dispatch = useDispatch();
-
+   
 
   const toggleSidebarVisibility = () => {
     setIsSidebarVisible(!isSidebarVisible);
@@ -58,12 +60,12 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportD
   // ];
 
   const fields = useSelector(state => state.farmfield.fields);
-  console.log(fields);
+
 
   return (
     <>
       {isSidebarVisible && (
-        <div className="soil-report-sidebar h-full flex flex-col  shadow-lg  relative">
+        <div className="soil-report-sidebar h-screen flex flex-col  shadow-lg  relative overflow-y-auto">
           <div className="soil-report-heading">
             <div className="soil-report-first-row">
               <Operation2 />
@@ -107,10 +109,12 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportD
               />
             </div>
           </div>
-          <div className="soil-report-field">
-            <h2>Field</h2>
-      {(fields || []).map((fieldObj, index) => (
+          <div className="soil-report-field flex flex-col">
+            <h2 className="px-4 pt-2 text-xl font-semibold text-[#344e41]">Field</h2>
+              <div className="overflow-y-auto max-h-[200px] ">
+                 {(fields || []).map((fieldObj, index) => (
   <FieldInfo
+   
     key={fieldObj._id || index}
     title={fieldObj.fieldName || `Field ${index + 1}`}
       area={
@@ -138,6 +142,7 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportD
     }}
   />
 ))}
+              </div>
 
             {selectedOperationIndex !== null && (
               <div className="mt-5 p-3 flex flex-col gap-3 text-[#344e41] ">
@@ -189,10 +194,10 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportD
         Generate Report
       </button>
     ) : (
-        <div className="absolute left-0 bottom-10 w-full flex justify-center p-4 ">
+        <div className=" w-full flex justify-center p-4 ">
               <button
               onClick={downloadPDF}
-        className="bg-[#344e41] w-full rounded-md px-3 py-2 text-gray-200 "
+        className="bg-[#344e41] rounded-md px-10 py-2 text-gray-200 mt-4"
       >
         Download Report
       </button>
