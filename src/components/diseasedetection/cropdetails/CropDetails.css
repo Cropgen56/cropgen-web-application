@@ -1,11 +1,4 @@
-/* Overall Container */
-.crop-details {
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #344e41;
-}
+
 
 /* Form Container */
 .crop-details-form-container {

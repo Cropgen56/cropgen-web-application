@@ -4,5 +4,21 @@
 }
 
 .soil-report {
-  background-color: #5a7c6b;
+  background-color: #2d3f33;
+}
+.pdf-style .bg-\[\#2d3f33\] {
+  background-color: white !important;
+}
+
+.pdf-style .text-green-100 {
+  color: black !important;
+}
+
+.pdf-style .text-white {
+  color: black !important;
+}
+
+.pdf-style{
+  padding: 40px;
+  background: white;
 }

@@ -1,10 +1,16 @@
 import React from "react";
 import "./CropDetails.css";
 
-const CropDetails = () => {
+const CropDetails = ({closeModal}) => {
   return (
     <div className="crop-details">
       <div className="crop-details-form-container mx-auto my-auto">
+         <button
+          onClick={closeModal}
+          className="flex justify-end text-[#344e41] font-bold text-xl mb-4"
+        >
+          &times;
+        </button>
         {/* Image Section */}
         <div className="image-section">
           <img
@@ -28,20 +34,21 @@ const CropDetails = () => {
         </div>
 
         {/* Form Section */}
-        <form className="form-content">
-          <div className="form-group">
-            <label htmlFor="crop-name" className="disease-details-form-label">
-              Crop Name
+        <form className="form-content flex flex-col gap-2 text-[#344e41]">
+          <div className="form-group flex justify-between items-center gap-3">
+            <label htmlFor="crop-name" className="disease-details-form-label text-[#344e41] text-[#344e41] font-bold ">
+              Crop Name 
             </label>
             <input
               id="crop-name"
               type="text"
-              className="disease-details-form-input"
+              className="disease-details-form-input "
+              
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="disease" className="disease-details-form-label">
-              Disease
+          <div className="form-group flex justify-between items-center gap-4">
+            <label htmlFor="disease" className="disease-details-form-label text-[#344e41] font-bold ">
+              Disease 
             </label>
             <input
               id="disease"
@@ -49,8 +56,8 @@ const CropDetails = () => {
               className="disease-details-form-input"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="treatment" className="disease-details-form-label">
+          <div className="form-group flex justify-between items-center gap-3">
+            <label htmlFor="treatment" className="disease-details-form-label text-[#344e41] font-bold">
               Treatment
             </label>
             <input
@@ -61,7 +68,7 @@ const CropDetails = () => {
           </div>
 
           {/* Feedback Section */}
-          <h2 className="additional-info">Tell us about Treatment</h2>
+          <h2 className="additional-info text-[#344e41] font-bold">Tell us about Treatment</h2>
           <p className="additional-info-feedback p-0 m-0">
             Do you Like Treatment / Is it Helpful to?
           </p>
@@ -81,10 +88,10 @@ const CropDetails = () => {
           </div>
 
           {/* Comment Box */}
-          <textarea
+          <textarea 
             rows="3"
             placeholder="Leave your comments"
-            className="form-textarea"
+            className="form-textarea "
           ></textarea>
         </form>
       </div>

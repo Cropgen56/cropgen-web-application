@@ -224,3 +224,42 @@ button:hover {
 .ant-modal {
   position: absolute;
 }
+
+
+
+.fc-timegrid-slot-label {
+  display: none !important; /* hides time labels */
+}
+
+.fc-timegrid-slot {
+  height: 70px !important; /* Adjust if needed */
+  border: none !important;
+}
+
+
+/* ✅ Add borders between each vertical column (day) */
+.fc-timegrid-col-frame {
+  border-left: 1px solid #dcdcdc !important;
+}
+
+.fc-timegrid-cols {
+  border-right: 1px solid #dcdcdc !important;
+}
+
+/* ✅ Add horizontal row borders (time slots) */
+.fc-timegrid-slot {
+  border-top: 1px solid #dcdcdc !important;
+}
+
+/* ✅ Optional: Strong border around today’s column */
+.fc-day-today .fc-timegrid-col-frame {
+  border: 2px solid #5a7c6b !important;
+}
+
+/* ✅ Optional: Add border around events */
+.fc-event {
+  border: 1px solid #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 4px !important;
+}
+
