@@ -73,7 +73,7 @@ const AddField = () => {
   };
 
   return (
-    <div className="weather container-fluid m-0 p-0 w-100">
+    <div className="weather container-fluid m-0 p-0 w-full">
       <AddFieldSidebar saveFarm={saveFarm} markers={markers} />
       <AddFieldMap
         markers={markers}

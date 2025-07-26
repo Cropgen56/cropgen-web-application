@@ -151,8 +151,9 @@ const Sidebar = ({ onToggleCollapse }) => {
                 <li
                   key={path}
                   onClick={() => handleNavigation(path)}
-                  className={location.pathname === path ? "active" : ""}
-                >
+                  // className={location.pathname === path ? "active" : ""}
+                  className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out
+                    ${location.pathname === path ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left " : ""}`}>
                   <Icon />
                   {!isCollapsed && label}
                 </li>

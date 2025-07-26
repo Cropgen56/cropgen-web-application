@@ -75,14 +75,14 @@
   z-index: 1000;
 }
 
-.active {
+/* .active {
   padding: 2px 0 3px 5px;
   font-size: 0.9rem !important;
   font-weight: 200;
   line-height: 18.15px;
   text-align: left;
   color: #f8f8f8 !important;
-}
+} */
 
 .profile-user-name {
   font-size: 25px;
@@ -139,6 +139,7 @@ nav a {
 
 .footer-text {
   display: flex;
+  align-items: center;
   gap: 8px;
   font-size: 1rem;
   color: #fff;

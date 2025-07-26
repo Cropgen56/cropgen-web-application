@@ -128,13 +128,19 @@ const Dashboard = () => {
     return (
         <div className="dashboard float-end p-1.5 lg:p-3">
             <MapView {...mapViewProps} />
-            <CropHealth {...cropHealthProps} />
-            <ForeCast />
-            <NdviGraph {...ndviGraphProps} />
-            <WaterIndex {...ndviGraphProps} />
-            <Insights />
-            <CropAdvisory {...cropAdvisoryProps} />
-            <PlantGrowthActivity {...plantGrowthProps} />
+
+            {fields.length > 0 && (
+                <>
+                    <CropHealth {...cropHealthProps} />
+                    <ForeCast />
+                    <NdviGraph {...ndviGraphProps} />
+                    <WaterIndex {...ndviGraphProps} />
+                    <Insights />
+                    <CropAdvisory {...cropAdvisoryProps} />
+                    <PlantGrowthActivity {...plantGrowthProps} />
+                </>
+            )}
+            
         </div>
     );
 };

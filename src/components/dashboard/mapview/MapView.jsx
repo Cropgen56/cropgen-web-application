@@ -137,12 +137,14 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
   const defaultCenter = [20.135245, 77.156935];
 
   return (
-    <div className="flex flex-col items-center w-full md:h-[500px] lg:h-[95%] relative">
+    // <div className="flex flex-col items-center w-full md:h-[500px] lg:h-[95%] relative">
+    <div className={`flex flex-col items-center w-full relative ${ fields.length === 0 ? "h-full" : "md:h-[500px] lg:h-[95%]" } relative`}>
+
       <MapContainer
         center={centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter}
         zoom={18}
         zoomControl={true}
-        className="w-full h-full rounded-[20px] overflow-hidden"
+        className={`w-full h-full overflow-hidden ${fields.length === 0 ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"}`}
         ref={mapRef}
         maxZoom={20}
       >
@@ -174,7 +176,7 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
             onChange={handleFieldChange}
             value={selectedField || ""}
             className="bg-[#010704b2] outline-none border-none rounded px-2 py-1 text-white cursor-pointer scrollbar-none">
-            <option value="" disabled>Select a field</option>
+            <option value="" hidden>Select a field</option>
             {fields?.map((field) => (
               <option key={field?._id} value={field?._id}>{field.fieldName}</option>
             ))}
@@ -218,21 +220,21 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
       {fields?.length > 0 ? (
         <IndexDates selectedFieldsDetials={selectedFieldsDetials} />
       ) : (
-        <div className="absolute z-[1000] mt-[33rem] w-full text-white text-[1rem] bg-[#5a7c6b] rounded cursor-pointer">
-          <div className="absolute bottom-[10px] left-0 w-full text-center z-[1000]">
-            <div className="w-[95%] mx-auto p-2.5 bg-[#5a7c6b] rounded flex justify-between items-center">
-              <div className="border-r border-white pr-2">
-                <button aria-label="Calendar"><Calender /></button>
+        <div className="w-full text-white text-base bg-[#5a7c6b] rounded cursor-pointer">
+          <div className="w-full text-center z-[1000]">
+            <div className="flex justify-between items-center gap-4 p-2.5 bg-[#5a7c6b] rounded w-full">
+              <div className="flex items-center gap-3 border-r border-gray-200 pr-2">
+                <button aria-label="Calendar" className="border-r border-gray-200 pr-2"><Calender /></button>
                 <button aria-label="Previous"><LeftArrow /></button>
               </div>
               <button
-                className="add-new-field"
+                className="add-new-field cursor-pointer"
                 onClick={() => navigate("/addfield")}
                 aria-label="Add New Field"
               >
                 Add Field
               </button>
-              <button className="border-l border-white pl-2" aria-label="Next">
+              <button className="border-l border-gray-200 pl-2" aria-label="Next">
                 <RightArrow />
               </button>
             </div>
