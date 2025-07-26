@@ -66,13 +66,13 @@ span {
   font-size: 0.7rem;
 }
 /* Form Styles */
-/* .form-content {
+.form-content {
   width: 40%;
   max-width: 600px;
   display: flex;
   flex-direction: column;
   margin-left: 3rem;
-} */
+}
 
 .form-group {
   display: flex;
@@ -82,8 +82,12 @@ span {
   margin-bottom: 0.5rem;
 }
 
+.disease-details-form-label {
+  font-size: 1.1rem;
+  color: #344e41;
+  font-weight: 500;
+}
 
-/* 
 .disease-details-form-input {
   padding: 4px;
   font-size: 14px;
@@ -91,7 +95,7 @@ span {
   border-radius: 5px;
   outline: none;
   background-color: #5a7c6bb2;
-} */
+}
 .additional-info {
   margin: 0;
   padding: 0;
