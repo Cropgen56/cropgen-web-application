@@ -9,11 +9,18 @@ import Soilwaterindex from "../components/soilreport/soilreportsidebar/Soilwater
 import SOCreport from "../components/soilreport/soilreportsidebar/SOCreport";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { getFarmFields } from "../redux/slices/farmSlice";
 
 const SoilReport = () => {
   const [selectedOperation, setSelectedOperation] = useState(null);
   const [reportdata, setReportData] = useState(null);
   const [isdownloading, setIsDownloading] = useState(false);
+
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state?.auth?.user);
+  const userId = user?.id;
 
   const reportRef = useRef();
   const restRef = useRef();
@@ -34,17 +41,17 @@ const SoilReport = () => {
     const height = pdf.internal.pageSize.getHeight();
 
     const capturePage = async (element, pageNumber) => {
-  const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-  const imgData = canvas.toDataURL("image/png");
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
 
-  const imgHeight = (canvas.height * width) / canvas.width;
-  const scaledHeight = height * 0.95;; // force fit A4
+      const imgHeight = (canvas.height * width) / canvas.width;
+      const scaledHeight = height * 0.95; // force fit A4
 
-  pdf.addImage(imgData, "PNG", 0, 0, width, scaledHeight);
-  pdf.setTextColor(100);
-  pdf.setFontSize(10);
-  pdf.text(`Page ${pageNumber}`, width - 20, height - 10);
-};
+      pdf.addImage(imgData, "PNG", 0, 0, width, scaledHeight);
+      pdf.setTextColor(100);
+      pdf.setFontSize(10);
+      pdf.text(`Page ${pageNumber}`, width - 20, height - 10);
+    };
 
     await capturePage(input1, 1);
     pdf.addPage();
@@ -56,6 +63,13 @@ const SoilReport = () => {
     input2.classList.remove("pdf-style");
     setIsDownloading(false);
   };
+
+  // Fetch fields once when userId is available
+  useEffect(() => {
+    if (userId) {
+      dispatch(getFarmFields(userId));
+    }
+  }, [dispatch, userId]);
 
   return (
     <div className="soil-report container-fluid m-0 p-0 d-flex h-screen">
@@ -88,30 +102,45 @@ const SoilReport = () => {
             </MapContainer>
 
             {/* Page 1 */}
-            <div ref={reportRef} className={`${isdownloading ? "bg-white text-black p-4" : ""}`}>
+            <div
+              ref={reportRef}
+              className={`${isdownloading ? "bg-white text-black p-4" : ""}`}
+            >
               <div className="mt-4">
                 <Report data={reportdata} isdownloading={isdownloading} />
               </div>
             </div>
 
             {/* Page 2 */}
-            <div ref={restRef} className={`${isdownloading ? "bg-white text-black p-4" : ""}`}>
+            <div
+              ref={restRef}
+              className={`${isdownloading ? "bg-white text-black p-4" : ""}`}
+            >
               <div className="mt-4">
                 <SOCreport isdownloading={isdownloading} />
               </div>
 
               <div className="mt-4 rounded-lg shadow-md flex justify-between gap-4 mt-10">
-                <Soilwaterindex isdownloading={isdownloading} selectedFieldsDetials={[selectedOperation]} />
+                <Soilwaterindex
+                  isdownloading={isdownloading}
+                  selectedFieldsDetials={[selectedOperation]}
+                />
               </div>
 
               <div className="mt-4">
                 <Reccomendations isdownloading={isdownloading} />
               </div>
 
-              <div className={`mt-5 p-4 rounded-lg shadow-md ${isdownloading ? "text-black" : "text-green-100"}`}>
+              <div
+                className={`mt-5 p-4 rounded-lg shadow-md ${
+                  isdownloading ? "text-black" : "text-green-100"
+                }`}
+              >
                 <p className="text-xs">
-                  * This is a satellite-based generated soil report, not a physical or lab-tested report.
-                  The results are indicative and may not represent exact ground conditions. Please use it for advisory purposes only.
+                  * This is a satellite-based generated soil report, not a
+                  physical or lab-tested report. The results are indicative and
+                  may not represent exact ground conditions. Please use it for
+                  advisory purposes only.
                 </p>
               </div>
             </div>

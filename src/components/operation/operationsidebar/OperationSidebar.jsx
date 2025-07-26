@@ -13,7 +13,11 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   >
     <FieldIcon isSelected={isSelected} />
     <div className="ml-2">
-      <h4 className={`text-base font-normal ${isSelected ? "text-white" : "text-[#344e41]"}`}>
+      <h4
+        className={`text-base font-normal ${
+          isSelected ? "text-white" : "text-[#344e41]"
+        }`}
+      >
         {title}
       </h4>
       <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
@@ -25,10 +29,10 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   </div>
 );
 
-
 const OperationSidebar = ({ setSelectedField, selectedField }) => {
   const [selectedOperationIndex, setSelectedOperationIndex] = useState(0);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+
   const fields = useSelector((state) => state?.farmfield?.fields);
 
   const calculateCentroid = (field) => {
@@ -107,7 +111,9 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
 
       {/* Scrollable Fields */}
       <div className=" overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-hide">
-        <h2 className="text-sm font-bold text-[#344e41] pl-2 pb-2 #344e41 ">Field</h2>
+        <h2 className="text-sm font-bold text-[#344e41] pl-2 pb-2 #344e41 ">
+          Field
+        </h2>
         {fields && fields.length > 0 ? (
           fields.map((field, index) => {
             const { lat, lon } = calculateCentroid(field.field);

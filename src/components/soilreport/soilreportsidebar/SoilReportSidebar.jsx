@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Operation2 } from "../../../assets/Icons";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
@@ -6,13 +6,11 @@ import "./SoilReportSidebar.css";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { fetchSatelliteDates } from "../../../redux/slices/satelliteSlice";
-import {getFarmFields} from "../../../redux/slices/farmSlice";
+import { getFarmFields } from "../../../redux/slices/farmSlice";
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
-
   <div
     className={`soil-report-info ${isSelected ? "selected-soil-report" : ""}`}
     onClick={onClick}
-
   >
     <FieldIcon isSelected={isSelected} />
     <div className="soil-report-operations">
@@ -26,41 +24,106 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   </div>
 );
 
-
 const cropOptions = [
-  "Barley", "Wheat", "Pearl Millet", "Sorghum", "Finger Millet", "Chickpea", "Red Gram", "Green Gram", "Black Gram",
-  "Lentil", "Field Pea", "Horse Gram", "Cowpea", "Groundnut", "Mustard", "Soybean", "Sunflower", "Sesame", "Linseed",
-  "Castor", "Safflower", "Niger", "Sugarcane", "Cotton", "Jute", "Tobacco", "Potato", "Tomato", "Brinjal", "Cabbage",
-  "Cauliflower", "Onion", "Garlic", "Okra", "Carrot", "Radish", "Spinach", "Methi", "Green Peas", "Bitter Gourd",
-  "Bottle Gourd", "Pumpkin", "Cucumber", "Beans", "Mango", "Banana", "Guava", "Apple", "Papaya", "Orange", "Lemon",
-  "Pomegranate", "Grapes", "Pineapple", "Watermelon", "Muskmelon", "Turmeric", "Ginger", "Coriander", "Cumin",
-  "Black Pepper", "Red Chilies", "Tea", "Coffee", "Coconut", "Arecanut", "Rubber", "Dragon Fruit", "Sponge Gourd",
-  "Snake Gourd", "Ash Gourd", "Drumstick", "Chili", "Chia", "Rice", "Kiwi", "Amla", "Capsicum", "Other"
+  "Barley",
+  "Wheat",
+  "Pearl Millet",
+  "Sorghum",
+  "Finger Millet",
+  "Chickpea",
+  "Red Gram",
+  "Green Gram",
+  "Black Gram",
+  "Lentil",
+  "Field Pea",
+  "Horse Gram",
+  "Cowpea",
+  "Groundnut",
+  "Mustard",
+  "Soybean",
+  "Sunflower",
+  "Sesame",
+  "Linseed",
+  "Castor",
+  "Safflower",
+  "Niger",
+  "Sugarcane",
+  "Cotton",
+  "Jute",
+  "Tobacco",
+  "Potato",
+  "Tomato",
+  "Brinjal",
+  "Cabbage",
+  "Cauliflower",
+  "Onion",
+  "Garlic",
+  "Okra",
+  "Carrot",
+  "Radish",
+  "Spinach",
+  "Methi",
+  "Green Peas",
+  "Bitter Gourd",
+  "Bottle Gourd",
+  "Pumpkin",
+  "Cucumber",
+  "Beans",
+  "Mango",
+  "Banana",
+  "Guava",
+  "Apple",
+  "Papaya",
+  "Orange",
+  "Lemon",
+  "Pomegranate",
+  "Grapes",
+  "Pineapple",
+  "Watermelon",
+  "Muskmelon",
+  "Turmeric",
+  "Ginger",
+  "Coriander",
+  "Cumin",
+  "Black Pepper",
+  "Red Chilies",
+  "Tea",
+  "Coffee",
+  "Coconut",
+  "Arecanut",
+  "Rubber",
+  "Dragon Fruit",
+  "Sponge Gourd",
+  "Snake Gourd",
+  "Ash Gourd",
+  "Drumstick",
+  "Chili",
+  "Chia",
+  "Rice",
+  "Kiwi",
+  "Amla",
+  "Capsicum",
+  "Other",
 ];
 
-
-
-const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportData ,downloadPDF}) => {
+const SoilReportSidebar = ({
+  selectedOperation,
+  setSelectedOperation,
+  setReportData,
+  downloadPDF,
+}) => {
   const [selectedOperationIndex, setSelectedOperationIndex] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [currentcrop, setcurrentcrop] = useState("");
   const [nextcrop, setnextcrop] = useState("");
-  const [reportGenerated,setReportGenerated] = useState(false);
+  const [reportGenerated, setReportGenerated] = useState(false);
   const dispatch = useDispatch();
-   
 
   const toggleSidebarVisibility = () => {
     setIsSidebarVisible(!isSidebarVisible);
-
   };
 
-  // const operations = [
-  //   { title: "Field 1", area: "0.12h", lat: "24.154", lon: "56.165" },
-  //   { title: "Field 2", area: "0.14h", lat: "27.234", lon: "76.564" }
-  // ];
-
-  const fields = useSelector(state => state.farmfield.fields);
-
+  const fields = useSelector((state) => state.farmfield.fields);
 
   return (
     <>
@@ -110,103 +173,108 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setReportD
             </div>
           </div>
           <div className="soil-report-field flex flex-col">
-            <h2 className="px-4 pt-2 text-xl font-semibold text-[#344e41]">Field</h2>
-              <div className="overflow-y-auto max-h-[200px] ">
-                 {(fields || []).map((fieldObj, index) => (
-  <FieldInfo
-   
-    key={fieldObj._id || index}
-    title={fieldObj.fieldName || `Field ${index + 1}`}
-      area={
-      fieldObj.acre !== undefined && fieldObj.acre !== null && fieldObj.acre !== ""
-        ? Number(fieldObj.acre).toFixed(3)
-        : ""
-    }
-     lat={
-      fieldObj.field?.[0]?.lat !== undefined
-        ? Number(fieldObj.field[0].lat).toFixed(3)
-        : ""
-    }
-    lon={
-      fieldObj.field?.[0]?.lng !== undefined
-        ? Number(fieldObj.field[0].lng).toFixed(3)
-        : ""
-    }
-    isSelected={selectedOperationIndex === index}
-    onClick={() => {
-      setSelectedOperationIndex(index);
-      setSelectedOperation(fieldObj);
-      setcurrentcrop("");
-      setnextcrop("");
-      setReportGenerated(false);
-    }}
-  />
-))}
-              </div>
+            <h2 className="px-4 pt-2 text-xl font-semibold text-[#344e41]">
+              Field
+            </h2>
+            <div className="overflow-y-auto max-h-[200px] ">
+              {(fields || []).map((fieldObj, index) => (
+                <FieldInfo
+                  key={fieldObj._id || index}
+                  title={fieldObj.fieldName || `Field ${index + 1}`}
+                  area={
+                    fieldObj.acre !== undefined &&
+                    fieldObj.acre !== null &&
+                    fieldObj.acre !== ""
+                      ? Number(fieldObj.acre).toFixed(3)
+                      : ""
+                  }
+                  lat={
+                    fieldObj.field?.[0]?.lat !== undefined
+                      ? Number(fieldObj.field[0].lat).toFixed(3)
+                      : ""
+                  }
+                  lon={
+                    fieldObj.field?.[0]?.lng !== undefined
+                      ? Number(fieldObj.field[0].lng).toFixed(3)
+                      : ""
+                  }
+                  isSelected={selectedOperationIndex === index}
+                  onClick={() => {
+                    setSelectedOperationIndex(index);
+                    setSelectedOperation(fieldObj);
+                    setcurrentcrop("");
+                    setnextcrop("");
+                    setReportGenerated(false);
+                  }}
+                />
+              ))}
+            </div>
 
             {selectedOperationIndex !== null && (
               <div className="mt-5 p-3 flex flex-col gap-3 text-[#344e41] ">
                 <h4 className="font-bold text-[#344e41]">Crop Details </h4>
-                <label className="font-semibold" > Current Crop</label>
-                <select className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200"
+                <label className="font-semibold"> Current Crop</label>
+                <select
+                  className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200"
                   value={currentcrop}
                   onChange={(e) => setcurrentcrop(e.target.value)}
                 >
-                  <option >Select Crop</option>
+                  <option>Select Crop</option>
                   {cropOptions.map((crop, index) => {
                     return (
-                      <option key={index} value={crop}>{crop}</option>
-                    )
+                      <option key={index} value={crop}>
+                        {crop}
+                      </option>
+                    );
                   })}
                 </select>
 
                 <label className="font-semibold">Next Crop</label>
-                <select className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200"
+                <select
+                  className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200"
                   value={nextcrop}
                   onChange={(e) => setnextcrop(e.target.value)}
-
                 >
-                  <option >Select Crop</option>
+                  <option>Select Crop</option>
                   {cropOptions.map((crop, index) => {
                     return (
-                      <option key={index} value={crop}>{crop}</option>
-                    )
+                      <option key={index} value={crop}>
+                        {crop}
+                      </option>
+                    );
                   })}
                 </select>
-                
 
-                   {!reportGenerated ? (
-      <button
-        onClick={() => {
-          setReportData({
-            field: fields[selectedOperationIndex]?.farmName || "",
-            current: currentcrop,
-            nextcrop: nextcrop,
-            lat: fields[selectedOperationIndex]?.field?.[0]?.lat,
-            lng: fields[selectedOperationIndex]?.field?.[0]?.lng,
-            geometry: fields?.field,
-          });
-          dispatch(fetchSatelliteDates(fields?.field));
-          setReportGenerated(true); // Change button to "Download Report"
-        }}
-        className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200 mt-10"
-      >
-        Generate Report
-      </button>
-    ) : (
-        <div className=" w-full flex justify-center p-4 ">
-              <button
-              onClick={downloadPDF}
-        className="bg-[#344e41] rounded-md px-10 py-2 text-gray-200 mt-4"
-      >
-        Download Report
-      </button>
-        </div>
-    )}
+                {!reportGenerated ? (
+                  <button
+                    onClick={() => {
+                      setReportData({
+                        field: fields[selectedOperationIndex]?.farmName || "",
+                        current: currentcrop,
+                        nextcrop: nextcrop,
+                        lat: fields[selectedOperationIndex]?.field?.[0]?.lat,
+                        lng: fields[selectedOperationIndex]?.field?.[0]?.lng,
+                        geometry: fields?.field,
+                      });
+                      dispatch(fetchSatelliteDates(fields?.field));
+                      setReportGenerated(true);
+                    }}
+                    className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200 mt-10"
+                  >
+                    Generate Report
+                  </button>
+                ) : (
+                  <div className=" w-full flex justify-center p-4 ">
+                    <button
+                      onClick={downloadPDF}
+                      className="bg-[#344e41] rounded-md px-10 py-2 text-gray-200 mt-4"
+                    >
+                      Download Report
+                    </button>
+                  </div>
+                )}
               </div>
             )}
-
-
           </div>
         </div>
       )}
