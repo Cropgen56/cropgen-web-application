@@ -12,13 +12,13 @@ import {
 
 const Insight = ({ icon, title, description, actions }) => {
   return (
-    <div className="flex items-center py-2 px-4 sm:px-6 border-b border-gray-200 last:border-b-0">
-      <div className="mr-4">{icon}</div>
+    <div className="flex items-center gap-3 lg:gap-4 py-2 px-4 border-b border-gray-200 last:border-b-0">
+      <div>{icon}</div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm sm:text-base font-semibold text-gray-800">
+        <div className="text-sm lg:text-base font-semibold text-gray-800">
           {title}
         </div>
-        <div className="text-xs sm:text-sm text-gray-500">{description}</div>
+        <div className="text-xs lg:text-sm text-gray-500">{description}</div>
       </div>
       <div className="flex gap-4 ml-auto">
         <button className="p-2 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
@@ -37,7 +37,7 @@ const Insights = () => {
   const insights = [
     {
       icon: (
-        <div className="w-8 h-8 bg-red-300 rounded-full flex items-center justify-center">
+        <div className="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center">
           <Drop />
         </div>
       ),
@@ -51,7 +51,7 @@ const Insights = () => {
     },
     {
       icon: (
-        <div className="w-8 h-8 bg-yellow-300 rounded-full flex items-center justify-center relative">
+        <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center relative">
           <Drop />
           <sup>
             <SmallDrop className="absolute -top-1 -right-1" />
@@ -67,7 +67,7 @@ const Insights = () => {
     },
     {
       icon: (
-        <div className="w-8 h-8 bg-yellow-300 rounded-full flex items-center justify-center">
+        <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center">
           <Lite />
         </div>
       ),
@@ -83,26 +83,26 @@ const Insights = () => {
   return (
     <Card body className="mt-1 mb-3 shadow-md rounded-lg bg-white">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
-        <div className="flex items-center">
-          <div className="text-lg sm:text-xl font-semibold text-gray-800">
+        <div className="flex items-center gap-1">
+          <div className="text-md lg:text-lg font-semibold text-[#344E41]">
             Insights
           </div>
-          <div className="flex flex-col items-center ml-2 sm:ml-3 mt-1">
-            <UpArrow className="w-3 h-3" />
-            <DownArrow className="w-3 h-3" />
+          <div className="flex flex-col items-center">
+            <UpArrow />
+            <DownArrow />
           </div>
         </div>
-        <div className="flex items-center mt-2 sm:mt-0">
-          <div className="flex items-center mr-4 sm:mr-8">
-            <div className="text-lg sm:text-xl font-semibold text-gray-800">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            <div className="text-md lg:text-lg font-semibold text-[#344E41]">
               Action
             </div>
-            <div className="flex flex-col items-center ml-2 sm:ml-3 mt-1">
-              <UpArrow className="w-3 h-3" />
-              <DownArrow className="w-3 h-3" />
+            <div className="flex flex-col items-center">
+              <UpArrow />
+              <DownArrow />
             </div>
           </div>
-          <div className="text-sm text-gray-400 cursor-pointer hover:text-gray-600">
+          <div className="text-xs lg:text-sm text-gray-400 cursor-pointer hover:text-gray-600">
             See all
           </div>
         </div>

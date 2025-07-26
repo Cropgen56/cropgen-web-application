@@ -490,7 +490,7 @@ export const BackButtonIcon = () => {
       id="Layer_1"
       version="1.1"
       viewBox="0 0 32 32"
-      width="32px"
+      width="25px"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
@@ -504,8 +504,8 @@ export const BackButtonIcon = () => {
 export const DeleteIcon = () => {
   return (
     <svg
-      width="21"
-      height="28"
+      width="25px"
+      height="25px"
       viewBox="0 0 12 12"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

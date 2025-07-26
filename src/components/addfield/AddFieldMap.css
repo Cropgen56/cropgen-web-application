@@ -14,6 +14,7 @@
   height: 100vh;
   position: relative;
   margin: auto;
+  z-index: 0;
 }
 
 /* Map Container */

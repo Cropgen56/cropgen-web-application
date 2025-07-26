@@ -9,26 +9,55 @@ const NutrientBar = ({ label, symbol, current, required, colorCurrent, colorRequ
   const requiredWidth = `${(required / max) * 100}%`;
 
   return (
-    <div className="flex items-center mb-3 sm:mb-6 md:mb-2">
-      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-6 md:h-6 bg-teal-700 rounded-full flex items-center justify-center mr-2 sm:mr-3">
+    <div className="flex items-center gap-2 sm:gap-3 md:gap-2 ">
+      <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-6 md:h-6 bg-lime-500 rounded-full flex items-center justify-center">
         <span className="text-white font-bold text-xs md:text-[10px] sm:text-sm">{symbol}</span>
       </div>
       <div className="flex-1">
-        <span className="block text-sm sm:text-base md:text-xs font-semibold text-black mb-1 sm:mb-2">
+        <span className="block text-sm md:text-xs font-semibold text-black mb-1 sm:mb-2">
           {label}
         </span>
-        <div className="bg-gray-200 h-1.5 sm:h-2 md:h-1.5 rounded-full mb-1 overflow-hidden">
+        <div className="bg-gray-200 h-1.5 sm:h-1 md:h-1.5 rounded-full mb-1 overflow-hidden">
           <div className="h-full rounded-full" style={{ backgroundColor: colorCurrent, width: currentWidth }} />
         </div>
-        <div className="bg-gray-200 h-1.5 sm:h-2 md:h-1.5 rounded-full overflow-hidden">
+        <div className="bg-gray-200 h-1.5 sm:h-1 md:h-1.5 rounded-full overflow-hidden">
           <div className="h-full rounded-full" style={{ backgroundColor: colorRequired, width: requiredWidth }} />
         </div>
       </div>
-      <div className="flex flex-col items-start pl-2 sm:pl-4 pt-4 sm:pt-5">
-        <span className="text-xs sm:text-sm md:text-[10px] font-bold text-gray-900">{`${current} kg/acre`}</span>
-        <span className="text-xs sm:text-sm md:text-[10px] font-medium text-gray-500">{`${required} kg/acre`}</span>
+      <div className="flex flex-col items-start pt-4 sm:pt-5">
+        <span className="text-xs md:text-[10px] font-bold text-gray-900">{`${current} kg/acre`}</span>
+        <span className="text-xs md:text-[10px] font-medium text-gray-500">{`${required} kg/acre`}</span>
       </div>
     </div>
+
+  // <div className="flex gap-2 sm:gap-3 md:gap-2 items-start">
+  //   {/* Symbol Circle */}
+  //   <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-6 md:h-6 bg-lime-500 rounded-full flex items-center justify-center">
+  //     <span className="text-white font-bold text-xs md:text-[10px] sm:text-sm">{symbol}</span>
+  //   </div>
+
+  //   {/* Label and Bars */}
+  //   <div className="flex flex-col flex-1 gap-1 sm:gap-2">
+  //     <span className="text-sm sm:text-base md:text-xs font-semibold text-black">
+  //       {label}
+  //     </span>
+
+  //     {/* <div className="bg-gray-200 h-1.5 sm:h-2 md:h-1.5 rounded-full overflow-hidden">
+  //       <div className="h-full rounded-full" style={{ backgroundColor: colorCurrent, width: currentWidth }} />
+  //     </div>
+
+  //     <div className="bg-gray-200 h-1.5 sm:h-2 md:h-1.5 rounded-full overflow-hidden">
+  //       <div className="h-full rounded-full" style={{ backgroundColor: colorRequired, width: requiredWidth }} />
+  //     </div> */}
+  //   </div>
+
+  //   {/* Values */}
+  //   <div className="flex flex-col items-start justify-start pt-1 sm:pt-1.5 md:pt-2 gap-[2px]">
+  //     <span className="text-xs sm:text-sm md:text-[10px] font-bold text-gray-900">{`${current} kg/acre`}</span>
+  //     <span className="text-xs sm:text-sm md:text-[10px] font-medium text-gray-500">{`${required} kg/acre`}</span>
+  //   </div>
+  // </div>
+
   );
 };
 
@@ -37,6 +66,9 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
   const farmDetails = selectedFieldsDetials?.[0];
   const { NpkData } = useSelector((state) => state?.satellite);
   const { cropName } = farmDetails || {};
+
+  // console.log("NPK Data:", NpkData);
+
 
   useEffect(() => {
     if (farmDetails) {
@@ -68,7 +100,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials }) => {
   ];
 
   return (
-    <div className="w-full px-3 sm:px-4 md:scale-[0.95] md:pl-1">
+    <div className="w-full px-2 sm:px-4 md:scale-[0.95] md:pl-1">
       {isFinalHarvest ? (
         <div className="bg-orange-50 p-3 sm:p-4 rounded-lg border border-yellow-500 mb-4 sm:mb-6">
           <span className="block text-sm sm:text-base font-semibold text-orange-800 text-center">

@@ -1,8 +1,9 @@
 export const Calender = () => {
   return (
     <svg
-      width="30"
-      height="30"
+      // width="30"
+      // height="30"
+      className="w-6 h-6 lg:w-[30px] lg:h-[30px]"
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -22,8 +23,9 @@ export const CropImage = () => {
 export const LeftArrow = () => {
   return (
     <svg
-      width="25"
-      height="25"
+      // width="25"
+      // height="25"
+      className="w-4 h-4 lg:w-[25px] lg:h-[25px]"
       viewBox="0 0 18 16"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -39,8 +41,9 @@ export const LeftArrow = () => {
 export const RightArrow = () => {
   return (
     <svg
-      width="25"
-      height="25"
+      // width="25"
+      // height="25"
+      className="w-4 h-4 lg:w-[25px] lg:h-[25px]"
       viewBox="0 0 18 16"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -56,8 +59,9 @@ export const RightArrow = () => {
 export const DropIcon = () => {
   return (
     <svg
-      width="15"
-      height="15"
+      // width="15"
+      // height="15"
+      className="w-3 h-3 lg:w-[15px] lg:h-[15px]"
       viewBox="0 0 18 23"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -75,8 +79,9 @@ export const DropIcon = () => {
 export const WaveIcon = () => {
   return (
     <svg
-      width="15"
-      height="15"
+      // width="15"
+      // height="15"
+      className="w-3 h-3 lg:w-[15px] lg:h-[15px]"
       viewBox="0 0 22 13"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -91,8 +96,9 @@ export const WaveIcon = () => {
 export const WindSpeedIcon = () => {
   return (
     <svg
-      width="15"
-      height="15"
+      // width="15"
+      // height="15"
+      className="w-3 h-3 lg:w-[15px] lg:h-[15px]"
       viewBox="0 0 22 20"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -205,8 +211,9 @@ export const Lite = () => {
 export const UpArrow = () => {
   return (
     <svg
-      width="14"
-      height="13"
+      // width="14"
+      // height="13"
+      className="w-2.5 h-2.5 lg:w-3 lg:h-3"
       viewBox="0 0 14 13"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -234,8 +241,9 @@ export const UpArrow = () => {
 export const DownArrow = () => {
   return (
     <svg
-      width="14"
-      height="12"
+      // width="14"
+      // height="12"
+      className="w-2.5 h-2.5 lg:w-3 lg:h-3"
       viewBox="0 0 14 12"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

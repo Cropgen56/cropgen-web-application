@@ -14,6 +14,7 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
 /* Custom styles for Toastify */
 .Toastify__toast {
   font-size: 0.9rem;
@@ -22,3 +23,14 @@ code {
 .Toastify__toast-body {
   font-size: 0.9rem;
 }
+
+/* Scrollbar hiding */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+

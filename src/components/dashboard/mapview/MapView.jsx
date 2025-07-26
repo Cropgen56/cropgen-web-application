@@ -137,12 +137,14 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
   const defaultCenter = [20.135245, 77.156935];
 
   return (
-    <div className="flex flex-col items-center w-full md:h-[379px] lg:h-[95%] relative">
+    // <div className="flex flex-col items-center w-full md:h-[500px] lg:h-[95%] relative">
+    <div className={`flex flex-col items-center w-full relative ${ fields.length === 0 ? "h-full" : "md:h-[500px] lg:h-[95%]" } relative`}>
+
       <MapContainer
         center={centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter}
         zoom={18}
         zoomControl={true}
-        className="w-full h-full rounded-[20px] overflow-hidden"
+        className={`w-full h-full overflow-hidden ${fields.length === 0 ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"}`}
         ref={mapRef}
         maxZoom={20}
       >
@@ -167,69 +169,72 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
         <MoveMapToField lat={centroid.lat} lng={centroid.lng} bounds={polygonBounds} />
       </MapContainer>
 
-      <div className="absolute right-2 z-[1000] h-[80%]">
+      <div className="absolute top-2 right-2 flex flex-row gap-3 items-end z-[1000]">
         {fields.length > 0 && (
           <select
             id="field-dropdown"
             onChange={handleFieldChange}
             value={selectedField || ""}
-            className="bg-[#010704b2] outline-none border-none rounded px-2 py-1 text-white absolute -left-[22rem] top-3 cursor-pointer scrollbar-none"
-          >
-            <option value="" disabled>Select a field</option>
+            className="bg-[#010704b2] outline-none border-none rounded px-2 py-1 text-white cursor-pointer scrollbar-none">
+            <option value="" hidden>Select a field</option>
             {fields?.map((field) => (
               <option key={field?._id} value={field?._id}>{field.fieldName}</option>
             ))}
           </select>
         )}
 
-        <div className="legend-dropdown-wrapper absolute top-[15px] -left-40 z-[1100]">
+        {/* <div className="legend-dropdown-wrapper absolute top-3 -left-40 z-1000"> */}
+
+        <div className="legend-dropdown-wrapper relative w-max">
           <strong
             onClick={() => setShowLegend(!showLegend)}
-            className="bg-[#010704b2] outline-none border-none rounded text-white px-3 py-[6px] font-normal cursor-pointer"
+            className="flex items-center whitespace-nowrap bg-[#010704b2] outline-none border-none rounded  z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer"
           >
             🗺️ Legend
           </strong>
 
           {showLegend && indexData?.legend && indexData?.area_summary_ha && (
-            <div className="legend-dropdown absolute top-20 right-5 bg-white rounded-xl p-4 z-[1000] max-w-[300px] animate-slideIn">
+            // <div className="legend-dropdown absolute top-8 right-5 bg-white rounded-xl p-2 md:p-4 z-[2000] max-w-[300px] animate-slideIn">
+              <div className="legend-dropdown absolute top-12 right-0 bg-white rounded-xl p-3 md:p-4 shadow-lg max-w-[300px] z-[3000] animate-slideIn">
+
               {indexData.legend.map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-2.5 p-2.5 mb-2 rounded-lg text-[0.95rem] font-medium hover:-translate-y-[2px] hover:shadow-md transition"
+                  className="flex items-center gap-2 p-2.5 rounded-lg text-[0.95rem] font-medium hover:-translate-y-[2px] hover:shadow-md transition duration-400 ease-in-out"
                 >
                   <span
                     className="w-[30px] h-[20px] rounded bg-inherit border border-black/10"
                     style={{ backgroundColor: item.color }}
                   ></span>
-                  <span className="flex-1">{item.label}</span>
-                  <span className="text-gray-500 font-normal">
+                  <span className="flex-1 whitespace-nowrap">{item.label}</span>
+                  <span className="text-gray-500 font-normal whitespace-nowrap">
                     {indexData.area_summary_ha[item.label]?.toFixed(2) || "0.00"} ha
                   </span>
                 </div>
               ))}
             </div>
           )}
-        </div>
+          </div>
       </div>
 
       {fields?.length > 0 ? (
         <IndexDates selectedFieldsDetials={selectedFieldsDetials} />
       ) : (
-        <div className="absolute z-[1000] mt-[33rem] w-full text-white text-[1rem] bg-[#5a7c6b] rounded cursor-pointer">
-          <div className="absolute bottom-[10px] left-0 w-full text-center z-[1000]">
-            <div className="w-[95%] mx-auto p-2.5 bg-[#5a7c6b] rounded flex justify-between items-center">
-              <div className="border-r border-white pr-2">
-                <button aria-label="Calendar"><Calender /></button>
+        <div className="w-full text-white text-base bg-[#5a7c6b] rounded cursor-pointer">
+          <div className="w-full text-center z-[1000]">
+            <div className="flex justify-between items-center gap-4 p-2.5 bg-[#5a7c6b] rounded w-full">
+              <div className="flex items-center gap-3 border-r border-gray-200 pr-2">
+                <button aria-label="Calendar" className="border-r border-gray-200 pr-2"><Calender /></button>
                 <button aria-label="Previous"><LeftArrow /></button>
               </div>
               <button
-                className="add-new-field"
+                className="add-new-field cursor-pointer"
                 onClick={() => navigate("/addfield")}
                 aria-label="Add New Field"
               >
                 Add Field
               </button>
-              <button className="border-l border-white pl-2" aria-label="Next">
+              <button className="border-l border-gray-200 pl-2" aria-label="Next">
                 <RightArrow />
               </button>
             </div>

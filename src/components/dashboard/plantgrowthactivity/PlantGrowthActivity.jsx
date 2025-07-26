@@ -61,7 +61,7 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex flex-col gap-1">
-          <h2 className="lg:text-xl font-semibold text-[#344e41] md:text-base sm:text-sm m-0">
+          <h2 className="text-sm lg:text-xl font-semibold whitespace-nowrap text-[#344e41] m-0">
             Plant Growth Activity
           </h2>
           <div className="text-sm text-gray-600 md:text-xs">
@@ -72,9 +72,9 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
         {/* Right dropdowns */}
         <div className="flex gap-2">
           {/* Dropdown 1 */}
-          <div className="relative w-[204px] h-[52px]">
+          <div className="relative md:w-[160px] w-[180px] h-[40px]">
             <select
-              className="w-full h-full px-6 pr-10 py-2 text-sm border border-[#5a7c6b] rounded-full bg-white text-gray-600 appearance-none cursor-pointer"
+              className="w-full h-full px-6 pr-10 py-2 text-sm border-2 border-[#5a7c6b] rounded-full bg-white text-gray-600 appearance-none focus:outline-none cursor-pointer"
             >
               <option>Planting/Sowing</option>
               <option>Sowing</option>
@@ -96,9 +96,9 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
           </div>
 
           {/* Dropdown 2 */}
-          <div className="relative w-[124px] h-[52px]">
+          <div className="relative w-[100px] h-[40px]">
             <select
-              className="w-full h-full px-6 pr-10 py-2 text-sm border border-[#5a7c6b] rounded-full bg-white text-gray-600 appearance-none cursor-pointer"
+              className="w-full h-full px-6 pr-10 py-2 text-sm border-2 border-[#5a7c6b] rounded-full bg-white text-gray-600 appearance-none focus:outline-none cursor-pointer"
             >
               <option>Days</option>
               <option>Weeks</option>
