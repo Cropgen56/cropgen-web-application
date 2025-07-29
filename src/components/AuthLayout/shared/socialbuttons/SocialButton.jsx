@@ -35,7 +35,7 @@ function SocialButtons() {
   };
 
   return (
-    <GoogleOAuthProvider clientId={clientId}>
+    <GoogleOAuthProvider clientId={clientId} >
       <GoogleLogin
         onSuccess={handleGoogleLogin}
         onError={() => console.log("Login Failed")}
