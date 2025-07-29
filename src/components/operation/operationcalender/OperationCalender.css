@@ -263,3 +263,54 @@ button:hover {
   border-radius: 4px !important;
 }
 
+/* Remove all default borders/blue lines if still appearing */
+.fc .fc-daygrid-day {
+  border: none !important;
+}
+
+.fc .fc-scrollgrid {
+  border: none !important;
+  background-color: #5a7c6b !important;
+}
+
+.fc .fc-daygrid-day-number {
+  color: white !important;
+  text-decoration: none !important;
+}
+
+.fc .fc-toolbar-title {
+  color: white !important;
+  text-decoration: none !important;
+}
+/* Remove top and vertical lines around weekday headers */
+.fc .fc-col-header-cell {
+  border: none !important;
+}
+
+/* Remove selection or highlight borders */
+.fc .fc-daygrid-day.fc-day-today {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Remove blue bottom lines under dates */
+.fc .fc-daygrid-day-frame {
+  border: none !important;
+}
+
+/* ✅ Remove blue background from the current day */
+.fc .fc-daygrid-day.fc-day-today {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* ✅ Remove bottom blue line from each day cell */
+.fc .fc-daygrid-day-frame {
+  border: none !important;
+}
+
+/* ✅ Optional: remove focus outlines on selection */
+.fc .fc-highlight {
+  background: transparent !important;
+  border: none !important;
+}
