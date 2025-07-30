@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { SmartAdvisoryDarkIcon } from "../../../assets/Icons";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
-import "./SmartAdvisorySidebar.css";
+
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   <div
