@@ -142,7 +142,7 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
           })
         ) : (
           <p className="text-center text-sm text-gray-500 mt-4">
-            No fields found
+            No fields found 
           </p>
         )}
       </div>

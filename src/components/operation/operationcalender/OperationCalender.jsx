@@ -263,7 +263,7 @@ const FarmerScheduler = (selectedField) => {
                   <button
                     className="absolute top-2 right-2 text-white hover:text-red-500 transition"
                     onClick={(e) => {
-                      e.stopPropagation();
+                      e.stopPropagation(); 
                       // delete logic can go here later
                     }}
                   >
