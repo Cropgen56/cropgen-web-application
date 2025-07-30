@@ -338,7 +338,7 @@ export const genrateAdvisory = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/generate-advisory-crop`,
+        `https://server.cropgenapp.com/v1/api/crop/generate-advisory`,
         payload
       );
 
@@ -363,7 +363,7 @@ export const fetchWeatherData = createAsyncThunk(
       }
 
       // Replace with your actual weather API endpoint
-      const response = await axios.get("https://api.weather.com/data"); // Placeholder
+      const response = await axios.get("https://api.weather.com/data");
 
       await set(cacheKey, { data: response.data, timestamp: now });
       return response.data;
@@ -606,7 +606,7 @@ const satelliteSlice = createSlice({
       })
       .addCase(genrateAdvisory.fulfilled, (state, action) => {
         state.loading.advisory = false;
-        state.advisory = parseAdvisoryText(action.payload.advisory);
+        state.advisory = action.payload.advisory;
       })
       .addCase(genrateAdvisory.rejected, (state, action) => {
         state.loading.advisory = false;
