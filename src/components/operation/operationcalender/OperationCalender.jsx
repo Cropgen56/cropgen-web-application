@@ -1,27 +1,27 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import FullCalendar from "@fullcalendar/react";
-import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import moment from "moment";
 import EventForm from "../operationform/EventForm";
 import { getOperationsByFarmField } from "../../../redux/slices/operationSlice";
-import { FaTractor } from "react-icons/fa";
 import { Operation } from "../../../assets/Icons";
+import { RiDeleteBin6Line } from "react-icons/ri";
+import "./OperationCalender.css";
+import Days from "react-calendar/dist/cjs/MonthView/Days.js";
+import { query } from "esri-leaflet";
 
 const FarmerScheduler = (selectedField) => {
   const dispatch = useDispatch();
   const { operations } = useSelector((state) => state.operation);
-  console.log(operations)
-  console.log("Selected Field:", selectedField);
+  const calendarRef = useRef(null);
 
   const [view, setView] = useState("timeGridThreeDay");
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  console.log(events)
   const [currentMonth, setCurrentMonth] = useState(moment());
 
   useEffect(() => {
@@ -54,13 +54,21 @@ const FarmerScheduler = (selectedField) => {
     });
     setIsModalVisible(true);
   };
+
   const handleMonthChange = (direction) => {
     const newMonth =
       direction === "prev"
         ? moment(currentMonth).subtract(1, "month")
         : moment(currentMonth).add(1, "month");
+
     setCurrentMonth(newMonth);
+
+    const calendarApi = calendarRef.current?.getApi();
+    if (calendarApi) {
+      calendarApi.gotoDate(newMonth.toDate());
+    }
   };
+
   const filteredEvents = events.filter((event) =>
     moment(event.start).isSame(currentMonth, "month")
   );
@@ -79,11 +87,14 @@ const FarmerScheduler = (selectedField) => {
     setIsModalVisible(true);
   };
 
-  const handleSave = useCallback((newEvent) => {
-    dispatch(getOperationsByFarmField(selectedField._id));
-    setIsModalVisible(false);
-    setSelectedEvent(null);
-  }, [dispatch, selectedField]);
+  const handleSave = useCallback(
+    (newEvent) => {
+      dispatch(getOperationsByFarmField(selectedField._id));
+      setIsModalVisible(false);
+      setSelectedEvent(null);
+    },
+    [dispatch, selectedField]
+  );
 
   const handleClose = () => {
     setIsModalVisible(false);
@@ -91,11 +102,15 @@ const FarmerScheduler = (selectedField) => {
   };
 
   const handleNavigate = (direction) => {
-    const newDate =
-      direction === "prev"
-        ? moment(date).subtract(1, "day").toDate()
-        : moment(date).add(1, "day").toDate();
-    setDate(newDate);
+    const calendarApi = calendarRef.current?.getApi();
+    if (!calendarApi) return;
+
+    if (direction === "prev") calendarApi.prev();
+    else if (direction === "next") calendarApi.next();
+
+    const newDate = moment(calendarApi.getDate());
+    setDate(newDate.toDate());
+    setCurrentMonth(newDate.clone().startOf("month"));
   };
 
   const renderEventContent = (eventInfo) => (
@@ -107,8 +122,8 @@ const FarmerScheduler = (selectedField) => {
   );
 
   return (
-    <div className="h-screen bg-[#344e41] text-white overflow-y-auto p-4">
-      {/* Navigation */}
+    <div className="h-screen bg-[#344e41] text-white overflow-y-auto scrollbar-hidden p-4">
+      {/* Header + Navigation */}
       <div className="flex justify-between items-center mb-4">
         <button
           onClick={() => handleNavigate("prev")}
@@ -116,8 +131,8 @@ const FarmerScheduler = (selectedField) => {
         >
           ←
         </button>
-        <div className="text-lg font-semibold">
-          {moment(date).format("MMMM D, YYYY")}
+        <div className="text-2xl font-bold text-white">
+          {currentMonth.format("MMMM YYYY")}
         </div>
         <button
           onClick={() => handleNavigate("next")}
@@ -127,9 +142,23 @@ const FarmerScheduler = (selectedField) => {
         </button>
       </div>
 
-      {/* Calendar (not scrollable individually) */}
+      {/* Add Operation Button */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => {
+            setSelectedEvent(null);
+            setIsModalVisible(true);
+          }}
+          className="bg-[#5a7c6b] text-[white] font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-[#344e41] transition"
+        >
+          + Add Operation
+        </button>
+      </div>
+
+      {/* Calendar */}
       <div className="rounded-xl bg-[#344e41] shadow-inner p-2 mb-6">
         <FullCalendar
+          ref={calendarRef}
           key={moment(date).format("YYYY-MM-DD")}
           plugins={[dayGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
@@ -146,7 +175,6 @@ const FarmerScheduler = (selectedField) => {
           dayCellClassNames={() => "bg-[#5a7c6b] border-none"}
           dayHeaderClassNames={() => "bg-[#344e41] text-white font-bold"}
           slotLaneClassNames={() => "border-none"}
-
           dayHeaderContent={(args) => (
             <div className="text-white font-bold py-2 text-sm text-center">
               {args.text}
@@ -158,14 +186,10 @@ const FarmerScheduler = (selectedField) => {
             </div>
           )}
         />
-
       </div>
 
-
-      {/* Real-Time Operation Cards */}
-      {/* Monthly Operations Section */}
+      {/* Monthly Operations */}
       <div className="mt-10 px-4">
-        {/* Heading with Navigation */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Operation className="text-white text-6xl" />
@@ -192,18 +216,13 @@ const FarmerScheduler = (selectedField) => {
           </div>
         </div>
 
-        {/* Monthly Container */}
         <div className="bg-[#294036] rounded-xl shadow-lg p-6 mb-8">
           {filteredEvents.length === 0 ? (
             <div className="text-white text-center text-lg">
               No operations for this month.
             </div>
           ) : (
-            <div
-
-
-
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredEvents.map((event) => (
                 <div
                   key={event.id}
@@ -221,8 +240,8 @@ const FarmerScheduler = (selectedField) => {
                     setIsModalVisible(true);
                   }}
                   className="bg-gradient-to-br from-[#5a7c6b] to-[#3d5d50] hover:from-[#4b6b5a] hover:to-[#2e473c] 
-      text-white p-4 rounded-xl shadow-md hover:shadow-xl 
-      transition-all duration-300 ease-in-out transform hover:scale-[1.03] min-h-[130px]"
+                    text-white p-4 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 
+                    ease-in-out transform hover:scale-[1.03] min-h-[130px] relative"
                 >
                   <div className="text-base font-semibold mb-1 capitalize">
                     {event.title}
@@ -239,13 +258,23 @@ const FarmerScheduler = (selectedField) => {
                     <span className="font-semibold">Created:</span>{" "}
                     {moment(event.extendedProps.createdAt).format("hh:mm A, MMM D")}
                   </div>
+
+                  {/* Delete button (no functionality yet) */}
+                  <button
+                    className="absolute top-2 right-2 text-white hover:text-red-500 transition"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // delete logic can go here later
+                    }}
+                  >
+                    <RiDeleteBin6Line className="text-lg" />
+                  </button>
                 </div>
               ))}
             </div>
           )}
         </div>
       </div>
-
 
       {/* Modal */}
       {isModalVisible && (
@@ -262,3 +291,6 @@ const FarmerScheduler = (selectedField) => {
 };
 
 export default FarmerScheduler;
+
+
+
