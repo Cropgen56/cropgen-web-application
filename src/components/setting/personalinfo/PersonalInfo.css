@@ -1,4 +1,4 @@
-.personal-info-container {
+/* .personal-info-container {
   max-width: 1200px;
   width: 98%;
   margin: 0 auto;
@@ -49,7 +49,7 @@
   height: clamp(50px, 8vw, 60px);
   border-radius: 50%;
   object-fit: cover;
-}
+} */
 
 .edit-profile-icon {
   position: absolute;
@@ -60,7 +60,7 @@
   cursor: pointer;
 }
 
-.profile-details h3 {
+/* .profile-details h3 {
   font-size: clamp(1rem, 2vw, 1.25rem);
   margin: 0;
   color: #344e41;
@@ -82,9 +82,9 @@
   font-size: clamp(0.625rem, 1.2vw, 0.75rem);
   color: #344e41;
   margin: 0;
-}
+} */
 
-.personal-info-form {
+/* .personal-info-form {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -120,7 +120,7 @@
 .input-with-icon {
   position: relative;
   width: 100%;
-}
+} */
 
 .form-group input,
 .form-group select {
@@ -243,7 +243,7 @@
   }
 }
 
-.update-message {
+/* .update-message {
   margin-bottom: 1rem;
   padding: 0.5rem;
   border-radius: 4px;
@@ -258,4 +258,4 @@
 .update-message.error {
   background-color: #ffe6e6;
   color: #dc3545;
-}
+} */

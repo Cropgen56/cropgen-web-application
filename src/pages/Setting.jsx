@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import "../style/Setting.css";
+// import "../style/Setting.css";
 import SettingSidebar from "../components/setting/settingsidebar/SettingSidebar";
-import PersonalInfo from "../components/setting/personalinfo/PersonalInfo";
-import WeatherSettings from "../components/setting/weathersetting/WeatherSetting";
+import PersonalInfo from "../components/setting/personalinfo/PersonalInfo"
+import FarmSetting from "../components/setting/farmsetting/FarmSetting";
+
 const Setting = () => {
   // for seleted field
   const [selectedOption, setSelectedOption] = useState("personalInfo");
@@ -12,16 +13,16 @@ const Setting = () => {
   };
 
   return (
-    <div className="setting container-fluid m-0 p-0 d-flex">
+    <div className="bg-[#5A7C6B] h-full w-full container-fluid m-0 p-0 d-flex font-inter">
       <div>
         <SettingSidebar
           handleOptionClick={handleOptionClick}
           selectedOption={selectedOption}
         />
       </div>
-      <div className="w-100">
+      <div className="w-full">
         {selectedOption === "personalInfo" && <PersonalInfo />}
-        {selectedOption === "weatherSettings" && <WeatherSettings />}
+        {selectedOption === "farmSettings" && <FarmSetting />}
       </div>
     </div>
   );

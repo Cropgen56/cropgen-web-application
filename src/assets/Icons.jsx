@@ -379,7 +379,7 @@ export const SettingDarkIcon = () => {
       viewBox="0 0 35 35"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="me-2 ms-4"
+      // className="me-2 ms-4"
     >
       <path
         fill-rule="evenodd"

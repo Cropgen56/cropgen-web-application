@@ -91,8 +91,8 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
 
           {/* Crop Details Form */}
           <div className="flex flex-col justify-between h-[calc(100vh-64px)]">
-            <form className="py-4 px-3 text-[#344e41]">
-              <h5 className=" text-[#344e41] mb-4">Crop Details </h5>
+            <form className="p-3 text-[#344e41]">
+              <h5 className=" text-[#344e41] mb-3">Crop Details </h5>
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col gap-1 cursor-pointer">
                   <label htmlFor="farm-name"className="text-[#344e41] font-semibold text-sm"> Farm Name</label>
