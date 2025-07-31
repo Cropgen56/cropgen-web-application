@@ -20,7 +20,7 @@ const Setting = () => {
           selectedOption={selectedOption}
         />
       </div>
-      <div className="w-full">
+      <div className="w-full flex items-center">
         {selectedOption === "personalInfo" && <PersonalInfo />}
         {selectedOption === "farmSettings" && <FarmSetting />}
       </div>

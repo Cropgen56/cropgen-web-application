@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addFarmField } from "../redux/slices/farmSlice";
 import { useNavigate } from "react-router-dom";
 import * as turf from "@turf/turf";
+import { message } from "antd";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
@@ -35,7 +36,7 @@ const AddField = () => {
     typeOfFarming,
   }) => {
     if (markers.length === 0) {
-      alert("No markers added. Please add some markers first.");
+      message.error("No markers added. Please add some markers first.");
       return;
     }
 
@@ -66,7 +67,7 @@ const AddField = () => {
       })
     ).then((result) => {
       if (result?.payload?.success) {
-        alert("Field added successfylly !");
+        message.success("Field added successfylly !");
         navigate("/cropgen-analytics");
       }
     });

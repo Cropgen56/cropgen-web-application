@@ -35,4 +35,3 @@ const SettingSidebar = ({ handleOptionClick, selectedOption }) => {
 };
 
 export default SettingSidebar;
-

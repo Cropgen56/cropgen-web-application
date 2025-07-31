@@ -59,3 +59,42 @@ export const getFieldAPI = async (userId) => {
     throw error;
   }
 };
+
+
+// Update field API
+export const updateFieldAPI = async (fieldId, updatedData) => {
+  try {
+    const response = await axios.patch(
+      `${API_URL}/api/field/update-field/${fieldId}`,
+      updatedData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating field:", error);
+    throw error;
+  }
+};
+
+
+// Delete field API
+export const deleteFieldAPI = async (fieldId) => {
+  try {
+    const response = await axios.delete(
+      `${API_URL}/api/field/delete-field/${fieldId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting field:", error);
+    throw error;
+  }
+};

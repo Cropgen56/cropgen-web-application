@@ -1,308 +1,370 @@
-import React, { useState } from "react";
-import {TriangleRight,} from "lucide-react"; 
+import React, { useEffect, useState } from "react";
+import { Save, Trash2 } from "lucide-react";
+import { getFarmFields, updateFarmField, deleteFarmField  } from "../../../redux/slices/farmSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { MapContainer, TileLayer, Polygon, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { Modal, message } from "antd";
+import AllFarms from "./AllFarms";
 
-const AddFarm = ({ onBackClick }) => {
-  const [formData, setFormData] = useState({
-    crop: "",
-    year: "",
-    cropCycle: "",
-    area: "",
-    variety: "",
-    seed: "",
-    season: "",
-    sowingDate: "",
-    age: "",
-    estimatedHarvest: "",
-  });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+const AddFarm = ({selectedFarm }) => {
+    const dispatch = useDispatch();
+    const { fields: farms, status } = useSelector((state) => state.farmfield || { fields: [] });
+    const user = useSelector((state) => state.auth.user);
+    const userId = user?._id || user?.id;
+    const [polygonCoordinates, setPolygonCoordinates] = useState(selectedFarm?.field || []);
+    const [updating, setUpdating] = useState(false);
+    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+    const [showAllFarms, setShowAllFarms] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Farm data submitted:", formData);
-  };
 
-  return (
-    <div className="flex flex-col flex-grow gap-4 p-2 overflow-hidden overflow-y-auto">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3 h-full">
+    const [formData, setFormData] = useState({
+        farmName: selectedFarm?.fieldName || "",
+        cropName: selectedFarm?.cropName || "",
+        variety: selectedFarm?.variety || "",
+        sowingDate: selectedFarm?.sowingDate?.split("T")[0] || "",
+        typeOfIrrigation: selectedFarm?.typeOfIrrigation || "",
+        typeOfFarming: selectedFarm?.typeOfFarming || "",
+    });
 
-        {/* Left Section */}
-        <div className="flex flex-col gap-3 w-2/5 bg-white ">
 
-          <div className="flex items-center justify-between gap-1">
-            <label
-              htmlFor="crop"
-              className="block w-[25%] text-sm font-bold text-[#344E41]">
-              Crop
-            </label>
-            <input
-              type="text"
-              id="crop"
-              name="crop"
-              value={formData.crop}
-              onChange={handleChange}
-              className="mt-1 block w-[75%] rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]"
-              placeholder="Enter Crop"
-            />
-          </div>
+    useEffect(() => {
+        if (status === "idle" && userId) {
+            dispatch(getFarmFields(userId));
+        }
+    }, [dispatch, status, userId]);
 
-          <div className="flex items-center justify-between gap-2">
-            <label
-              htmlFor="year"
-              className="block w-[25%] text-sm font-bold text-[#344E41]">
-              Year
-            </label>
-            <input
-              type="text"
-              id="year"
-              name="year"
-              value={formData.year}
-              onChange={handleChange}
-              className="mt-1 block w-[75%] rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]"
-              placeholder="Enter Year"
-            />
-          </div>
+    const handleFarmChange = (e) => {
+        const value = e.target.value;
+        setFormData((prev) => ({ ...prev, farmName: value }));
 
-          <div className="flex items-center gap-2 w-full">
-            <label className="w-1/4 text-sm font-bold text-[#344E41]">
-              Crop Cycle
-            </label>
+        const existingFarm = farms.find((f) => f.fieldName?.toLowerCase() === value.toLowerCase());
+        
+        if (existingFarm) {
+            setFormData({
+                farmName: existingFarm.fieldName || "",
+                cropName: existingFarm.cropName || "",
+                variety: existingFarm.variety || "",
+                sowingDate: existingFarm.sowingDate?.split("T")[0] || "",
+                typeOfIrrigation: existingFarm.typeOfIrrigation || "",
+                typeOfFarming: existingFarm.typeOfFarming || "",
+            });
 
-            <select
-              id="crop"
-              name="crop"
-              value={formData.crop}
-              onChange={handleChange}
-              className="block w-1/2 rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]">
-              <option value="" disabled>Select Crop</option>
-              <option value="Wheat">Wheat</option>
-              <option value="Rice">Rice</option>
-              <option value="Maize">Maize</option>
-            </select>
+            setPolygonCoordinates(existingFarm.field || []); 
+        } else {
+            if (!selectedFarm?._id) {
+                setPolygonCoordinates([]);
+            }
+        }
+    };
 
-            <select
-              id="year"
-              name="year"
-              value={formData.year}
-              onChange={handleChange}
-              className="block w-1/4 rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]" >
-              <option value="" disabled>Year</option>
-              {Array.from(
-                { length: new Date().getFullYear() - 2000 + 1 },
-                (_, i) => 2000 + i
-              ).map((yr) => (
-                <option key={yr} value={yr}>
-                  {yr}
-                </option>
-              ))}
-            </select>
-          </div>
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value,
+        }));
+    };
 
-          <div className="flex items-center gap-2 w-full">
-            <label className="w-[25%] text-sm font-bold text-[#344E41]">
-              Area
-            </label>
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!selectedFarm?._id) {
+            message.error("No farm selected to update!");
+            return;
+        }
 
-            <input
-              type="number"
-              name="areaHec"
-              value={formData.areaHec || ""}
-              onChange={handleChange}
-              placeholder="Hec"
-              className="block w-[25%] rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]"
-            />
+        const updatedData = {
+            ...formData,
+            fieldName: formData.farmName,
+            latlng: polygonCoordinates, 
+        };
 
-            <div className="flex items-center w-[25%] rounded-md border-1 border-[#344E41] text-sm p-2 bg-gray-100">
-              <TriangleRight
-                size={20}
-                strokeWidth={2}
-                color="#000"
-                className="ml-2 transform rotate-90"
-              />
-              <input
-                type="number"
-                name="areaSqft"
-                value={formData.areaSqft || ""}
-                readOnly
-                placeholder="Sq.ft"
-                className="w-full bg-gray-100 text-gray-500 text-sm cursor-not-allowed focus:outline-none focus:ring-0 focus:border-[#344E41]"
-              />
+        console.log("Payload sent to API:", updatedData);
+
+        try {
+            setUpdating(true); 
+            await dispatch(updateFarmField({ fieldId: selectedFarm._id, updatedData })).unwrap()
+            message.success("Farm updated successfully!");
+
+            dispatch(getFarmFields(userId));
+        } catch (err) {
+            message.error("Failed to update farm.");
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+        const cropOptions = [
+        "Barley",
+        "Wheat",
+        "Pearl Millet",
+        "Sorghum",
+        "Finger Millet",
+        "Chickpea",
+        "Red Gram",
+        "Green Gram",
+        "Black Gram",
+        "Lentil",
+        "Field Pea",
+        "Horse Gram",
+        "Cowpea",
+        "Groundnut",
+        "Mustard",
+        "Soybean",
+        "Sunflower",
+        "Sesame",
+        "Linseed",
+        "Castor",
+        "Safflower",
+        "Niger",
+        "Sugarcane",
+        "Cotton",
+        "Jute",
+        "Tobacco",
+        "Potato",
+        "Tomato",
+        "Brinjal",
+        "Cabbage",
+        "Cauliflower",
+        "Onion",
+        "Garlic",
+        "Okra",
+        "Carrot",
+        "Radish",
+        "Spinach",
+        "Methi",
+        "Green Peas",
+        "Bitter Gourd",
+        "Bottle Gourd",
+        "Pumpkin",
+        "Cucumber",
+        "Beans",
+        "Mango",
+        "Banana",
+        "Guava",
+        "Apple",
+        "Papaya",
+        "Orange",
+        "Lemon",
+        "Pomegranate",
+        "Grapes",
+        "Pineapple",
+        "Watermelon",
+        "Muskmelon",
+        "Turmeric",
+        "Ginger",
+        "Coriander",
+        "Cumin",
+        "Black Pepper",
+        "Red Chilies",
+        "Tea",
+        "Coffee",
+        "Coconut",
+        "Arecanut",
+        "Rubber",
+        "Dragon Fruit",
+        "Sponge Gourd",
+        "Snake Gourd",
+        "Ash Gourd",
+        "Drumstick",
+        "Chili",
+        "Chia",
+        "Rice",
+        "Kiwi",
+        "Amla",
+        "Capsicum",
+        "Other",
+    ];
+
+    const defaultCenter = [20.135245, 77.156935];
+
+    const MoveMapToField = ({ coordinates }) => {
+    const map = useMap();
+        useEffect(() => {
+            if (coordinates.length > 0) {
+                const bounds = coordinates.map(c => [c.lat, c.lng]);
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+            }
+        }, [coordinates, map]);
+        return null;
+    };
+
+    const handleDeleteConfirm = async () => {
+    try {
+        await dispatch(deleteFarmField(selectedFarm._id)).unwrap();
+        message.success("Farm deleted successfully!");
+        setDeleteModalVisible(false);
+        dispatch(getFarmFields(userId));
+
+        // setFormData({
+        //     farmName: "",
+        //     cropName: "",
+        //     variety: "",
+        //     sowingDate: "",
+        //     typeOfIrrigation: "",
+        //     typeOfFarming: "",
+        //     });
+        // setPolygonCoordinates([]);
+        setShowAllFarms(true);
+
+    } catch (error) {
+        message.error("Failed to delete farm.");
+    }
+};
+
+    if (showAllFarms) {
+        return <AllFarms onAddFarmClick={(farm) => console.log("Clicked farm:", farm)} />;
+    }
+
+
+    return (
+        <div className="flex flex-col flex-grow gap-4 p-2 overflow-hidden overflow-y-auto">
+            <form onSubmit={handleSubmit} className="flex flex-row gap-3 h-full">
+                {/* Left Section */}
+                <div className="flex flex-col gap-3 w-[30%] bg-white ">
+                    <h5 className="mt-2 font-semibold text-[#344E41]">Crop Details</h5>
+
+                    <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-1">
+                            <label className="font-semibold text-sm">Farm Name</label>
+                            <input
+                                type="text"
+                                name="farmName"
+                                value={formData.farmName}
+                                onChange={handleFarmChange}
+                                placeholder="Enter farm name"
+                                className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] placeholder-gray-300 text-gray-300"
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <label className="font-semibold text-sm">Crop Name</label>
+                            <select
+                                name="cropName"
+                                value={formData.cropName}
+                                onChange={handleChange}
+                                className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300">
+                                
+                                <option value="" disabled>Select Crop</option>
+                                 {cropOptions.map((crop, index) => (
+                                    <option key={index} value={crop}>
+                                        {crop}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <label className="font-semibold text-sm">Variety</label>
+                            <input
+                                type="text"
+                                name="variety"
+                                value={formData.variety}
+                                onChange={handleChange}
+                                placeholder="Enter crop variety"
+                                className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] placeholder-gray-300 text-gray-300"
+                            />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <label className="font-semibold text-sm">Sowing Date</label>
+                            <input
+                                type="date"
+                                name="sowingDate"
+                                value={formData.sowingDate}
+                                onChange={handleChange}
+                                className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300"/>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <label className="font-semibold text-sm">Type Of Irrigation</label>
+                            <select
+                                name="typeOfIrrigation"
+                                value={formData.typeOfIrrigation}
+                                onChange={handleChange}
+                                className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300">
+                                <option value="" disabled>Select Irrigation Type</option>
+                                <option value="Open">Open Irrigation</option>
+                                <option value="Drip">Drip Irrigation</option>
+                                <option value="Sprinkler">Sprinkler Irrigation</option>
+                            </select>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <label className="font-semibold text-sm">Type Of Farming</label>
+                            <select
+                                name="typeOfFarming"
+                                value={formData.typeOfFarming}
+                                onChange={handleChange}
+                                className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300" >
+                                <option value="" disabled>Select Farming Type</option>
+                                <option value="Organic">Organic</option>
+                                <option value="Inorganic">Inorganic</option>
+                                <option value="Integrated">Integrated</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                {/* Right Section */}
+                <div className="flex flex-col gap-4 w-[70%] bg-white ">
+                    <div className="flex-grow">
+                        <MapContainer
+                            center={polygonCoordinates.length > 0 
+                                    ? [polygonCoordinates[0].lat, polygonCoordinates[0].lng] 
+                                    : defaultCenter}
+                            zoom={15}
+                            className="w-full h-full rounded-lg" >
+                            
+                            <TileLayer
+                            url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                            subdomains={["mt0", "mt1", "mt2", "mt3"]} />
+
+                            {polygonCoordinates.length > 0 && (
+                                <Polygon
+                                    positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
+                                    pathOptions={{ color: "yellow", fillOpacity: 0.2 }}
+                                />
+                            )}
+                            <MoveMapToField coordinates={polygonCoordinates} />
+                        </MapContainer>
+                    </div>
+                </div>
+            </form>
+
+            <div className="flex items-center justify-between gap-2">
+                <button
+                    type="button"
+                    onClick={() => setDeleteModalVisible(true)}
+                    className="flex items-center gap-1 px-4 py-2 border-1 border-red-600 text-red-600 rounded-md hover:border-red-700 transition-colors duration-400 ease-in-out cursor-pointer">
+                        Delete <Trash2 size={18} /> 
+                </button>
+                <button
+                    type="button"
+                    onClick={handleSubmit}
+                    className={`flex items-center gap-1 px-4 py-2 border-1 ${updating ? "bg-[#5A7C6B] cursor-not-allowed" : "bg-[#344E41] text-white"} text-white rounded-md transition-all duration-400 ease-in-out cursor-pointer`}>
+                        {updating ? "Updating..." : <> Update <Save size={18} /></>}
+                </button>
             </div>
 
-            <div className="flex items-center w-[25%] border rounded-md bg-[#344E41]">
-              <TriangleRight
-                size={20}
-                strokeWidth={2}
-                color="#fff"
-                className="ml-2 transform rotate-90"
-              />
+            <Modal
+                title="Confirm Delete"
+                open={deleteModalVisible}
+                onOk={handleDeleteConfirm}
+                onCancel={() => setDeleteModalVisible(false)}
+                okText="Yes, Delete"
+                okButtonProps={{ danger: true }}
+                centered   >
+                <p>Are you sure you want to delete this farm? This action cannot be undone.</p>
+            </Modal>
 
-              <input
-                type="number"
-                name="areaHac"
-                value={formData.areaHac || ""}
-                readOnly
-                placeholder="Hac"
-                className="w-full text-gray-500 sm:text-sm p-2 rounded-md border-0 bg-[#344E41] focus:outline-none focus:ring-0 focus:border-[#344E41] cursor-not-allowed"
-              />
-            </div>
-          </div>
-
-
-          <div className="flex items-center gap-2 w-full">
-            <label
-              htmlFor="variety"
-              className="w-[25%] text-sm font-bold text-[#344E41]" >
-              Variety
-            </label>
-
-            <select
-              id="variety"
-              name="variety"
-              value={formData.variety}
-              onChange={handleChange}
-              className="w-[75%] rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]"
-            >
-              <option value="" disabled>Select Variety</option>
-              <option value="Hybrid">Hybrid</option>
-              <option value="Organic">Organic</option>
-              <option value="Local">Local</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 w-full">
-            <label
-              htmlFor="seed"
-              className="w-[25%] text-sm font-bold text-[#344E41]" >
-              Seed
-            </label>
-
-            <input
-              type="text"
-              id="seed"
-              name="seed"
-              value={formData.seed}
-              onChange={handleChange}
-              placeholder="Enter Seed"
-              className="w-[75%] rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 w-full">
-            <label
-              htmlFor="season"
-              className="w-[25%] text-sm font-bold text-[#344E41]">
-              Season
-            </label>
-
-            <select
-              id="season"
-              name="season"
-              value={formData.season}
-              onChange={handleChange}
-              className="w-[75%] rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]"
-            >
-              <option value="" disabled>Select Season</option>
-              <option value="Rabi">Rabi</option>
-              <option value="Kharif">Kharif</option>
-              <option value="Zaid">Zaid</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 w-full">
-            <label
-              htmlFor="sowingDate"
-              className="w-[25%] text-sm font-bold text-[#344E41]" >
-              Sowing Date
-            </label>
-
-            <div className="relative w-[75%]">
-              <input
-                type="date"
-                id="sowingDate"
-                name="sowingDate"
-                value={formData.sowingDate}
-                onChange={handleChange}
-                className="block w-full rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 w-full">
-            <label
-              htmlFor="age"
-              className="w-[25%] text-sm font-bold text-[#344E41]" >
-              Age
-            </label>
-            <input
-              type="text"
-              id="age"
-              name="age"
-              value={formData.age}
-              onChange={handleChange}
-              placeholder="Enter Age"
-              className="block w-[75%] rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 w-full">
-            <label
-              htmlFor="estimatedHarvest"
-              className="w-[25%] text-sm font-bold text-[#344E41]">
-              Estimated Harvest
-            </label>
-
-            <div className="relative w-[75%]">
-              <input
-                type="date"
-                id="estimatedHarvest"
-                name="estimatedHarvest"
-                value={formData.estimatedHarvest}
-                onChange={handleChange}
-                className="block w-full rounded-md border-1 border-[#344E41] text-sm p-2 focus:outline-none focus:ring-0 focus:border-[#344E41]"
-              />
-            </div>
-          </div>
         </div>
-
-        {/* Right Section */}
-        {/* <div className="flex flex-col gap-4 w-3/5 bg-white ">
-      
-          </div>
-
-          <div className="flex justify-end gap-2 mt-4">
-            <button
-              type="button"
-              // onClick={() => 
-              className="flex items-center gap-1 px-4 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600 transition-colors"
-            >
-              <Trash2 size={18} /> Delete
-            </button>
-            <button
-              type="submit"
-              className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-md shadow-md hover:bg-green-700 transition-colors"
-            >
-              <Save size={18} /> Update
-            </button>
-          </div>
-        </div> */}
-      </form>
-
-      
-      {/* <button
-        onClick={onBackClick}
-        className="mt-4 px-6 py-2 bg-gray-300 text-gray-800 rounded-md shadow-md hover:bg-gray-400 transition-colors self-center"
-      >
-        Back to All Farms
-      </button> */}
-    </div>
-  );
+    );
 };
 
 export default AddFarm;
+
+

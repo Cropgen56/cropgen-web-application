@@ -3,6 +3,7 @@ import { FieldIcon } from "../../assets/Globalicon";
 // import "./AddFieldSidebar.css";
 import cropename from "../../assets/cropname.json";
 import { ArrowLeft, Calendar, ChevronDown } from "lucide-react";
+import { message } from "antd";
 
 const AddFieldSidebar = ({ saveFarm, markers }) => {
   const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
@@ -28,35 +29,35 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
     const today = new Date();
     // Check if all required fields are filled
     if (!farmName.trim()) {
-      alert("Please enter the Farm Name.");
+      message.error("Please enter the Farm Name.");
       return;
     }
     if (!cropName.trim()) {
-      alert("Please select a Crop Name.");
+      message.error("Please select a Crop Name.");
       return;
     }
     if (!variety.trim()) {
-      alert("Please enter the Variety.");
+      message.error("Please enter the Variety.");
       return;
     }
     if (!sowingDate.trim()) {
-      alert("Please select the Sowing Date.");
+      message.error("Please select the Sowing Date.");
       return;
     }
     const sowing = new Date(sowingDate);
     if (sowing > today) {
-      alert(
+      message.error(
         "Sowing Date cannot be in the future. Please select a date on or before today."
       );
       return;
     }
     if (!typeOfIrrigation.trim()) {
-      alert("Please select the Type of Irrigation.");
+      message.error("Please select the Type of Irrigation.");
       return;
     }
 
     if (markers.length === 0) {
-      alert("Please add Field !.");
+      message.warning("Please add Field !.");
       return;
     }
 

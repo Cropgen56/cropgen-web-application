@@ -6,6 +6,7 @@ import "./PersonalInfo.css";
 import { getUserData, updateUserData } from "../../../redux/slices/authSlice";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
+import { message } from "antd";
 
 const PersonalInfo = () => {
   const dispatch = useDispatch();
@@ -29,6 +30,7 @@ const PersonalInfo = () => {
         lastName: userDetails.lastName || "",
         email: userDetails.email || "",
         phone: userDetails.phone || "",
+        organization: userDetails.organization?.organizationName || "No Organization",
       });
     }
   }, [userDetails]);
@@ -71,15 +73,25 @@ const PersonalInfo = () => {
     e.preventDefault();
     setUpdateStatus(null);
     try {
+
+      let phone = formData.phone.replace(/\D/g, ""); 
+    if (phone.length > 10) {
+      phone = phone.slice(-10); 
+    }
+    const formattedPhone = `+91${phone}`;
+
+      
       const updatePayload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
+        // phone: `+91${formData.phone.replace(/\D/g, "")}`,
         email: formData.email,
       };
       await dispatch(
         updateUserData({ id: userId, updateData: updatePayload, token })
       ).unwrap();
+      message.success("Profile updated successfully!"); 
       setUpdateStatus({
         success: true,
         message: "Profile updated successfully!",
@@ -89,6 +101,7 @@ const PersonalInfo = () => {
         success: false,
         message: err.message || "Failed to update profile",
       });
+      message.error(err.message || "Failed to update profile");
     }
   };
 
@@ -97,7 +110,7 @@ const PersonalInfo = () => {
   }
 
   return (
-    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-4 rounded-lg bg-white shadow-md font-inter h-[98%] flex flex-col box-border overflow-hidden overflow-y-hidden">
+    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 lg:p-4 rounded-lg bg-white shadow-md font-inter h-[98%] flex flex-col box-border overflow-hidden overflow-y-hidden">
       <div className="text-left px-4 py-1 border-b border-black/40 font-bold text-[#344E41]">
         <h5>Personal Info</h5>
       </div>
@@ -123,7 +136,7 @@ const PersonalInfo = () => {
 
           {updateStatus && (
             <div
-              className={`mb-4 p-2 rounded text-center ${
+              className={`p-2 rounded text-center text-sm ${
                 updateStatus.success ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
               }`}
             >
@@ -212,7 +225,7 @@ const PersonalInfo = () => {
                     id="language"
                     value={formData.language}
                     onChange={handleLanguageChange}
-                    className="px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%2210%22 viewBox=%220 0 24 24%22><path fill=%22%23344e41%22 d=%22M7 10l5 5 5-5z%22/></svg>')] bg-no-repeat bg-[right_0.4rem_center] bg-[length:10px]" >
+                    className="px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full" >
                     <option value="English">English</option>
                     <option value="Spanish">Spanish</option>
                     <option value="French">French</option>
