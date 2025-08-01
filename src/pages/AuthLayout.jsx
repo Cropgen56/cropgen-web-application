@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Signup from "../components/AuthLayout/signup/Signup";
-import { Logo } from "../assets/Icons.jsx";
 import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice.js";
 import { useDispatch } from "react-redux";
 import bgimage from "../assets/image/login/bgimage.svg";
@@ -10,12 +9,13 @@ import soilMois from "../assets/image/login/soil m.png";
 import sattelite from "../assets/image/login/satellite.png";
 import laptop from "../assets/image/login/laptop-overlay.png";
 import ndvi from "../assets/image/login/ndvi.png";
+import logo from "../assets/image/login/logo.png";
 
 import { User } from "lucide-react";
 
 const AuthLayout = () => {
-  const [activeTab, setActiveTab] = useState("SignUp");
   const [animate, setAnimate] = useState(false);
+  const [height, setHeight] = useState(window.innerHeight);
 
   const dispatch = useDispatch();
 
@@ -29,15 +29,22 @@ const AuthLayout = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => setHeight(window.innerHeight);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
-    <div className="flex flex-col lg:flex-row h-screen w-full bg-white overflow-hidden font-poppins">
+    <div className="flex flex-row h-screen w-full bg-white overflow-hidden font-poppins">
       {/* Left Side - Image/Testimonial */}
-      <div className="hidden lg:block relative w-full lg:w-1/2 h-full items-center justify-center overflow-hidden">
+      <div className="flex relative w-[60%] h-full items-center justify-center overflow-hidden">
         {/* Background image */}
         <img
           src={bgimage}
           alt="Farming Background"
-          className="w-full h-full object-contain scale-x-[1.5] origin-center"
+          // className="w-full h-full object-contain scale-x-[1.5] origin-center"
+          className="w-full h-full object-contain md:scale-y-[1.9] lg:scale-100 md:scale-x-[1.1] lg:scale-x-[1.76] origin-center"
         />
 
         {/* Overlay */}
@@ -52,10 +59,15 @@ const AuthLayout = () => {
         <div className="absolute inset-0 z-20 flex flex-col h-full p-4 sm:p-6 lg:p-8 xl:p-10 text-white">
           {/* Logo */}
           <div className="flex items-center gap-2 text-white">
-            <Logo className="w-12 h-12 cursor-pointer" />
+            <img
+              src={logo}
+              alt="CropGen Logo"
+              className="w-auto md:h-12 h-20 cursor-pointer"
+            />
+            {/* <Logo className="w-12 h-12 cursor-pointer" />
             <span className="text-lg lg:text-xl font-medium cursor-pointer">
               CropGen
-            </span>
+            </span> */}
           </div>
 
           {/* Testimonial */}
@@ -81,61 +93,113 @@ const AuthLayout = () => {
           </div>
 
           <div
-            className="relative w-full flex justify-center mt-6 lg:mt-10 mb-4 z-20"
+            className="relative w-full flex justify-center items-end mt-6 lg:mt-10 mb-4 z-20"
             style={{ height: "max-content" }}
           >
-            <div className="relative w-[60%]">
-              {" "}
+            <div
+              className="relative"
+              style={{ width: height >= 800 ? "70%" : "50%" }}
+            >
               <img
                 src={sattelite}
                 // className="absolute -top-32 left-1/2 transform -translate-x-1/2 w-[55%] h-auto z-4 pointer-events-none"
-                className={`absolute -top-32 left-1/2 transform -translate-x-1/2 w-[55%] z-[4] pointer-events-none ${
+                className={`absolute left-1/2 transform -translate-x-1/2 w-[55%] z-[4] pointer-events-none ${
                   animate ? "animate-satelliteMove" : ""
                 }`}
+                style={{
+                  top: window.innerWidth < 1024 ? "auto" : "-68px", // -32*4px approx
+                  bottom: window.innerWidth < 1024 ? "-220px" : "auto",
+                }}
                 alt="Satellite"
               />
               <img
                 src={laptop}
                 alt="Laptop Preview"
                 className="relative w-full h-auto object-contain z-20"
+                style={{
+                  width: window.innerWidth < 1024 ? "100%" : "auto",
+                  position: window.innerWidth < 1024 ? "relative" : "relative",
+                  bottom: window.innerWidth < 1024 ? "-330px" : "0px",
+                }}
               />
             </div>
 
-            {/* <div className="absolute -left-12 top-1/2 transform -translate-y-1/2 flex flex-col gap-2"> */}
+            {/* <div className="absolute inset-0 flex justify-between items-center pointer-events-none"> */}
             <img
               src={weather}
-              // className="absolute left-[15%] top-[10%] w-36 h-auto rounded-md z-30"
-              className={`absolute left-[15%] top-[10%] w-36 rounded-md z-30 ${
+              // className="absolute left-[20%] top-[10%]  w-36 h-auto rounded-md z-30"
+              className={`absolute w-36 rounded-md z-30 ${
                 animate ? "animate-floatUp" : ""
               }`}
+              // style={{ left: window.innerHeight < 800 ? "20%" : "12%" }}
+              style={{
+                top: window.innerWidth < 1024 ? "auto" : "10%",
+                bottom: window.innerWidth < 1024 ? "-120%" : "auto",
+                left:
+                  window.innerWidth < 1024
+                    ? "2%"
+                    : window.innerHeight < 800
+                    ? "20%"
+                    : "12%",
+              }}
               alt="Side 1"
             />
             <img
               src={soilTemp}
-              // className="absolute bottom-[25%] left-[22%] w-20 h-auto rounded-md z-30"
-              className={`absolute left-[22%] bottom-[25%] w-20 rounded-md z-30 ${
+              // className="absolute left-[28%] bottom-[25%] w-20 h-auto rounded-md z-30"
+              className={`absolute  w-20 rounded-md z-30 ${
                 animate ? "animate-floatUp" : ""
               }`}
+              style={{
+                left:
+                  window.innerWidth < 1024
+                    ? "10%"
+                    : window.innerHeight < 800
+                    ? "28%"
+                    : "20%",
+                bottom: window.innerWidth < 1024 ? "-170%" : "25%",
+                top: window.innerWidth < 1024 ? "auto" : "auto",
+              }}
               alt="Side 2"
             />
             <img
               src={soilMois}
-              // className="absolute top-[17%] right-[22%] w-20 h-auto rounded-md z-30"
-              className={`absolute right-[22%] top-[17%] w-20 rounded-md z-30 ${
+              // className="absolute right-[28%] top-[17%]  w-20 h-auto rounded-md z-30"
+              className={`absolute w-20 rounded-md z-30 ${
                 animate ? "animate-floatDown" : ""
               }`}
+              style={{
+                right:
+                  window.innerWidth < 1024
+                    ? "10%"
+                    : window.innerHeight < 800
+                    ? "28%"
+                    : "18%",
+                bottom: window.innerWidth < 1024 ? "-110%" : "auto",
+                top: window.innerWidth < 1024 ? "auto" : "17%",
+              }}
               alt="Side 3"
             />
             <img
               src={ndvi}
-              // className="absolute bottom-[20%] right-[15%] w-36 h-auto rounded-md z-30"
-              className={`absolute right-[15%] bottom-[20%] w-36 rounded-md z-30 ${
+              // className="absolute right-[20%] bottom-[20%]] w-36 h-auto rounded-md z-30"
+              className={`absolute w-36 rounded-md z-30 ${
                 animate ? "animate-floatDown" : ""
               }`}
+              style={{
+                right:
+                  window.innerWidth < 1024
+                    ? "-5%"
+                    : window.innerHeight < 800
+                    ? "20%"
+                    : "10%",
+                bottom: window.innerWidth < 1024 ? "-163%" : "20%",
+                top: window.innerWidth < 1024 ? "auto" : "auto",
+              }}
               alt="Side 4"
             />
-            {/* </div> */}
           </div>
+          {/* </div> */}
 
           {/* Bottom Tagline Text */}
           <div className="absolute bottom-10 w-full text-center px-4 z-30">
@@ -151,7 +215,7 @@ const AuthLayout = () => {
       </div>
 
       {/* Right Side - Signup/Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 xl:p-10 h-screen">
+      <div className="w-[40%] flex items-center justify-center p-4 sm:p-6 lg:p-8 xl:p-10 h-screen">
         <Signup />
       </div>
     </div>

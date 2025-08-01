@@ -34,3 +34,25 @@ code {
   scrollbar-width: none;     /* Firefox */
 }
 
+/* Move to top-right */
+.ant-message {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  left: auto !important;
+  width: auto !important;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Custom message content look */
+.ant-message-notice-content {
+  background: #ffffff;
+  color: #344E41;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-weight: 500;
+  pointer-events: all;
+}
+

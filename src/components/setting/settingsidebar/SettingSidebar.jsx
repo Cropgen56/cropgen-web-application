@@ -1,30 +1,33 @@
 import React, { useState } from "react";
 import { SettingDarkIcon } from "../../../assets/Icons";
-import "./SettingSidebar.css";
 
 const SettingSidebar = ({ handleOptionClick, selectedOption }) => {
   return (
-    <div className="setting-sidebar">
-      <div className="setting-sidebar-heading">
+    <div className="w-[20vw] h-screen bg-white m-0 p-0">
+      <div className="flex flex-row justify-start items-center px-4 py-3 gap-2 border-b border-[#344e41]">
         <SettingDarkIcon />
-        <h2>Setting</h2>
+        <h2 className="text-lg text-[#344e41] mb-0">Setting</h2>
       </div>
-      <div className="list-of-settings">
+      <div className="cursor-pointer">
         <div
-          className={`setting-option ${
-            selectedOption === "personalInfo" ? "selected" : ""
+          className={`text-center p-4 text-sm lg:text-lg font-bold transition duration-400 ease-in-out ${
+            selectedOption === "personalInfo"
+              ? "bg-[#5A7C6B] text-white"
+              : "bg-white text-[#344E41]"
           }`}
           onClick={() => handleOptionClick("personalInfo")}
         >
           Personal Info
         </div>
         <div
-          className={`setting-option ${
-            selectedOption === "weatherSettings" ? "selected" : ""
+          className={`text-center p-4 text-sm lg:text-lg font-bold border-b border-[#344E4166] transition duration-400 ease-in-out ${
+            selectedOption === "farmSettings"
+              ? "bg-[#5a7c6b] text-white"
+              : "bg-white text-[#344E41]"
           }`}
-          onClick={() => handleOptionClick("weatherSettings")}
+          onClick={() => handleOptionClick("farmSettings")}
         >
-          Weather Settings
+          Farm Settings
         </div>
       </div>
     </div>

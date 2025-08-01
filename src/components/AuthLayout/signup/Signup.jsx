@@ -4,6 +4,7 @@ import { userLoginSignup } from "../../../redux/slices/authSlice";
 import SocialButtons from "../shared/socialbuttons/SocialButton";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { message } from "antd";
 
 const Signup = () => {
 	const dispatch = useDispatch();
@@ -35,23 +36,23 @@ const Signup = () => {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 		if (!formData.email) {
-		alert("Email is required.");
+		message.error("Email is required.");
 		return false;
 		}
 		if (!emailRegex.test(formData.email)) {
-		alert("Invalid email format.");
+		message.error("Invalid email format.");
 		return false;
 		}
 		if (!formData.password) {
-		alert("Password is required.");
+		message.error("Password is required.");
 		return false;
 		}
 		if (formData.password.length < 6) {
-		alert("Password must be at least 6 characters.");
+		message.error("Password must be at least 6 characters.");
 		return false;
 		}
 		if (!formData.terms) {
-		alert("You must accept the terms.");
+		message.warning("You must accept the terms.");
 		return false;
 		}
 
@@ -64,32 +65,32 @@ const Signup = () => {
 
 		dispatch(userLoginSignup(formData)).then((res) => {
 		if (res?.payload?.success) {
-			alert(res.payload.message || "Signup successful!");
+			message.success(res.payload.message || "Signup successful!");
 			navigate("/");
 		} else {
-			alert(res?.payload?.message || "Signup failed. Please try again.");
+			message.error(res?.payload?.message || "Signup failed. Please try again.");
 		}
 		});
 	};
 
 	return (
-		<div className="w-full max-w-lg flex flex-col gap-3 items-start">
+		<div className="w-full max-w-lg flex flex-col gap-3 lg:gap-4 items-start">
 			{/* Heading */}
-			<div className="w-full max-w-lg h-full flex flex-col justify-center gap-3">
-				<h2 className="text-[36px] text-left font-semibold text-black capitalize mb-0">
+			<div className="w-full max-w-md lg:max-w-lg h-full flex flex-col justify-center gap-1 lg:gap-2">
+				<h2 className="text-xl lg:text-[1.5rem] text-left font-semibold text-black capitalize mb-0">
 					Get started with CropGen
 				</h2>
-				<p className="text-base text-center text-gray-400 font-semibold mb-0">
+				<p className="text-xs lg:text-sm text-left text-gray-400 font-semibold mb-0">
 					Enter your personal data to create your account
 				</p>
 			</div>
 
-			<div className="flex flex-col gap-4 sm:gap-5 w-full">
+			<div className="flex flex-col gap-3 lg:gap-4 w-full">
 				{/* Email */}
 				<div>
 					<label
 						htmlFor="email"
-						className="block text-xs lg:text-base font-medium text-black mb-2">
+						className="block text-xs lg:text-base font-medium text-black mb-1">
 						Email
 					</label>
 					<input
@@ -106,7 +107,7 @@ const Signup = () => {
 				<div className="relative">
 					<label
 						htmlFor="password"
-						className="block text-xs lg:text-base font-medium text-black mb-2">
+						className="block text-xs lg:text-base font-medium text-black mb-1">
 						Password
 					</label>
 					<input
@@ -173,7 +174,7 @@ const Signup = () => {
 				<div>
 					<label
 						htmlFor="organizationCode"
-						className="block text-xs lg:text-base font-medium text-black mb-2 capitalize">
+						className="block text-xs lg:text-base font-medium text-black mb-1 capitalize">
 						Organization code (optional)
 					</label>
 					<input
@@ -197,7 +198,7 @@ const Signup = () => {
 						onChange={handleChange} />
 					<label
 						htmlFor="terms"
-						className="text-gray-700 text-xs lg:text-sm" >
+						className="text-gray-700 text-xs" >
 							I agree to the{" "}
 						<a href="https://www.cropgenapp.com/terms-conditions" className="text-sky-500 hover:underline" target="_blank" >
 							Terms and Privacy Policy
@@ -213,6 +214,13 @@ const Signup = () => {
 					disabled={status === "loading"} >
 						{status === "loading" ? "Signing Up..." : "Login / Sign Up"}
 				</button>
+
+				{/* divider line */}
+				<div className="flex items-center w-full">
+					<div className="flex-1 h-px bg-gradient-to-l from-gray-300 to-transparent"></div>
+					<span className="px-3 text-gray-400 text-xs uppercase">or</span>
+					<div className="flex-1 h-px bg-gradient-to-r from-gray-300 to-transparent"></div>
+				</div>
 
 				{/* Google Sign-In */}
 				<div className="w-full">
