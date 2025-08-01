@@ -30,29 +30,75 @@ code {
 }
 
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;  
 }
 
-/* Move to top-right */
+/* Position toaster at top-right */
 .ant-message {
   position: fixed !important;
-  top: 20px !important;
-  right: 20px !important;
+  top: 10px !important;
+  right: 10px !important;
   left: auto !important;
   width: auto !important;
-  z-index: 9999;
+  z-index: 9999 !important;
   pointer-events: none;
 }
 
-/* Custom message content look */
-.ant-message-notice-content {
-  background: #ffffff;
-  color: #344E41;
-  padding: 12px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  font-weight: 500;
-  pointer-events: all;
+/* Space between multiple toasts */
+.ant-message-notice {
+  margin-top: 12px !important; 
 }
 
+/* Outer box of each toast */
+.ant-message-notice-content {
+  background: #ffffff !important;     
+  color: #344E41 !important;          
+  padding: 15px 25x !important;      
+  border-radius: 10px !important;  
+  min-width: 200px important;  
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+  font-weight: 500 !important;
+  pointer-events: all !important;
+}
+
+/* Inner content text + icon */
+.ant-message-custom-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 14px !important;  
+  font-weight: 600 !important;
+}
+
+.ant-message-custom-content span {
+  font-size: 14px !important; 
+  line-height: 1.4 !important;
+}
+
+/* Icon inside the toast */
+.ant-message-custom-content span svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Success message color */
+.ant-message-success .ant-message-notice-content {
+  border-left: 5px solid #52c41a !important;
+}
+
+/* Error message color */
+.ant-message-error .ant-message-notice-content {
+  border-left: 5px solid #ff4d4f !important;
+}
+
+/* Warning message color */
+.ant-message-warning .ant-message-notice-content {
+  border-left: 5px solid #faad14 !important;
+}
+
+.ant-modal-centered .ant-modal {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0;
+}

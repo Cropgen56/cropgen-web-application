@@ -17,7 +17,7 @@ const AddFarm = ({selectedFarm }) => {
     const [updating, setUpdating] = useState(false);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [showAllFarms, setShowAllFarms] = useState(false);
-
+    const [selectedFarmState, setSelectedFarmState] = useState(selectedFarm || {});
 
     const [formData, setFormData] = useState({
         farmName: selectedFarm?.fieldName || "",
@@ -27,6 +27,18 @@ const AddFarm = ({selectedFarm }) => {
         typeOfIrrigation: selectedFarm?.typeOfIrrigation || "",
         typeOfFarming: selectedFarm?.typeOfFarming || "",
     });
+
+    useEffect(() => {
+        setFormData({
+            farmName: selectedFarmState.fieldName || "",
+            cropName: selectedFarmState.cropName || "",
+            variety: selectedFarmState.variety || "",
+            sowingDate: selectedFarmState.sowingDate?.split("T")[0] || "",
+            typeOfIrrigation: selectedFarmState.typeOfIrrigation || "",
+            typeOfFarming: selectedFarmState.typeOfFarming || "",
+        });
+        setPolygonCoordinates(selectedFarmState.field || []);
+    }, [selectedFarmState]);
 
 
     useEffect(() => {
@@ -39,7 +51,7 @@ const AddFarm = ({selectedFarm }) => {
         const value = e.target.value;
         setFormData((prev) => ({ ...prev, farmName: value }));
 
-        const existingFarm = farms.find((f) => f.fieldName?.toLowerCase() === value.toLowerCase());
+        const existingFarm = farms?.find((f) => f.fieldName?.toLowerCase() === value.toLowerCase());
         
         if (existingFarm) {
             setFormData({
@@ -192,38 +204,34 @@ const AddFarm = ({selectedFarm }) => {
     };
 
     const handleDeleteConfirm = async () => {
-    try {
-        await dispatch(deleteFarmField(selectedFarm._id)).unwrap();
-        message.success("Farm deleted successfully!");
-        setDeleteModalVisible(false);
-        dispatch(getFarmFields(userId));
+        try {
+            if (!selectedFarm?._id) return message.error("No farm selected to delete!");
 
-        // setFormData({
-        //     farmName: "",
-        //     cropName: "",
-        //     variety: "",
-        //     sowingDate: "",
-        //     typeOfIrrigation: "",
-        //     typeOfFarming: "",
-        //     });
-        // setPolygonCoordinates([]);
-        setShowAllFarms(true);
+            await dispatch(deleteFarmField(selectedFarm._id)).unwrap();
+            message.success("Farm deleted successfully!");
+            setDeleteModalVisible(false);
+            dispatch(getFarmFields(userId));
 
-    } catch (error) {
-        message.error("Failed to delete farm.");
-    }
-};
+            setShowAllFarms(true);
+
+        } catch (error) {
+            message.error("Failed to delete farm.");
+        }
+    };
 
     if (showAllFarms) {
-        return <AllFarms onAddFarmClick={(farm) => console.log("Clicked farm:", farm)} />;
+        return <AllFarms onAddFarmClick={(farm) => {
+                setSelectedFarmState(farm);
+                setShowAllFarms(false);
+            }}
+        />;
     }
 
-
     return (
-        <div className="flex flex-col flex-grow gap-4 p-2 overflow-hidden overflow-y-auto">
-            <form onSubmit={handleSubmit} className="flex flex-row gap-3 h-full">
-                {/* Left Section */}
-                <div className="flex flex-col gap-3 w-[30%] bg-white ">
+        <div className="flex flex-col flex-grow justify-between gap-4 p-2 overflow-hidden overflow-y-auto">
+            <form onSubmit={handleSubmit} className="flex flex-col-reverse lg:flex-row gap-3 lg:h-full w-full">
+                {/* form Section */}
+                <div className="flex flex-col gap-3 w-full lg:w-[30%] bg-white ">
                     <h5 className="mt-2 font-semibold text-[#344E41]">Crop Details</h5>
 
                     <div className="flex flex-col gap-2">
@@ -309,11 +317,11 @@ const AddFarm = ({selectedFarm }) => {
                 </div>
 
 
-                {/* Right Section */}
-                <div className="flex flex-col gap-4 w-[70%] bg-white ">
+                {/* map Section */}
+                <div className="flex flex-col gap-4 w-full lg:w-[70%] bg-white h-[300px] lg:h-auto">
                     <div className="flex-grow">
                         <MapContainer
-                            center={polygonCoordinates.length > 0 
+                            center={polygonCoordinates?.length > 0 && polygonCoordinates[0]?.lat
                                     ? [polygonCoordinates[0].lat, polygonCoordinates[0].lng] 
                                     : defaultCenter}
                             zoom={15}
@@ -357,7 +365,7 @@ const AddFarm = ({selectedFarm }) => {
                 onCancel={() => setDeleteModalVisible(false)}
                 okText="Yes, Delete"
                 okButtonProps={{ danger: true }}
-                centered   >
+                centered >
                 <p>Are you sure you want to delete this farm? This action cannot be undone.</p>
             </Modal>
 

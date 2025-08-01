@@ -4,11 +4,12 @@ import FarmArea from "../../../assets/image/setting/farmarea.svg";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 
 const FarmCard = ({ farm, onClick }) => (
     <div onClick={() => onClick(farm)} 
         className="flex flex-col rounded-lg shadow-sm border-1 border-[#075A53] text-center transition-shadow duration-400 ease-in-out hover:shadow-md overflow-hidden cursor-pointer">
-        <div className="flex justify-between items-center bg-[#5A7C6B] text-white p-3 rounded-t-lg">
+        <div className="flex justify-between items-center bg-[#5A7C6B] text-white p-1.5 lg:p-3 rounded-t-lg">
             <span className="font-medium text-sm lg:text-base">{farm.fieldName}</span>
             <span className="font-medium text-xs lg:text-sm">
                 {" "}
@@ -69,15 +70,20 @@ const AllFarms = ({onAddFarmClick }) => {
         }
     }, [dispatch, status, userId]);
 
-    if (status === "loading") return <p className="p-4 text-gray-500">Loading farms...</p>;
+    if (status === "loading") return
+        <div className="flex items-center justify-center w-full h-[200px]">
+            <LoadingSpinner height="100px" size={64} color="#86D72F" />
+            <p className="ml-2 text-gray-700 text-sm">Loading farms...</p>
+        </div>
+    
     if (!userId) return <p className="p-4 text-gray-500">Please log in to view your farms.</p>
 
-    if (status === "failed") return <p className="p-4 text-red-600">Error: {error}</p>;
+    if (status === "failed") return <p className="p-4 text-red-600">{typeof error === "string" ? error : error?.message || "Something went wrong"}</p>;
 
     return (
-        <div className="flex flex-col flex-grow gap-4 p-2">
-            <div className="overflow-y-auto max-h-[calc(100vh-160px)] pr-1 mb-4 scroll-smooth no-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex flex-col flex-grow gap-4 p-2 h-[calc(100vh-100px)]">
+            <div className="overflow-y-auto flex-grow pr-1 mb-2 scroll-smooth no-scrollbar">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
                     {farms.length > 0 ? (
                         farms.map((farm, index) => (
                         <FarmCard key={farm._id || index} farm={farm} onClick={onAddFarmClick}  />

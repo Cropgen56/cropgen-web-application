@@ -75,16 +75,14 @@ const PersonalInfo = () => {
     try {
 
       let phone = formData.phone.replace(/\D/g, ""); 
-    if (phone.length > 10) {
-      phone = phone.slice(-10); 
-    }
-    const formattedPhone = `+91${phone}`;
+      phone = phone.slice(-10);
 
-      
+      const formattedPhone = `+91${phone}`;
+
       const updatePayload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formData.phone,
+        phone: formattedPhone,
         // phone: `+91${formData.phone.replace(/\D/g, "")}`,
         email: formData.email,
       };
@@ -134,7 +132,7 @@ const PersonalInfo = () => {
 
         <form className="flex flex-col flex-grow gap-2" onSubmit={handleSubmit}>
 
-          {updateStatus && (
+          {/* {updateStatus && (
             <div
               className={`p-2 rounded text-center text-sm ${
                 updateStatus.success ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
@@ -142,7 +140,7 @@ const PersonalInfo = () => {
             >
               {updateStatus.message}
             </div>
-          )}
+          )} */}
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2 p-2">
             <div className="flex flex-col gap-3">
