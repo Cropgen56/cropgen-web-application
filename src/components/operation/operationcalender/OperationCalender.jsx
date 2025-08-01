@@ -5,7 +5,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import moment from "moment";
 import EventForm from "../operationform/EventForm";
-import { getOperationsByFarmField } from "../../../redux/slices/operationSlice";
+import { getOperationsByFarmField, deleteOperation } from "../../../redux/slices/operationSlice";
 import { Operation } from "../../../assets/Icons";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import "./OperationCalender.css";
@@ -25,6 +25,7 @@ const FarmerScheduler = (selectedField) => {
   const [currentMonth, setCurrentMonth] = useState(moment());
 
   useEffect(() => {
+    console.log("Fetched operations:", operations);
     const mappedEvents = operations.map((operation) => {
       const startDateTime = moment(
         `${operation.operationDate} ${operation.operationTime}`,
@@ -120,6 +121,48 @@ const FarmerScheduler = (selectedField) => {
       </div>
     </div>
   );
+
+  const [operationToDelete, setOperationToDelete] = useState(null);
+
+  //implemented delete functionality
+  const handleConfirmDelete = async () => {
+    if (!operationToDelete) return;
+    try {
+      await dispatch(deleteOperation(operationToDelete.id));
+      dispatch(getOperationsByFarmField({ farmId: selectedField._id }));
+    } catch (err) {
+      alert("Failed to delete operation.");
+    } finally {
+      setOperationToDelete(null); // close modal
+    }
+  };
+
+  const DeleteConfirmationModal = ({ onCancel, onConfirm }) => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg text-center">
+        <h3 className="text-lg font-semibold mb-4 text-[#344e41]">Delete Operation?</h3>
+        <p className="text-sm text-gray-600 mb-6">
+          Are you sure you want to delete this operation?
+        </p>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-gray-300 text-[#344e41] font-semibold rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-700"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+
 
   return (
     <div className="h-screen bg-[#344e41] text-white overflow-y-auto scrollbar-hidden p-4">
@@ -263,8 +306,8 @@ const FarmerScheduler = (selectedField) => {
                   <button
                     className="absolute top-2 right-2 text-white hover:text-red-500 transition"
                     onClick={(e) => {
-                      e.stopPropagation(); 
-                      // delete logic can go here later
+                      e.stopPropagation();
+                      setOperationToDelete({ id: event.id });
                     }}
                   >
                     <RiDeleteBin6Line className="text-lg" />
@@ -284,6 +327,13 @@ const FarmerScheduler = (selectedField) => {
           onSave={handleSave}
           initialData={selectedEvent}
           selectedField={selectedField}
+        />
+      )}
+
+      {operationToDelete && (
+        <DeleteConfirmationModal
+          onCancel={() => setOperationToDelete(null)}
+          onConfirm={handleConfirmDelete}
         />
       )}
     </div>

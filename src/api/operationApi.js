@@ -2,7 +2,17 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-// create operation API
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("authToken");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
+
+
 export const createOperationAPI = async ({ farmId, operationData }) => {
   const response = await axios.post(
     `${API_URL}/api/operation/${farmId}/create`,
@@ -18,13 +28,27 @@ export const createOperationAPI = async ({ farmId, operationData }) => {
       comments: operationData.comments,
       operationDate: operationData.operationDate,
       operationTime: operationData.operationTime,
-    }
+    },
+    getAuthHeaders()
   );
   return response.data;
 };
 
-// create operation API
+
 export const getOperationsByFarmFieldAPI = async ({ farmId }) => {
-  const response = await axios.get(`${API_URL}/api/operation/${farmId}/get`);
+  const response = await axios.get(
+    `${API_URL}/api/operation/${farmId}/get`,
+    getAuthHeaders() // 
+  );
   return response.data;
 };
+
+
+export const deleteOperationAPI = async (operationId) => {
+  const response = await axios.delete(
+    `${API_URL}/api/operation/${operationId}`,
+    getAuthHeaders()
+  );
+  return response.data;
+};
+

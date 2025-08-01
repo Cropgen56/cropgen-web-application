@@ -6,17 +6,15 @@ import { CiSearch } from "react-icons/ci";
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   <div
-    className={`flex justify-around items-start border-b border-[#344e41] pt-4 cursor-pointer ${
-      isSelected ? "bg-[#5a7c6b]" : ""
-    }`}
+    className={`flex justify-around items-start border-b border-[#344e41] pt-4 cursor-pointer ${isSelected ? "bg-[#5a7c6b]" : ""
+      }`}
     onClick={onClick}
   >
     <FieldIcon isSelected={isSelected} />
     <div className="ml-2">
       <h4
-        className={`text-base font-normal ${
-          isSelected ? "text-white" : "text-[#344e41]"
-        }`}
+        className={`text-base font-normal ${isSelected ? "text-white" : "text-[#344e41]"
+          }`}
       >
         {title}
       </h4>
@@ -68,7 +66,8 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
   if (!isSidebarVisible) return null;
 
   return (
-    <div className="w-[30vw] min-w-[300px] bg-white shadow-md flex flex-col h-full">
+    <div className="w-full sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">
+
       {/* Heading */}
       <div className="flex flex-col border-b border-[#344e41] gap-2 p-4">
         <div className="flex justify-between items-center cursor-pointer">
@@ -119,7 +118,7 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
 
       {/* Scrollable Fields */}
       <div className="overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-hidden">
-        <h2 className="text-sm font-bold text-[#344e41] pl-2 pb-2">Field</h2>
+        <h2 className="text-sm font-bold text-[#344e41] text-[18px] p-2">All Farms</h2>
         {filteredFields && filteredFields.length > 0 ? (
           filteredFields.map((field, index) => {
             const { lat, lon } = calculateCentroid(field.field);
@@ -142,7 +141,7 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
           })
         ) : (
           <p className="text-center text-sm text-gray-500 mt-4">
-            No fields found 
+            No fields found
           </p>
         )}
       </div>
