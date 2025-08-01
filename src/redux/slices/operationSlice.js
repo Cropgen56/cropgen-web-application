@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   createOperationAPI,
-  getOperationsByFarmFieldAPI,
+  getOperationsByFarmFieldAPI, deleteOperationAPI
 } from "../../api/operationApi";
 
 // Existing async thunk for creating operation
@@ -15,6 +15,20 @@ export const createOperation = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Failed to create operation"
+      );
+    }
+  }
+);
+//delete operation thunk
+export const deleteOperation = createAsyncThunk(
+  "operation/deleteOperation",
+  async (operationId, { rejectWithValue }) => {
+    try {
+      await deleteOperationAPI(operationId);
+      return operationId;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to delete operation"
       );
     }
   }
@@ -74,7 +88,26 @@ const operationSlice = createSlice({
       .addCase(getOperationsByFarmField.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to fetch operations";
+      })
+      // Delete operation cases
+      .addCase(deleteOperation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteOperation.fulfilled, (state, action) => {
+        state.loading = false;
+        // Filter out the deleted operation
+        state.operations = state.operations.filter(
+          (op) => op._id !== action.payload
+        );
+      })
+      .addCase(deleteOperation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to delete operation";
       });
+
+
+
   },
 });
 

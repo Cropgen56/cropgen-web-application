@@ -4,6 +4,7 @@ import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
 import useLogout from "../../utility/logout";
+import img1 from "../../assets/image/Frame 63.png"
 import {
   AddFieldIcon,
   CropAnalysisIcon,
@@ -111,13 +112,12 @@ const Sidebar = ({ onToggleCollapse }) => {
         résultats
       >
         <Offcanvas.Body className="p-0 m-0">
-          <div
-            className="title-container"
-            onClick={() => handleNavigation("/")}
-          >
-            {!isCollapsed && <Logo />}
-            {!isCollapsed && <span className="title-text">CropGen</span>}
-          </div>
+          {!isCollapsed && (
+            <div className="title-container flex items-center justify-center" onClick={() => handleNavigation("/")}>
+              <img src={img1} alt="CropGen Logo" className=" w-[170px]" />
+
+            </div>
+          )}
 
           {!isCollapsed && (
             <Card

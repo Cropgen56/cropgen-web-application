@@ -6,17 +6,15 @@ import { CiSearch } from "react-icons/ci";
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   <div
-    className={`flex justify-around items-start border-b border-[#344e41] pt-4 cursor-pointer ${
-      isSelected ? "bg-[#5a7c6b]" : ""
-    }`}
+    className={`flex justify-around items-start border-b border-[#344e41] pt-4 cursor-pointer ${isSelected ? "bg-[#5a7c6b]" : ""
+      }`}
     onClick={onClick}
   >
     <FieldIcon isSelected={isSelected} />
     <div className="ml-2">
       <h4
-        className={`text-base font-normal ${
-          isSelected ? "text-white" : "text-[#344e41]"
-        }`}
+        className={`text-base font-normal ${isSelected ? "text-white" : "text-[#344e41]"
+          }`}
       >
         {title}
       </h4>
@@ -32,6 +30,7 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
 const OperationSidebar = ({ setSelectedField, selectedField }) => {
   const [selectedOperationIndex, setSelectedOperationIndex] = useState(0);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fields = useSelector((state) => state?.farmfield?.fields);
 
@@ -59,10 +58,16 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
+  // 🔍 Filter logic based on searchQuery
+  const filteredFields = fields?.filter((field) =>
+    field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (!isSidebarVisible) return null;
 
   return (
-    <div className="w-[30vw] min-w-[300px]  bg-white shadow-md flex flex-col h-full">
+    <div className="w-full sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">
+
       {/* Heading */}
       <div className="flex flex-col border-b border-[#344e41] gap-2 p-4">
         <div className="flex justify-between items-center cursor-pointer">
@@ -103,6 +108,8 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
           <CiSearch className="absolute text-white text-lg top-2 left-8" />
           <input
             type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-[80%] pl-10 py-1 border border-gray-300 rounded-md outline-none text-sm bg-[#344e41] text-white mb-4 ml-6"
             placeholder="Search"
           />
@@ -110,12 +117,10 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
       </div>
 
       {/* Scrollable Fields */}
-      <div className=" overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-hide">
-        <h2 className="text-sm font-bold text-[#344e41] pl-2 pb-2 #344e41 ">
-          Field
-        </h2>
-        {fields && fields.length > 0 ? (
-          fields.map((field, index) => {
+      <div className="overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-hidden">
+        <h2 className="text-sm font-bold text-[#344e41] text-[18px] p-2">All Farms</h2>
+        {filteredFields && filteredFields.length > 0 ? (
+          filteredFields.map((field, index) => {
             const { lat, lon } = calculateCentroid(field.field);
             return (
               <FieldInfo
@@ -129,33 +134,17 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
                   setSelectedOperationIndex(index);
                   if (typeof setSelectedField === "function") {
                     setSelectedField(field._id);
-                  } else {
-                    console.error("setSelectedField is not a function.");
                   }
                 }}
               />
             );
           })
         ) : (
-          <p>No fields available</p>
+          <p className="text-center text-sm text-gray-500 mt-4">
+            No fields found
+          </p>
         )}
       </div>
-
-      {/* <div className="flex flex-col gap-2 p-4  border-[#344e41]">
-       <h4 className="text-[#344e41] font-bold text-m">Crop :</h4>
-       <select name="" id="" className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200 text-sm">
-         <option value="" disabled selected>Select Crop</option>
-         {cropOptions.map((crop,index)=>{
-          return (
-            <option key={index} value={crop}>
-              {crop}
-            </option>
-          );
-       })}
-
-       </select>
-
-      </div> */}
     </div>
   );
 };

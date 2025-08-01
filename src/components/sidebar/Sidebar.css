@@ -20,13 +20,7 @@
   height: 1.3rem !important;
 }
 
-.title-container {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.7rem;
-  padding-left: 3rem;
-  cursor: pointer;
-}
+
 
 .company-logo {
   margin-right: 2px;
