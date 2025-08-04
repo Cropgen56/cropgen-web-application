@@ -1,0 +1,21 @@
+// hooks/useIsTablet.js
+import { useEffect, useState } from "react";
+
+const useIsTablet = () => {
+  const [isTablet, setIsTablet] = useState(false);
+
+  useEffect(() => {
+    const checkIsTablet = () => {
+      const width = window.innerWidth;
+      setIsTablet(width >= 768 && width < 1024);
+    };
+
+    checkIsTablet();
+    window.addEventListener("resize", checkIsTablet);
+    return () => window.removeEventListener("resize", checkIsTablet);
+  }, []);
+
+  return isTablet;
+};
+
+export default useIsTablet;
