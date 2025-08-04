@@ -186,7 +186,7 @@ const FarmerScheduler = (selectedField) => {
       </div>
 
       {/* Add Operation Button */}
-      <div className="flex justify-end mb-4">
+      {/* <div className="flex justify-end mb-4">
         <button
           onClick={() => {
             setSelectedEvent(null);
@@ -196,7 +196,7 @@ const FarmerScheduler = (selectedField) => {
         >
           + Add Operation
         </button>
-      </div>
+      </div> */}
 
       {/* Calendar */}
       <div className="rounded-xl bg-[#344e41] shadow-inner p-2 mb-6">

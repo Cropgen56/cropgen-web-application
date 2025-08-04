@@ -5,7 +5,7 @@ const PestDiseaseCard = () => {
   return (
     <div className="bg-[#344e41] rounded-lg p-4 text-white w-full shadow-sm flex flex-col gap-2">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-base font-semibold text-[24px]">Pest & Disease</h2>
+        <h2 className="text-base font-semibold text-[24px]">Disease & Pest</h2>
         <img className="w-[30px]" src={img3} alt="" />
       </div>
 

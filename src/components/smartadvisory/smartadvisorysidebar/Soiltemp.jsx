@@ -31,7 +31,7 @@ const Soiltemp = () => {
       <div className="w-full flex justify-between items-start px-6 pt-6 pb-2">
         {/* Title + Legend */}
         <div>
-          <h2 className="text-3xl font-bold mb-4">Soil Moisture & Temprature</h2>
+          <h2 className="text-3xl font-bold mb-4">Soil Moisture & Temperature</h2>
           <div className="flex flex-col space-y-2">
             <div className="flex items-center space-x-2">
               <span className="w-6 h-2 rounded-full" style={{ backgroundColor: moistureColor }}></span>

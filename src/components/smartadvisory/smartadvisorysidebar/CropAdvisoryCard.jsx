@@ -6,7 +6,7 @@ const CropAdvisoryCard = ({ isTablet = false }) => {
       {/* Header */}
       <div className={`flex items-center justify-between ${isTablet ? "mb-[3px]" : "mb-2"}`}>
         <h2 className={`font-semibold ${isTablet ? "text-[7.5px]" : "text-[24px]"}`}>
-          Neutron Management
+          Nutrition Management
         </h2>
         <img className={`${isTablet ? "w-[10px]" : "w-[30px]"}`} src={img1} alt="" />
       </div>
@@ -36,7 +36,7 @@ const CropAdvisoryCard = ({ isTablet = false }) => {
       {/* Footer */}
       <div className={`bg-white text-black rounded-md ${isTablet ? "px-[6px] py-[3px] text-[7px]" : "px-4 py-2 text-sm"} flex justify-between font-semibold`}>
         <span>Expected Yield</span>
-        <span>4.2 t/ha</span>
+        <span>4.2 t/hactare</span>
       </div>
     </div>
   );
