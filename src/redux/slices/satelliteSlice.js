@@ -173,10 +173,10 @@ export const fetchCropHealth = createAsyncThunk(
       const cached = await get(cacheKey);
       const now = Date.now();
 
-      if (cached && now - cached.timestamp < CACHE_TTL) {
-        // console.log("cache data ", cached);
-        return cached.data;
-      }
+     if (!farmDetails?.bypassCache && cached && now - cached.timestamp < CACHE_TTL) {
+  return cached.data;
+}
+
 
       const { field } = farmDetails || {};
       if (!field) {
