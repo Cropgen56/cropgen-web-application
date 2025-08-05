@@ -5,7 +5,7 @@ import * as turf from "@turf/turf";
 import SoilAnalysisChart from "./SoilAnalysisChart.jsx";
 import SoilHealthChart from "./SoilHealthChart.jsx";
 import { calculateAiYield, fetchSoilData } from "../../../redux/slices/satelliteSlice.js";
-import cropImage from "../../../assets/image/dashboard/crop-image.jpg";
+import cropimage from "../../../assets/image/Rectangle 74@2x.jpg"
 import CropHealthStatusBar from "./CropHealthStatusBar.jsx";
 
 const CropHealth = ({ selectedFieldsDetials }) => {
@@ -58,34 +58,35 @@ const CropHealth = ({ selectedFieldsDetials }) => {
             {/* === Main Layout: Image container + Details container === */}
             <div className="flex flex-row px-4 gap-6">
                 {/* Left: BIG CROP IMAGE in its own box */}
-                <div className="flex flex-col items-center justify-center border border-green-600 rounded-md p-2 w-[160px] h-[160px]">
+                <div className="flex flex-col items-center border-2 border-[#5A7C6B] rounded-md w-[160px] h-[160px] overflow-hidden">
                     <img
-                        src={cropImage}
+                        src={cropimage}
                         alt="crop"
-                        className="w-full h-full object-cover rounded-md"
+                        className="w-full h-full object-cover"
                     />
                 </div>
+
 
                 {/* Right: Info + health status */}
                 <div className="flex flex-col justify-between w-full gap-4">
                     {/* Top: Grid details */}
-                    <div className="grid grid-cols-2 gap-x-20 gap-y-5 text-sm md:text-[10px] text-[#344E41]">
-                        <div className="flex gap-1 ">
-                            <span className="font-semibold text-[20px]">Crop Name :-</span>
+                    <div className=" grid grid-cols-2 gap-x-20 gap-y-5 text-sm md:text-[10px] text-[#344E41]">
+                        <div className="flex gap-2 ">
+                            <span className="font-semibold text-[20px] text-[#344E41]">Crop Name :-</span>
                             <span className="text-black font-medium text-[20px]">{crop?.cropName || "N/A"}</span>
                         </div>
-                        <div className="flex gap-1">
-                            <span className="font-semibold text-[20px]">Crop Age :-</span>
+                        <div className="flex gap-2">
+                            <span className="font-semibold text-[20px] text-[#344E41]">Crop Age :-</span>
                             <span className="text-black font-medium text-[20px]">{daysFromSowing} days</span>
                         </div>
-                        <div className="flex gap-1">
-                            <span className="font-semibold text-[20px]">Total Area :-</span>
+                        <div className="flex gap-2">
+                            <span className="font-semibold text-[20px] text-[#344E41]">Total Area :-</span>
                             <span className="text-black font-medium text-[20px]">
                                 {totalArea?.toFixed(1) || "0.0"} Acre
                             </span>
                         </div>
-                        <div className="flex gap-1">
-                            <span className="font-semibold text-[20px]">Standard Yield :-</span>
+                        <div className="flex gap-2 ">
+                            <span className="font-semibold text-[20px] text-[#344E41]">Standard Yield :-</span>
                             <span className="text-black font-medium text-[20px]">{yieldVal}</span>
                         </div>
                     </div>
