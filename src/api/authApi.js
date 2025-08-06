@@ -2,12 +2,19 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
+
 export const authenticateUser = async (userData) => {
-  const response = await axios.post(
-    `${API_URL}/api/auth/authenticate`,
-    userData
-  );
-  return response.data;
+  const response = await axios.post(`${API_URL}/api/auth/authenticate`, userData);
+  
+  if (response?.data?.token && response?.data?.user) {
+    return {
+      token: response.data.token,
+      user: response.data.user,
+      message: response.data.message || "Authenticated successfully",
+    };
+  }
+
+  throw new Error("Authentication failed.");
 };
 
 // get user API

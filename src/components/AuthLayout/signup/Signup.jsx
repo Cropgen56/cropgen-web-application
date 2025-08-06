@@ -34,22 +34,41 @@ const Signup = () => {
 
 	const validate = () => {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!formData.email) return message.error("Email is required.");
-		if (!emailRegex.test(formData.email)) return message.error("Invalid email format.");
-		if (!formData.password) return message.error("Password is required.");
-		if (formData.password.length < 6)
-			return message.error("Password must be at least 6 characters.");
-		if (!formData.terms) return message.warning("You must accept the terms.");
+		if (!formData.email) {
+			message.error("Email is required.");
+			return false;
+		}
+		if (!emailRegex.test(formData.email)) {
+			message.error("Invalid email format.");
+			return false;
+		}
+		if (!formData.password) {
+			message.error("Password is required.");
+			return false;
+		}
+		if (formData.password.length < 6) {
+			message.error("Password must be at least 6 characters.");
+			return false;
+		}
+		if (!formData.terms) {
+			message.error("You must accept the Terms of Use and Privacy Policy.");
+			return false;
+		}
 		return true;
 	};
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
-		if (!validate()) return;
+		if (!validate()) {
+			console.log("Validation failed");
+			return;
+		}
 
 		dispatch(userLoginSignup(formData)).then((res) => {
-			if (res?.payload?.success) {
-				message.success(res.payload.message || "Signup successful!");
+			console.log("API response:", res);
+
+			if (res?.payload?.token) {
+				message.success("Signup successful!");
 				navigate("/");
 			} else {
 				message.error(res?.payload?.message || "Signup failed. Please try again.");
