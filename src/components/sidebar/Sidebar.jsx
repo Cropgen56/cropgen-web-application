@@ -4,7 +4,7 @@ import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
 import useLogout from "../../utility/logout";
-import img1 from "../../assets/image/Frame 63.png"
+import img1 from "../../assets/image/Frame 63.png";
 import {
   AddFieldIcon,
   CropAnalysisIcon,
@@ -18,35 +18,21 @@ import {
   Setting,
   Logout,
   Hammer,
-  Logo,
 } from "../../assets/Icons";
 import "./Sidebar.css";
 import { decodeToken, loadLocalStorage } from "../../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 
-// Navigation items configuration
 const NAV_ITEMS = [
-  {
-    path: "/cropgen-analytics",
-    label: "CropGen Analytics",
-    Icon: CropAnalysisIcon,
-  },
+  { path: "/cropgen-analytics", label: "CropGen Analytics", Icon: CropAnalysisIcon },
   { path: "/addfield", label: "Add Field", Icon: AddFieldIcon },
   { path: "/weather", label: "Weather", Icon: Weather },
   { path: "/operation", label: "Operation", Icon: Operation },
-  {
-    path: "/disease-detection",
-    label: "Disease Detection",
-    Icon: DieaseDetaction,
-  },
+  { path: "/disease-detection", label: "Disease Detection", Icon: DieaseDetaction },
   { path: "/smart-advisory", label: "Smart Advisory", Icon: SmartAdvisory },
   { path: "/soil-report", label: "Soil Report", Icon: SoilReportIcon },
   { path: "/farm-report", label: "Farm Report", Icon: FarmReport },
-  {
-    path: "/personalise-crop-shedule",
-    label: "Personalise Crop Schedule",
-    Icon: PersonaliseCropShedule,
-  },
+  { path: "/personalise-crop-shedule", label: "Personalise Crop Schedule", Icon: PersonaliseCropShedule },
   { path: "/setting", label: "Setting", Icon: Setting },
 ];
 
@@ -58,13 +44,11 @@ const Sidebar = ({ onToggleCollapse }) => {
   const logout = useLogout();
   const user = useSelector((state) => state?.auth?.user);
 
-  // Load local storage and decode token on mount
   useEffect(() => {
     dispatch(loadLocalStorage());
     dispatch(decodeToken());
   }, [dispatch]);
 
-  // Set initial sidebar state based on current path
   useEffect(() => {
     if (location.pathname === "/cropgen-analytics") {
       setIsCollapsed(false);
@@ -72,17 +56,14 @@ const Sidebar = ({ onToggleCollapse }) => {
     }
   }, [location.pathname, onToggleCollapse]);
 
-  // Handle sidebar collapse toggle
   const handleCollapseToggle = (collapse) => {
     const newCollapsedState = collapse ?? !isCollapsed;
     setIsCollapsed(newCollapsedState);
     onToggleCollapse(newCollapsedState);
   };
 
-  // Handle navigation
   const handleNavigation = (path) => {
     navigate(path);
-    // If navigating to /cropgen-analytics, ensure sidebar is open
     if (path === "/cropgen-analytics") {
       handleCollapseToggle(false);
     } else if (location.pathname === "/cropgen-analytics") {
@@ -90,17 +71,29 @@ const Sidebar = ({ onToggleCollapse }) => {
     }
   };
 
-  // Handle logout
   const handleLogout = async () => {
     const result = await logout();
     if (result.success) {
       alert("Logout successful");
-      // Optionally show a success message (e.g., using react-toastify)
     } else {
       console.error("Logout failed:", result.error);
-      // Optionally show an error message
     }
   };
+
+  // collapsed mode items including hammer & logout
+  const collapsedNavItems = [
+    <li key="collapse-toggle" className="collapse-button" onClick={() => handleCollapseToggle(false)}>
+      <Hammer />
+    </li>,
+    ...NAV_ITEMS.map(({ path, Icon }) => (
+      <li key={path} onClick={() => handleNavigation(path)} className="cursor-pointer">
+        <Icon />
+      </li>
+    )),
+    <li key="logout-icon" className="cursor-pointer" onClick={handleLogout}>
+      <Logout />
+    </li>,
+  ];
 
   return (
     <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
@@ -109,16 +102,16 @@ const Sidebar = ({ onToggleCollapse }) => {
         scroll={true}
         backdrop={false}
         className={`offcanvas ${isCollapsed ? "collapsed" : ""}`}
-        résultats
       >
         <Offcanvas.Body className="p-0 m-0">
+          {/* Logo (visible only when expanded) */}
           {!isCollapsed && (
             <div className="title-container flex items-center justify-center" onClick={() => handleNavigation("/")}>
-              <img src={img1} alt="CropGen Logo" className=" w-[170px]" />
-
+              <img src={img1} alt="CropGen Logo" className="w-[170px]" />
             </div>
           )}
 
+          {/* User Card (only in expanded mode) */}
           {!isCollapsed && (
             <Card
               style={{ width: "13rem" }}
@@ -130,42 +123,57 @@ const Sidebar = ({ onToggleCollapse }) => {
                 <Card.Title className="profile-user-name">
                   {user?.firstName} {user?.lastName}
                 </Card.Title>
-                <Card.Text className="profile-user-email">
-                  {user?.email}
-                </Card.Text>
+                <Card.Text className="profile-user-email">{user?.email}</Card.Text>
               </Card.Body>
             </Card>
           )}
 
+          {/* Navigation */}
           <nav className="sidebar-nav">
-            <ul>
-              {isCollapsed && (
-                <li
-                  className="collapse-button mb-3"
-                  onClick={() => handleCollapseToggle(false)}
-                >
-                  <Hammer />
-                </li>
-              )}
-              {NAV_ITEMS.map(({ path, label, Icon }) => (
-                <li
-                  key={path}
-                  onClick={() => handleNavigation(path)}
-                  // className={location.pathname === path ? "active" : ""}
-                  className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out
-                    ${location.pathname === path ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left " : ""}`}>
-                  <Icon />
-                  {!isCollapsed && label}
-                </li>
-              ))}
+            <ul
+              className={!isCollapsed ? "" : "collapsed-nav-list"}
+              style={
+                isCollapsed
+                  ? {
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-evenly",
+                    alignItems: "center",
+                    height: "100vh",
+                    overflow: "hidden",
+                    padding: 0,
+                    margin: 0,
+                  }
+                  : undefined
+              }
+            >
+              {!isCollapsed
+                ? NAV_ITEMS.map(({ path, label, Icon }) => (
+                  <li
+                    key={path}
+                    onClick={() => handleNavigation(path)}
+                    className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${location.pathname === path
+                        ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
+                        : ""
+                      }`}
+                  >
+                    <Icon />
+                    {label}
+                  </li>
+                ))
+                : collapsedNavItems.map((item, index) => <li key={index}>{item}</li>)}
             </ul>
           </nav>
-          <div className="offcanvas-footer" onClick={handleLogout}>
-            <p className="footer-text">
-              <Logout />
-              {!isCollapsed && <span>Logout</span>}
-            </p>
-          </div>
+
+          {/* Logout in expanded mode */}
+          {!isCollapsed && (
+            <div className="offcanvas-footer cursor-pointer mt-5" onClick={handleLogout}>
+              <p className="footer-text flex items-center gap-2">
+                <Logout />
+                <span>Logout</span>
+              </p>
+            </div>
+          )}
         </Offcanvas.Body>
       </Offcanvas>
     </div>

@@ -18,7 +18,7 @@ const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
   return (
     <div className="w-full flex flex-col gap-2">
       {/* ✅ Heading */}
-      <span className="text-[#344E41] font-semibold text-[15px] text-[#344E41]">
+      <span className="text-[#344E41] font-semibold text-[16px] text-[#344E41]">
         Overall Crop Health
       </span>
 
@@ -33,7 +33,7 @@ const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
           </span>
         </div>
 
-        <span className="text-[#FCC21B] bg-[#F8F8F8] px-4 py-1 rounded-md text-sm font-semibold">
+        <span className="text-[#FCC21B] bg-[#F8F8F8] px-4 py-1 rounded-md text-[20px] font-semibold">
           {Crop_Health}
         </span>
       </div>
