@@ -108,7 +108,8 @@ const PersonalInfo = () => {
   }
 
   return (
-    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 lg:p-4 rounded-lg bg-white shadow-md font-inter h-[98%] flex flex-col box-border overflow-hidden overflow-y-hidden">
+   <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 lg:p-4 rounded-lg bg-white shadow-md font-inter h-[98%] overflow-y-auto">
+
       <div className="text-left px-4 py-1 border-b border-black/40 font-bold text-[#344E41]">
         <h5>Personal Info</h5>
       </div>

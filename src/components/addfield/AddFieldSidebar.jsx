@@ -87,7 +87,7 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
         <div className="w-[22vw] m-0 p-0 h-full">
           <div className="flex flex-row justify-between items-center border-b border-[#344e41] p-2.5 cursor-pointer">
             <h2 className="flex items-center gap-1 text-base text-[#344e41]">All Fields <ChevronDown size={20} color="#344E41" strokeWidth={2.5} /></h2>
-            <ArrowLeft size={20} color="#344E41" strokeWidth={2} onClick={toggleSidebarVisibility}/>
+            <ArrowLeft size={20} color="#344E41" strokeWidth={2} onClick={toggleSidebarVisibility} />
           </div>
 
           {/* Crop Details Form */}
@@ -96,7 +96,7 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
               <h5 className=" text-[#344e41] mb-3">Crop Details </h5>
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col gap-1 cursor-pointer">
-                  <label htmlFor="farm-name"className="text-[#344e41] font-semibold text-sm"> Farm Name</label>
+                  <label htmlFor="farm-name" className="text-[#344e41] font-semibold text-sm"> Farm Name</label>
                   <input
                     type="text"
                     value={farmName}
@@ -110,8 +110,9 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
                   <select
                     value={cropName}
                     onChange={(e) => setCropName(e.target.value)}
-                    className="select border border-[#344e41] w-[90%] outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300"
+                    className="select border border-[#344e41] w-[90%] outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300 hide-scrollbar"
                   >
+
                     <option value="" disabled>
                       Select Crop
                     </option>

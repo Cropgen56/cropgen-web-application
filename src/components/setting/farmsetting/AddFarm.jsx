@@ -365,7 +365,7 @@ const AddFarm = ({selectedFarm }) => {
                 onCancel={() => setDeleteModalVisible(false)}
                 okText="Yes, Delete"
                 okButtonProps={{ danger: true }}
-                centered >
+                className="flex justify-center items-center" >
                 <p>Are you sure you want to delete this farm? This action cannot be undone.</p>
             </Modal>
 

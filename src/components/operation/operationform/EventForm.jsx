@@ -31,13 +31,13 @@ const PROGRESS_OPTIONS = [
 
 const FORM_FIELDS = [
 
-    {
-    name: "Crop Name",
-    label: "Crop Name",
-    span: 12,
-    component: <Input />,
-    rules: [],
-  },
+  //   {
+  //   name: "Crop Name",
+  //   label: "Crop Name",
+  //   span: 12,
+  //   component: <Input />,
+  //   rules: [],
+  // },
   {
     name: "supervisorName",
     label: "Supervisor Name",
@@ -103,20 +103,20 @@ const FORM_FIELDS = [
     component: <Input type="number" min={0} />,
     rules: [],
   },
-   {
-    name: "Area",
-    label: "Area (in acres)",
-    span: 6,
-    component: <Input type="text" min={1} />,
-    rules: [],
-  },
-  {
-    name: "Date",
-    label: "Date",
-    span: 6,
-    component:<DatePicker placeholder="" style={{ width: "100%" }} />,
-    rules: [],
-  },
+  //  {
+  //   name: "Area",
+  //   label: "Area (in acres)",
+  //   span: 6,
+  //   component: <Input type="text" min={1} />,
+  //   rules: [],
+  // },
+  // {
+  //   name: "Date",
+  //   label: "Date",
+  //   span: 6,
+  //   component:<DatePicker placeholder="" style={{ width: "100%" }} />,
+  //   rules: [],
+  // },
 
   {
     name: "estimatedCost",
@@ -187,7 +187,7 @@ const EventForm = ({
   };
 
   return (
-    <Modal open={visible} onCancel={onClose} footer={null} centered width={600}>
+    <Modal open={visible} onCancel={onClose} footer={null} className="event-modal" width={600}>
       <h2 className="add-operation-title">Add Operations</h2>
       <Form
         form={form}
