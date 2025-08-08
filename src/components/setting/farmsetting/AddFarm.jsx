@@ -18,6 +18,8 @@ const AddFarm = ({selectedFarm }) => {
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [showAllFarms, setShowAllFarms] = useState(false);
     const [selectedFarmState, setSelectedFarmState] = useState(selectedFarm || {});
+    const isTabletSize = () => window.innerWidth <= 1024 && window.innerWidth > 768;
+
 
     const [formData, setFormData] = useState({
         farmName: selectedFarm?.fieldName || "",
@@ -46,6 +48,15 @@ const AddFarm = ({selectedFarm }) => {
             dispatch(getFarmFields(userId));
         }
     }, [dispatch, status, userId]);
+
+    const [isTablet, setIsTablet] = useState(isTabletSize());
+
+useEffect(() => {
+    const handleResize = () => setIsTablet(isTabletSize());
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+}, []);
+
 
     const handleFarmChange = (e) => {
         const value = e.target.value;
@@ -225,10 +236,116 @@ const AddFarm = ({selectedFarm }) => {
                 setShowAllFarms(false);
             }}
         />;
+
     }
 
-    return (
-        <div className="flex flex-col flex-grow justify-between gap-4 p-2 overflow-hidden overflow-y-auto">
+    
+
+return isTablet ? (
+    // === TABLET UI ===
+    <div className="flex flex-col h-[100vh] overflow-y-auto">
+        {/* MAP */}
+        <div className="h-[60vh] w-full">
+          <MapContainer
+            center={polygonCoordinates?.length > 0 ? [polygonCoordinates[0].lat, polygonCoordinates[0].lng] : defaultCenter}
+            zoom={15}
+            className="w-full h-full rounded-lg"
+          >
+            <TileLayer
+              url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+              subdomains={["mt0", "mt1", "mt2", "mt3"]}
+            />
+            {polygonCoordinates.length > 0 && (
+              <Polygon
+                positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
+                pathOptions={{ color: "yellow", fillOpacity: 0.2 }}
+              />
+            )}
+            <MoveMapToField coordinates={polygonCoordinates} />
+          </MapContainer>
+        </div>
+
+        {/* FORM + BUTTONS */}
+       {/* FORM + BUTTONS */}
+<div className="h-[30vh] px-3 py-2 flex flex-col">
+  {/* Scrollable form */}
+  <div className="flex-grow overflow-y-auto pr-1">
+    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
+      {[
+        { label: "Farm Name", name: "farmName", type: "text", value: formData.farmName, onChange: handleFarmChange },
+        { label: "Crop Name", name: "cropName", type: "select", value: formData.cropName },
+        { label: "Variety", name: "variety", type: "text", value: formData.variety },
+        { label: "Sowing Date", name: "sowingDate", type: "date", value: formData.sowingDate },
+        { label: "Type Of Irrigation", name: "typeOfIrrigation", type: "select", value: formData.typeOfIrrigation, options: ["Open", "Drip", "Sprinkler"] },
+        { label: "Type Of Farming", name: "typeOfFarming", type: "select", value: formData.typeOfFarming, options: ["Organic", "Inorganic", "Integrated"] },
+      ].map((field, index) => (
+        <div key={index} className="flex flex-col gap-1">
+          <label className="text-sm font-semibold">{field.label}</label>
+          {field.type === "select" ? (
+            <select
+              name={field.name}
+              value={field.value}
+              onChange={handleChange}
+              className="bg-[#344E41] text-gray-300 border border-[#344e41] rounded px-2 py-1"
+            >
+              <option value="" disabled>Select</option>
+              {(field.options || cropOptions).map((opt, i) => (
+                <option key={i} value={opt}>{opt}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type={field.type}
+              name={field.name}
+              value={field.value}
+              onChange={field.onChange || handleChange}
+              placeholder={field.label}
+              className="bg-[#344E41] text-gray-300 placeholder-gray-300 border border-[#344e41] rounded px-2 py-1"
+            />
+          )}
+        </div>
+      ))}
+    </form>
+  </div>
+
+  {/* Buttons at bottom */}
+  <div className="flex justify-between mt-3">
+    <button
+      type="button"
+      onClick={() => setDeleteModalVisible(true)}
+      className="flex items-center gap-1 px-4 py-2 border border-red-600 text-red-600 rounded-md hover:border-red-700 transition-colors duration-400 ease-in-out cursor-pointer"
+    >
+      Delete <Trash2 size={18} />
+    </button>
+    <button
+      type="button"
+      onClick={handleSubmit}
+      className={`flex items-center gap-1 px-4 py-2 border ${updating ? "bg-[#5A7C6B] cursor-not-allowed" : "bg-[#344E41] text-white"} rounded-md transition-all duration-400 ease-in-out cursor-pointer`}
+    >
+      {updating ? "Updating..." : <>Update <Save size={18} /></>}
+    </button>
+  </div>
+</div>
+
+
+        {/* Modal */}
+        <Modal
+          title="Confirm Delete"
+          open={deleteModalVisible}
+          onOk={handleDeleteConfirm}
+          onCancel={() => setDeleteModalVisible(false)}
+          okText="Yes, Delete"
+          okButtonProps={{ danger: true }}
+          className="flex justify-center items-center"
+        >
+          <p>Are you sure you want to delete this farm? This action cannot be undone.</p>
+        </Modal>
+      </div>
+) : (
+    // === DESKTOP UI ===
+    // KEEP YOUR EXISTING RETURN BLOCK HERE (unchanged)
+    <>
+       <div className="flex flex-col flex-grow justify-between gap-4 p-2 overflow-hidden overflow-y-auto">
             <form onSubmit={handleSubmit} className="flex flex-col-reverse lg:flex-row gap-3 lg:h-full w-full">
                 {/* form Section */}
                 <div className="flex flex-col gap-3 w-full lg:w-[30%] bg-white ">
@@ -370,7 +487,9 @@ const AddFarm = ({selectedFarm }) => {
             </Modal>
 
         </div>
-    );
+    </>
+);
+
 };
 
 export default AddFarm;

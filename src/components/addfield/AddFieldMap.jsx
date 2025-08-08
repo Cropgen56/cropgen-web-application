@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import L from "leaflet";
 import {
   MapContainer,
@@ -19,16 +19,19 @@ import {
 } from "../../assets/Icons";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import { getCityState } from "../../utility/getUserLocation";
-import { useLocation } from "react-router-dom";
-import "leaflet-geosearch/dist/geosearch.css";
 import { Calender, LeftArrow, RightArrow } from "../../assets/DashboardIcons";
 import { getCurrentLocation } from "../../utility/getCurrentLocation";
-// import "./AddFieldMap.css";
+import "leaflet-geosearch/dist/geosearch.css";
 import LoadingSpinner from "../comman/loading/LoadingSpinner";
 
-const AddFieldMap = ({ setMarkers, markers }) => {
-  const data = useLocation();
-  const [isAddingMarkers, setIsAddingMarkers] = useState(false);
+const AddFieldMap = ({
+  setMarkers,
+  markers,
+  isTabletView = false,
+  isAddingMarkers,
+  toggleAddMarkers,
+  clearMarkers,
+}) => {
   const [location, setLocation] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState({});
   const navigate = useNavigate();
@@ -36,7 +39,6 @@ const AddFieldMap = ({ setMarkers, markers }) => {
   const [loading, setLoading] = useState(true);
   const mapRef = useRef(null);
 
-  // Fetch the weather data
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
 
@@ -45,7 +47,6 @@ const AddFieldMap = ({ setMarkers, markers }) => {
       setLocation: (loc) => {
         setLocation(loc);
         if (loc?.latitude && loc?.longitude) {
-          // Update selectedLocation when location is fetched
           setSelectedLocation({
             lat: loc.latitude,
             lng: loc.longitude,
@@ -65,28 +66,27 @@ const AddFieldMap = ({ setMarkers, markers }) => {
 
   const yellowMarkerIcon = new L.divIcon({
     className: "yellow-marker",
-    // html: '<div style="background-color: yellow; border-radius: 50%; width: 15px; height: 15px; border: 1px solid #ffcc00; "></div>',
     html: `<div style="
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    font-size: 20px;
-                    font-weight: bold;
-                    color: yellow;
-                    background-color: rgba(0, 0, 0, 0.4); 
-                    border-radius: 50%;
-                    width: 22px;
-                    height: 22px;
-                    border: 2px solid yellow;
-                    box-shadow: 0 0 4px rgba(0,0,0,0.2);
-                "> + </div>`,
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: yellow;
+      background-color: rgba(0, 0, 0, 0.4); 
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      border: 2px solid yellow;
+      box-shadow: 0 0 4px rgba(0,0,0,0.2);
+    "> + </div>`,
     iconSize: [25, 25],
     iconAnchor: [12, 12],
     shadowUrl: markerShadow,
     shadowSize: [41, 41],
   });
 
-  const clearMarkers = () => setMarkers([]);
+  const clearAllMarkers = () => setMarkers([]);
 
   const Markers = () => {
     useMapEvents({
@@ -104,7 +104,6 @@ const AddFieldMap = ({ setMarkers, markers }) => {
     return null;
   };
 
-  // remove the last marks
   const removeLastMarker = () => {
     setMarkers((currentMarkers) => {
       if (currentMarkers.length === 0) {
@@ -115,43 +114,6 @@ const AddFieldMap = ({ setMarkers, markers }) => {
     });
   };
 
-  // get the currenct location
-  const CurrentLocationButton = ({ onLocationFound }) => {
-    const map = useMap();
-
-    const handleCurrentLocation = () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            onLocationFound({
-              lat: latitude,
-              lng: longitude,
-              name: "Your Current Location",
-            });
-            map.setView([latitude, longitude], 18);
-          },
-          () => alert("Unable to fetch your location."),
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-      } else {
-        alert("Geolocation not supported.");
-      }
-    };
-
-    // return (
-    //     <button
-    //     className={`absolute top-[60vh] right-2 z-[5000] p-2 bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out pointer-events-auto cursor-pointer hover:bg-[#064841] ${selectedIcon == "current-location" ? "selected-icon" : ""} `}
-    //     onClick={() => {
-    //     handleCurrentLocation();
-    //     setSelectedIcon("current-location");
-    //     }} >
-    //     <CurrentLocation />
-    // </button>
-    // );
-  };
-
-  // search the location
   const SearchField = ({ onLocationSelect }) => {
     const map = useMap();
 
@@ -199,14 +161,17 @@ const AddFieldMap = ({ setMarkers, markers }) => {
 
     return (
       <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-4/5 max-w-[400px] z-[2000]">
-        {/* Search control is added by leaflet-geosearch */}
+        {/* Placeholder for search UI injected by leaflet-geosearch */}
       </div>
     );
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center relative overflow-hidden">
-      <div className="h-screen w-full m-0 p-0 z-[1000] relative">
+      <div
+        className={`w-full m-0 p-0 z-[1000] relative ${isTabletView ? "h-[50vh]" : "h-screen"
+          }`}
+      >
         {loading && (
           <div className="absolute top-0 left-0 w-full h-full z-[999] bg-white bg-opacity-50 flex flex-col items-center justify-center">
             <LoadingSpinner height="100px" size={64} color="#86D72F" />
@@ -214,13 +179,15 @@ const AddFieldMap = ({ setMarkers, markers }) => {
           </div>
         )}
 
-        {selectedLocation?.lat && selectedLocation?.lng ? (
+        {selectedLocation?.lat && selectedLocation?.lng && (
           <>
             <MapContainer
               center={[selectedLocation.lat, selectedLocation.lng]}
               zoom={17}
               zoomControl={true}
-              className="h-screen w-full m-0 p-0 relative z-[1000]"
+              className={`w-full m-0 p-0 relative 
+                ${isTabletView ? "h-[60vh]" : "h-screen"} 
+                pointer-events-auto z-0`}
               whenCreated={(mapInstance) => {
                 mapRef.current = mapInstance;
               }}
@@ -256,14 +223,16 @@ const AddFieldMap = ({ setMarkers, markers }) => {
               )}
 
               <Markers />
-              <CurrentLocationButton onLocationFound={setSelectedLocation} />
+              <SearchField onLocationSelect={setSelectedLocation} />
 
-              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-4/5 max-w-[400px] z-[2000]">
-                {" "}
-                <SearchField onLocationSelect={setSelectedLocation} />
-              </div>
-            </MapContainer>{" "}
-            <div className="absolute top-0 right-2 h-screen flex flex-col justify-center gap-4 z-[1000] ">
+              {/* Disable bottom half of the map for pointer events in tablet mode */}
+              {isTabletView && (
+                <div className="absolute top-1/2 left-0 w-full h-1/2 z-[5000] bg-transparent pointer-events-none"></div>
+              )}
+            </MapContainer>
+
+            {/* Right side vertical buttons */}
+            <div className="absolute top-[-10%] right-2 h-screen flex flex-col justify-center gap-4 z-[1000] ">
               <button
                 onClick={() => {
                   setSelectedIcon("back-button");
@@ -273,9 +242,8 @@ const AddFieldMap = ({ setMarkers, markers }) => {
                     removeLastMarker();
                   }
                 }}
-                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${
-                  selectedIcon == "back-button" ? "ring-2 ring-white" : ""
-                }`}
+                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${selectedIcon === "back-button" ? "ring-2 ring-white" : ""
+                  }`}
               >
                 <BackButtonIcon />
               </button>
@@ -285,26 +253,18 @@ const AddFieldMap = ({ setMarkers, markers }) => {
                   clearMarkers();
                   setSelectedIcon("remove");
                 }}
-                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${
-                  selectedIcon == "remove" ? "selected-icon" : ""
-                }`}
+                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${selectedIcon === "remove" ? "ring-2 ring-white" : ""
+                  }`}
               >
                 <DeleteIcon />
               </button>
 
               <button
                 onClick={() => {
-                  console.log("Location button clicked");
                   if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                       (position) => {
                         const { latitude, longitude } = position.coords;
-                        console.log(
-                          "Got current location:",
-                          latitude,
-                          longitude
-                        );
-
                         setSelectedLocation({
                           lat: latitude,
                           lng: longitude,
@@ -324,22 +284,24 @@ const AddFieldMap = ({ setMarkers, markers }) => {
                   }
                   setSelectedIcon("current-location");
                 }}
-                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-300 hover:bg-[#064841] cursor-pointer ${
-                  selectedIcon === "current-location" ? "ring-2 ring-white" : ""
-                }`}
+                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-300 hover:bg-[#064841] cursor-pointer ${selectedIcon === "current-location" ? "ring-2 ring-white" : ""
+                  }`}
               >
                 <CurrentLocation />
               </button>
             </div>
-            {/* Add Field Button Section */}
-            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 z-[1100] w-[95%] md:max-w-[500px] lg:max-w-[900px]  bg-[#5a7c6b] rounded shadow-md mx-auto">
-              <div className="w-full text-center z-[1000]">
-                <div className="flex justify-between items-center gap-4 p-2.5 bg-[#5a7c6b] rounded w-full">
+
+            {/* Bottom center controls */}
+            <div
+              className={`z-[1100] w-full px-2 ${isTabletView
+                  ? "absolute bottom-[-15%] left-0"
+                  : "absolute bottom-1 left-1/2 transform -translate-x-1/2"
+                }`}
+            >
+              <div className="w-full text-center">
+                <div className="flex justify-between items-center gap-4 p-2.5 bg-[#5a7c6b] rounded shadow-md w-full max-w-[900px] mx-auto">
                   <div className="flex items-center gap-2 border-r border-gray-200 pr-2">
-                    <button
-                      aria-label="Calendar"
-                      className="border-r border-gray-200 pr-2"
-                    >
+                    <button aria-label="Calendar" className="border-r border-gray-200 pr-2">
                       <Calender />
                     </button>
                     <button aria-label="Previous">
@@ -349,22 +311,20 @@ const AddFieldMap = ({ setMarkers, markers }) => {
 
                   <button
                     className="px-4 text-sm lg:text-base rounded bg-[#5a7c6b] text-white font-semibold whitespace-nowrap"
-                    onClick={() => setIsAddingMarkers(!isAddingMarkers)}
+                    onClick={toggleAddMarkers}
                   >
                     {isAddingMarkers ? "Stop Adding Markers" : "Add Field"}
                   </button>
 
-                  <button
-                    className="border-l border-gray-200 pl-2"
-                    aria-label="Next"
-                  >
+                  <button className="border-l border-gray-200 pl-2" aria-label="Next">
                     <RightArrow />
                   </button>
                 </div>
               </div>
             </div>
+
           </>
-        ) : null}
+        )}
       </div>
     </div>
   );
