@@ -22,7 +22,7 @@ const AuthLayout = () => {
   const [animate, setAnimate] = useState(false);
   const [height, setHeight] = useState(window.innerHeight);
   const [width, setWidth] = useState(window.innerWidth);
-  const isTablet = width <= 1023 && height <= 1366;
+  const isTablet = width <= 1139 && height <= 1367;
 
   useEffect(() => {
     dispatch(loadLocalStorage());
