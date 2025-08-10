@@ -18,7 +18,8 @@ const AddFarm = ({selectedFarm }) => {
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [showAllFarms, setShowAllFarms] = useState(false);
     const [selectedFarmState, setSelectedFarmState] = useState(selectedFarm || {});
-    const isTabletSize = () => window.innerWidth <= 1024 && window.innerWidth > 768;
+    const isTabletSize = () => window.innerWidth <= 1024 && window.innerWidth >= 600;
+
 
 
     const [formData, setFormData] = useState({
@@ -269,7 +270,7 @@ return isTablet ? (
        {/* FORM + BUTTONS */}
 <div className="h-[30vh] px-3 py-2 flex flex-col">
   {/* Scrollable form */}
-  <div className="flex-grow overflow-y-auto pr-1">
+  <div className="flex-grow pr-1">
     <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
       {[
         { label: "Farm Name", name: "farmName", type: "text", value: formData.farmName, onChange: handleFarmChange },
