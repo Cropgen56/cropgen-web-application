@@ -8,6 +8,7 @@ import WeekWeather from "../components/weather/weather/WeekWeather";
 import WeatherHistory from "../components/weather/weatherhistory/WeatherHistory";
 import WeatherSidebar from "../components/weather/weathersidebar/WeatherSidebar";
 import { getFarmFields } from "../redux/slices/farmSlice";
+import { fetchForecastData } from "../redux/slices/weatherSlice";
 import { createAOI, fetchAOIs } from "../redux/slices/weatherSlice";
 import "../style/weather.css";
 
@@ -28,10 +29,13 @@ const Weather = () => {
   const user = useSelector((state) => state?.auth?.user);
   const fields = useSelector((state) => state?.farmfield?.fields) || [];
   const aois = useSelector((state) => state?.weather?.aois) || [];
+  const forecastData =
+    useSelector((state) => state?.weather?.forecastData) || [];
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [selectedField, setSelectedField] = useState(null);
 
+  console.log(forecastData);
   // Fetch AOIs and farm fields when userId changes
   useEffect(() => {
     if (user?.id) {
@@ -72,7 +76,15 @@ const Weather = () => {
     }
   }, [payload, dispatch, aois]);
 
-  console.log(aois);
+  // Dispatch fetchForecastData when selectedField or aois changes
+  useEffect(() => {
+    if (selectedField && aois.length > 0) {
+      const matchingAOI = aois.find((aoi) => aoi.name === selectedField._id);
+      if (matchingAOI && matchingAOI.id) {
+        dispatch(fetchForecastData({ geometry_id: matchingAOI.id }));
+      }
+    }
+  }, [dispatch, selectedField, aois]);
 
   return (
     <div className="weather container-fluid m-0 p-0 w-full flex">

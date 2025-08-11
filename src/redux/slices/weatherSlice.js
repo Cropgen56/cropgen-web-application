@@ -64,7 +64,26 @@ export const fetchAOIs = createAsyncThunk(
   }
 );
 
-// create the forcast thunk here
+// Async thunk for fetching 16-day weather forecast
+export const fetchForecastData = createAsyncThunk(
+  "weather/fetchForecastData",
+  async ({ geometry_id }, { rejectWithValue }) => {
+    const apiKey = "5b97d3f0-a01a-490b-aad1-3bfa848309f2";
+    const url = `https://observearth.com/api/weather/forecast/?geometry_id=${geometry_id}`;
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          "X-API-Key": apiKey,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to fetch forecast data"
+      );
+    }
+  }
+);
 
 // Weather slice
 const weatherSlice = createSlice({
@@ -117,6 +136,19 @@ const weatherSlice = createSlice({
         state.loading = false;
       })
       .addCase(fetchAOIs.rejected, (state, action) => {
+        state.error = action.payload;
+        state.loading = false;
+      })
+      // Fetch forecast data
+      .addCase(fetchForecastData.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchForecastData.fulfilled, (state, action) => {
+        state.forecastData = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchForecastData.rejected, (state, action) => {
         state.error = action.payload;
         state.loading = false;
       });
