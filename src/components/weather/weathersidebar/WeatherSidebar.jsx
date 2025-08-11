@@ -33,6 +33,7 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const fields = useSelector((state) => state?.farmfield?.fields) || [];
 
+  // calculate the centroid of a field
   const calculateCentroid = (field) => {
     if (!field || field.length === 0) return { lat: 0, lon: 0 };
     const total = field.reduce(
