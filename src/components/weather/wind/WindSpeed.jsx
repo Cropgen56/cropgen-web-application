@@ -1,75 +1,81 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import ReactECharts from "echarts-for-react";
 import { Card } from "react-bootstrap";
 import "./WindSpeed.css";
 
 const WindChart = ({ forecastData }) => {
-  // Defensive defaults
   const forecast = forecastData?.forecast || {};
   const current = forecastData?.current || {};
 
-  // Dates formatted from forecast.time (e.g. "2025-08-11" => "11 Aug")
   const dates = (forecast.time || []).map((dateStr) => {
     const d = new Date(dateStr);
     return `${d.getDate()} ${d.toLocaleString("default", { month: "short" })}`;
   });
 
-  // Wind gusts and wind speed arrays from forecast (units in km/h)
   const windGusts = forecast.wind_gusts || [];
   const windSpeed = forecast.wind_speed || [];
 
-  // Current wind info, fallback to '-'
   const currentWindSpeed = current.wind_speed ?? "-";
   const currentWindGusts = current.wind_gusts ?? "-";
   const lastUpdated = current.time
     ? new Date(current.time).toLocaleString()
     : "-";
 
-  const option = {
-    tooltip: { trigger: "axis" },
-    grid: {
-      left: "5%",
-      right: "5%",
-      top: "18%",
-      bottom: "10%",
-      containLabel: true,
+const option = {
+  tooltip: { trigger: "axis" },
+  grid: {
+    left: "3%",   // even smaller left margin
+    right: "3%",  // smaller right margin
+    top: "18%",
+    bottom: "15%",
+    containLabel: true,
+  },
+  xAxis: {
+    type: "category",
+    data: dates,
+    boundaryGap: false,      // no gap on sides, use full width
+    axisLine: { lineStyle: { color: "#888" } },
+    axisLabel: {
+      color: "#333",
+      interval: 0,           // show all labels
+      rotate: 0,            // horizontal labels, can set to 15 or 20 if overlap occurs
+      margin: 15,
+      fontSize: 12,
+      // overflow: 'truncate',  // optional if text overflows
     },
-    xAxis: {
-      type: "category",
-      data: dates,
-      axisLine: { lineStyle: { color: "#888" } },
-      axisLabel: { color: "#333" },
+  },
+  yAxis: {
+    type: "value",
+    min: 0,
+    max: Math.max(...windGusts, ...windSpeed, 20),
+    interval: 15,
+    axisLine: { lineStyle: { color: "#888" } },
+    axisLabel: { formatter: "{value} km/h", color: "#333", margin: 15 },
+    splitLine: { lineStyle: { type: "dashed", color: "#eee" } },
+  },
+  series: [
+    {
+      name: "Wind Gusts",
+      type: "line",
+      data: windGusts,
+      smooth: true,
+      symbol: "circle",
+      symbolSize: 8,
+      itemStyle: { color: "#1f77b4" },
     },
-    yAxis: {
-      type: "value",
-      min: 0,
-      max: Math.max(...windGusts, ...windSpeed, 20), // dynamic max or min 20
-      interval: 5,
-      axisLine: { lineStyle: { color: "#888" } },
-      axisLabel: { formatter: "{value} km/h", color: "#333" },
-      splitLine: { lineStyle: { type: "dashed", color: "#eee" } },
+    {
+      name: "Wind Speed",
+      type: "line",
+      data: windSpeed,
+      smooth: true,
+      symbol: "circle",
+      symbolSize: 8,
+      itemStyle: { color: "#ff7f0e" },
     },
-    series: [
-      {
-        name: "Wind Gusts",
-        type: "line",
-        data: windGusts,
-        smooth: true,
-        symbol: "circle",
-        symbolSize: 8,
-        itemStyle: { color: "#1f77b4" },
-      },
-      {
-        name: "Wind Speed",
-        type: "line",
-        data: windSpeed,
-        smooth: true,
-        symbol: "circle",
-        symbolSize: 8,
-        itemStyle: { color: "#ff7f0e" },
-      },
-    ],
-  };
+  ],
+};
+
+
 
   return (
     <Card className="wind-chart-card">
@@ -123,11 +129,12 @@ const WindChart = ({ forecastData }) => {
           </div>
         </div>
         <div className="wind-chart-container">
-          <ReactECharts
-            option={option}
-            className="wind-chart-echarts"
-            style={{ width: "100%", padding: "0px" }}
-          />
+        <ReactECharts
+  option={option}
+  className="wind-chart-echarts"
+  style={{ width: "100%", padding: "0px" }}
+/>
+
         </div>
       </Card.Body>
     </Card>

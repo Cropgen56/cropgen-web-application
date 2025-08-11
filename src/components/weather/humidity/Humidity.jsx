@@ -16,12 +16,8 @@ const Humidity = ({ forecastData }) => {
   // Use relative humidity for humidity data (array)
   const humidityData = forecast.relative_humidity || [];
 
-  //we have no dewpoint data
-  const dewPointData = forecast.dew_point || humidityData.map(() => null);
-
-  // Current humidity and dew point from current data (or fallback)
+  // Current humidity from current data (or fallback)
   const currentHumidity = current.relative_humidity ?? "-";
-  const currentDewPoint = current.dew_point ?? "-";
 
   const options = {
     grid: {
@@ -35,8 +31,14 @@ const Humidity = ({ forecastData }) => {
       type: "category",
       boundaryGap: false,
       data: dates,
+
       axisLine: { show: true },
-      axisLabel: { color: "#000" },
+      axisLabel: {
+        color: "#000", interval: 0,    // show all 16 labels
+        rotate: 0,      // rotate to 15 or 30 if needed
+        fontSize: 11,
+        margin: 10,
+      },
       splitLine: {
         show: true,
         lineStyle: {
@@ -45,40 +47,16 @@ const Humidity = ({ forecastData }) => {
         },
       },
     },
-    yAxis: [
-      {
-        type: "value",
-        nameTextStyle: {
-          fontSize: 14,
-          fontWeight: "bold",
-          color: "#000",
-          padding: [0, 0, 0, 5],
-        },
-        min: 0,
-        max: 100,
-        interval: 20,
-        axisLine: { show: true },
-        axisTick: { show: true },
-        axisLabel: { color: "#000", formatter: "{value}%" },
-        splitLine: { show: false },
-      },
-      {
-        type: "value",
-        nameTextStyle: {
-          fontSize: 14,
-          fontWeight: "bold",
-          color: "#000",
-          padding: [0, 5, 0, 0],
-        },
-        min: -10,
-        max: 35,
-        interval: 5,
-        axisLine: { show: true },
-        axisTick: { show: true },
-        axisLabel: { color: "#000", formatter: "{value}°C" },
-        splitLine: { show: false },
-      },
-    ],
+    yAxis: {
+      type: "value",
+      min: 0,
+      max: 100,
+      interval: 20,
+      axisLine: { show: true },
+      axisTick: { show: true },
+      axisLabel: { color: "#000", formatter: "{value}%" },
+      splitLine: { show: false },
+    },
     series: [
       {
         name: "Humidity",
@@ -90,24 +68,12 @@ const Humidity = ({ forecastData }) => {
         symbol: "circle",
         symbolSize: 4,
       },
-      {
-        name: "Dew Point",
-        data: dewPointData,
-        type: "line",
-        yAxisIndex: 1,
-        areaStyle: { color: "#86D72FB2" },
-        lineStyle: { color: "#86D72FB2" },
-        smooth: false,
-        symbol: "circle",
-        symbolSize: 4,
-      },
     ],
     tooltip: {
       trigger: "axis",
       formatter: (params) => {
         const humidity = params.find(p => p.seriesName === "Humidity");
-        const dewPoint = params.find(p => p.seriesName === "Dew Point");
-        return `${params[0].name}<br/>Humidity: ${humidity?.value ?? '-'}%<br/>Dew Point: ${dewPoint?.value ?? '-'}°C`;
+        return `${params[0].name}<br/>Humidity: ${humidity?.value ?? '-'}%`;
       },
     },
   };
@@ -115,19 +81,12 @@ const Humidity = ({ forecastData }) => {
   return (
     <div className="bg-white rounded-lg shadow-md mt-3 mx-2 mb-2">
       <div className="p-4">
-        <h2 className="flex justify-between items-center text-[20px] font-bold text-[#344E41] mb-3">
+        <h2 className="flex justify-start items-center text-[20px] font-bold text-[#344E41] mb-3">
           <span className="text-[20px] font-bold">Humidity %</span>
-          <span className="text-[20px] font-bold">Dew Point, °C</span>
         </h2>
-        <div className="flex justify-between mb-3 text-[#344E41]">
-          <div>
-            <p>Current Humidity</p>
-            <h2 className="text-[30px] font-bold">{currentHumidity}%</h2>
-          </div>
-          <div>
-            <p>Current Dew Point</p>
-            <h2 className="text-[30px] font-bold">{currentDewPoint}°C</h2>
-          </div>
+        <div className="mb-3 text-[#344E41]">
+          <p>Current Humidity</p>
+          <h2 className="text-[30px] font-bold">{currentHumidity}%</h2>
         </div>
         <div className="w-full">
           <ReactEcharts option={options} className="w-full h-[200px]" />

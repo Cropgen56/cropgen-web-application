@@ -4,6 +4,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   background-color: #ffffff !important;
+  width: auto;
 }
 .wind-chart-heading {
   display: flex;
@@ -43,6 +44,7 @@
 }
 .wind-chart-container {
   position: relative;
+ 
 }
 
 .wind-chart-echarts {

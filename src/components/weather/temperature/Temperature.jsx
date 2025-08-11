@@ -8,7 +8,21 @@ const Temperature = ({ forecastData }) => {
     return <p>Loading temperature data...</p>;
   }
 
-  const { time, temp_max, temp_mean, temp_min } = forecastData.forecast;
+  const { time = [], temp_max = [], temp_mean = [], temp_min = [] } = forecastData.forecast;
+
+  // Slice to 16 days only
+  const slicedTime = time.slice(0, 16);
+  const slicedTempMax = temp_max.slice(0, 16);
+  const slicedTempMean = temp_mean.slice(0, 16);
+  const slicedTempMin = temp_min.slice(0, 16);
+
+  // Format dates as "DD MMM"
+  const formattedDates = slicedTime.map(dateStr => {
+    const d = new Date(dateStr);
+    const day = d.getDate();
+    const month = d.toLocaleString("default", { month: "short" });
+    return `${day} ${month}`;
+  });
 
   const options = {
     grid: {
@@ -21,14 +35,14 @@ const Temperature = ({ forecastData }) => {
     xAxis: {
       type: "category",
       boundaryGap: false,
-      data: time,
+      data: formattedDates,
       axisLine: { show: true },
       axisLabel: { color: "#000" },
     },
     yAxis: {
       type: "value",
-      min: Math.min(...temp_min) - 2,
-      max: Math.max(...temp_max) + 2,
+      min: Math.min(...slicedTempMin) - 2,
+      max: Math.max(...slicedTempMax) + 2,
       interval: 2,
       axisLine: { show: true },
       splitLine: { show: true },
@@ -38,7 +52,7 @@ const Temperature = ({ forecastData }) => {
     series: [
       {
         name: "Max Temp",
-        data: temp_max,
+        data: slicedTempMax,
         type: "line",
         areaStyle: { color: "#F4BC58" },
         lineStyle: { color: "#F4BC58" },
@@ -47,7 +61,7 @@ const Temperature = ({ forecastData }) => {
       },
       {
         name: "Mean Temp",
-        data: temp_mean,
+        data: slicedTempMean,
         type: "line",
         areaStyle: { color: "#86D72F" },
         lineStyle: { color: "#86D72F" },
@@ -56,7 +70,7 @@ const Temperature = ({ forecastData }) => {
       },
       {
         name: "Min Temp",
-        data: temp_min,
+        data: slicedTempMin,
         type: "line",
         areaStyle: { color: "#4B970F" },
         lineStyle: { color: "#4B970F" },
