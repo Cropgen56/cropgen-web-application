@@ -1,200 +1,159 @@
-// import axios from "axios";
-// import React, { useState, useEffect } from "react";
-// import { Container, Row, Col, Card } from "react-bootstrap";
-// import { useSelector } from "react-redux";
-
-// const WeekWeather = () => {
-//   const [forecast, setForecast] = useState([]);
-//   const apiKey = "55914755213187993587f0bcd665271b";
-//   const lat = 19.076;
-//   const lon = 72.8777;
-
-//   useEffect(() => {
-//     const fetchWeather = async () => {
-//       try {
-//         const response = await axios.get(
-//           `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
-//         );
-
-//         // Process the data to extract daily forecast data
-//         const dailyData = response.data.list.reduce((acc, reading) => {
-//           const dateObj = new Date(reading.dt * 1000);
-//           const date = `${dateObj.toLocaleDateString("en-US", {
-//             weekday: "short",
-//           })} ${dateObj.getDate()} ${dateObj.toLocaleDateString("en-US", {
-//             month: "short",
-//           })}`;
-
-//           // Only store the data for one reading per day (e.g., for noon or midnight)
-//           if (!acc[date]) {
-//             acc[date] = {
-//               temp: reading.main.temp,
-//               icon: reading.weather[0].icon,
-//               description: reading.weather[0].description,
-//               feelsLike: reading.main.feels_like,
-//               pressure: reading.main.pressure,
-//               humidity: reading.main.humidity,
-//               windSpeed: reading.wind.speed,
-//               clouds: reading.clouds.all,
-//             };
-//           }
-//           return acc;
-//         }, {});
-
-//         // Only keep data for the next 7 days
-//         setForecast(Object.entries(dailyData).slice(0, 7)); // 7 days of forecast data
-//       } catch (error) {
-//         console.error("Error fetching weather data:", error);
-//       }
-//     };
-
-//     fetchWeather();
-//   }, [lat, lon, apiKey]);
-
-//   // WeatherDay component inside WeekWeather.js
-//   const WeatherDay = ({ day, data }) => {
-//     return (
-//       <div className="weather-day bg-primary h-25">
-//         <h3>{day}</h3>
-//         <img
-//           src={`https://openweathermap.org/img/wn/${data.icon}@2x.png`}
-//           alt={data.description}
-//           className="weather-icon"
-//         />
-//         <p>{data.description}</p>
-//         <p>Temperature: {Math.round((data.temp * 9) / 5 + 32)}°F</p>
-//         <p>Feels Like: {Math.round((data.feelsLike * 9) / 5 + 32)}°F</p>
-//         <p>Pressure: {data.pressure} hPa</p>
-//         <p>Humidity: {data.humidity}%</p>
-//         <p>Wind Speed: {data.windSpeed} m/s</p>
-//         <p>Clouds: {data.clouds}%</p>
-//       </div>
-//     );
-//   };
-
-//   return (
-//     <Container fluid style={{ background: "#5f7e6f", height: "100vh" }}>
-//       <Row>
-//         <Col md={9} className="content">
-//           <Card style={{ marginTop: 20 }}>
-//             <div className="weather-container">
-//               <div className="forecast-wrapper">
-//                 {forecast.map(([day, data], index) => (
-//                   <WeatherDay key={index} day={day} data={data} />
-//                 ))}
-//               </div>
-//             </div>
-//           </Card>
-//         </Col>
-//       </Row>
-//     </Container>
-//   );
-// };
-
-// export default WeekWeather;
-
-import React from "react";
-import "./WeekWeather.css";
+import React, { useRef } from "react";
 import { Card } from "react-bootstrap";
-import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import rainIcon from "../../../assets/image/Vector (1).png"; // raining
+import sunIcon from "../../../assets/image/Vector (2).png"; // sunny
+import cloudIcon from "../../../assets/image/Vector (2).png"; // clouds
+import thundering from "../../../assets/image/Vector (4).png"; // thundering
+import partiallyrainy from "../../../assets/image/Group 109.png"; // partially rainy
 
-const WeekWeather = ({ selectedField }) => {
-  const [forecast, setForecast] = useState([]);
-  const { data } = useSelector((state) => state.weather);
+import "./WeekWeather.css";
 
-  useEffect(() => {
-    try {
-      // Process the data to extract daily forecast data
-      const dailyData = data.data.list.reduce((acc, reading) => {
-        const dateObj = new Date(reading.dt * 1000);
-        const date = `${dateObj.toLocaleDateString("en-US", {
-          weekday: "short",
-        })} ${dateObj.getDate()} ${dateObj.toLocaleDateString("en-US", {
-          month: "short",
-        })}`;
+const WeekWeather = ({ forecastData }) => {
+  const scrollRef = useRef(null);
 
-        // Only store the data for one reading per day (e.g., for noon or midnight)
-        if (!acc[date]) {
-          acc[date] = {
-            temp: reading.main.temp,
-            icon: reading.weather[0].icon,
-            description: reading.weather[0].description,
-            feelsLike: reading.main.feels_like,
-            pressure: reading.main.pressure,
-            humidity: reading.main.humidity,
-            windSpeed: reading.wind.speed,
-            clouds: reading.clouds.all,
-          };
-        }
-        return acc;
-      }, {});
+  if (!forecastData || !forecastData.forecast) return <p>Loading...</p>;
 
-      // Only keep data for the next 7 days
-      setForecast(Object.entries(dailyData).slice(0, 7)); // 7 days of forecast data
-    } catch (error) {
-      console.error("Error fetching weather data:", error);
+  const { forecast } = forecastData;
+  const daysToShow = forecast.time.length;
+
+  // Format date helper
+  const formatDate = (dateStr) => {
+    const dateObj = new Date(dateStr);
+    const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return `${dayNames[dateObj.getDay()]}, ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]}`;
+  };
+
+  // Icon logic based on precip, cloud cover, and (optional) other data
+  const getWeatherIcon = (precip, cloudCover, dayIndex) => {
+    // Use your own logic and imported icons here
+
+    // Example enhanced logic:
+    if (precip > 10) return rainIcon; // heavy rain
+    if (precip > 0 && precip <= 10) return partiallyrainy; // light rain
+    if (cloudCover > 70) return cloudIcon; // cloudy
+    if (cloudCover > 40) return partiallyrainy; // partly cloudy
+    // For demonstration, randomly assign thundering on days divisible by 5
+    if (dayIndex % 5 === 0 && precip > 0) return thundering;
+
+    return sunIcon; // default sunny
+  };
+
+  // Scroll handler to scroll right by 200px
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 200, behavior: "smooth" });
     }
-  }, []);
+  };
 
-  const forecastData = [
-    {
-      date: "SUN, 9 Jun",
-      icon: "https://img.icons8.com/color/48/000000/rain--v1.png",
-      temperature: "3° - 30°",
-      rain: "40mm",
-    },
-    {
-      date: "MON, 10 Jun",
-      icon: "https://img.icons8.com/color/48/000000/sun.png",
-      temperature: "10° - 30°",
-      rain: "0mm",
-    },
-    {
-      date: "TUE, 11 Jun",
-      icon: "https://img.icons8.com/color/48/000000/rain--v1.png",
-      temperature: "3° - 30°",
-      rain: "40mm",
-    },
-    {
-      date: "WED, 12 Jun",
-      icon: "https://img.icons8.com/color/48/000000/storm.png",
-      temperature: "5° - 30°",
-      rain: "0mm",
-    },
-    {
-      date: "THU, 13 Jun",
-      icon: "https://img.icons8.com/color/48/000000/partly-cloudy-day--v1.png",
-      temperature: "3° - 30°",
-      rain: "0mm",
-    },
-    {
-      date: "FRI, 14 Jun",
-      icon: "https://img.icons8.com/color/48/000000/rain--v1.png",
-      temperature: "3° - 30°",
-      rain: "20mm",
-    },
-    {
-      date: "SAT, 15 Jun",
-      icon: "https://img.icons8.com/color/48/000000/sun.png",
-      temperature: "3° - 30°",
-      rain: "40mm",
-    },
-  ];
+  // Scroll handler to scroll left by 200px
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -200, behavior: "smooth" });
+    }
+  };
 
   return (
     <Card className="weekweather-card">
-      {" "}
       <Card.Body>
-        <div className="forecast-container">
-          {forecastData.map((day, index) => (
-            <div className="day-card" key={index}>
-              <div className="date">{day.date}</div>
-              <img src={day.icon} alt="Weather Icon" className="icon" />
-              <div className="temperature">{day.temperature}</div>
-              <div className="rain">{day.rain}</div>
-            </div>
-          ))}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {/* Left scroll button */}
+          <button
+            onClick={scrollLeft}
+            style={{
+              fontSize: 20,
+              padding: "6px 12px",
+              marginRight: 8,
+              cursor: "pointer",
+            }}
+            aria-label="Scroll left"
+          >
+            ◀
+          </button>
+
+          {/* Scrollable container */}
+          <div
+            ref={scrollRef}
+            className="forecast-container"
+            style={{
+              display: "flex",
+              overflowX: "auto",
+              gap: "12px",
+              scrollbarWidth: "thin",
+              flexGrow: 1,
+              paddingBottom: 8,
+            }}
+          >
+            {forecast.time.slice(0, daysToShow).map((dateStr, i) => {
+              const maxTemp = Math.round(forecast.temp_max[i]);
+              const minTemp = Math.round(forecast.temp_min[i]);
+              const precipitation = forecast.precipitation[i];
+              const cloudCover = forecast.cloud_cover[i];
+              const icon = getWeatherIcon(precipitation, cloudCover, i);
+
+              return (
+                <div
+                  className="day-card"
+                  key={dateStr}
+                  style={{
+                    textAlign: "center",
+                    minWidth: 100,
+                    border: "1px solid #ccc",
+                    borderRadius: 8,
+                    padding: 8,
+                    backgroundColor: "#f9f9f9",
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    className="date"
+                    style={{ fontWeight: "600", marginBottom: 6 }}
+                  >
+                    {formatDate(dateStr)}
+                  </div>
+                  <img
+                    src={icon}
+                    alt="Weather Icon"
+                    className="icon"
+                    style={{ width: 48, height: 48, marginBottom: 6 }}
+                  />
+                  <div className="temperature" style={{ marginBottom: 4 }}>
+                    {minTemp}° - {maxTemp}°
+                  </div>
+                  <div className="rain" style={{ color: "#0066cc" }}>
+                    {precipitation.toFixed(1)} mm
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Right scroll button */}
+          <button
+            onClick={scrollRight}
+            style={{
+              fontSize: 20,
+              padding: "6px 12px",
+              marginLeft: 8,
+              cursor: "pointer",
+            }}
+            aria-label="Scroll right"
+          >
+            ▶
+          </button>
         </div>
       </Card.Body>
     </Card>
