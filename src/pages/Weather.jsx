@@ -35,7 +35,6 @@ const Weather = () => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [selectedField, setSelectedField] = useState(null);
 
-  console.log(forecastData);
   // Fetch AOIs and farm fields when userId changes
   useEffect(() => {
     if (user?.id) {
