@@ -24,15 +24,23 @@ import { decodeToken, loadLocalStorage } from "../../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const NAV_ITEMS = [
-  { path: "/cropgen-analytics", label: "CropGen Analytics", Icon: CropAnalysisIcon },
+  {
+    path: "/cropgen-analytics",
+    label: "CropGen Analytics",
+    Icon: CropAnalysisIcon,
+  },
   { path: "/addfield", label: "Add Field", Icon: AddFieldIcon },
   { path: "/weather", label: "Weather", Icon: Weather },
   { path: "/operation", label: "Operation", Icon: Operation },
-  { path: "/disease-detection", label: "Disease Detection", Icon: DieaseDetaction },
+  // { path: "/disease-detection", label: "Disease Detection", Icon: DieaseDetaction },
   { path: "/smart-advisory", label: "Smart Advisory", Icon: SmartAdvisory },
   { path: "/soil-report", label: "Soil Report", Icon: SoilReportIcon },
   { path: "/farm-report", label: "Farm Report", Icon: FarmReport },
-  { path: "/personalise-crop-shedule", label: "Personalise Crop Schedule", Icon: PersonaliseCropShedule },
+  // {
+  //   path: "/personalise-crop-shedule",
+  //   label: "Personalise Crop Schedule",
+  //   Icon: PersonaliseCropShedule,
+  // },
   { path: "/setting", label: "Setting", Icon: Setting },
 ];
 
@@ -82,7 +90,11 @@ const Sidebar = ({ onToggleCollapse }) => {
 
   // calculate dynamic spacing for collapsed mode
   const collapsedNavItems = [
-    <li key="collapse-toggle" className="collapse-button" onClick={() => handleCollapseToggle(false)}>
+    <li
+      key="collapse-toggle"
+      className="collapse-button"
+      onClick={() => handleCollapseToggle(false)}
+    >
       <Hammer />
     </li>,
     ...NAV_ITEMS.map(({ path, Icon }) => (
@@ -112,7 +124,10 @@ const Sidebar = ({ onToggleCollapse }) => {
         <Offcanvas.Body className="p-0 m-0">
           {/* Logo */}
           {!isCollapsed && (
-            <div className="title-container flex items-center justify-center" onClick={() => handleNavigation("/")}>
+            <div
+              className="title-container flex items-center justify-center"
+              onClick={() => handleNavigation("/")}
+            >
               <img src={img1} alt="CropGen Logo" className="w-[170px]" />
             </div>
           )}
@@ -164,7 +179,10 @@ const Sidebar = ({ onToggleCollapse }) => {
 
           {/* Logout Button (only when expanded) */}
           {!isCollapsed && (
-            <div className="offcanvas-footer cursor-pointer mt-5" onClick={handleLogout}>
+            <div
+              className="offcanvas-footer cursor-pointer mt-5"
+              onClick={handleLogout}
+            >
               <p className="footer-text flex items-center gap-2">
                 <Logout />
                 <span>Logout</span>
