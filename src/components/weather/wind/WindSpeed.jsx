@@ -59,7 +59,7 @@ const WindChart = () => {
     <Card className="wind-chart-card">
       <Card.Body>
         <div className="wind-chart-heading ">
-          <h2>Wind</h2>
+          <h2 className="text-[20px]">Wind</h2>
           <div>
             <p>
               <svg
@@ -93,12 +93,12 @@ const WindChart = () => {
         <div className="wind-info">
           <div>
             <p>Wind Speed High</p>
-            <h2>7 mph</h2>
+            <h2 className="text-[30px] font-bold">7 mph</h2>
             <p>25/07/2024 4:35 PM</p>
           </div>
           <div className="ms-5">
             <p>Wind Speed Avg</p>
-            <h2>3 mph</h2>
+            <h2 className="text-[30px] font-bold">3 mph</h2>
             <p>25/07/2024 4:35 PM</p>
           </div>
         </div>

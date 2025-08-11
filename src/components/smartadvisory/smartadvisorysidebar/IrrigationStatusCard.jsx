@@ -24,7 +24,7 @@ const IrrigationStatusCard = ({ isTablet = false }) => {
   };
 
   const options = {
-    cutout: "80%",
+    cutout: "70%",
     plugins: {
       legend: { display: false },
       tooltip: { enabled: false },
@@ -33,7 +33,7 @@ const IrrigationStatusCard = ({ isTablet = false }) => {
   };
 
   return (
-    <div className={`bg-[#2F4F3A] w-full h-full rounded-[16px] ${isTablet ? "p-[4px]" : "p-3"} text-white flex flex-col justify-between`}>
+    <div className={`bg-[#2F4F3A] w-full h-full rounded-[16px] ${isTablet ? "p-[2px]" : "p-3"} text-white flex flex-col justify-between`}>
       {/* Header */}
       <div className="flex justify-between items-center mb-[2px]">
         <h2 className={`${isTablet ? "text-[7px]" : "text-xl"} font-semibold`}>Irrigation Status</h2>
@@ -41,18 +41,20 @@ const IrrigationStatusCard = ({ isTablet = false }) => {
       </div>
 
       {/* Donut Chart */}
-      <div className={`flex justify-center items-center relative ${isTablet ? "h-[85px]" : "h-[160px]"}`}>
+      <div className={`flex justify-center items-center relative ${isTablet ? "h-[85px]" : "h-[180px]"}`}>
         <Doughnut data={data} options={options} />
-        <div className={`absolute text-white font-bold ${isTablet ? "text-[7.5px]" : "text-2xl"}`}>
+        <div className={`absolute text-white font-bold ${isTablet ? "text-[7.5px]" : "text-3xl"}`}>
           {percentage}%
         </div>
       </div>
 
       {/* Recommendation */}
-      <div className={`bg-[#4F7160] rounded-md ${isTablet ? "p-[2px] mt-[4px]" : "p-2 mt-4"}`}>
+      <div className={`bg-[#5A7C6B] rounded-md ${isTablet ? "p-[2px] mt-[4px]" : "p-2 mt-3"}`}>
         <h3 className={`${isTablet ? "text-[7px]" : "text-[15px]"} font-semibold mb-[1px]`}>Recommendation</h3>
         <ul className={`${isTablet ? "text-[7px] leading-[9px]" : "text-[12px]"} list-disc list-inside`}>
           <li>Soil Moisture Optimal. Next irrigation tomorrow evening.</li>
+          <li>Soil Moisture Optimal. Next irrigation tomorrow evening.</li>
+                    <li>Soil Moisture Optimal. Next irrigation tomorrow evening.</li>
           <li>Soil Moisture Optimal. Next irrigation tomorrow evening.</li>
      
         </ul>

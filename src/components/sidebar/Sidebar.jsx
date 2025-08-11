@@ -80,13 +80,17 @@ const Sidebar = ({ onToggleCollapse }) => {
     }
   };
 
-  // collapsed mode items including hammer & logout
+  // calculate dynamic spacing for collapsed mode
   const collapsedNavItems = [
     <li key="collapse-toggle" className="collapse-button" onClick={() => handleCollapseToggle(false)}>
       <Hammer />
     </li>,
     ...NAV_ITEMS.map(({ path, Icon }) => (
-      <li key={path} onClick={() => handleNavigation(path)} className="cursor-pointer">
+      <li
+        key={path}
+        onClick={() => handleNavigation(path)}
+        className={`cursor-pointer`}
+      >
         <Icon />
       </li>
     )),
@@ -94,6 +98,8 @@ const Sidebar = ({ onToggleCollapse }) => {
       <Logout />
     </li>,
   ];
+
+  const spacing = Math.floor(100 / collapsedNavItems.length); // % per icon
 
   return (
     <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
@@ -104,14 +110,14 @@ const Sidebar = ({ onToggleCollapse }) => {
         className={`offcanvas ${isCollapsed ? "collapsed" : ""}`}
       >
         <Offcanvas.Body className="p-0 m-0">
-          {/* Logo (visible only when expanded) */}
+          {/* Logo */}
           {!isCollapsed && (
             <div className="title-container flex items-center justify-center" onClick={() => handleNavigation("/")}>
               <img src={img1} alt="CropGen Logo" className="w-[170px]" />
             </div>
           )}
 
-          {/* User Card (only in expanded mode) */}
+          {/* User Card */}
           {!isCollapsed && (
             <Card
               style={{ width: "13rem" }}
@@ -123,49 +129,40 @@ const Sidebar = ({ onToggleCollapse }) => {
                 <Card.Title className="profile-user-name">
                   {user?.firstName} {user?.lastName}
                 </Card.Title>
-                <Card.Text className="profile-user-email">{user?.email}</Card.Text>
+                <Card.Text className="profile-user-email">
+                  {user?.email}
+                </Card.Text>
               </Card.Body>
             </Card>
           )}
 
           {/* Navigation */}
           <nav className="sidebar-nav">
-            <ul
-              className={!isCollapsed ? "" : "collapsed-nav-list"}
-              style={
-                isCollapsed
-                  ? {
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-evenly",
-                    alignItems: "center",
-                    height: "100vh",
-                    overflow: "hidden",
-                    padding: 0,
-                    margin: 0,
-                  }
-                  : undefined
-              }
-            >
+            <ul className={!isCollapsed ? "" : "collapsed-nav-list"}>
               {!isCollapsed
                 ? NAV_ITEMS.map(({ path, label, Icon }) => (
-                  <li
-                    key={path}
-                    onClick={() => handleNavigation(path)}
-                    className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${location.pathname === path
-                        ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
-                        : ""
+                    <li
+                      key={path}
+                      onClick={() => handleNavigation(path)}
+                      className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${
+                        location.pathname === path
+                          ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
+                          : ""
                       }`}
-                  >
-                    <Icon />
-                    {label}
-                  </li>
-                ))
-                : collapsedNavItems.map((item, index) => <li key={index}>{item}</li>)}
+                    >
+                      <Icon />
+                      {label}
+                    </li>
+                  ))
+                : collapsedNavItems.map((item, index) => (
+                    <div key={index} style={{ height: `${spacing}vh` }}>
+                      {item}
+                    </div>
+                  ))}
             </ul>
           </nav>
 
-          {/* Logout in expanded mode */}
+          {/* Logout Button (only when expanded) */}
           {!isCollapsed && (
             <div className="offcanvas-footer cursor-pointer mt-5" onClick={handleLogout}>
               <p className="footer-text flex items-center gap-2">

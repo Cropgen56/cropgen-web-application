@@ -8,7 +8,7 @@ import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { message } from "antd";
 
-const PersonalInfo = () => {
+const PersonalInfo = ({ setShowSidebar }) => {
   const dispatch = useDispatch();
   const token = localStorage.getItem("authToken");
   const userId = useSelector((state) => state?.auth?.user?.id);
@@ -74,7 +74,7 @@ const PersonalInfo = () => {
     setUpdateStatus(null);
     try {
 
-      let phone = formData.phone.replace(/\D/g, ""); 
+      let phone = formData.phone.replace(/\D/g, "");
       phone = phone.slice(-10);
 
       const formattedPhone = `+91${phone}`;
@@ -89,7 +89,7 @@ const PersonalInfo = () => {
       await dispatch(
         updateUserData({ id: userId, updateData: updatePayload, token })
       ).unwrap();
-      message.success("Profile updated successfully!"); 
+      message.success("Profile updated successfully!");
       setUpdateStatus({
         success: true,
         message: "Profile updated successfully!",
@@ -108,10 +108,21 @@ const PersonalInfo = () => {
   }
 
   return (
-    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 lg:p-4 rounded-lg bg-white shadow-md font-inter h-[98%] flex flex-col box-border overflow-hidden overflow-y-hidden">
-      <div className="text-left px-4 py-1 border-b border-black/40 font-bold text-[#344E41]">
-        <h5>Personal Info</h5>
+    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 lg:p-4 rounded-lg bg-white shadow-md font-inter h-[98%] overflow-y-auto">
+
+      <div className="flex items-center justify-between text-left px-4 py-1 border-b border-black/40 text-[#344E41]">
+        <h5 className="font-bold">Personal Info</h5>
+        <button
+          onClick={() => setShowSidebar(true)}
+          className="flex items-center gap-1 text-sm text-[#344E41] hover:text-[#1d3039]"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Back to Settings
+        </button>
       </div>
+
 
       <div className="py-2 flex flex-col flex-grow gap-2">
         <div className="flex items-center gap-2 lg:gap-4 flex-row px-2 lg:px-4 pb-4 border-b border-black/40">

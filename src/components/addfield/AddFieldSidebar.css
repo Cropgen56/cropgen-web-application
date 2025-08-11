@@ -155,3 +155,12 @@
   font-size: 14px;
   padding: 2px 5px;
 }
+
+/* Hide scrollbar for custom select dropdown (WebKit browsers) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}

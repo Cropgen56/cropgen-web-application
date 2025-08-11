@@ -69,7 +69,7 @@ const RainChances = () => {
       <Card.Body>
         <div className="rain-chances-container">
           <div className="chart-heading">
-            <h2>Rain Chances</h2>
+            <h2 className="text-[20px]">Rain Chances</h2>
             <div>
               <p>
                 <svg

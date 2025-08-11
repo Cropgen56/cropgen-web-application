@@ -1,30 +1,18 @@
 import React from "react";
 import ReactEcharts from "echarts-for-react";
-import { Card } from "react-bootstrap";
-import "./Humidity.css";
 
 const Humidity = () => {
   const data = [70, 49, 72, 36, 71, 62, 70, 68, 79, 44, 69, 43];
   const data2 = [0, 70, 20, 16, 42, 30, 42, 38, 49, 27, 58, 14];
   const monthsData = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
 
   const options = {
     grid: {
-      left: "0%",
-      right: "0%",
+      left: "10%",
+      right: "10%",
       top: "14%",
       bottom: "0%",
       containLabel: true,
@@ -46,31 +34,37 @@ const Humidity = () => {
     yAxis: [
       {
         type: "value",
-        name: "Humidity, %",
+
+        nameTextStyle: {
+          fontSize: 20,
+          fontWeight: "bold",
+          color: "#000",
+          padding: [0, 0, 0, 5],
+        },
         min: 0,
         max: 100,
         interval: 20,
         axisLine: { show: true },
-        splitLine: {
-          show: false,
-          lineStyle: {
-            color: "#e0e0e0",
-            type: "solid",
-          },
-        },
         axisTick: { show: true },
         axisLabel: { color: "#000", formatter: "{value}%" },
+        splitLine: { show: false },
       },
       {
         type: "value",
-        name: "Dew Point, °C",
+     
+        nameTextStyle: {
+          fontSize: 20,
+          fontWeight: "bold",
+          color: "#000",
+          padding: [0, 5, 0, 0],
+        },
         min: -10,
         max: 35,
         interval: 5,
         axisLine: { show: true },
         axisTick: { show: true },
-        splitLine: { show: false },
         axisLabel: { color: "#000", formatter: "{value}°C" },
+        splitLine: { show: false },
       },
     ],
     series: [
@@ -99,25 +93,25 @@ const Humidity = () => {
     tooltip: {
       trigger: "axis",
       formatter: (params) => {
-        const humidity = params.find(
-          (param) => param.seriesName === "Humidity"
-        );
-        const dewPoint = params.find(
-          (param) => param.seriesName === "Dew Point"
-        );
+        const humidity = params.find(p => p.seriesName === "Humidity");
+        const dewPoint = params.find(p => p.seriesName === "Dew Point");
         return `${params[0].name}<br/>Humidity: ${humidity.value}%<br/>Dew Point: ${dewPoint.value}°C`;
       },
     },
   };
 
   return (
-    <Card className="humidity-card">
-      <Card.Body>
-        <div className="humidity-chart-container">
-          <ReactEcharts option={options} className="humidity-echarts" />
+    <div className="bg-white rounded-lg shadow-md mt-3 mx-2 mb-2">
+      <div className="p-4">
+        <h2 className="flex justify-between items-center text-[20px] font-bold text-[#344E41] mb-3">
+          <span className="text-[20px] font-bold">Humidity %</span>
+          <span className="text-[20px] font-bold">Dew Point,°C</span>
+        </h2>
+        <div className="w-full ">
+          <ReactEcharts option={options} className="w-full h-[200px]" />
         </div>
-      </Card.Body>
-    </Card>
+      </div>
+    </div>
   );
 };
 
