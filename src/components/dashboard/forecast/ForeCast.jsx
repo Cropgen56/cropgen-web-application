@@ -13,70 +13,60 @@ import {
   Cloudesun,
   RainCloude,
 } from "../../../assets/image/weather/index.js";
+import { useSelector } from "react-redux";
 
 function ForeCast() {
-  const [weatherData, setWeatherData] = useState(() => {
-    const data = localStorage.getItem("weatherData");
-    return data
-      ? JSON.parse(data)
-      : {
-          currentConditions: {
-            temp: null,
-            humidity: null,
-            pressure: null,
-            windspeed: null,
-            precipitation: null,
-          },
-          days: [],
-        };
+  const forecastData = useSelector((state) => state.weather.forecastData) || {};
+
+  const [weatherData, setWeatherData] = useState({
+    currentConditions: {
+      temp: forecastData.current?.temp || null,
+      humidity: forecastData.current?.relative_humidity || null,
+      pressure: forecastData.current?.surface_pressure || null,
+      windspeed: forecastData.current?.wind_speed || null,
+      precipitation: forecastData.current?.precipitation || null,
+    },
+    days: forecastData.forecast
+      ? forecastData.forecast.time.slice(0, 7).map((date, index) => ({
+          datetime: date,
+          temp: forecastData.forecast.temp_mean[index] || null,
+          precipprob: forecastData.forecast.precipitation[index] || 0,
+          description: null,
+        }))
+      : [],
   });
 
   useEffect(() => {
-    const handleStorageChange = () => {
-      const data = localStorage.getItem("weatherData");
-      setWeatherData(
-        data
-          ? JSON.parse(data)
-          : {
-              currentConditions: {
-                temp: null,
-                humidity: null,
-                pressure: null,
-                windspeed: null,
-                precipitation: null,
-              },
-              days: [],
-            }
-      );
-    };
+    setWeatherData({
+      currentConditions: {
+        temp: forecastData.current?.temp || null,
+        humidity: forecastData.current?.relative_humidity || null,
+        pressure: forecastData.current?.surface_pressure || null,
+        windspeed: forecastData.current?.wind_speed || null,
+        precipitation: forecastData.current?.precipitation || null,
+      },
+      days: forecastData.forecast
+        ? forecastData.forecast.time.slice(0, 7).map((date, index) => ({
+            datetime: date,
+            temp: forecastData.forecast.temp_mean[index] || null,
+            precipprob: forecastData.forecast.precipitation[index] || 0,
+            description: null,
+          }))
+        : [],
+    });
+  }, [forecastData]);
 
-    window.addEventListener("storage", handleStorageChange);
-    handleStorageChange();
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
-  const fahrenheitToCelsius = (fahrenheit) => {
-    return fahrenheit ? Math.round(((fahrenheit - 32) * 5) / 9) : 0;
-  };
-
-  const getWeatherIcon = (temperature, condition) => {
-    if (!condition && !temperature) return "🧊";
-    if (condition?.toLowerCase()?.includes("rain")) return <RainCloude className="w-8 h-8 lg:w-11 lg:h-11" />;
-    if (condition?.toLowerCase()?.includes("snow")) return "❄️";
-    if (condition?.toLowerCase()?.includes("storm")) return <CloudeElectric className="drop-shadow-[0_0_2px_white] w-8 h-8 lg:w-11 lg:h-11"/>;
-    if (
-      condition?.toLowerCase()?.includes("clear") ||
-      condition?.toLowerCase()?.includes("sunny")
-    )
-      return <Sun />;
-    if (condition?.toLowerCase()?.includes("cloud")) return <RainSun className="w-8 h-8 lg:w-11 lg:h-11"/>;
-    if (condition?.toLowerCase()?.includes("fog")) return "🌫️";
+  const getWeatherIcon = (temperature, cloudCover) => {
+    if (!cloudCover && !temperature) return "🧊";
+    if (cloudCover >= 90)
+      return <RainCloude className="w-8 h-8 lg:w-11 lg:h-11" />;
+    if (cloudCover >= 70)
+      return <RainSun className="w-8 h-8 lg:w-11 lg:h-11" />;
+    if (cloudCover >= 40) return <Cloudesun />;
+    if (cloudCover < 40) return <Sun />;
 
     if (temperature >= 35) return <Sun />;
-    if (temperature >= 25) return <Sun />;
+    if (temperature >= 25) return <Cloudesun />;
     if (temperature >= 15) return <Cloudesun />;
     if (temperature >= 5) return <Cloudesun />;
     if (temperature >= -5) return "❄️";
@@ -90,7 +80,6 @@ function ForeCast() {
 
   return (
     <div className="mt-4 mb-3 bg-white p-2.5 sm:p-4 rounded-lg shadow-md overflow-x-auto scrollbar-hide scroll-smooth no-scrollbar">
-
       <div className="flex flex-col font-sans text-gray-800">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -102,33 +91,39 @@ function ForeCast() {
 
         <div className="flex flex-row overflow-hidden">
           {/* Today's Weather */}
-          <div className="flex flex-col gap-6 items-center justify-center border-r border-[#344E41] text-center w-1/3 lg:w-[30%] py-2 lg:py-4 lg:pr-2 pr-0.5 shrink-0">
+          <div className="flex flex-col gap-6 items-center justify-center border-r border-[#344E41] text-center w-1/3 lg:w-[25%] py-2 lg:py-4 lg:pr-2 pr-0.5 shrink-0">
             <h2 className="text-xs md:text-sm text-gray-400">
               Weather's Today
             </h2>
             <div className="flex flex-col sm:flex-row gap-2 items-center justify-center px-4 sm:px-5">
               <span className="text-2xl sm:text-xl md:text-lg lg:text-2xl">
                 {getWeatherIcon(
-                  fahrenheitToCelsius(weather.temp),
-                  weather.conditions
+                  weather.temp,
+                  forecastData.current?.cloud_cover
                 )}
               </span>
               <div className="text-sm lg:text-xl font-bold text-[#344E41]">
-                {fahrenheitToCelsius(weather.temp)}°C
+                {weather.temp}°C
               </div>
             </div>
             <div className="flex flex-col gap-1 lg:gap-2 sm:flex-row justify-center w-full sm:w-auto text-gray-600">
               <div className="flex items-center gap-0.5 lg:gap-2">
                 <WindSpeedIcon />
-                <span className="text-[10px] lg:text-sm whitespace-nowrap">{weather.windspeed ?? "--"} km/h</span>
+                <span className="text-[10px] lg:text-sm whitespace-nowrap">
+                  {weather.windspeed ?? "--"} km/h
+                </span>
               </div>
               <div className="flex items-center gap-0.5 lg:gap-2">
                 <DropIcon />
-                <span className="text-[10px] lg:text-sm whitespace-nowrap">{weather.humidity ?? "--"}%</span>
+                <span className="text-[10px] lg:text-sm whitespace-nowrap">
+                  {weather.humidity ?? "--"}%
+                </span>
               </div>
               <div className="flex items-center gap-0.5 lg:gap-2">
                 <WaveIcon />
-                <span className="text-[10px] lg:text-sm whitespace-nowrap">{weather.pressure ?? "--"} hPa</span>
+                <span className="text-[10px] lg:text-sm whitespace-nowrap">
+                  {weather.pressure ?? "--"} hPa
+                </span>
               </div>
             </div>
           </div>
@@ -136,24 +131,23 @@ function ForeCast() {
           {/* Weekly Weather */}
           <div className="flex flex-col items-start justify-center w-2/3 lg:w-[70%] pl-4 pt-2 overflow-x-auto no-scrollbar">
             <div className="flex flex-col gap-2">
-              <h2 className="text-xs md:text-sm text-gray-400">
-                This Week
-              </h2>
-              {/* <div className="flex flex-row justify-between gap-2 w-full"> */}
+              <h2 className="text-xs md:text-sm text-gray-400">This Week</h2>
               <div className="flex flex-row gap-3.5 lg:gap-2 w-max lg:w-full">
-                {weekForecast?.slice(0, 7).map((day, index) => {
+                {weekForecast.map((day, index) => {
                   const icon = getWeatherIcon(
-                    fahrenheitToCelsius(day.temp),
-                    day.description
+                    day.temp,
+                    forecastData.forecast?.cloud_cover?.[index] ||
+                      forecastData.current?.cloud_cover
                   );
-                  const temperature = fahrenheitToCelsius(day.temp);
+                  const temperature = day.temp;
                   const isToday = day.datetime === today;
 
                   return (
                     <div
                       key={index}
                       className={`flex flex-col items-center gap-1 text-center w-24 lg:w-28 p-3 lg:p-3 rounded-lg shrink-0
-                            ${isToday ? "bg-[#5A7C6B] text-white" : ""}`} >
+                            ${isToday ? "bg-[#5A7C6B] text-white" : ""}`}
+                    >
                       <div
                         className={`font-semibold mb-1 text-xs lg:text-sm ${
                           isToday ? "text-white" : "text-black"
