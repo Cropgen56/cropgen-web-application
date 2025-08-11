@@ -64,6 +64,8 @@ export const fetchAOIs = createAsyncThunk(
   }
 );
 
+// create the forcast thunk here
+
 // Weather slice
 const weatherSlice = createSlice({
   name: "weather",

@@ -72,6 +72,8 @@ const Weather = () => {
     }
   }, [payload, dispatch, aois]);
 
+  console.log(aois);
+
   return (
     <div className="weather container-fluid m-0 p-0 w-full flex">
       {isSidebarVisible && (
