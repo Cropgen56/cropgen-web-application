@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import weatherSlice from "./slices/weatherSlice/index";
+import weatherSlice from "./slices/weatherSlice";
 import authSlice from "./slices/authSlice";
 import farmSlice from "./slices/farmSlice";
 import satelliteSlice from "./slices/satelliteSlice";
@@ -16,5 +16,3 @@ export const store = configureStore({
 });
 
 export default store;
-
-

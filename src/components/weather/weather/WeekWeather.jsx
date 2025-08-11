@@ -99,10 +99,10 @@ import { Card } from "react-bootstrap";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 
-const WeekWeather = () => {
+const WeekWeather = ({ selectedField }) => {
   const [forecast, setForecast] = useState([]);
   const { data } = useSelector((state) => state.weather);
-  console.log(data);
+
   useEffect(() => {
     try {
       // Process the data to extract daily forecast data
@@ -137,7 +137,6 @@ const WeekWeather = () => {
     }
   }, []);
 
-  console.log(forecast);
   const forecastData = [
     {
       date: "SUN, 9 Jun",
