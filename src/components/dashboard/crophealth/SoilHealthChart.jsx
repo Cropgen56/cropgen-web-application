@@ -20,7 +20,8 @@ const SoilHealthChart = () => {
 
   // Use forecastData.current for latest values
   const latestTemp2cm = forecastData.current?.soil_temperature_surface || "N/A"; // 2cm data (soil_temperature_surface is closest)
-  const latestMoisture2cm = forecastData.current?.soil_moisture_2cm || "N/A"; // 2cm data
+  const latestMoisture2cm =
+    forecastData.current?.soil_moisture_surface || "N/A"; // 2cm data
   const latestTemp5cm = forecastData.current?.soil_temperature_5cm || "N/A"; // 5cm data
   const latestMoisture5cm = forecastData.current?.soil_moisture_5cm || "N/A"; // 5cm data
   const latestTemp15cm = forecastData.current?.soil_temperature_15cm || "N/A"; // 15cm data

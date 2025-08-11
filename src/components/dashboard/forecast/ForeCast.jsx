@@ -27,7 +27,7 @@ function ForeCast() {
       precipitation: forecastData.current?.precipitation || null,
     },
     days: forecastData.forecast
-      ? forecastData.forecast.time.slice(0, 7).map((date, index) => ({
+      ? forecastData.forecast.time.slice(0, 16).map((date, index) => ({
           datetime: date,
           temp: forecastData.forecast.temp_mean[index] || null,
           precipprob: forecastData.forecast.precipitation[index] || 0,
@@ -46,7 +46,7 @@ function ForeCast() {
         precipitation: forecastData.current?.precipitation || null,
       },
       days: forecastData.forecast
-        ? forecastData.forecast.time.slice(0, 7).map((date, index) => ({
+        ? forecastData.forecast.time.slice(0, 16).map((date, index) => ({
             datetime: date,
             temp: forecastData.forecast.temp_mean[index] || null,
             precipprob: forecastData.forecast.precipitation[index] || 0,
@@ -145,7 +145,7 @@ function ForeCast() {
                   return (
                     <div
                       key={index}
-                      className={`flex flex-col items-center gap-1 text-center w-24 lg:w-28 p-3 lg:p-3 rounded-lg shrink-0
+                      className={`flex flex-col items-center gap-1 text-center w-24 lg:w-32 p-3 lg:p-3 rounded-lg shrink-0
                             ${isToday ? "bg-[#5A7C6B] text-white" : ""}`}
                     >
                       <div

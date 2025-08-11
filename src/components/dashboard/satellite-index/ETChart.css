@@ -1,0 +1,47 @@
+.et-chart-card {
+  margin: 20px 0px 0px 0px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #ffffff !important;
+}
+.et-chart-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.et-chart-heading h2 {
+  color: #344e41;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.et-chart-heading div {
+  display: flex;
+}
+.et-chart-heading p {
+  margin: 0;
+  padding: 0 5px;
+  color: #a7a5a5;
+  font-size: 0.8rem;
+}
+.et-info {
+  display: flex;
+  margin-left: 3rem;
+  text-align: center;
+}
+.et-info p {
+  margin: 0;
+  padding: 0;
+  font-size: 0.7rem;
+  color: #9a9898;
+}
+.et-info h2 {
+  color: #344e41;
+  font-size: 1.5rem;
+}
+.et-chart-container {
+  position: relative;
+}
+.et-chart-echarts {
+  width: 100%;
+  height: 250px !important;
+}

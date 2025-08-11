@@ -15,7 +15,7 @@ import {
   createAOI,
   fetchForecastData,
 } from "../redux/slices/weatherSlice";
-
+import EvapotranspirationDashboard from "../components/dashboard/satellite-index/ETChart";
 // Constants
 const SELECTED_FIELD_KEY = "selectedFieldId";
 
@@ -40,6 +40,8 @@ const Dashboard = () => {
   const aois = useSelector((state) => state?.weather?.aois) || [];
   const forecastData = useSelector((state) => state.weather.forecastData) || [];
   const userId = user?.id;
+
+  const { forecast, units } = forecastData;
 
   // State management
   const [markers, setMarkers] = useState([]);
@@ -191,6 +193,7 @@ const Dashboard = () => {
           <ForeCast forecastData={forecastData} />
           <NdviGraph {...ndviGraphProps} />
           <WaterIndex {...ndviGraphProps} />
+          <EvapotranspirationDashboard forecast={forecast} units={units} />
           <Insights />
           <CropAdvisory {...cropAdvisoryProps} />
           <PlantGrowthActivity {...plantGrowthProps} />
