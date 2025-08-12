@@ -92,7 +92,6 @@ const WeekWeather = ({ forecastData }) => {
               display: "flex",
               overflowX: "auto",
               gap: "12px",
-              scrollbarWidth: "thin",
               flexGrow: 1,
               paddingBottom: 8,
             }}
@@ -134,7 +133,7 @@ const WeekWeather = ({ forecastData }) => {
                     {minTemp}° - {maxTemp}°
                   </div>
                   <div className="rain" style={{ color: "#0066cc" }}>
-                    {precipitation.toFixed(1)} mm
+                    {precipitation} mm
                   </div>
                 </div>
               );

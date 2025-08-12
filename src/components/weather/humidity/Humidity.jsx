@@ -21,8 +21,8 @@ const Humidity = ({ forecastData }) => {
 
   const options = {
     grid: {
-      left: "10%",
-      right: "10%",
+      left: "0%",
+      right: "2%",
       top: "14%",
       bottom: "10%",
       containLabel: true,
@@ -80,7 +80,7 @@ const Humidity = ({ forecastData }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md mt-3 mx-2 mb-2">
-      <div className="p-4">
+      <div className="p-4 ">
         <h2 className="flex justify-start items-center text-[20px] font-bold text-[#344E41] mb-3">
           <span className="text-[20px] font-bold">Humidity %</span>
         </h2>
