@@ -1,65 +1,53 @@
 import React, { useRef } from "react";
-import { Card } from "react-bootstrap";
-import rainIcon from "../../../assets/image/Vector (1).png"; // raining
-import sunIcon from "../../../assets/image/Vector (2).png"; // sunny
-import cloudIcon from "../../../assets/image/Vector (2).png"; // clouds
-import thundering from "../../../assets/image/Vector (4).png"; // thundering
-import partiallyrainy from "../../../assets/image/Group 109.png"; // partially rainy
+import rainIcon from "../../../assets/image/Vector (1).png";
+import sunIcon from "../../../assets/image/Vector (2).png";
+import cloudIcon from "../../../assets/image/Vector (2).png";
+import thundering from "../../../assets/image/Vector (4).png";
+import partiallyrainy from "../../../assets/image/Group 109.png";
+import logo from "../../../assets/image/login/logo.svg";
 
 import "./WeekWeather.css";
+import "./loader.css";
 
 const WeekWeather = ({ forecastData }) => {
   const scrollRef = useRef(null);
 
-  if (!forecastData || !forecastData.forecast) return <p>Loading...</p>;
+  if (!forecastData || !forecastData.forecast) {
+    return (
+      <div className="loader-container">
+        <img src={logo} alt="Loading..." className="rotating-logo" />
+      </div>
+    );
+  }
 
   const { forecast } = forecastData;
   const daysToShow = forecast.time.length;
 
-  // Format date helper
   const formatDate = (dateStr) => {
     const dateObj = new Date(dateStr);
     const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
     const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
-    return `${dayNames[dateObj.getDay()]}, ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]}`;
+    return `${dayNames[dateObj.getDay()]}, ${dateObj.getDate()}${monthNames[dateObj.getMonth()]}`;
   };
 
-  // Icon logic based on precip, cloud cover, and (optional) other data
   const getWeatherIcon = (precip, cloudCover, dayIndex) => {
-    // Use your own logic and imported icons here
-
-    // Example enhanced logic:
-    if (precip > 10) return rainIcon; // heavy rain
-    if (precip > 0 && precip <= 10) return partiallyrainy; // light rain
-    if (cloudCover > 70) return cloudIcon; // cloudy
-    if (cloudCover > 40) return partiallyrainy; // partly cloudy
-    // For demonstration, randomly assign thundering on days divisible by 5
+    if (precip > 10) return rainIcon;
+    if (precip > 0 && precip <= 10) return partiallyrainy;
+    if (cloudCover > 70) return cloudIcon;
+    if (cloudCover > 40) return partiallyrainy;
     if (dayIndex % 5 === 0 && precip > 0) return thundering;
-
-    return sunIcon; // default sunny
+    return sunIcon;
   };
 
-  // Scroll handler to scroll right by 200px
   const scrollRight = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: 200, behavior: "smooth" });
     }
   };
 
-  // Scroll handler to scroll left by 200px
   const scrollLeft = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: -200, behavior: "smooth" });
@@ -67,95 +55,75 @@ const WeekWeather = ({ forecastData }) => {
   };
 
   return (
-    <Card className="weekweather-card">
-      <Card.Body>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          {/* Left scroll button */}
-          <button
-            onClick={scrollLeft}
-            style={{
-              fontSize: 20,
-              padding: "6px 12px",
-              marginRight: 8,
-              cursor: "pointer",
-            }}
-            aria-label="Scroll left"
-          >
-            ◀
-          </button>
+<div className="m-2">
+  <div className="bg-white w-full border border-gray-300 rounded">
+    {/* Navigation + Scrollable Cards */}
+    <div className="flex items-start px-2 py-2 border-b border-gray-200">
+      
+      {/* Left button */}
+      <button
+        onClick={scrollLeft}
+        className="text-lg px-2 py-1 cursor-pointer flex-shrink-0"
+        aria-label="Scroll left"
+      >
+        ◀
+      </button>
 
-          {/* Scrollable container */}
-          <div
-            ref={scrollRef}
-            className="forecast-container"
-            style={{
-              display: "flex",
-              overflowX: "auto",
-              gap: "12px",
-              flexGrow: 1,
-              paddingBottom: 8,
-            }}
-          >
-            {forecast.time.slice(0, daysToShow).map((dateStr, i) => {
-              const maxTemp = Math.round(forecast.temp_max[i]);
-              const minTemp = Math.round(forecast.temp_min[i]);
-              const precipitation = forecast.precipitation[i];
-              const cloudCover = forecast.cloud_cover[i];
-              const icon = getWeatherIcon(precipitation, cloudCover, i);
+      {/* Forecast Cards */}
+      <div
+        ref={scrollRef}
+        className="flex overflow-x-auto no-scrollbar flex-1"
+      >
+        {forecast.time.slice(0, daysToShow).map((dateStr, i) => {
+          const maxTemp = Math.round(forecast.temp_max[i]);
+          const minTemp = Math.round(forecast.temp_min[i]);
+          const precipitation = forecast.precipitation[i];
+          const cloudCover = forecast.cloud_cover[i];
+          const icon = getWeatherIcon(precipitation, cloudCover, i);
 
-              return (
-                <div
-                  className="day-card"
-                  key={dateStr}
-                  style={{
-                    textAlign: "center",
-                    minWidth: 100,
-                    border: "1px solid #ccc",
-                    borderRadius: 8,
-                    padding: 8,
-                    backgroundColor: "#f9f9f9",
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    className="date"
-                    style={{ fontWeight: "600", marginBottom: 6 }}
-                  >
-                    {formatDate(dateStr)}
-                  </div>
-                  <img
-                    src={icon}
-                    alt="Weather Icon"
-                    className="icon"
-                    style={{ width: 48, height: 48, marginBottom: 6 }}
-                  />
-                  <div className="temperature" style={{ marginBottom: 4 }}>
-                    {minTemp}° - {maxTemp}°
-                  </div>
-                  <div className="rain" style={{ color: "#0066cc" }}>
-                    {precipitation} mm
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          return (
+            <div
+              key={dateStr}
+              className={`flex-shrink-0 flex flex-col items-center justify-center text-center px-6 py-2 min-w-[120px] ${
+                i !== daysToShow - 1 ? "border-r border-gray-300" : ""
+              }`}
+            >
+              <p className="text-xs text-gray-500 mb-4">
+                {formatDate(dateStr)}
+              </p>
+              <img src={icon} alt="Weather Icon" className="w-8 h-8 mb-1" />
+              <p className="font-semibold">
+                {precipitation > 10
+                  ? "Rain"
+                  : precipitation > 0
+                  ? "Partly Rain"
+                  : cloudCover > 70
+                  ? "Cloudy"
+                  : "Sunny"}
+              </p>
+              <p className="text-sm">
+                {minTemp}° - {maxTemp}°
+              </p>
+              <p className="text-xs text-gray-500">
+                {precipitation}mm
+              </p>
+            </div>
+          );
+        })}
+      </div>
 
-          {/* Right scroll button */}
-          <button
-            onClick={scrollRight}
-            style={{
-              fontSize: 20,
-              padding: "6px 12px",
-              marginLeft: 8,
-              cursor: "pointer",
-            }}
-            aria-label="Scroll right"
-          >
-            ▶
-          </button>
-        </div>
-      </Card.Body>
-    </Card>
+      {/* Right button */}
+      <button
+        onClick={scrollRight}
+        className="text-lg px-2 py-1 cursor-pointer flex-shrink-0"
+        aria-label="Scroll right"
+      >
+        ▶
+      </button>
+    </div>
+  </div>
+</div>
+
   );
 };
 

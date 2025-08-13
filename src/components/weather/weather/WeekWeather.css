@@ -56,11 +56,11 @@
   color: #666;
 }
 
-.forecast-container {
-  -ms-overflow-style: none; /* For Internet Explorer and Edge */
-  scrollbar-width: none; /* For Firefox */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
-.forecast-container::-webkit-scrollbar {
-  display: none; /* For Chrome, Safari, and Opera */
-}
