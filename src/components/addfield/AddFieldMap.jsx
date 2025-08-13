@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import {
   MapContainer,
@@ -42,6 +42,19 @@ const AddFieldMap = ({
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
 
+  const plusCursorBase64 =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAARVBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////8+tjvlAAAAHXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHxxS/qf0AAAAqUlEQVQ4y8WSSQ7DIAxFH1oQUb7/f9ERnMbdKYvDoYc2V0F+5koZP+waXQzXcFqIjg4IDR4DofEZ4BLRZbkF6CYHhXkg2w2U5CEo0BNZ0vpslsrK5HAbJXyugEEYZPvboR1xyHcRpsZhYrEdd84l1AFLShTI6wqC1fZTigHkCgnAiRH9sK91cLRE0q3H1/gInV7axjjXcxE8xeJ3X/O4q5Y+JyxbcAAAAASUVORK5CYII=";
+
+  const CursorUpdater = ({ isAddingMarkers }) => {
+    const map = useMap();
+    useEffect(() => {
+      map.getContainer().style.cursor = isAddingMarkers
+        ? `url("${plusCursorBase64}") 24 24, crosshair`
+        : "";
+    }, [isAddingMarkers, map]);
+    return null;
+  };
+
   useEffect(() => {
     getCurrentLocation({
       setLocation: (loc) => {
@@ -64,6 +77,7 @@ const AddFieldMap = ({
     });
   }, []);
 
+  // ✅ Custom marker icon
   const yellowMarkerIcon = new L.divIcon({
     className: "yellow-marker",
     html: `<div style="
@@ -224,14 +238,14 @@ const AddFieldMap = ({
 
               <Markers />
               <SearchField onLocationSelect={setSelectedLocation} />
+              <CursorUpdater isAddingMarkers={isAddingMarkers} />
 
-              {/* Disable bottom half of the map for pointer events in tablet mode */}
               {isTabletView && (
                 <div className="absolute top-1/2 left-0 w-full h-1/2 z-[5000] bg-transparent pointer-events-none"></div>
               )}
             </MapContainer>
 
-            {/* Right side vertical buttons */}
+            {/* Right side buttons */}
             <div className="absolute top-[-10%] right-2 h-screen flex flex-col justify-center gap-4 z-[1000] ">
               <button
                 onClick={() => {
@@ -291,7 +305,7 @@ const AddFieldMap = ({
               </button>
             </div>
 
-            {/* Bottom center controls */}
+            {/* Bottom controls */}
             <div
               className={`z-[1100] w-full px-2 ${isTabletView
                   ? "absolute bottom-[-15%] left-0"
@@ -322,7 +336,6 @@ const AddFieldMap = ({
                 </div>
               </div>
             </div>
-
           </>
         )}
       </div>
