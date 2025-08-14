@@ -5,44 +5,47 @@ import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
+import PolygonPreview from "../../polygon/PolygonPreview";
 
 const FarmCard = ({ farm, onClick }) => (
-    <div onClick={() => onClick(farm)} 
-        className="flex flex-col rounded-lg shadow-sm border-1 border-[#075A53] text-center transition-shadow duration-400 ease-in-out hover:shadow-md overflow-hidden cursor-pointer">
-        <div className="flex justify-between items-center bg-[#5A7C6B] text-white p-1.5 lg:p-3 rounded-t-lg">
-            <span className="font-medium text-sm lg:text-base">{farm.fieldName}</span>
-            <span className="font-medium text-xs lg:text-sm">
-                {" "}
-                {Number(farm.acre || 0).toFixed(2)} hec{" "}
-            </span>
-        </div>
-
-        <div className="flex-grow flex items-center justify-center bg-white p-4">
-            <img src={FarmArea}
-                    alt="FarmArea"
-                    className="max-w-[120px] max-h-[80px]"
-            />
-        </div>
-
-        <div className="flex justify-around items-center bg-white border-t border-[#075A53] p-1.5 lg:p-3">
-            <div className="flex flex-col items-center gap-1 text-[10px] lg:text-xs text-gray-900">
-                <Leaf className="w-4 h-4 text-[#075A53]" />
-                <span>{farm.variety || "N/A"}</span>
-            </div>
-            <div className="flex flex-col items-center gap-1 text-[10px] lg:text-xs text-gray-900">
-                <CalendarDays className="w-4 h-4 text-[#075A53]" />
-                <span>
-                    {farm.sowingDate
-                        ? new Date(farm.sowingDate).toLocaleDateString()
-                        : "No Date"}
-                </span>
-            </div>
-            <div className="flex flex-col items-center gap-1 text-[10px] lg:text-xs text-gray-900">
-                <Wheat className="w-4 h-4 text-[#075A53]" />
-                <span>{farm.cropName || "N/A"}</span>
-            </div>
-        </div>
+   <div
+    onClick={() => onClick(farm)}
+    className="flex flex-col rounded-lg shadow-sm border-1 border-[#075A53] text-center transition-shadow duration-400 ease-in-out hover:shadow-md overflow-hidden cursor-pointer"
+  >
+    <div className="flex justify-between items-center bg-[#5A7C6B] text-white p-1.5 lg:p-3 rounded-t-lg">
+      <span className="font-medium text-sm lg:text-base">{farm.fieldName}</span>
+      <span className="font-medium text-xs lg:text-sm">
+        {Number(farm.acre || 0).toFixed(2)} hec
+      </span>
     </div>
+
+    <div className="flex-grow flex items-center justify-center bg-white p-4">
+      {farm.field && farm.field.length > 0 ? (
+        <PolygonPreview coordinates={farm.field} />
+      ) : (
+        <span className="text-gray-400 text-sm">No Shape</span>
+      )}
+    </div>
+
+    <div className="flex justify-around items-center bg-white border-t border-[#075A53] p-1.5 lg:p-3">
+      <div className="flex flex-col items-center gap-1 text-[10px] lg:text-xs text-gray-900">
+        <Leaf className="w-4 h-4 text-[#075A53]" />
+        <span>{farm.variety || "N/A"}</span>
+      </div>
+      <div className="flex flex-col items-center gap-1 text-[10px] lg:text-xs text-gray-900">
+        <CalendarDays className="w-4 h-4 text-[#075A53]" />
+        <span>
+          {farm.sowingDate
+            ? new Date(farm.sowingDate).toLocaleDateString()
+            : "No Date"}
+        </span>
+      </div>
+      <div className="flex flex-col items-center gap-1 text-[10px] lg:text-xs text-gray-900">
+        <Wheat className="w-4 h-4 text-[#075A53]" />
+        <span>{farm.cropName || "N/A"}</span>
+      </div>
+    </div>
+  </div>
 );
 
 const AddNewFarmCard = ({ onClick }) => (
