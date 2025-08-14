@@ -5,6 +5,8 @@ import cloudIcon from "../../../assets/image/Vector (2).png";
 import thundering from "../../../assets/image/Vector (4).png";
 import partiallyrainy from "../../../assets/image/Group 109.png";
 import logo from "../../../assets/image/login/logo.svg";
+import leftarrow from "../../../assets/image/mingcute_up-line.png"
+import rightarrow from "../../../assets/image/Group (1).png"
 
 import "./WeekWeather.css";
 import "./loader.css";
@@ -58,15 +60,15 @@ const WeekWeather = ({ forecastData }) => {
 <div className="m-2">
   <div className="bg-white w-full border border-gray-300 rounded">
     {/* Navigation + Scrollable Cards */}
-    <div className="flex items-start px-2 py-2 border-b border-gray-200">
+    <div className="flex items-start px-0 py-0 border-b border-gray-300">
       
-      {/* Left button */}
+      {/* Left button with underline */}
       <button
         onClick={scrollLeft}
-        className="text-lg px-2 py-1 cursor-pointer flex-shrink-0"
+        className="text-[10.5px] p-2 cursor-pointer flex-shrink-0 border-b border-gray-300 flex items-center justify-center"
         aria-label="Scroll left"
       >
-        ◀
+        <img src={leftarrow} className="w-[21px]" alt="" />
       </button>
 
       {/* Forecast Cards */}
@@ -84,11 +86,12 @@ const WeekWeather = ({ forecastData }) => {
           return (
             <div
               key={dateStr}
-              className={`flex-shrink-0 flex flex-col items-center justify-center text-center px-6 py-2 min-w-[120px] ${
+              className={`flex-shrink-0 flex flex-col items-center justify-center text-center pt-2 min-w-[120px] ${
                 i !== daysToShow - 1 ? "border-r border-gray-300" : ""
               }`}
             >
-              <p className="text-xs text-gray-500 mb-4">
+              {/* Date with underline */}
+              <p className="text-sm text-gray-500 mb-3 border-b border-gray-300 w-full pb-1">
                 {formatDate(dateStr)}
               </p>
               <img src={icon} alt="Weather Icon" className="w-8 h-8 mb-1" />
@@ -112,17 +115,18 @@ const WeekWeather = ({ forecastData }) => {
         })}
       </div>
 
-      {/* Right button */}
-      <button
+      {/* Right button with underline */}
+       <button
         onClick={scrollRight}
-        className="text-lg px-2 py-1 cursor-pointer flex-shrink-0"
-        aria-label="Scroll right"
+        className="text-[10.5px] p-2 cursor-pointer flex-shrink-0 border-b border-gray-300 flex items-center justify-center"
+        aria-label="Scroll left"
       >
-        ▶
+        <img src={rightarrow} className="w-[21px]" alt="" />
       </button>
     </div>
   </div>
 </div>
+
 
   );
 };
