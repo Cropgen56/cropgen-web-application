@@ -7,16 +7,22 @@ import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { fetchSatelliteDates } from "../../../redux/slices/satelliteSlice";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
+import PolygonPreview from "../../polygon/PolygonPreview";
+
+const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) => (
   <div
-    className={`soil-report-info ${isSelected ? "selected-soil-report" : ""}`}
+    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
+      isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
+    }`}
     onClick={onClick}
   >
-    <FieldIcon isSelected={isSelected} />
-    <div className="soil-report-operations">
-      <h4 className={`${isSelected ? "selected-title" : ""}`}>{title}</h4>
-      <p className="ha">{area} ha</p>
-      <div className="soil-report-details">
+    <PolygonPreview coordinates={coordinates}  isSelected={isSelected}/>
+    <div>
+      <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
+        {title}
+      </h4>
+      <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
+      <div className="flex gap-4 text-xs text-[#a2a2a2]">
         <p>{lat} N</p>
         <p>{lon} E</p>
       </div>
@@ -199,6 +205,7 @@ const SoilReportSidebar = ({
                       : ""
                   }
                   isSelected={selectedOperationIndex === index}
+                   coordinates={fieldObj.field}
                   onClick={() => {
                     setSelectedOperationIndex(index);
                     setSelectedOperation(fieldObj);
