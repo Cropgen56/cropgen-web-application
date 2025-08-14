@@ -34,7 +34,9 @@ const WeekWeather = ({ forecastData }) => {
       "Nov",
       "Dec",
     ];
-    return `${dayNames[dateObj.getDay()]}, ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]}`;
+    return `${dayNames[dateObj.getDay()]}, ${dateObj.getDate()} ${
+      monthNames[dateObj.getMonth()]
+    }`;
   };
 
   // Icon logic based on precip, cloud cover, and (optional) other data
@@ -134,7 +136,7 @@ const WeekWeather = ({ forecastData }) => {
                     {minTemp}° - {maxTemp}°
                   </div>
                   <div className="rain" style={{ color: "#0066cc" }}>
-                    {precipitation.toFixed(1)} mm
+                    {precipitation} mm
                   </div>
                 </div>
               );
