@@ -47,8 +47,8 @@ const RainChances = ({ forecastData }) => {
 
   const options = {
     grid: {
-      left: "10%",
-      right: "5%",
+      left: "2%",
+      right: "2%",
       top: "14%",
       bottom: "15%",
       containLabel: true,
@@ -139,6 +139,7 @@ const RainChances = ({ forecastData }) => {
             marginTop: "20px",
             fontSize: "14px",
             color: "#344E41",
+            margin:"5%"
           }}
         >
           {/* Date & icon */}
@@ -180,7 +181,7 @@ const RainChances = ({ forecastData }) => {
         {/* Chart */}
         <ReactEcharts
           option={options}
-          className="rain-chances-chart"
+          className="rain-chances-chart mt-5"
           style={{ width: "100%", height: "300px" }}
         />
 

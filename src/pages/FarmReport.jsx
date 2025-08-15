@@ -4,10 +4,14 @@ import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmRe
 
 const FarmReport = () => {
   const [selectedField, setSelectedField] = useState({});
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const isFieldSelected = () => {
     return selectedField && selectedField.title;
+
   };
+
+
 
   return (
     <div className="weather container-fluid m-0 p-0 w-100">
@@ -15,6 +19,7 @@ const FarmReport = () => {
       <FarmReportSidebar
         selectedField={selectedField}
         setSelectedField={setSelectedField}
+        setIsSidebarVisible={setIsSidebarVisible}
       />
       {/* Main weather body */}
       <div className="farm-report-body">

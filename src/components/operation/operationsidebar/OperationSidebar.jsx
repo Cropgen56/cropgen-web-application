@@ -3,19 +3,18 @@ import { useSelector } from "react-redux";
 import { Operation2 } from "../../../assets/Icons";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
+import PolygonPreview from "../../polygon/PolygonPreview";
 
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
+const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) => (
   <div
-    className={`flex justify-around items-start border-b border-[#344e41] pt-4 cursor-pointer ${isSelected ? "bg-[#5a7c6b]" : ""
-      }`}
+    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
+      isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
+    }`}
     onClick={onClick}
   >
-    <FieldIcon isSelected={isSelected} />
-    <div className="ml-2">
-      <h4
-        className={`text-base font-normal ${isSelected ? "text-white" : "text-[#344e41]"
-          }`}
-      >
+    <PolygonPreview coordinates={coordinates}  isSelected={isSelected}/>
+    <div>
+      <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
         {title}
       </h4>
       <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
@@ -130,6 +129,7 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
                 lat={lat}
                 lon={lon}
                 isSelected={selectedOperationIndex === index}
+                coordinates={field.field}
                 onClick={() => {
                   setSelectedOperationIndex(index);
                   if (typeof setSelectedField === "function") {

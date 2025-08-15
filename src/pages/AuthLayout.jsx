@@ -16,12 +16,16 @@ import ndvi from "../assets/image/login/ndvi.png";
 import logo from "../assets/image/login/logo.png";
 import { User } from "lucide-react";
 
+// ...imports stay same
+
 const AuthLayout = () => {
   const dispatch = useDispatch();
 
   const [animate, setAnimate] = useState(false);
   const [height, setHeight] = useState(window.innerHeight);
   const [width, setWidth] = useState(window.innerWidth);
+  const [scaleValue, setScaleValue] = useState(1);
+
   const isTablet = width <= 1139 && height <= 1367;
 
   useEffect(() => {
@@ -43,9 +47,33 @@ const AuthLayout = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // ✅ Calculate scaling factor for left panel
+  useEffect(() => {
+    // 900px height is "full" scale, anything smaller shrinks
+    const minHeight = 600; // stop shrinking too much
+    const fullHeight = 900;
+    const clampedHeight = Math.max(height, minHeight);
+    const scale = Math.min(clampedHeight / fullHeight, 1);
+    setScaleValue(scale);
+  }, [height]);
+
   return (
     <div className="relative w-full h-screen overflow-hidden font-poppins">
-      {/* Background Image Switch */}
+      {/* Animation Styles */}
+      <style>{`
+      @keyframes slideInRight {
+        0% { opacity: 0; transform: translateX(50px); }
+        100% { opacity: 1; transform: translateX(0); }
+      }
+      @keyframes fadeUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      .animate-slideInRight { animation: slideInRight 0.8s ease-out forwards; }
+      .animate-fadeUp { animation: fadeUp 0.8s ease-out forwards; }
+    `}</style>
+
+      {/* Background Image */}
       <img
         src={isTablet ? tabletBg : defaultBg}
         alt="Background"
@@ -71,13 +99,19 @@ const AuthLayout = () => {
       {/* Main Layout */}
       <div
         className={`relative z-20 w-full h-full p-4 sm:p-8 flex ${isTablet
-            ? "flex-col items-center justify-center"
-            : "flex-row items-center justify-between"
+          ? "flex-col items-center justify-center"
+          : "flex-row items-center justify-between"
           }`}
       >
         {/* Left Panel */}
         {!isTablet && (
-          <div className="flex flex-col justify-between h-full w-[60%] text-white">
+          <div
+            className="flex flex-col justify-between h-full w-[60%] text-white"
+            style={{
+              transform: `scale(${scaleValue})`,
+              transformOrigin: "top left",
+            }}
+          >
             {/* Logo */}
             <div className="flex items-center gap-2">
               <img src={logo} alt="Logo" className="h-12 lg:h-16 w-auto" />
@@ -104,76 +138,95 @@ const AuthLayout = () => {
             </div>
 
             {/* Floating Section */}
-            <div className="relative w-full flex justify-center items-end mt-10 mb-4 z-20 -translate-x-4 lg:-translate-x-12">
-              <div className="relative" style={{ width: height >= 800 ? "70%" : "50%" }}>
+            {/* Floating Section */}
+            <div className="flex flex-col justify-between items-center ml-12 mt-19">
+              <div
+                className="relative w-full flex justify-center items-center mt-10 z-20 float-x animate-fadeUp"
+                style={{
+                  transform: `translateX(${height >= 900 ? "-1rem" : height >= 750 ? "0rem" : "1rem"})`,
+                  transition: "transform 0.3s ease",
+                }}
+              >
+                <div
+                  className="relative"
+                  // 🔹 Increased width for bigger laptop
+                  style={{ width: height >= 800 ? "80%" : "65%" }}
+                >
+                  <img
+                    src={sattelite}
+                    className={`absolute left-1/2 transform -translate-x-1/2 w-[60%] z-[4] pointer-events-none ${animate ? "animate-satelliteMove" : ""
+                      }`}
+                    style={{ top: "-68px" }}
+                    alt="Satellite"
+                  />
+
+                  <img
+                    src={laptop}
+                    alt="Laptop"
+                    className="relative z-10 w-full object-contain"
+                  />
+                </div>
+
+                {/* Floating Cards */}
                 <img
-                  src={sattelite}
-                  className={`absolute left-1/2 transform -translate-x-1/2 w-[55%] z-[4] pointer-events-none ${animate ? "animate-satelliteMove" : ""
+                  src={weather}
+                  className={`absolute w-36 rounded-md z-30 ${animate ? "animate-floatUp" : ""
                     }`}
                   style={{
-                    top: "-68px",
+                    top: "10%",
+                    left: height < 800 ? "20%" : "12%",
                   }}
-                  alt="Satellite"
+                  alt="Weather"
                 />
-
                 <img
-                  src={laptop}
-                  alt="Laptop"
-                  className="relative z-10 w-full object-contain"
+                  src={soilTemp}
+                  className={`absolute w-20 rounded-md z-30 ${animate ? "animate-floatUp" : ""
+                    }`}
+                  style={{
+                    left: height < 800 ? "28%" : "20%",
+                    bottom: "25%",
+                  }}
+                  alt="Soil Temp"
+                />
+                <img
+                  src={soilMois}
+                  className={`absolute w-20 rounded-md z-30 ${animate ? "animate-floatDown" : ""
+                    }`}
+                  style={{
+                    right: height < 800 ? "28%" : "18%",
+                    top: "17%",
+                  }}
+                  alt="Soil Moisture"
+                />
+                <img
+                  src={ndvi}
+                  className={`absolute w-36 rounded-md z-30 ${animate ? "animate-floatDown" : ""
+                    }`}
+                  style={{
+                    right: height < 800 ? "20%" : "10%",
+                    bottom: "20%",
+                  }}
+                  alt="NDVI"
                 />
               </div>
 
-              {/* Floating Cards */}
-              <img
-                src={weather}
-                className={`absolute w-36 rounded-md z-30 ${animate ? "animate-floatUp" : ""}`}
-                style={{
-                  top: "10%",
-                  left: height < 800 ? "20%" : "12%",
-                }}
-                alt="Weather"
-              />
-              <img
-                src={soilTemp}
-                className={`absolute w-20 rounded-md z-30 ${animate ? "animate-floatUp" : ""}`}
-                style={{
-                  left: height < 800 ? "28%" : "20%",
-                  bottom: "25%",
-                }}
-                alt="Soil Temp"
-              />
-              <img
-                src={soilMois}
-                className={`absolute w-20 rounded-md z-30 ${animate ? "animate-floatDown" : ""}`}
-                style={{
-                  right: height < 800 ? "28%" : "18%",
-                  top: "17%",
-                }}
-                alt="Soil Moisture"
-              />
-              <img
-                src={ndvi}
-                className={`absolute w-36 rounded-md z-30 ${animate ? "animate-floatDown" : ""}`}
-                style={{
-                  right: height < 800 ? "20%" : "10%",
-                  bottom: "20%",
-                }}
-                alt="NDVI"
-              />
+              {/* Tagline */}
+              <div className="text-center z-30 mb-8 mt-10">
+                <h2 className="text-lg lg:text-4xl font-bold">
+                  Your Smart Farming Assistant
+                </h2>
+                <p className="text-xs lg:text-[14px] font-semibold mt-1 max-w-md mx-auto">
+                  Powered by satellite insights, CropGen helps you detect, decide, and grow
+                  better—field by field.
+                </p>
+              </div>
             </div>
 
-            {/* Tagline */}
-            <div className="text-center z-30 mb-8">
-              <h2 className="text-lg lg:text-3xl font-bold">Your Smart Farming Assistant</h2>
-              <p className="text-xs lg:text-[12px] font-semibold mt-1 max-w-md mx-auto">
-                Powered by satellite insights, CropGen helps you detect, decide, and grow better—field by field.
-              </p>
-            </div>
           </div>
         )}
 
         {/* Right Panel: Signup */}
-        <div className="w-full lg:w-[45%] flex justify-center items-center h-full z-30">
+        <div className="w-full lg:w-[45%] flex justify-center items-center h-full z-30 animate-slideInRight">
           <Signup />
         </div>
       </div>

@@ -1,0 +1,27 @@
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px; /* matches your card height */
+  perspective: 800px; /* gives the 3D effect */
+}
+
+.rotating-logo {
+  width: 60px;
+  height: 60px;
+  animation: flip 1.2s linear infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(180deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
