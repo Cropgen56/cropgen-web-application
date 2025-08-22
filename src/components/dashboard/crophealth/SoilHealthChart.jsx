@@ -31,9 +31,7 @@ const SoilHealthChart = () => {
     <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto">
       {/* Temperature & Moisture Cards - 2cm Data */}
       <div className="flex items-center justify-end gap-2 md:gap-6">
-        <span className="flex text-[#344E41] font-bold text-sm md:text-lg capitalize whitespace-nowrap">
-          top soil (2cm)
-        </span>
+
 
         <div className="flex items-center gap-1 md:gap-2 bg-[#344E41] border rounded-xl shadow-md p-2.5 w-42">
           <img
@@ -151,10 +149,10 @@ const SoilHealthChart = () => {
             <span className="absolute top-1/2 left-full w-4 h-[2px] bg-gray-800 -translate-y-1/2"></span>
             <span className="absolute bottom-0 left-full w-4 h-[2px] bg-gray-800"></span>
           </div>
-          <div className="absolute top-0 right-0 md:right-[-4px] ml-2 h-full flex flex-col justify-around">
-            <span className="text-[10px] text-gray-400">2cm</span>
-            <span className="text-[10px] text-gray-400">5cm</span>
-            <span className="text-[10px] text-gray-400">15cm</span>
+          <div className="absolute top-0 right-0 md:right-[-4px] ml-2 h-full flex flex-col justify-around gap-10">
+            <span className="text-[10px] text-gray-700">5cm</span>
+      
+            <span className="text-[10px] text-gray-700">15cm</span>
           </div>
         </div>
 

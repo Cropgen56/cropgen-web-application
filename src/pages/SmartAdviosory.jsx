@@ -5,6 +5,7 @@ import { getFarmFields } from "../redux/slices/farmSlice";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import img1 from "../assets/image/Group 31.png"
+import { useNavigate } from "react-router-dom";
 
 import SatelliteIndexScroll from "../components/smartadvisory/smartadvisorysidebar/SatelliteIndexScroll";
 import NDVIChartCard from "../components/smartadvisory/smartadvisorysidebar/Ndvigrapgh";
@@ -24,6 +25,7 @@ const SmartAdvisory = () => {
   const [reportdata, setReportData] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const isTablet = useIsTablet();
+  const navigate= useNavigate();
 
   const userId = user?.id;
 
@@ -32,6 +34,33 @@ const SmartAdvisory = () => {
       dispatch(getFarmFields(userId));
     }
   }, [dispatch, userId]);
+  
+
+  if (fields.length === 0) {
+  return (
+   <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
+  {/* Centered Background Image */}
+  <img
+    src={img1}
+    alt="No Fields"
+    className="w-[400px] h-[400px] mb-6 opacity-70"
+  />
+
+  {/* Text */}
+  <h2 className="text-2xl font-semibold text-white">
+    Add Farm to See the Smart Advisory
+  </h2>
+
+  {/* Optional Button */}
+  <button
+    onClick={() => navigate("/addfield")}
+    className="mt-6 px-5 py-2 rounded-lg bg-white text-[#5a7c6b] font-medium hover:bg-gray-200 transition"
+  >
+    Add Field
+  </button>
+</div>
+  );
+}
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#5a7c6b] text-white">

@@ -1,16 +1,48 @@
 import React, { useState } from "react";
 import "../style/FarmReport.css";
 import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmReportSidebar";
+import { getFarmFields } from "../redux/slices/farmSlice";
+import img1 from "../assets/image/Group 31.png"
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 
 const FarmReport = () => {
   const [selectedField, setSelectedField] = useState({});
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const fields = useSelector((state) => state?.farmfield?.fields);
+  const navigate = useNavigate();
+  
 
   const isFieldSelected = () => {
     return selectedField && selectedField.title;
 
   };
+  
+    if (fields.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
+        {/* Centered Background Image */}
+        <img
+          src={img1}
+          alt="No Fields"
+          className="w-[400px] h-[400px] mb-6 opacity-70"
+        />
 
+        {/* Text */}
+        <h2 className="text-2xl font-semibold text-white">
+          Add Farm to See the Farm Report
+        </h2>
+
+        {/* Optional Button */}
+        <button
+          onClick={() => navigate("/addfield")}
+          className="mt-6 px-5 py-2 rounded-lg bg-white text-[#5a7c6b] font-medium hover:bg-gray-200 transition"
+        >
+          Add Field
+        </button>
+      </div>
+    );
+  }
 
 
   return (

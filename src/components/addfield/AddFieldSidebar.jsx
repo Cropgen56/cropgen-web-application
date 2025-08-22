@@ -122,7 +122,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
         <div className="w-[22vw] m-0 p-0 h-full">
           <div className="flex flex-row justify-between items-center border-b border-[#344e41] p-2.5 cursor-pointer">
             <h2 className="flex items-center gap-1 text-base text-[#344e41]">
-              All Fields <ChevronDown size={20} color="#344E41" strokeWidth={2.5} />
+              All Fields 
             </h2>
             <ArrowLeft size={20} color="#344E41" strokeWidth={2} onClick={toggleSidebarVisibility} />
           </div>

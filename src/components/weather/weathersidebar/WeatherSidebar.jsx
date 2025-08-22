@@ -67,7 +67,7 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
       <div className="flex flex-col border-b border-[#344e41] gap-2 p-4">
         <div className="flex justify-between items-center">
           <Weather2 />
-          <h2 className="text-sm font-bold text-[#344e41]">Weather</h2>
+          <h2 className="text-[18px] font-bold text-[#344e41]">Weather</h2>
           <svg
             width="30"
             height="30"
@@ -109,7 +109,7 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
         </div>
       </div>
       <div className="overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-hidden">
-        <h2 className="text-sm font-bold text-[#344e41] text-[18px] p-2">
+        <h2 className="text-[18px] font-bold text-[#344e41] text-[18px] p-2">
           All Farms
         </h2>
         {filteredFields.length > 0 ? (

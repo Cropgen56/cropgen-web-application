@@ -138,7 +138,7 @@ const SoilReportSidebar = ({
           <div className="soil-report-heading">
             <div className="soil-report-first-row">
               <Operation2 />
-              <h2>Soil Report</h2>
+              <p className="text-[18px] font-bold text-[#344e41]">Soil Report</p>
               <svg
                 width="30"
                 height="30"
@@ -178,10 +178,11 @@ const SoilReportSidebar = ({
               />
             </div>
           </div>
-          <div className="soil-report-field flex flex-col">
-            <h2 className="px-4 pt-2 text-xl font-semibold text-[#344e41]">
-              Field
+          <h2 className="px-4 pt-2 text-[18px] font-bold text-[#344e41]">
+              All Farms
             </h2>
+          <div className="soil-report-field flex flex-col">
+            
             <div className="overflow-y-auto max-h-[200px] ">
               {(fields || []).map((fieldObj, index) => (
                 <FieldInfo

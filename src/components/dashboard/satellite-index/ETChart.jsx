@@ -51,8 +51,8 @@ const EvapotranspirationChart = () => {
     yAxis: {
       type: "value",
       min: 0,
-      max: 6, // Adjusted max to accommodate higher values like 5.36
-      interval: 1,
+      max: 12, // Adjusted max to accommodate higher values like 5.36
+      interval: 2,
       axisLabel: {
         formatter: "{value} mm",
         fontWeight: "bold",

@@ -8,6 +8,8 @@ import WeekWeather from "../components/weather/weather/WeekWeather";
 import WeatherHistory from "../components/weather/weatherhistory/WeatherHistory";
 import WeatherSidebar from "../components/weather/weathersidebar/WeatherSidebar";
 import { getFarmFields } from "../redux/slices/farmSlice";
+import { useNavigate } from "react-router-dom";
+import img1 from "../assets/image/Group 31.png"
 import {
   fetchForecastData,
   createAOI,
@@ -33,9 +35,11 @@ const Weather = () => {
   const aois = useSelector((state) => state?.weather?.aois) || [];
   const forecastData =
     useSelector((state) => state?.weather?.forecastData) || [];
+  const loading = useSelector((state) => state?.weather?.loading); 
 
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [selectedField, setSelectedField] = useState(null);
+  const navigate = useNavigate();
 
   // Fetch AOIs and farm fields when userId changes
   useEffect(() => {
@@ -81,6 +85,34 @@ const Weather = () => {
     }
   }, [dispatch, selectedField, aois]);
 
+   // If no fields exist → show message + button
+if (fields.length === 0) {
+  return (
+   <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
+  {/* Centered Background Image */}
+  <img
+    src={img1}
+    alt="No Fields"
+    className="w-[400px] h-[400px] mb-6 opacity-70"
+  />
+
+  {/* Text */}
+  <h2 className="text-2xl font-semibold text-white">
+    Add Farm to See the Weather Report
+  </h2>
+
+  {/* Optional Button */}
+  <button
+    onClick={() => navigate("/addfield")}
+    className="mt-6 px-5 py-2 rounded-lg bg-white text-[#5a7c6b] font-medium hover:bg-gray-200 transition"
+  >
+    Add Field
+  </button>
+</div>
+  );
+}
+
+
   return (
     <div className="weather container-fluid m-0 p-0 w-full flex">
       {isSidebarVisible && (
@@ -91,24 +123,21 @@ const Weather = () => {
         />
       )}
       <div className="weather-body ml-[320px] w-full h-screen overflow-y-auto overflow-x-hidden">
-        <WeekWeather
-          selectedField={selectedField}
-          forecastData={forecastData}
-        />
-        <WeatherHistory
-          selectedField={selectedField}
-          forecastData={forecastData}
-        />
-        <RainChances
-          selectedField={selectedField}
-          forecastData={forecastData}
-        />
-        <WindSpeed selectedField={selectedField} forecastData={forecastData} />
-        <Temperature
-          selectedField={selectedField}
-          forecastData={forecastData}
-        />
-        <Humidity selectedField={selectedField} forecastData={forecastData} />
+      {loading ? (
+          // Loader (centered spinner)
+          <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-8 border-white"></div>
+          </div>
+        ) : (
+          <>
+            <WeekWeather selectedField={selectedField} forecastData={forecastData} />
+            <WeatherHistory selectedField={selectedField} forecastData={forecastData} />
+            <RainChances selectedField={selectedField} forecastData={forecastData} />
+            <WindSpeed selectedField={selectedField} forecastData={forecastData} />
+            <Temperature selectedField={selectedField} forecastData={forecastData} />
+            <Humidity selectedField={selectedField} forecastData={forecastData} />
+          </>
+        )}
       </div>
     </div>
   );

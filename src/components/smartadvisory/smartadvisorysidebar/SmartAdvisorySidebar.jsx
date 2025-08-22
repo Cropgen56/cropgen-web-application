@@ -62,7 +62,7 @@ const SmartAdvisorySidebar = ({ setReportData, setIsSidebarVisible }) => {
       <div className="flex flex-col border-b border-[#344e41] gap-2 p-4">
         <div className="flex justify-between items-center cursor-pointer">
           <SmartAdvisoryDarkIcon />
-          <h2 className="text-sm font-bold text-[#344e41]">Smart Advisory</h2>
+          <h2 className="text-[18px] font-bold text-[#344e41]">Smart Advisory</h2>
           <svg
             width="30"
             height="30"
@@ -96,7 +96,7 @@ const SmartAdvisorySidebar = ({ setReportData, setIsSidebarVisible }) => {
 
       {/* Fields List */}
       <div className="overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-hidden">
-        <h2 className="text-sm font-bold text-[#344e41] text-[18px] p-2">All Farms</h2>
+        <h2 className="font-bold text-[#344e41] text-[18px] p-2">All Farms</h2>
         {filteredFields?.length > 0 ? (
           filteredFields.map((field, index) => {
             const { lat, lon } = calculateCentroid(field.field);

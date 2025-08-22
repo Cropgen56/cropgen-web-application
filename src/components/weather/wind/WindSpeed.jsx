@@ -38,7 +38,7 @@ const option = {
     axisLabel: {
       color: "#333",
       interval: 0,           // show all labels
-      rotate: 0,            // horizontal labels, can set to 15 or 20 if overlap occurs
+      rotate: 30,            // horizontal labels, can set to 15 or 20 if overlap occurs
       margin: 15,
       fontSize: 12,
       // overflow: 'truncate',  // optional if text overflows

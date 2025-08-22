@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
+import { Listbox } from "@headlessui/react";
 import {
   MapContainer,
   TileLayer,
@@ -138,11 +139,12 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
 
   return (
     // <div className="flex flex-col items-center w-full md:h-[500px] lg:h-[95%] relative">
-    <div className={`flex flex-col items-center w-full relative ${ fields.length === 0 ? "h-full" : "md:h-[500px] lg:h-[95%]" } relative`}>
+    <div className={`flex flex-col items-center w-full relative ${fields.length === 0 ? "h-full" : "md:h-[500px] lg:h-[95%]"} relative`}>
 
       <MapContainer
         center={centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter}
         zoom={18}
+        attributionControl={false}
         zoomControl={true}
         className={`w-full h-full overflow-hidden ${fields.length === 0 ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"}`}
         ref={mapRef}
@@ -171,16 +173,31 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
 
       <div className="absolute top-2 right-2 flex flex-row gap-3 items-end z-[1000]">
         {fields.length > 0 && (
-          <select
-            id="field-dropdown"
-            onChange={handleFieldChange}
-            value={selectedField || ""}
-            className="bg-[#010704b2] outline-none border-none rounded px-2 py-1 text-white cursor-pointer scrollbar-none">
-            <option value="" hidden>Select a field</option>
-            {fields?.map((field) => (
-              <option key={field?._id} value={field?._id}>{field.fieldName}</option>
-            ))}
-          </select>
+          <Listbox
+            value={selectedField}
+            onChange={(value) => setSelectedField(value)}
+          >
+            <div className="relative">
+              <Listbox.Button className="bg-[#344e41] text-white rounded border px-3 py-1.5 cursor-pointer min-w-[150px]">
+                {fields.find((f) => f._id === selectedField)?.fieldName ||
+                  "Select a field "}
+              </Listbox.Button>
+              <Listbox.Options className="absolute mt-1 w-full bg-[#344e41] rounded-lg shadow-lg text-white z-[2000]  border border-green-900">
+                {fields.map((field) => (
+                  <Listbox.Option
+                    key={field._id}
+                    value={field._id}
+                    className={({ active }) =>
+                      `cursor-pointer select-none px-3 py-2 rounded ${active ? "bg-[#5a7c6b]" : ""
+                      }`
+                    }
+                  >
+                    {field.fieldName}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </div>
+          </Listbox>
         )}
 
         {/* <div className="legend-dropdown-wrapper absolute top-3 -left-40 z-1000"> */}
@@ -188,33 +205,41 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
         <div className="legend-dropdown-wrapper relative w-max">
           <strong
             onClick={() => setShowLegend(!showLegend)}
-            className="flex items-center whitespace-nowrap bg-[#010704b2] outline-none border-none rounded  z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer"
+            className="flex items-center whitespace-nowrap bg-[#344e41] outline-none border border-[#344e41] rounded  z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer"
           >
             🗺️ Legend
           </strong>
 
           {showLegend && indexData?.legend && indexData?.area_summary_ha && (
-            // <div className="legend-dropdown absolute top-8 right-5 bg-white rounded-xl p-2 md:p-4 z-[2000] max-w-[300px] animate-slideIn">
-              <div className="legend-dropdown absolute top-12 right-0 bg-white rounded-xl p-3 md:p-4 shadow-lg max-w-[300px] z-[3000] animate-slideIn">
+            <div className="absolute top-12 right-0 bg-[#344e41] text-white rounded-lg shadow-lg w-max z-[3000] animate-slideIn">
+              <ul className="divide-y divide-white/10 list-none p-2">
+                {indexData.legend.map((item) => (
+                  <li
+                    key={item.label}
+                    className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#5a7c6b] transition-colors duration-200 rounded"
+                  >
+                    {/* Color box */}
+                    <span
+                      className="w-[30px] h-[20px] rounded border border-black/10"
+                      style={{ backgroundColor: item.color }}
+                    ></span>
 
-              {indexData.legend.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-2 p-2.5 rounded-lg text-[0.95rem] font-medium hover:-translate-y-[2px] hover:shadow-md transition duration-400 ease-in-out"
-                >
-                  <span
-                    className="w-[30px] h-[20px] rounded bg-inherit border border-black/10"
-                    style={{ backgroundColor: item.color }}
-                  ></span>
-                  <span className="flex-1 whitespace-nowrap">{item.label}</span>
-                  <span className="text-gray-500 font-normal whitespace-nowrap">
-                    {indexData.area_summary_ha[item.label]?.toFixed(2) || "0.00"} ha
-                  </span>
-                </div>
-              ))}
+                    {/* Label */}
+                    <span className="flex-1 whitespace-nowrap font-medium">
+                      {item.label}
+                    </span>
+
+                    {/* Area */}
+                    <span className="text-gray-200 font-normal whitespace-nowrap">
+                      {indexData.area_summary_ha[item.label]?.toFixed(2) || "0.00"} ha
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
-          </div>
+
+        </div>
       </div>
 
       {fields?.length > 0 ? (

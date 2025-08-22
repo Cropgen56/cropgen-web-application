@@ -5,7 +5,7 @@ const WeatherHistory = () => {
   return (
     <Card className="weather-history">
       <Card.Body className="flex flex-col">
-        <h2 className="w-heading text-[20px] font-bold">Weather History</h2>
+        <h2 className="w-heading text-[20px] font-bold text-[#344e41]">Weather History</h2>
         <div className="flex gap-3 mt-4">
           <div className="flex flex-col gap-2 mt-2">
             <div className="subtext text-[12px] text-gray-400 font-bold">Start Date</div>

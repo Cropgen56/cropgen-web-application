@@ -3,18 +3,19 @@ import { useSelector } from "react-redux";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import {DieaseDetactiondark} from "../../../assets/Icons";
+import PolygonPreview from "../../polygon/PolygonPreview";
 
 
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
+const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) => (
   <div
-    className={`flex justify-around items-start border-b border-[#344e41] pt-4 cursor-pointer ${
-      isSelected ? "bg-[#5a7c6b]" : ""
+    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
+      isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
     }`}
     onClick={onClick}
   >
-    <FieldIcon isSelected={isSelected} />
-    <div className="ml-2">
-      <h4 className={`text-base font-normal ${isSelected ? "text-white" : "text-[#344e41]"}`}>
+    <PolygonPreview coordinates={coordinates}  isSelected={isSelected}/>
+    <div>
+      <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
         {title}
       </h4>
       <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
@@ -25,6 +26,7 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
     </div>
   </div>
 );
+
 
 const DiseaseSidebar = ({ setSelectedField, selectedField }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -63,7 +65,7 @@ const DiseaseSidebar = ({ setSelectedField, selectedField }) => {
       <div className="flex flex-col border-b border-[#344e41] gap-2 p-4">
         <div className="flex justify-between items-center cursor-pointer">
           <DieaseDetactiondark />
-          <h2 className="text-sm font-bold text-[#344e41]">Disease Detection</h2>
+          <h2 className="text-[18px] font-bold text-[#344e41]">Disease Detection</h2>
           <svg
             width="30"
             height="30"
@@ -95,7 +97,7 @@ const DiseaseSidebar = ({ setSelectedField, selectedField }) => {
 
       {/* Scrollable Fields */}
       <div className="overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-hide">
-        <h2 className="text-sm font-bold text-[#344e41] pl-2 pb-2">Field</h2>
+        <h2 className="text-[18px] font-bold text-[#344e41] pl-2 pb-2">All Farms</h2>
         {fields && fields.length > 0 ? (
           fields.map((field, index) => {
             const { lat, lon } = calculateCentroid(field.field);
@@ -106,6 +108,7 @@ const DiseaseSidebar = ({ setSelectedField, selectedField }) => {
                 area={formatArea(field.acre)}
                 lat={lat}
                 lon={lon}
+                 coordinates={field.field}
                 isSelected={selectedIndex === index}
                 onClick={() => {
                   setSelectedIndex(index);

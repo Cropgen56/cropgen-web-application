@@ -100,6 +100,14 @@ const CropHealth = ({ selectedFieldsDetials }) => {
                 {yieldVal}
               </span>
             </div>
+            <div className="flex gap-2">
+              <span className="font-semibold text-[18px]">
+                AI Yield :-
+              </span>
+              <span className="text-black font-medium text-[18px]">
+                Ai Yield
+              </span>
+            </div>
           </div>
 
           <div className="w-full flex flex-col justify-center">
