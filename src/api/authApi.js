@@ -5,7 +5,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 export const authenticateUser = async (userData) => {
   const response = await axios.post(`${API_URL}/api/auth/authenticate`, userData);
-  
+
   if (response?.data?.token && response?.data?.user) {
     return {
       token: response.data.token,
@@ -38,5 +38,21 @@ export const updateUser = async ({ id, token, updateData }) => {
       },
     }
   );
+  return response.data;
+};
+
+
+// Forgot password (send reset email)
+export const forgotPassword = async (email) => {
+  const response = await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
+  return response.data;
+};
+
+// Reset password
+export const resetPassword = async (token, newPassword) => {
+  const response = await axios.post(`${API_URL}/api/auth/reset-password`, {
+    token,
+    newPassword,
+  });
   return response.data;
 };

@@ -4,13 +4,16 @@ import { userLoginSignup } from "../../../redux/slices/authSlice";
 import SocialButtons from "../shared/socialbuttons/SocialButton";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-import { message } from "antd";
-import axios from "axios"; 
+import { message, Spin } from "antd";
+import axios from "axios";
+import { forgotPassword } from "../../../api/authApi";
+
 
 const Signup = () => {
   const dispatch = useDispatch();
   const { status } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const [scale, setScale] = useState(1);
   const [formData, setFormData] = useState({
@@ -44,8 +47,8 @@ const Signup = () => {
         type === "checkbox"
           ? checked
           : name === "organizationCode"
-          ? value.toUpperCase()
-          : value,
+            ? value.toUpperCase()
+            : value,
     }));
   };
 
@@ -81,20 +84,36 @@ const Signup = () => {
       }
     });
   };
+  const openEmailProvider = (email) => {
+    const domain = email.split("@")[1].toLowerCase();
+
+    if (domain.includes("gmail")) {
+      window.open("https://mail.google.com", "_blank");
+    } else if (domain.includes("outlook") || domain.includes("hotmail") || domain.includes("live")) {
+      window.open("https://outlook.live.com", "_blank");
+    } else if (domain.includes("yahoo")) {
+      window.open("https://mail.yahoo.com", "_blank");
+    } else {
+      // Fallback
+      window.open("https://" + domain, "_blank");
+    }
+  };
+
 
   // Handle forgot password
   const handleForgotPassword = async () => {
+
     if (!formData.email) return message.error("Please enter your email first");
+    setLoading(true);
     try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/auth/forgot-password`,
-        { email: formData.email }
-      );
-      message.success(res.data.message || "Password reset email sent!");
+      const res = await forgotPassword(formData.email);
+      message.success(res.message || "Password reset email sent!");
+      setTimeout(() => {
+        setLoading(false);
+        openEmailProvider(formData.email);
+      }, 1000);
     } catch (err) {
-      message.error(
-        err.response?.data?.message || "Error sending reset email"
-      );
+      message.error(err.response?.data?.message || "Error sending reset email");
     }
   };
 
@@ -174,7 +193,7 @@ const Signup = () => {
                   onClick={handleForgotPassword}
                   className="text-white hover:underline"
                 >
-                  Forgot Password
+                  {loading ? <Spin size="small" /> : "Forgot Password"}
                 </button>
               </div>
             </div>
