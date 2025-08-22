@@ -16,6 +16,7 @@ import Profile from "../pages/Profile";
 import PageNotFound from "../pages/PageNotFound";
 import AuthLayout from "../pages/AuthLayout";
 import ProtectedRoute from "../authroute/ProtectedRoute";
+import ResetPassword from "../components/AuthLayout/signup/Resetpassowrd";
 
 const AppRoutes = () => {
   return (
@@ -48,6 +49,7 @@ const AppRoutes = () => {
         </Route>
         <Route path="/login" element={<AuthLayout />} />
         <Route path="/*" element={<PageNotFound />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
       </Routes>
     </Router>
   );

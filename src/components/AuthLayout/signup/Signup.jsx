@@ -5,6 +5,7 @@ import SocialButtons from "../shared/socialbuttons/SocialButton";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { message } from "antd";
+import axios from "axios"; 
 
 const Signup = () => {
   const dispatch = useDispatch();
@@ -25,7 +26,7 @@ const Signup = () => {
     const handleResize = () => {
       const screenHeight = window.innerHeight;
       if (screenHeight < 700) {
-        setScale(screenHeight / 700); // shrink proportionally
+        setScale(screenHeight / 700);
       } else {
         setScale(1);
       }
@@ -43,8 +44,8 @@ const Signup = () => {
         type === "checkbox"
           ? checked
           : name === "organizationCode"
-            ? value.toUpperCase()
-            : value,
+          ? value.toUpperCase()
+          : value,
     }));
   };
 
@@ -57,9 +58,12 @@ const Signup = () => {
     if (formData.password.length < 6)
       return message.error("Password must be at least 6 characters."), false;
     if (!formData.terms)
-      return message.error(
-        "You must accept the Terms of Use and Privacy Policy."
-      ), false;
+      return (
+        message.error(
+          "You must accept the Terms of Use and Privacy Policy."
+        ),
+        false
+      );
     return true;
   };
 
@@ -76,6 +80,22 @@ const Signup = () => {
         );
       }
     });
+  };
+
+  // Handle forgot password
+  const handleForgotPassword = async () => {
+    if (!formData.email) return message.error("Please enter your email first");
+    try {
+      const res = await axios.post(
+        `${process.env.REACT_APP_API_URL}/auth/forgot-password`,
+        { email: formData.email }
+      );
+      message.success(res.data.message || "Password reset email sent!");
+    } catch (err) {
+      message.error(
+        err.response?.data?.message || "Error sending reset email"
+      );
+    }
   };
 
   return (
@@ -108,7 +128,10 @@ const Signup = () => {
           <div className="space-y-4">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="text-xs md:text-sm font-medium text-gray-800">
+              <label
+                htmlFor="email"
+                className="text-xs md:text-sm font-medium text-gray-800"
+              >
                 Email
               </label>
               <input
@@ -123,7 +146,10 @@ const Signup = () => {
 
             {/* Password */}
             <div className="relative">
-              <label htmlFor="password" className="text-xs md:text-sm font-medium text-gray-800">
+              <label
+                htmlFor="password"
+                className="text-xs md:text-sm font-medium text-gray-800"
+              >
                 Password
               </label>
               <input
@@ -141,16 +167,24 @@ const Signup = () => {
               >
                 {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
+              {/*  Forgot Password Button */}
               <div className="text-right text-xs mt-1">
-                <a href="#" className="text-white hover:underline">
-                  Reset Password
-                </a>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-white hover:underline"
+                >
+                  Forgot Password
+                </button>
               </div>
             </div>
 
             {/* Organization Code */}
             <div>
-              <label htmlFor="organizationCode" className="text-xs md:text-sm font-medium text-gray-800">
+              <label
+                htmlFor="organizationCode"
+                className="text-xs md:text-sm font-medium text-gray-800"
+              >
                 Organization Code (Optional)
               </label>
               <input
@@ -172,9 +206,17 @@ const Signup = () => {
                 onChange={handleChange}
                 className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded"
               />
-              <label htmlFor="terms" className="text-[10px] md:text-xs text-gray-700">
+              <label
+                htmlFor="terms"
+                className="text-[10px] md:text-xs text-gray-700"
+              >
                 I agree to the{" "}
-                <a href="https://www.cropgenapp.com/terms-conditions" className="text-sky-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                <a
+                  href="https://www.cropgenapp.com/terms-conditions"
+                  className="text-sky-600 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Terms of Use and Privacy Policy
                 </a>
                 , to the processing of my personal data, and to receive emails
