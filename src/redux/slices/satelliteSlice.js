@@ -25,7 +25,6 @@ const generateCacheKey = (prefix, farmId, input) => {
 
 const initialState = {
   satelliteDates: null,
-
   advisory: null,
   indexData: null,
   cropHealth: null,
@@ -34,11 +33,11 @@ const initialState = {
   cropYield: null,
   indexTimeSeriesSummary: null,
   waterIndexData: null,
+  cropGrowthStage: null,
   soilData: null,
   error: null,
   loading: {
     satelliteDates: false,
-
     indexData: false,
     cropHealth: false,
     soilMoisture: false,
@@ -48,6 +47,7 @@ const initialState = {
     indexTimeSeriesSummary: false,
     waterIndexData: false,
     soilData: false,
+    cropGrowthStage: false,
   },
 };
 
@@ -173,10 +173,13 @@ export const fetchCropHealth = createAsyncThunk(
       const cached = await get(cacheKey);
       const now = Date.now();
 
-     if (!farmDetails?.bypassCache && cached && now - cached.timestamp < CACHE_TTL) {
-  return cached.data;
-}
-
+      if (
+        !farmDetails?.bypassCache &&
+        cached &&
+        now - cached.timestamp < CACHE_TTL
+      ) {
+        return cached.data;
+      }
 
       const { field } = farmDetails || {};
       if (!field) {
@@ -503,6 +506,25 @@ export const fetchSoilData = createAsyncThunk(
   }
 );
 
+// Async thunk for getting farm fields for a user
+export const getTheCropGrowthStage = createAsyncThunk(
+  "satellite/getTheCropGrowthStage",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3001/api/bbch-stage",
+        payload
+      );
+      console.log(response);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to fetch crop growth stage"
+      );
+    }
+  }
+);
+
 const satelliteSlice = createSlice({
   name: "satellite",
   initialState,
@@ -661,6 +683,19 @@ const satelliteSlice = createSlice({
       })
       .addCase(fetchSoilData.rejected, (state, action) => {
         state.loading.soilData = false;
+        state.error = action.payload;
+      })
+      // fetch the crop growth stage
+      .addCase(getTheCropGrowthStage.pending, (state) => {
+        state.loading.cropGrowthStage = true;
+        state.error = null;
+      })
+      .addCase(getTheCropGrowthStage.fulfilled, (state, action) => {
+        state.loading.cropGrowthStage = false;
+        state.cropGrowthStage = action.payload;
+      })
+      .addCase(getTheCropGrowthStage.rejected, (state, action) => {
+        state.loading.cropGrowthStage = false;
         state.error = action.payload;
       });
   },
