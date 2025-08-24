@@ -5,37 +5,57 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  ReferenceDot,
 } from "recharts";
 import Card from "react-bootstrap/Card";
 import { useSelector, useDispatch } from "react-redux";
 import { getTheCropGrowthStage } from "../../../redux/slices/satelliteSlice";
 
-// Generate chart data for Days/Weeks/Months
-const generateCurveData = (interval, currentDay, bbchData) => {
+// ✅ Helper: Convert day index → "Week n, Day m"
+const formatDayToWeekDay = (day) => {
+  const week = Math.ceil(day / 7);
+  const dayOfWeek = ((day - 1) % 7) + 1;
+  return `Week ${week}, Day ${dayOfWeek}`;
+};
+
+// ✅ Custom Tooltip above the dot
+const CustomTooltip = ({ viewBox, stage, activity, timeLabel }) => {
+  if (!viewBox) return null;
+  const { x, y } = viewBox;
+
+  const activities = Array.isArray(activity) ? activity : [activity];
+
+  return (
+    <foreignObject x={x - 80} y={y - 200} width={300} height={200}>
+      <div className="bg-[#7BB34F] text-white text-xs p-2 rounded shadow-lg max-h-[400px] overflow-auto">
+        <p className="font-bold text-sm">{stage}</p>
+        <p className="font-semibold mb-1">Key Activities:</p>
+        <ul className="list-disc list-inside space-y-1">
+          {activities.map((act, idx) => (
+            <li key={idx} className="whitespace-normal">
+              {act}
+            </li>
+          ))}
+        </ul>
+        <p className="italic mt-1">{timeLabel}</p>
+      </div>
+    </foreignObject>
+  );
+
+};
+// Generate chart data for Days/Weeks 
+const generateCurveData = (interval) => {
   const totalDays = 13 * 7;
-  const historicalData = bbchData?.historicalData?.daily || {};
-  const timeData = historicalData.time || [];
-  const tempMean = historicalData.temp_mean || [];
-  const soilMoisture = historicalData.soil_moisture_5cm || [];
-  const precipitation = historicalData.precipitation || [];
 
   if (interval === "Days") {
     return Array.from({ length: totalDays }, (_, i) => {
       const day = i + 1;
-      const dayIndex = Math.min(i, timeData.length - 1);
       return {
         label: `Day ${day}`,
-        height: Math.max(1, Math.sin(i / 10) * 3 + 4), // Placeholder growth curve
+        height: Math.max(1, Math.sin(i / 10) * 3 + 4),
         index: day,
-        date: timeData[dayIndex] || "",
-        temp: tempMean[dayIndex] || null,
-        soilMoisture: soilMoisture[dayIndex] || null,
-        precipitation: precipitation[dayIndex] || null,
-        stage: bbchData && day <= currentDay ? bbchData.finalStage?.stage : "",
-        activity: bbchData && day <= currentDay ? bbchData.keyActivity : "",
       };
     });
   }
@@ -43,129 +63,43 @@ const generateCurveData = (interval, currentDay, bbchData) => {
   // Weeks
   return Array.from({ length: 13 }, (_, i) => {
     const week = i + 1;
-    const weekStartDay = (week - 1) * 7;
-    const weekEndDay = Math.min(week * 7, timeData.length - 1);
-    const weekData = timeData.slice(weekStartDay, weekEndDay);
-    const avg = (arr) =>
-      arr.length ? arr.reduce((a, b) => a + (b || 0), 0) / arr.length : null;
-
     return {
       label: `Week ${week}`,
-      height: 1 + i * 0.5, // Placeholder growth curve
+      height: 1 + i * 0.5,
       index: week,
-      date: weekData[0] || "",
-      temp: avg(tempMean.slice(weekStartDay, weekEndDay)),
-      soilMoisture: avg(soilMoisture.slice(weekStartDay, weekEndDay)),
-      precipitation: avg(precipitation.slice(weekStartDay, weekEndDay)),
-      stage:
-        bbchData && week <= Math.ceil(currentDay / 7)
-          ? bbchData.finalStage?.stage
-          : "",
-      activity:
-        bbchData && week <= Math.ceil(currentDay / 7)
-          ? bbchData.keyActivity
-          : "",
     };
   });
-};
-
-// Tooltip component
-const CustomTooltip = ({ active, payload, coordinate, chartWidth }) => {
-  if (active && payload && payload.length) {
-    const { stage, activity, date, temp, soilMoisture, precipitation } =
-      payload[0].payload;
-    const tooltipWidth = 200;
-    const xPosition =
-      coordinate.x + tooltipWidth > chartWidth
-        ? coordinate.x - tooltipWidth - 10
-        : coordinate.x + 10;
-
-    return (
-      <div
-        className="bg-[#7BB34F] text-white text-xs p-3 rounded shadow-lg max-w-[200px]"
-        style={{
-          transform: `translate(${xPosition}px, ${coordinate.y - 100}px)`,
-          position: "absolute",
-          pointerEvents: "none",
-        }}
-      >
-        <p className="font-bold text-sm">{stage || "Unknown Stage"}</p>
-        {date && (
-          <p>
-            <strong>Date:</strong> {date}
-          </p>
-        )}
-        <p>
-          <strong>Key Activities:</strong>
-          <br />
-          {activity || "No activities available."}
-        </p>
-        {temp && (
-          <p>
-            <strong>Mean Temp:</strong> {temp.toFixed(1)}°C
-          </p>
-        )}
-        {soilMoisture && (
-          <p>
-            <strong>Soil Moisture (5cm):</strong>{" "}
-            {(soilMoisture * 100).toFixed(1)}%
-          </p>
-        )}
-        {precipitation && (
-          <p>
-            <strong>Precipitation:</strong> {precipitation.toFixed(1)} mm
-          </p>
-        )}
-      </div>
-    );
-  }
-  return null;
 };
 
 const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
   const dispatch = useDispatch();
   const { cropName, sowingDate } = selectedFieldsDetials[0] || {};
   const aois = useSelector((state) => state.weather?.aois) || [];
-  const bbchData = useSelector((state) => state.satellite?.bbchStage?.data);
-  const isLoading = useSelector((state) => state.satellite?.bbchStage?.loading);
-  const error = useSelector((state) => state.satellite?.bbchStage?.error);
+
+  const cropGrowthStage = useSelector(
+    (state) => state.satellite?.cropGrowthStage
+  );
+  const bbchData = cropGrowthStage;
+  const isLoading = useSelector(
+    (state) => state.satellite?.loading?.cropGrowthStage
+  );
+  const error = useSelector((state) => state.satellite?.error);
+
   const [interval, setInterval] = useState("Weeks");
-  const [chartWidth, setChartWidth] = useState(0);
 
   const today = new Date();
   const sowing = sowingDate ? new Date(sowingDate) : null;
   const daysSinceSowing = sowing
-    ? Math.floor((today.getTime() - sowing.getTime()) / (1000 * 60 * 60 * 24)) +
-      1
+    ? Math.floor((today.getTime() - sowing.getTime()) / (1000 * 60 * 60 * 24)) + 1
     : 1;
   const currentWeek = Math.min(Math.ceil(daysSinceSowing / 7), 13);
 
-  // Update chart width for tooltip positioning
-  useEffect(() => {
-    const updateWidth = () => {
-      const chartContainer = document.querySelector(".plant-growth-card");
-      if (chartContainer) {
-        setChartWidth(chartContainer.offsetWidth);
-      }
-    };
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
-  }, []);
-
-  // Dispatch Thunk to fetch BBCH data
   useEffect(() => {
     if (!cropName || !sowingDate || !selectedFieldsDetials[0]?._id) return;
 
     const selectedFieldId = selectedFieldsDetials[0]._id;
     const aoi = aois.find((a) => a.name === selectedFieldId);
-    if (!aoi?.id) {
-      dispatch({
-        type: "FETCH_BBCH_STAGE_FAILURE",
-        payload: "No matching AOI found",
-      });
-      return;
-    }
+    if (!aoi?.id) return;
 
     const payload = {
       cropName,
@@ -177,12 +111,15 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
     dispatch(getTheCropGrowthStage(payload));
   }, [cropName, sowingDate, aois, selectedFieldsDetials, dispatch]);
 
-  const data = generateCurveData(interval, daysSinceSowing, bbchData);
+  const data = generateCurveData(interval);
 
   if (error) {
     return (
       <Card body className="text-red-500 p-4">
-        Error: {error}
+        Error:{" "}
+        {typeof error === "object"
+          ? error?.detail || JSON.stringify(error)
+          : error}
       </Card>
     );
   }
@@ -210,21 +147,20 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
           >
             <option>Days</option>
             <option>Weeks</option>
-            <option>Months</option>
           </select>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="w-full h-[200px] flex items-center justify-center">
+        <div className="w-full h-[350px] flex items-center justify-center">
           Loading...
         </div>
       ) : (
-        <div className="w-full h-[200px] relative">
-          <ResponsiveContainer width="100%" height={200}>
+        <div className="w-full h-[350px] relative">
+          <ResponsiveContainer>
             <AreaChart
               data={data}
-              margin={{ top: 5, right: 0, left: 0, bottom: 0 }}
+              margin={{ top: 80, right: 20, left: 0, bottom: 0 }} // more top margin
             >
               <defs>
                 <linearGradient id="colorHeight" x1="0" y1="0" x2="0" y2="1">
@@ -241,24 +177,48 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
                 tick={{ fill: "#000", fontSize: "12px", fontWeight: "bold" }}
               />
               <YAxis hide />
-              <Tooltip
-                content={<CustomTooltip chartWidth={chartWidth} />}
-                cursor={{ stroke: "#3A8B0A", strokeWidth: 1 }}
-              />
 
+              {/* ✅ Green Reference Line */}
               {interval === "Days" ? (
                 <ReferenceLine
                   x={`Day ${daysSinceSowing}`}
-                  stroke="red"
-                  strokeDasharray="3 3"
+                  stroke="#3A8B0A"
+                  strokeWidth={2}
                 />
               ) : (
                 <ReferenceLine
                   x={`Week ${currentWeek}`}
-                  stroke="red"
-                  strokeDasharray="3 3"
+                  stroke="#3A8B0A"
+                  strokeWidth={2}
                 />
               )}
+
+              {/* ✅ ReferenceDot with Custom Tooltip */}
+              <ReferenceDot
+                x={interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`}
+                y={
+                  data.find(
+                    (d) =>
+                      d.label ===
+                      (interval === "Days"
+                        ? `Day ${daysSinceSowing}`
+                        : `Week ${currentWeek}`)
+                  )?.height
+                }
+                r={0}
+                isFront
+                label={
+                  <CustomTooltip
+                    stage={bbchData?.finalStage?.stage || "Unknown Stage"}
+                    activity={bbchData?.keyActivity || "No activities available"}
+                    timeLabel={
+                      interval === "Days"
+                        ? formatDayToWeekDay(daysSinceSowing)
+                        : `Week ${currentWeek}`
+                    }
+                  />
+                }
+              />
 
               <Area
                 type="monotone"

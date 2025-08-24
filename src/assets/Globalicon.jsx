@@ -10,7 +10,7 @@ export const FieldIcon = ({ isSelected }) => {
       <path
         d="M11.4575 2L2 31.3618L47.3503 69L56.0102 67.6206L67.7466 59.9353L69 50.8706L11.4575 2Z"
         stroke="#344E41"
-        stroke-width="2"
+        strokeWidth="2"
       />
     </svg>
   );
@@ -82,9 +82,9 @@ export const Search = () => {
       <path
         d="M17 17L21 21M3 11C3 13.1217 3.84285 15.1566 5.34315 16.6569C6.84344 18.1571 8.87827 19 11 19C13.1217 19 15.1566 18.1571 16.6569 16.6569C18.1571 15.1566 19 13.1217 19 11C19 8.87827 18.1571 6.84344 16.6569 5.34315C15.1566 3.84285 13.1217 3 11 3C8.87827 3 6.84344 3.84285 5.34315 5.34315C3.84285 6.84344 3 8.87827 3 11Z"
         stroke="white"
-        stroke-width="1.5"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

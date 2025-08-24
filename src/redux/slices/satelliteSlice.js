@@ -512,7 +512,7 @@ export const getTheCropGrowthStage = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://localhost:3001/api/bbch-stage",
+        "https://server.cropgenapp.com/v2/api/bbch-stage",
         payload
       );
       console.log(response);
