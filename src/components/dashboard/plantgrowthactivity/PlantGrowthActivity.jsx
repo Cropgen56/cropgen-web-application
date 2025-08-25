@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import Card from "react-bootstrap/Card";
 import { useSelector, useDispatch } from "react-redux";
+import { formatToYYYYMMDD } from "../../../utility/convertYYYYMMDD";
 import { getTheCropGrowthStage } from "../../../redux/slices/satelliteSlice";
 
 // Generate chart data for Days/Weeks/Months
@@ -127,6 +128,7 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
   const { cropName, sowingDate } = selectedFieldsDetials[0] || {};
   const aois = useSelector((state) => state.weather?.aois) || [];
   const bbchData = useSelector((state) => state.satellite?.bbchStage?.data);
+
   const isLoading = useSelector((state) => state.satellite?.bbchStage?.loading);
   const error = useSelector((state) => state.satellite?.bbchStage?.error);
   const [interval, setInterval] = useState("Weeks");
@@ -169,7 +171,7 @@ const PlantGrowthActivity = ({ selectedFieldsDetials = [] }) => {
 
     const payload = {
       cropName,
-      sowingDate,
+      sowingDate: formatToYYYYMMDD(sowingDate),
       currentDate: today.toISOString().split("T")[0],
       geometryId: aoi.id,
     };

@@ -34,6 +34,7 @@ const initialState = {
   indexTimeSeriesSummary: null,
   waterIndexData: null,
   cropGrowthStage: null,
+  newNpkData: null,
   soilData: null,
   error: null,
   loading: {
@@ -48,6 +49,7 @@ const initialState = {
     waterIndexData: false,
     soilData: false,
     cropGrowthStage: false,
+    newNpkData: false,
   },
 };
 
@@ -512,14 +514,33 @@ export const getTheCropGrowthStage = createAsyncThunk(
   async (payload, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://localhost:3001/api/bbch-stage",
+        "https://server.cropgenapp.com/v2/api/bbch-stage",
         payload
       );
-      console.log(response);
+
       return response.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Failed to fetch crop growth stage"
+      );
+    }
+  }
+);
+
+// Async thunk for getting farm field NPK data
+export const getNpkData = createAsyncThunk(
+  "satellite/getNpkData",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        "https://server.cropgenapp.com/v2/api/calculate-npk",
+        payload
+      );
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to fetch NPK data"
       );
     }
   }
@@ -696,6 +717,19 @@ const satelliteSlice = createSlice({
       })
       .addCase(getTheCropGrowthStage.rejected, (state, action) => {
         state.loading.cropGrowthStage = false;
+        state.error = action.payload;
+      })
+      // fetch the crop npk data
+      .addCase(getNpkData.pending, (state) => {
+        state.loading.newNpkData = true;
+        state.error = null;
+      })
+      .addCase(getNpkData.fulfilled, (state, action) => {
+        state.loading.newNpkData = false;
+        state.newNpkData = action.payload;
+      })
+      .addCase(getNpkData.rejected, (state, action) => {
+        state.loading.newNpkData = false;
         state.error = action.payload;
       });
   },
