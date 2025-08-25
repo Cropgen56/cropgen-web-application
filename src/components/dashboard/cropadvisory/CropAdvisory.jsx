@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { Form } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -18,9 +24,8 @@ const categories = [
 const CropAdvisory = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
   const [selectedDay, setSelectedDay] = useState("Day 1");
-  const { NpkData, SoilMoisture, advisory } = useSelector(
-    (state) => state.satellite
-  );
+  const { advisory, cropGrowthStage } = useSelector((state) => state.satellite);
+  const { forecastData } = useSelector((state) => state.weather);
 
   const scrollRef = useRef(null);
   const isDragging = useRef(false);
@@ -31,27 +36,29 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
 
   // Fetch soil moisture when selectedFieldsDetials changes
   useEffect(() => {
-    dispatch(fetchSoilMoisture(farmDetails));
+    if (farmDetails) {
+      dispatch(fetchSoilMoisture(farmDetails));
+    }
   }, [dispatch, farmDetails, selectedFieldsDetials]);
 
   // Generate advisory with debouncing
   useEffect(() => {
-    if (NpkData && SoilMoisture && selectedFieldsDetials?.length) {
+    if (cropGrowthStage && forecastData && selectedFieldsDetials?.length) {
       const timer = setTimeout(() => {
         dispatch(
           genrateAdvisory({
             farmDetails: selectedFieldsDetials[0],
-            NpkData,
-            SoilMoisture,
+            currenWeather: forecastData?.current,
+            bbchData: cropGrowthStage?.finalStage,
           })
         );
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [dispatch, NpkData, SoilMoisture, selectedFieldsDetials]);
+  }, [dispatch, cropGrowthStage, forecastData, selectedFieldsDetials]);
 
   // Handle dragging for scrollable area
-  useEffect(() => {
+  const handleDragEvents = useCallback(() => {
     const slider = scrollRef.current;
     if (!slider) return;
 
@@ -62,14 +69,11 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
       slider.style.cursor = "grabbing";
     };
 
-    const handleMouseLeave = () => {
-      isDragging.current = false;
-      slider.style.cursor = "grab";
-    };
-
-    const handleMouseUp = () => {
-      isDragging.current = false;
-      slider.style.cursor = "grab";
+    const handleMouseLeaveOrUp = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        slider.style.cursor = "grab";
+      }
     };
 
     const handleMouseMove = (e) => {
@@ -81,17 +85,21 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
     };
 
     slider.addEventListener("mousedown", handleMouseDown);
-    slider.addEventListener("mouseleave", handleMouseLeave);
-    slider.addEventListener("mouseup", handleMouseUp);
+    slider.addEventListener("mouseleave", handleMouseLeaveOrUp);
+    slider.addEventListener("mouseup", handleMouseLeaveOrUp);
     slider.addEventListener("mousemove", handleMouseMove);
 
     return () => {
       slider.removeEventListener("mousedown", handleMouseDown);
-      slider.removeEventListener("mouseleave", handleMouseLeave);
-      slider.removeEventListener("mouseup", handleMouseUp);
+      slider.removeEventListener("mouseleave", handleMouseLeaveOrUp);
+      slider.removeEventListener("mouseup", handleMouseLeaveOrUp);
       slider.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
+
+  useEffect(() => {
+    return handleDragEvents();
+  }, [handleDragEvents]);
 
   // Memoize advisoryData to handle array format and map keys to categories
   const advisoryData = useMemo(() => {
@@ -99,7 +107,10 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
       ? advisory.map((item) => ({
           day: item.day,
           activities: {
-            "Disease/Pest Control": `Disease Pest - ${item.disease_pest}\nSpray - ${item.spray}`,
+            "Disease/Pest Control": `Disease Pest - ${item.disease_pest.replace(
+              /[\[\]]/g,
+              ""
+            )}\nSpray - ${item.spray.replace(/[\[\]]/g, "")}`,
             Fertigation: item.fertigation,
             Watering: item.water,
             Monitoring: item.monitoring,
@@ -201,10 +212,10 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
           ))}
         </div>
       ) : (
-      <div className="text-center text-muted flex flex-col items-center gap-1">
-  <LoadingSpinner />
-  <strong>Generating Advisory</strong>
-</div>
+        <div className="text-center text-muted flex flex-col items-center gap-1">
+          <LoadingSpinner />
+          <strong>Generating Advisory</strong>
+        </div>
       )}
     </div>
   );

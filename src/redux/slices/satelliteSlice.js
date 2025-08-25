@@ -302,7 +302,7 @@ export const fetcNpkData = createAsyncThunk(
 
 export const genrateAdvisory = createAsyncThunk(
   "satellite/genrateAdvisory",
-  async ({ farmDetails, SoilMoisture, NpkData }, { rejectWithValue }) => {
+  async ({ farmDetails, currenWeather, bbchData }, { rejectWithValue }) => {
     try {
       const farmId = farmDetails?._id;
       const cacheKey = generateCacheKey("advisory", farmId);
@@ -312,11 +312,6 @@ export const genrateAdvisory = createAsyncThunk(
       if (cached && now - cached.timestamp < CACHE_TTL) {
         return cached.data;
       }
-
-      const rawWeatherData = localStorage?.getItem("weatherData");
-      const weatherData = rawWeatherData ? JSON.parse(rawWeatherData) : null;
-
-      const currentConditions = weatherData?.currentConditions || {};
 
       const { cropName, sowingDate, variety, typeOfIrrigation, typeOfFarming } =
         farmDetails || {};
@@ -329,19 +324,15 @@ export const genrateAdvisory = createAsyncThunk(
       const payload = {
         crop_name: cropName,
         sowing_date: formatDateToISO(sowingDate),
-        bbch_stage: NpkData?.Crop_Growth_Stage || "BBCH 00",
+        bbch_stage: bbchData?.bbch || "BBCH 00",
         variety,
         irrigation_type: typeOfIrrigation,
         type_of_farming: typeOfFarming,
-        humidity: Math.round(currentConditions.humidity || 0),
-        temp: Math.round(currentConditions.temp || 0),
-        rain: Math.round(currentConditions.precipprob || 0),
-        soil_temp: Math.round(
-          SoilMoisture?.data?.Soil_Temperature?.Soil_Temperature_max || 0
-        ),
-        soil_moisture: Math.round(
-          SoilMoisture?.data?.Soil_Moisture?.Soil_Moisture_max || 0
-        ),
+        humidity: Math.round(currenWeather?.relative_humidity || 0),
+        temp: Math.round(currenWeather?.temp || 0),
+        rain: Math.round(currenWeather?.rain || 0),
+        soil_temp: Math.round(currenWeather?.soil_temperature_5cm || 0),
+        soil_moisture: Math.round(currenWeather?.soil_moisture_5cm || 0),
         language: "en",
       };
 

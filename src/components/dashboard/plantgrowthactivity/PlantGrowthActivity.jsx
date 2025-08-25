@@ -132,15 +132,21 @@ const CustomTooltip = ({ viewBox, stage, activity, timeLabel }) => {
   const activities = Array.isArray(activity) ? activity : [activity];
 
   // Adjust position to prevent tooltip from being cut off
-  const tooltipWidth = window.innerWidth < 640 ? 150 : 300; // Smaller width on mobile
+  const tooltipWidth = window.innerWidth < 640 ? 150 : 300;
   const tooltipX = Math.max(
     10,
     Math.min(x - tooltipWidth / 2, window.innerWidth - tooltipWidth - 10)
   );
 
   return (
-    <foreignObject x={tooltipX} y={y - 220} width={tooltipWidth} height={200}>
-      <div className="bg-[#7BB34F] text-white text-xs p-2 rounded shadow-lg max-h-[200px] overflow-auto sm:text-sm">
+    <foreignObject
+      x={tooltipX}
+      y={y - 220}
+      width={tooltipWidth}
+      height={200}
+      className="absolute z-10"
+    >
+      <div className="bg-[#7BB34F] text-white text-xs p-2 rounded shadow-lg max-h-[200px] overflow-auto sm:text-sm ">
         <p className="font-bold sm:text-base">{stage}</p>
         <p className="font-semibold mb-1">Key Activities:</p>
         <ul className="list-disc list-inside space-y-1">
@@ -283,7 +289,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
   const referenceData = useMemo(() => {
     const label =
       interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
-    const height = data.find((d) => d.label === label)?.height ?? 1; // Fallback height
+    const height = data.find((d) => d.label === label)?.height ?? 1;
     return { label, height };
   }, [interval, daysSinceSowing, currentWeek, data]);
 
