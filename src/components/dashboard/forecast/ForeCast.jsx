@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   DropIcon,
-  RainCloudIcon,
   WaveIcon,
   WindSpeedIcon,
   Dots,
@@ -9,7 +8,6 @@ import {
 import {
   Sun,
   RainSun,
-  CloudeElectric,
   Cloudesun,
   RainCloude,
 } from "../../../assets/image/weather/index.js";
@@ -18,7 +16,8 @@ import { useSelector } from "react-redux";
 function ForeCast() {
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
 
-  const [weatherData, setWeatherData] = useState({
+  // Derived state directly from Redux data
+  const weatherData = {
     currentConditions: {
       temp: forecastData.current?.temp || null,
       humidity: forecastData.current?.relative_humidity || null,
@@ -34,27 +33,7 @@ function ForeCast() {
           description: null,
         }))
       : [],
-  });
-
-  useEffect(() => {
-    setWeatherData({
-      currentConditions: {
-        temp: forecastData.current?.temp || null,
-        humidity: forecastData.current?.relative_humidity || null,
-        pressure: forecastData.current?.surface_pressure || null,
-        windspeed: forecastData.current?.wind_speed || null,
-        precipitation: forecastData.current?.precipitation || null,
-      },
-      days: forecastData.forecast
-        ? forecastData.forecast.time.slice(0, 16).map((date, index) => ({
-            datetime: date,
-            temp: forecastData.forecast.temp_mean[index] || null,
-            precipprob: forecastData.forecast.precipitation[index] || 0,
-            description: null,
-          }))
-        : [],
-    });
-  }, [forecastData]);
+  };
 
   const getWeatherIcon = (temperature, cloudCover) => {
     if (!cloudCover && !temperature) return "🧊";
@@ -73,9 +52,7 @@ function ForeCast() {
     return "🧊";
   };
 
-  const { currentConditions: weather = {}, days: weekForecast = [] } =
-    weatherData;
-
+  const { currentConditions: weather = {}, days: weekForecast = [] } = weatherData;
   const today = new Date().toISOString().split("T")[0];
 
   return (

@@ -201,10 +201,10 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
           ))}
         </div>
       ) : (
-        <p className="text-center text-muted">
-          <LoadingSpinner />
-          <strong>Generating Advisory</strong>
-        </p>
+      <div className="text-center text-muted flex flex-col items-center gap-1">
+  <LoadingSpinner />
+  <strong>Generating Advisory</strong>
+</div>
       )}
     </div>
   );
