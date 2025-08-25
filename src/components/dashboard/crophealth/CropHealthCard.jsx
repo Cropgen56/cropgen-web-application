@@ -120,7 +120,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
       <div className="flex flex-col lg:flex-row items-start justify-between mt-6 px-2 md:px-4 gap-6 lg:gap-12">
         {/* === Left: Soil Analysis === */}
         <div className="w-full lg:w-1/2">
-          <h2 className="text-left text-[16px]  font-semibold text-[#344E41] mb-2 ml-10">
+          <h2 className="text-left text-[1.3rem]  font-semibold text-[#344E41] mb-2 ml-10">
             Soil analysis
           </h2>
           <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
@@ -128,7 +128,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
 
         {/* === Right: Soil Health === */}
         <div className="w-full lg:w-1/2">
-          <h2 className="text-left text-[16px]  font-semibold text-[#344E41] mb-2 ml-10">
+          <h2 className="text-left text-[1.3rem]  font-semibold text-[#344E41] mb-2 ml-10">
             Soil Health
           </h2>
           <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} />

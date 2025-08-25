@@ -11,6 +11,9 @@ import {
 // 4 days in milliseconds
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
 
+// 24 hours in milliseconds
+const CACHE_TTL_24_HOURS = 24 * 60 * 60 * 1000;
+
 const generateCacheKey = (prefix, farmId, input) => {
   if (farmId) {
     return `api_cache_${prefix}_${farmId}`;
@@ -513,11 +516,20 @@ export const getTheCropGrowthStage = createAsyncThunk(
   "satellite/getTheCropGrowthStage",
   async (payload, { rejectWithValue }) => {
     try {
+      const cacheKey = generateCacheKey("cropGrowthStage", null, payload);
+      const cached = await get(cacheKey);
+      const now = Date.now();
+
+      if (cached && now - cached.timestamp < CACHE_TTL_24_HOURS) {
+        return cached.data;
+      }
+
       const response = await axios.post(
         "https://server.cropgenapp.com/v2/api/bbch-stage",
         payload
       );
 
+      await set(cacheKey, { data: response.data, timestamp: now });
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -532,11 +544,20 @@ export const getNpkData = createAsyncThunk(
   "satellite/getNpkData",
   async (payload, { rejectWithValue }) => {
     try {
+      const cacheKey = generateCacheKey("newNpkData", null, payload);
+      const cached = await get(cacheKey);
+      const now = Date.now();
+
+      if (cached && now - cached.timestamp < CACHE_TTL_24_HOURS) {
+        return cached.data;
+      }
+
       const response = await axios.post(
         "https://server.cropgenapp.com/v2/api/calculate-npk",
         payload
       );
 
+      await set(cacheKey, { data: response.data, timestamp: now });
       return response.data;
     } catch (error) {
       return rejectWithValue(

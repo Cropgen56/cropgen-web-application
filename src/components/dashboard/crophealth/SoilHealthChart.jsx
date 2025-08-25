@@ -10,13 +10,7 @@ import soil_Temperature from "../../../assets/image/dashboard/soil-temperature1.
 import soil_Moisture from "../../../assets/image/dashboard/soil-moisture1.svg";
 
 const SoilHealthChart = () => {
-  const dispatch = useDispatch();
-  const { soilData } = useSelector((state) => state.satellite);
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
-
-  useEffect(() => {
-    dispatch(fetchSoilData());
-  }, [dispatch]);
 
   // Use forecastData.current for latest values
   const latestTemp2cm = forecastData.current?.soil_temperature_surface || "N/A"; // 2cm data (soil_temperature_surface is closest)
@@ -31,8 +25,6 @@ const SoilHealthChart = () => {
     <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto">
       {/* Temperature & Moisture Cards - 2cm Data */}
       <div className="flex items-center justify-end gap-2 md:gap-6">
-
-
         <div className="flex items-center gap-1 md:gap-2 bg-[#344E41] border rounded-xl shadow-md p-2.5 w-42">
           <img
             src={soilTemperature}
@@ -151,7 +143,7 @@ const SoilHealthChart = () => {
           </div>
           <div className="absolute top-0 right-0 md:right-[-4px] ml-2 h-full flex flex-col justify-around gap-10">
             <span className="text-[10px] text-gray-700">5cm</span>
-      
+
             <span className="text-[10px] text-gray-700">15cm</span>
           </div>
         </div>
