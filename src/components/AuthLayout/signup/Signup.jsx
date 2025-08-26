@@ -58,8 +58,8 @@ const Signup = () => {
     if (!emailRegex.test(formData.email))
       return message.error("Invalid email format."), false;
     if (!formData.password) return message.error("Password is required."), false;
-    if (formData.password.length < 6)
-      return message.error("Password must be at least 6 characters."), false;
+    if (formData.password.length < 10 || formData.password.length > 15)
+      return message.error("Password must be between 10 and 15 characters."), false;
     if (!formData.terms)
       return (
         message.error(
@@ -84,6 +84,7 @@ const Signup = () => {
       }
     });
   };
+  
   const openEmailProvider = (email) => {
     const domain = email.split("@")[1].toLowerCase();
 
@@ -119,8 +120,7 @@ const Signup = () => {
 
   return (
     <div
-      className="w-full h-screen flex items-center justify-center bg-cover bg-center"
-      style={{ backgroundImage: "url('/your-bg.jpg')" }}
+      className="w-full flex items-center justify-center h-full"
     >
       <div
         style={{
@@ -130,15 +130,14 @@ const Signup = () => {
         }}
       >
         <div
-          className="border border-white/30 shadow-xl rounded-xl p-6 sm:p-8 lg:p-14 w-[90vw] max-w-lg"
-          style={{ background: "#FFFFFF80" }}
+          className="p-6 md:p-10 lg:p-14 w-[90vw] max-w-sm lg:max-w-xl xl:max-w-2xl"
         >
           {/* Heading */}
           <div className="mb-8 text-center">
-            <h2 className="text-lg md:text-2xl lg:text-3xl font-semibold text-[#344E41]">
-              Get Start With Cropgen
+            <h2 className="text-lg md:text-2xl lg:text-3xl font-semibold text-black">
+              Get started with CropGen
             </h2>
-            <p className="text-xs md:text-sm lg:text-base text-white mt-1 font-semibold">
+            <p className="text-xs md:text-sm lg:text-base text-[#9A9898] mt-1 font-medium">
               Enter Your Personal data to Create your account
             </p>
           </div>
@@ -191,7 +190,7 @@ const Signup = () => {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="text-white hover:underline"
+                  className="text-gray-600 hover:underline"
                 >
                   {loading ? <Spin size="small" /> : "Forgot Password"}
                 </button>
@@ -247,16 +246,16 @@ const Signup = () => {
               type="button"
               onClick={handleSubmit}
               disabled={status === "loading"}
-              className="w-full bg-[#075A53] text-white py-2 rounded-md font-medium hover:bg-emerald-900 transition"
+              className="w-full bg-[#344E41] text-white py-2 rounded-md font-medium hover:bg-emerald-900 transition"
             >
               {status === "loading" ? "Signing Up..." : "Login / Sign Up"}
             </button>
 
             {/* OR */}
             <div className="flex items-center gap-2 mt-2">
-              <hr className="flex-1 border-gray-300" />
+              <hr className="flex-1 border-[#075A53]" />
               <span className="text-xs text-gray-600">OR</span>
-              <hr className="flex-1 border-gray-300" />
+              <hr className="flex-1 border-[#075A53]" />
             </div>
 
             {/* Google Sign-In */}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, memo } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import {
   AreaChart,
   Area,
@@ -126,39 +126,39 @@ const isValidDate = (dateInput) => {
 };
 
 // Custom Tooltip for ReferenceDot
-const CustomTooltip = ({ viewBox, stage, activity, timeLabel }) => {
-  if (!viewBox) return null;
-  const { x, y } = viewBox;
-  const activities = Array.isArray(activity) ? activity : [activity];
+// const CustomTooltip = ({ viewBox, stage, activity, timeLabel }) => {
+//   if (!viewBox) return null;
+//   const { x, y } = viewBox;
+//   const activities = Array.isArray(activity) ? activity : [activity];
 
-  // Adjust position to prevent tooltip from being cut off
-  const tooltipWidth = window.innerWidth < 640 ? 150 : 300;
-  const tooltipX = Math.max(
-    10,
-    Math.min(x - tooltipWidth / 2, window.innerWidth - tooltipWidth - 10)
-  );
+//   // Adjust position to prevent tooltip from being cut off
+//   const tooltipWidth = window.innerWidth < 640 ? 150 : 300;
+//   const tooltipX = Math.max(
+//     10,
+//     Math.min(x - tooltipWidth / 2, window.innerWidth - tooltipWidth - 10)
+//   );
 
-  return (
-    <foreignObject
-      x={tooltipX}
-      y={y - 220}
-      width={tooltipWidth}
-      height={200}
-      className="absolute z-10"
-    >
-      <div className="bg-[#7BB34F] text-white text-xs p-2 rounded shadow-lg max-h-[200px] overflow-auto sm:text-sm ">
-        <p className="font-bold sm:text-base">{stage}</p>
-        <p className="font-semibold mb-1">Key Activities:</p>
-        <ul className="list-disc list-inside space-y-1">
-          {activities.map((act, idx) => (
-            <li key={idx}>{act}</li>
-          ))}
-        </ul>
-        <p className="italic mt-1">{timeLabel}</p>
-      </div>
-    </foreignObject>
-  );
-};
+//   return (
+//     <foreignObject
+//       x={tooltipX}
+//       y={y - 220}
+//       width={tooltipWidth}
+//       height={200}
+//       className="absolute z-10"
+//     >
+//       <div className="bg-[#7BB34F] text-white text-xs p-2 rounded shadow-lg max-h-[200px] overflow-auto sm:text-sm ">
+//         <p className="font-bold sm:text-base">{stage}</p>
+//         <p className="font-semibold mb-1">Key Activities:</p>
+//         <ul className="list-disc list-inside space-y-1">
+//           {activities.map((act, idx) => (
+//             <li key={idx}>{act}</li>
+//           ))}
+//         </ul>
+//         <p className="italic mt-1">{timeLabel}</p>
+//       </div>
+//     </foreignObject>
+//   );
+// };
 
 // Generate chart data for Days/Weeks
 const generateCurveData = (interval, cropName) => {
@@ -196,6 +196,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
   const isLoading = loading?.cropGrowthStage || false;
 
   const [interval, setInterval] = React.useState("Weeks");
+  const [tooltipPos, setTooltipPos] = useState(null);
 
   // Memoize daysSinceSowing, currentWeek, date validity, and suggestion
   const {
@@ -373,22 +374,16 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                 x={referenceData.label}
                 y={referenceData.height}
                 r={0}
-                isFront
-                label={
-                  <CustomTooltip
-                    stage={
-                      cropGrowthStage?.finalStage?.stage || "Unknown Stage"
-                    }
-                    activity={
-                      cropGrowthStage?.keyActivity || "No activities available"
-                    }
-                    timeLabel={
-                      interval === "Days"
-                        ? formatDayToWeekDay(daysSinceSowing)
-                        : `Week ${currentWeek}`
-                    }
-                  />
-                }
+                fill="#3A8B0A"
+                isFront={true}
+                label={({ viewBox }) => {
+                  if (!viewBox) return null;
+                  const { x, y } = viewBox;
+                  if (!tooltipPos || tooltipPos.x !== x || tooltipPos.y !== y) {
+                    setTooltipPos({ x, y });
+                  }
+                  return null;
+                }}
               />
               <Area
                 type="monotone"
@@ -400,6 +395,37 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
               />
             </AreaChart>
           </ResponsiveContainer>
+          {/* Always visible Tooltip */}
+          {tooltipPos && (
+            <div
+              className="absolute z-50 bg-[#7BB34F] text-white text-xs p-2 rounded shadow-lg max-w-[300px]"
+              style={{
+                left: Math.max(10, tooltipPos.x - 100),
+                top: Math.max(10, tooltipPos.y - 50),
+              }}
+            >
+              <p className="font-bold sm:text-base">
+                {cropGrowthStage?.finalStage?.stage || "Unknown Stage"}
+              </p>
+              <p className="font-semibold mb-1">Key Activities:</p>
+              <ul className="list-disc list-inside space-y-1 max-h-[150px] overflow-auto">
+                {Array.isArray(cropGrowthStage?.keyActivity) ? (
+                  cropGrowthStage.keyActivity.map((act, idx) => (
+                    <li key={idx}>{act}</li>
+                  ))
+                ) : (
+                  <li>
+                    {cropGrowthStage?.keyActivity || "No activities available"}
+                  </li>
+                )}
+              </ul>
+              <p className="italic mt-1">
+                {interval === "Days"
+                  ? formatDayToWeekDay(daysSinceSowing)
+                  : `Week ${currentWeek}`}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </Card>

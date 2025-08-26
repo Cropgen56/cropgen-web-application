@@ -14,9 +14,11 @@ import sattelite from "../assets/image/login/satellite.png";
 import laptop from "../assets/image/login/laptop-overlay.png";
 import ndvi from "../assets/image/login/ndvi.png";
 import logo from "../assets/image/login/logo.png";
-import { User } from "lucide-react";
+import sphere from "../assets/image/login/Desktop-background.svg";
+import keywordBg from "../assets/image/login/keyword-bg.svg";
 
-// ...imports stay same
+
+import { User } from "lucide-react";
 
 const AuthLayout = () => {
   const dispatch = useDispatch();
@@ -47,189 +49,70 @@ const AuthLayout = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // ✅ Calculate scaling factor for left panel
-  useEffect(() => {
-    // 900px height is "full" scale, anything smaller shrinks
-    const minHeight = 600; // stop shrinking too much
-    const fullHeight = 900;
-    const clampedHeight = Math.max(height, minHeight);
-    const scale = Math.min(clampedHeight / fullHeight, 1);
-    setScaleValue(scale);
-  }, [height]);
+  // // ✅ Calculate scaling factor for left panel
+  // useEffect(() => {
+  //   // 900px height is "full" scale, anything smaller shrinks
+  //   const minHeight = 600; // stop shrinking too much
+  //   const fullHeight = 900;
+  //   const clampedHeight = Math.max(height, minHeight);
+  //   const scale = Math.min(clampedHeight / fullHeight, 1);
+  //   setScaleValue(scale);
+  // }, [height]);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden font-poppins">
-      {/* Animation Styles */}
-      <style>{`
-      @keyframes slideInRight {
-        0% { opacity: 0; transform: translateX(50px); }
-        100% { opacity: 1; transform: translateX(0); }
-      }
-      @keyframes fadeUp {
-        0% { opacity: 0; transform: translateY(20px); }
-        100% { opacity: 1; transform: translateY(0); }
-      }
-      .animate-slideInRight { animation: slideInRight 0.8s ease-out forwards; }
-      .animate-fadeUp { animation: fadeUp 0.8s ease-out forwards; }
-    `}</style>
+    <div className="relative flex flex-row w-full h-screen overflow-hidden font-poppins">
+        {/* right side panel */}
+        <div className="w-1/2 relative h-full bg-[#344E41]">
+            {/* logo */}
+            <div className="absolute top-4 left-4 lg:top-6 lg:left-6 flex items-center gap-2">
+            <img src={logo} alt="Logo" className="h-12 lg:h-20 w-auto" />
+            </div>
 
-      {/* Background Image */}
-      <img
-        src={isTablet ? tabletBg : defaultBg}
-        alt="Background"
-        className="absolute inset-0 w-full h-full object-cover z-0 transition-all duration-500 ease-in-out"
-        style={{
-          objectPosition: isTablet ? "22% center" : "center center",
-        }}
-      />
+            <div className="flex flex-col gap-4 justify-center items-center h-full w-full">
+                <div className="lg:mt-20 mt-32 mx-6 lg:mx-0 text-center">
+                    <h2 className="text-xl lg:text-3xl font-bold text-white [text-shadow:0px_4px_4px_#00000040]">
+                        Your Smart Farming Assistant
+                    </h2>
+                    <p className="text-sm lg:text-base font-medium max-w-lg mb-2 text-white [text-shadow:0px_4px_4px_#00000040]">
+                        Powered by satellite insights, CropGen helps you detect, decide,
+                        and grow better—field by field.
+                    </p>
+                    {/* <img
+                            src={sphere} 
+                            alt="Background"
+                            className="mt-6 w-80 lg:w-[28rem] drop-shadow-[0px_4px_4px_#00000040] mx-auto animate-[spin_10s_linear_infinite]"
+                        /> */}
+                    <div className="relative mt-2 w-80 lg:w-[28rem] mx-auto">
+                    {/* Image */}
+                        <img
+                            src={sphere}
+                            alt="Background"
+                            className="relative z-10 w-full h-auto"
+                        />
 
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 z-10"
-        style={{
-          background: "linear-gradient(180deg, #344E41CC 10%, #344E411A 80%)",
-        }}
-      />
-      {width <= 1023 && (
-        <div className="absolute top-6 left-6 z-30">
-          <img src={logo} alt="CropGen Logo" className="h-12 lg:h-16 w-auto" />
+                        <img
+                            src={keywordBg}
+                            alt="Keywords"
+                            className="absolute inset-0 z-20 w-full h-auto lg:h-[400px] animate-[spin_12s_linear_infinite]"
+                        />
+
+                        <img
+                            src={laptop}
+                            alt="Laptop"
+                            className="absolute left-[-6rem] top-1/2 -translate-y-1/2 z-30 w-80 lg:w-[500px] xl:w-[600px] max-w-full"
+                        />          
+
+                    {/* Rotating shadow layer */}
+                    <div className="absolute inset-0 rounded-full bg-white/20 blur-3xl animate-[spin_12s_linear_infinite]" />
+                    </div>
+                </div>
+            </div>
         </div>
-      )}
-
-      {/* Main Layout */}
-      <div
-        className={`relative z-20 w-full h-full p-4 sm:p-8 flex ${isTablet
-          ? "flex-col items-center justify-center"
-          : "flex-row items-center justify-between"
-          }`}
-      >
-        {/* Left Panel */}
-        {!isTablet && (
-          <div
-            className="flex flex-col justify-between h-full w-[60%] text-white"
-            style={{
-              transform: `scale(${scaleValue})`,
-              transformOrigin: "top left",
-            }}
-          >
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <img src={logo} alt="Logo" className="h-12 lg:h-16 w-auto" />
-            </div>
-
-            {/* Testimonial */}
-            <div className="flex justify-start mt-4 lg:mt-10">
-              <div className="bg-white/20 backdrop-blur-md p-4 rounded-xl max-w-xs text-white shadow">
-                <p className="text-[12px] font-semibold leading-relaxed mb-2">
-                  With Cropgen, I manage my crops without stepping into the field daily.
-                  I get instant crop health updates, weather alerts, and expert advice on my phone.
-                  It saves time, water, and effort.
-                </p>
-                <div className="flex items-center gap-2">
-                  <div className="bg-gray-300 p-1 rounded-full">
-                    <User className="text-white w-4 h-4" />
-                  </div>
-                  <div className="text-xs">
-                    <p className="font-bold leading-tight">Kishor Adkine</p>
-                    <p className="text-[10px] leading-tight">Maharashtra, Farmer</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Floating Section */}
-            {/* Floating Section */}
-            <div className="flex flex-col justify-between items-center ml-12 mt-19">
-              <div
-                className="relative w-full flex justify-center items-center mt-10 z-20 float-x animate-fadeUp"
-                style={{
-                  transform: `translateX(${height >= 900 ? "-1rem" : height >= 750 ? "0rem" : "1rem"})`,
-                  transition: "transform 0.3s ease",
-                }}
-              >
-                <div
-                  className="relative"
-                  // 🔹 Increased width for bigger laptop
-                  style={{ width: height >= 800 ? "80%" : "65%" }}
-                >
-                  <img
-                    src={sattelite}
-                    className={`absolute left-1/2 transform -translate-x-1/2 w-[60%] z-[4] pointer-events-none ${animate ? "animate-satelliteMove" : ""
-                      }`}
-                    style={{ top: "-68px" }}
-                    alt="Satellite"
-                  />
-
-                  <img
-                    src={laptop}
-                    alt="Laptop"
-                    className="relative z-10 w-full object-contain"
-                  />
-                </div>
-
-                {/* Floating Cards */}
-                <img
-                  src={weather}
-                  className={`absolute w-36 rounded-md z-30 ${animate ? "animate-floatUp" : ""
-                    }`}
-                  style={{
-                    top: "10%",
-                    left: height < 800 ? "20%" : "12%",
-                  }}
-                  alt="Weather"
-                />
-                <img
-                  src={soilTemp}
-                  className={`absolute w-20 rounded-md z-30 ${animate ? "animate-floatUp" : ""
-                    }`}
-                  style={{
-                    left: height < 800 ? "28%" : "20%",
-                    bottom: "25%",
-                  }}
-                  alt="Soil Temp"
-                />
-                <img
-                  src={soilMois}
-                  className={`absolute w-20 rounded-md z-30 ${animate ? "animate-floatDown" : ""
-                    }`}
-                  style={{
-                    right: height < 800 ? "28%" : "18%",
-                    top: "17%",
-                  }}
-                  alt="Soil Moisture"
-                />
-                <img
-                  src={ndvi}
-                  className={`absolute w-36 rounded-md z-30 ${animate ? "animate-floatDown" : ""
-                    }`}
-                  style={{
-                    right: height < 800 ? "20%" : "10%",
-                    bottom: "20%",
-                  }}
-                  alt="NDVI"
-                />
-              </div>
-
-              {/* Tagline */}
-              <div className="text-center z-30 mb-8 mt-10">
-                <h2 className="text-lg lg:text-4xl font-bold">
-                  Your Smart Farming Assistant
-                </h2>
-                <p className="text-xs lg:text-[14px] font-semibold mt-1 max-w-md mx-auto">
-                  Powered by satellite insights, CropGen helps you detect, decide, and grow
-                  better—field by field.
-                </p>
-              </div>
-            </div>
-
-          </div>
-        )}
 
         {/* Right Panel: Signup */}
-        <div className="w-full lg:w-[45%] flex justify-center items-center h-full z-30 animate-slideInRight">
-          <Signup />
+        <div className="w-1/2 flex justify-center items-center h-full bg-white">
+            <Signup />
         </div>
-      </div>
     </div>
   );
 };
