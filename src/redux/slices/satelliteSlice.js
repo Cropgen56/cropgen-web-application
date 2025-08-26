@@ -126,7 +126,7 @@ export const fetchIndexData = createAsyncThunk(
 
 export const calculateAiYield = createAsyncThunk(
   "satellite/calculateAiYield",
-  async ({ cropDetials, Crop_Growth_Stage }, { rejectWithValue }) => {
+  async ({ cropDetials, cropGrowthStage }, { rejectWithValue }) => {
     try {
       const farmId = cropDetials?._id;
       const cacheKey = generateCacheKey("aiYield", farmId);
@@ -153,10 +153,10 @@ export const calculateAiYield = createAsyncThunk(
       });
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/ai-yield`,
+        `https://server.cropgenapp.com/v2/api/ai-yield`,
         {
           crop_name: cropName,
-          crop_growth_stage: Crop_Growth_Stage,
+          bbch_stage: cropGrowthStage,
           geometry: [coordinates],
         }
       );
@@ -725,10 +725,12 @@ const satelliteSlice = createSlice({
       })
       .addCase(getTheCropGrowthStage.fulfilled, (state, action) => {
         state.loading.cropGrowthStage = false;
+
         state.cropGrowthStage = action.payload;
       })
       .addCase(getTheCropGrowthStage.rejected, (state, action) => {
         state.loading.cropGrowthStage = false;
+
         state.error = action.payload;
       })
       // fetch the crop npk data

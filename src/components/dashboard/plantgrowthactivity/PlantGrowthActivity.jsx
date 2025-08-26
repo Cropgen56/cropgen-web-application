@@ -13,6 +13,7 @@ import Card from "react-bootstrap/Card";
 import { useSelector, useDispatch } from "react-redux";
 import { formatToYYYYMMDD } from "../../../utility/convertYYYYMMDD";
 import { getTheCropGrowthStage } from "../../../redux/slices/satelliteSlice";
+import { calculateAiYield } from "../../../redux/slices/satelliteSlice";
 
 // Crop growth duration mapping (in weeks)
 const CROP_GROWTH_DURATIONS = {
@@ -279,6 +280,17 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
     aois,
     dispatch,
   ]);
+
+  useEffect(() => {
+    if (cropGrowthStage?.finalStage?.bbch) {
+      dispatch(
+        calculateAiYield({
+          cropDetials: selectedFieldsDetials[0],
+          cropGrowthStage: cropGrowthStage?.finalStage?.bbch,
+        })
+      );
+    }
+  }, [cropGrowthStage]);
 
   // Memoize chart data
   const data = useMemo(
