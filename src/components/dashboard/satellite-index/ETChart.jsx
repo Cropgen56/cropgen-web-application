@@ -1,6 +1,5 @@
 import React from "react";
 import ReactECharts from "echarts-for-react";
-import "./ETChart.css";
 import { Card } from "react-bootstrap";
 import { useSelector } from "react-redux";
 
@@ -74,12 +73,12 @@ const EvapotranspirationChart = () => {
   };
 
   return (
-    <Card className="et-chart-card">
+    <Card className="mt-3 rounded-lg shadow-md bg-white">
       <Card.Body>
-        <div className="et-chart-heading">
-          <h2 className="text-[20px]">Evapotranspiration</h2>
-          <div>
-            <p>
+        <div className="flex justify-between items-center">
+          <h2 className="text-[#344e41] text-xl font-bold">Evapotranspiration</h2>
+          <div className="flex gap-4">
+            <p className="flex items-center gap-1 px-1 text-[#a7a5a5] text-xs">
               <svg
                 width="10"
                 height="10"
@@ -94,23 +93,23 @@ const EvapotranspirationChart = () => {
             </p>
           </div>
         </div>
-        <div className="et-info">
+        <div className="flex ml-12 text-center">
           <div>
-            <p>ET High</p>
-            <h2 className="text-[30px] font-bold">{maxEt} mm</h2>
-            <p>{maxEtDate}</p>
+            <p className="text-[#9a9898]-500 text-[11px] m-0">ET High</p>
+            <h2 className="text-[#344e41] text-2xl font-bold">{maxEt} mm</h2>
+            <p className="text-gray-500 text-[11px] m-0">{maxEtDate}</p>
           </div>
           <div className="ms-5">
-            <p>ET Average</p>
-            <h2 className="text-[30px] font-bold">{avgEt} mm</h2>
-            <p>16-day average</p>
+            <p className="text-[#9a9898]-500 text-[11px] m-0">ET Average</p>
+            <h2 className="text-[#344e41] text-2xl font-bold">{avgEt} mm</h2>
+            <p className="text-gray-500 text-[11px] m-0">16-day average</p>
           </div>
         </div>
-        <div className="et-chart-container">
+        <div className="relative w-full h-[250px] ">
           <ReactECharts
             option={option}
-            className="et-chart-echarts"
-            style={{ width: "100%", padding: "0px" }}
+            className="w-full"
+            style={{ width: "100%", padding: "0px", height:"250px" }}
           />
         </div>
       </Card.Body>

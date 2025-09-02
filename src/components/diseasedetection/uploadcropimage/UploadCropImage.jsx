@@ -24,7 +24,7 @@ const UploadCropImage = () => {
       {/* Right-side content */}
       <div className="flex-1 bg-[#5a7c6b] flex items-center justify-center p-8">
         {!showCropModal ? (
-          <div className="border-4 border-dotted border-white rounded-lg flex flex-col items-center justify-center w-full h-full">
+          <div className="border-2 border-dashed border-[#D9D9D9] rounded-lg flex flex-col items-center justify-center w-full h-full">
             <img src={imageupload} alt="Upload" className="w-56 h-56" />
             <p className="mt-14 text-center text-white text-lg font-bold">
               Drag and Drop Files <br />
@@ -32,7 +32,7 @@ const UploadCropImage = () => {
               <span>
                 <a
                   href="#"
-                  className="text-[#00b2eb] mx-1"
+                  className="text-[#00b2eb] text-lg mx-1"
                   onClick={triggerFileUpload}
                 >
                   click here

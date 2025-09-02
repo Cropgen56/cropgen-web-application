@@ -2,28 +2,25 @@ import React, { useState } from "react";
 import { PersonaliseCropSheduleDarkIcon } from "../../../assets/Icons";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
-import "./PersonaliseCropSheduleSidebar.css";
+// import "./PersonaliseCropSheduleSidebar.css";
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   <div
-    className={`personalise-crop-schedule-sidebar-info ${
-      isSelected ? "selected-personalise-crop-schedule-sidebar" : ""
+    className={`flex justify-around border-b border-[#344e41] pt-4 cursor-pointer ${
+      isSelected ? "bg-[#5a7c6b]" : ""
     }`}
     onClick={onClick}
   >
     <FieldIcon isSelected={isSelected} />
-    <div className="personalise-crop-schedule-sidebar-operations">
+    <div className="flex flex-col">
       <h4
-        className={`${
-          isSelected ? "selected-personalise-crop-schedule-title" : ""
-        }`}
-      >
+        className={`${isSelected ? "text-white" : "text-[#344e41]"} text-base font-normal`}>
         {title}
       </h4>
-      <p className="ha">{area}</p>
-      <div className="personalise-crop-schedule-sidebar-details">
-        <p>{lat} N</p>
-        <p>{lon} E</p>
+      <p className="m-0 p-0 text-[0.7rem] text-[#a2a2a2] mb-[0.2rem]">{area}</p>
+      <div className="flex">
+        <p className="text-[0.7rem] text-[#a2a2a2] mr-4">{lat} N</p>
+        <p className="text-[0.7rem] text-[#a2a2a2]">{lon} E</p>
       </div>
     </div>
   </div>
@@ -47,11 +44,13 @@ const PersonaliseCropSheduleSidebar = ({
   return (
     <>
       {isSidebarVisible && (
-        <div className="personalise-crop-schedule-sidebar">
-          <div className="personalise-crop-schedule-sidebar-heading">
-            <div className="personalise-crop-schedule-sidebar-first-row">
-              <PersonaliseCropSheduleDarkIcon />
-              <h2>Personalise Crop shedule</h2>
+        <div className="w-[20vw] h-screen m-0 p-0 bg-white">
+          <div className="flex flex-col border-b border-[#344e41] gap-2 px-2 py-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <PersonaliseCropSheduleDarkIcon />
+                <h2 className="text-[18px] font-bold text-[#344e41]">Personalise Crop shedule</h2>
+              </div>
               <svg
                 width="30"
                 height="30"
@@ -82,17 +81,17 @@ const PersonaliseCropSheduleSidebar = ({
                 </defs>
               </svg>
             </div>
-            <div className="personalise-crop-schedule-sidebar-search">
-              <CiSearch className="search-icon" />
+            <div className="relative flex items-center mx-auto w-full">
+              <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg" />
               <input
                 type="search"
-                className="search-input"
+                className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 text-gray-100 text-sm outline-none bg-[#344e41] focus:border-none"
                 placeholder="Search"
               />
             </div>
           </div>
-          <div className="personalise-crop-schedule-sidebar-field">
-            <h2>Field</h2>
+          <div className="overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
+            <h2 className="text-[16px] font-bold text-[#344e41] p-2">Field</h2>
             {operations.map((operation, index) => (
               <FieldInfo
                 key={index}

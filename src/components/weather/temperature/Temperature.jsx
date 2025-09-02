@@ -1,7 +1,7 @@
 import React from "react";
 import ReactEcharts from "echarts-for-react";
 import { Card } from "react-bootstrap";
-import "./Temperature.css";
+// import "./Temperature.css";
 
 const Temperature = ({ forecastData }) => {
   if (!forecastData?.forecast) {
@@ -90,15 +90,15 @@ const Temperature = ({ forecastData }) => {
   };
 
   return (
-    <Card className="temperature-card">
+    <Card className="mt-3 mx-2 rounded-lg shadow-md bg-white">
       <Card.Body>
-        <div className="temperature-chart-container">
-          <div className="Temperature-heading">
-            <h2>
+        <div className="w-full">
+          <div className="flex justify-between items-center">
+            <h2 className="text-[#344e41] text-lg font-bold">
               Temperature, <sup>°C</sup>
             </h2>
           </div>
-          <ReactEcharts option={options} className="temperature-echarts" />
+          <ReactEcharts option={options} className="w-full relative h-[250px]" />
         </div>
       </Card.Body>
     </Card>

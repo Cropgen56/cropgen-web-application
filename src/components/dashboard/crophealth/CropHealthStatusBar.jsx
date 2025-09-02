@@ -18,7 +18,7 @@ const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
   return (
     <div className="w-full flex flex-col gap-2">
       {/* ✅ Heading */}
-      <span className="text-[#344E41] font-semibold text-[16px] text-[#344E41]">
+      <span className="text-[#344E41] font-semibold text-[16px]">
         Overall Crop Health
       </span>
 
