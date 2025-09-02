@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import SoilReportSidebar from "../components/soilreport/soilreportsidebar/SoilReportSidebar";
-import "../style/Soilreport.css";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import Report from "../components/soilreport/soilreportsidebar/Report";
@@ -102,7 +101,7 @@ const SoilReport = () => {
   }
 
   return (
-    <div className="soil-report container-fluid m-0 p-0 d-flex h-screen">
+    <div className="h-screen w-full bg-[#5a7c6b] flex">
     <div>
       <SoilReportSidebar
         selectedOperation={selectedOperation}
@@ -160,7 +159,7 @@ const SoilReport = () => {
               <SOCreport isdownloading={isdownloading} />
             </div>
 
-            <div className="mt-4 rounded-lg shadow-md flex justify-between gap-4 mt-10">
+            <div className="mt-10 rounded-lg shadow-md flex justify-between gap-4">
               <Soilwaterindex
                 isdownloading={isdownloading}
                 selectedFieldsDetials={[selectedOperation]}

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactECharts from "echarts-for-react";
 import { Card } from "react-bootstrap";
-import "./WindSpeed.css";
+// import "./WindSpeed.css";
 
 const WindChart = ({ forecastData }) => {
   const forecast = forecastData?.forecast || {};
@@ -21,69 +21,67 @@ const WindChart = ({ forecastData }) => {
     ? new Date(current.time).toLocaleString()
     : "-";
 
-const option = {
-  tooltip: { trigger: "axis" },
-  grid: {
-    left: "3%",   // even smaller left margin
-    right: "3%",  // smaller right margin
-    top: "18%",
-    bottom: "15%",
-    containLabel: true,
-  },
-  xAxis: {
-    type: "category",
-    data: dates,
-    boundaryGap: false,      // no gap on sides, use full width
-    axisLine: { lineStyle: { color: "#888" } },
-    axisLabel: {
-      color: "#333",
-      interval: 0,           // show all labels
-      rotate: 30,            // horizontal labels, can set to 15 or 20 if overlap occurs
-      margin: 15,
-      fontSize: 12,
-      // overflow: 'truncate',  // optional if text overflows
+  const option = {
+    tooltip: { trigger: "axis" },
+    grid: {
+      left: "3%", // even smaller left margin
+      right: "3%", // smaller right margin
+      top: "18%",
+      bottom: "15%",
+      containLabel: true,
     },
-  },
-  yAxis: {
-    type: "value",
-    min: 0,
-    max: Math.max(...windGusts, ...windSpeed, 20),
-    interval: 15,
-    axisLine: { lineStyle: { color: "#888" } },
-    axisLabel: { formatter: "{value} km/h", color: "#333", margin: 15 },
-    splitLine: { lineStyle: { type: "dashed", color: "#eee" } },
-  },
-  series: [
-    {
-      name: "Wind Gusts",
-      type: "line",
-      data: windGusts,
-      smooth: true,
-      symbol: "circle",
-      symbolSize: 8,
-      itemStyle: { color: "#1f77b4" },
+    xAxis: {
+      type: "category",
+      data: dates,
+      boundaryGap: false, // no gap on sides, use full width
+      axisLine: { lineStyle: { color: "#888" } },
+      axisLabel: {
+        color: "#333",
+        interval: 0, // show all labels
+        rotate: 30, // horizontal labels, can set to 15 or 20 if overlap occurs
+        margin: 15,
+        fontSize: 12,
+        // overflow: 'truncate',  // optional if text overflows
+      },
     },
-    {
-      name: "Wind Speed",
-      type: "line",
-      data: windSpeed,
-      smooth: true,
-      symbol: "circle",
-      symbolSize: 8,
-      itemStyle: { color: "#ff7f0e" },
+    yAxis: {
+      type: "value",
+      min: 0,
+      max: Math.max(...windGusts, ...windSpeed, 20),
+      interval: 15,
+      axisLine: { lineStyle: { color: "#888" } },
+      axisLabel: { formatter: "{value} km/h", color: "#333", margin: 15 },
+      splitLine: { lineStyle: { type: "dashed", color: "#eee" } },
     },
-  ],
-};
-
-
+    series: [
+      {
+        name: "Wind Gusts",
+        type: "line",
+        data: windGusts,
+        smooth: true,
+        symbol: "circle",
+        symbolSize: 8,
+        itemStyle: { color: "#1f77b4" },
+      },
+      {
+        name: "Wind Speed",
+        type: "line",
+        data: windSpeed,
+        smooth: true,
+        symbol: "circle",
+        symbolSize: 8,
+        itemStyle: { color: "#ff7f0e" },
+      },
+    ],
+  };
 
   return (
-    <Card className="wind-chart-card">
+    <Card className="mt-3 mx-2 rounded-lg shadow-md bg-white w-auto">
       <Card.Body>
-        <div className="wind-chart-heading">
-          <h2 className="text-[20px]">Wind</h2>
-          <div>
-            <p>
+        <div className="flex justify-between items-center">
+          <h2 className="text-[#344e41] text-xl font-bold">Wind</h2>
+          <div className="flex gap-4">
+            <p className="flex items-center gap-1 px-1 text-[#a7a5a5] text-xs">
               <svg
                 width="10"
                 height="10"
@@ -97,7 +95,7 @@ const option = {
               Wind Gusts
             </p>
 
-            <p>
+            <p className="flex items-center gap-1 px-1 text-[#a7a5a5] text-xs">
               <svg
                 width="10"
                 height="10"
@@ -112,29 +110,28 @@ const option = {
             </p>
           </div>
         </div>
-        <div className="wind-info">
+        <div className="flex ml-12 text-center">
           <div>
-            <p>Current Wind Gusts</p>
-            <h2 className="text-[30px] font-bold">
+            <p className="text-[0.7rem] text-[#9a9898] m-0 p-0">Current Wind Gusts</p>
+            <h2 className="text-[#344e41] text-2xl font-bold">
               {currentWindGusts === "-" ? "-" : `${currentWindGusts} km/h`}
             </h2>
-            <p>{lastUpdated}</p>
+            <p className="text-[0.7rem] text-[#9a9898] m-0 p-0">{lastUpdated}</p>
           </div>
           <div className="ms-5">
-            <p>Current Wind Speed</p>
-            <h2 className="text-[30px] font-bold">
+            <p className="text-[0.7rem] text-[#9a9898] m-0 p-0">Current Wind Speed</p>
+            <h2 className="text-[#344e41] text-2xl font-bold">
               {currentWindSpeed === "-" ? "-" : `${currentWindSpeed} km/h`}
             </h2>
-            <p>{lastUpdated}</p>
+            <p className="text-[0.7rem] text-[#9a9898] m-0 p-0">{lastUpdated}</p>
           </div>
         </div>
-        <div className="wind-chart-container">
-        <ReactECharts
-  option={option}
-  className="wind-chart-echarts"
-  style={{ width: "100%", padding: "0px" }}
-/>
-
+        <div className="relative ">
+          <ReactECharts
+            option={option}
+            className="w-full"
+            style={{ padding: "0px", height: "200px" }}
+          />
         </div>
       </Card.Body>
     </Card>
@@ -142,3 +139,5 @@ const option = {
 };
 
 export default WindChart;
+
+

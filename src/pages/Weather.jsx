@@ -15,7 +15,6 @@ import {
   createAOI,
   fetchAOIs,
 } from "../redux/slices/weatherSlice";
-import "../style/weather.css";
 
 const formatCoordinates = (data) => {
   if (!data || data.length === 0) return [];
@@ -114,7 +113,7 @@ if (fields.length === 0) {
 
 
   return (
-    <div className="weather container-fluid m-0 p-0 w-full flex">
+    <div className="m-0 p-0 w-full flex flex-row">
       {isSidebarVisible && (
         <WeatherSidebar
           fields={fields}
@@ -122,7 +121,7 @@ if (fields.length === 0) {
           selectedField={selectedField}
         />
       )}
-      <div className="weather-body ml-[320px] w-full h-screen overflow-y-auto overflow-x-hidden">
+      <div className="w-full bg-[#5f7e6f] m-0 p-0 ml-[320px] h-screen overflow-y-auto overflow-x-hidden">
       {loading ? (
           // Loader (centered spinner)
           <div className="flex justify-center items-center h-full">

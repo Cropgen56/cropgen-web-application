@@ -4,7 +4,7 @@ import { getFarmFields } from "../redux/slices/farmSlice";
 import { getOperationsByFarmField } from "../redux/slices/operationSlice";
 import OperationSidebar from "../components/operation/operationsidebar/OperationSidebar";
 import Calendar from "../components/operation/operationcalender/OperationCalender";
-import "../style/Operation.css";
+// import "../style/Operation.css";
 import { useNavigate } from "react-router-dom";
 import img1 from "../assets/image/Group 31.png"
 
@@ -67,12 +67,12 @@ const Operation = () => {
 }
 
   return (
-    <div className="operation container-fluid m-0 p-0 d-flex">
+    <div className="w-full h-full m-0 p-0 d-flex">
       <OperationSidebar
         setSelectedField={setSelectedField}
         selectedField={selectedField}
       />
-      <div className="operation-body">
+      <div className="bg-[#5a7c6b]">
         <Calendar selectedField={selectedField} />
       </div>
     </div>

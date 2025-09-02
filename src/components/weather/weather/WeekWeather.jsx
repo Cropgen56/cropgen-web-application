@@ -8,16 +8,13 @@ import logo from "../../../assets/image/login/logo.svg";
 import leftarrow from "../../../assets/image/mingcute_up-line.png";
 import rightarrow from "../../../assets/image/Group (1).png";
 
-import "./WeekWeather.css";
-import "./loader.css";
-
 const WeekWeather = ({ forecastData }) => {
   const scrollRef = useRef(null);
 
   if (!forecastData || !forecastData.forecast) {
     return (
-      <div className="loader-container">
-        <img src={logo} alt="Loading..." className="rotating-logo" />
+      <div className="flex justify-center items-center h-[200px] [perspective:800px]">
+        <img src={logo} alt="Loading..." className="w-[60px] h-[60px] animate-flip [transform-style:preserve-3d]" />
       </div>
     );
   }

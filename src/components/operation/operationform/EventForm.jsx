@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { Modal, Form, Input, Select, Button, Row, Col, message } from "antd";
-import "./EventForm.css";
 import { useDispatch } from "react-redux";
 import { createOperation } from "../../../redux/slices/operationSlice";
 import { DatePicker } from "antd"
@@ -187,8 +186,8 @@ const EventForm = ({
   };
 
   return (
-    <Modal open={visible} onCancel={onClose} footer={null} className="event-modal" width={600}>
-      <h2 className="add-operation-title">Add Operations</h2>
+    <Modal open={visible} onCancel={onClose} footer={null} className="flex items-center justify-center gap-4" width={600}>
+      <h2 className="text-[#344e41] text-[1.2rem]">Add Operations</h2>
       <Form
         form={form}
         layout="vertical"
@@ -203,7 +202,7 @@ const EventForm = ({
               <Form.Item
                 name={name}
                 label={label}
-                className="add-operation-form-label"
+                className="text-[0.9rem] text-[#344e41] outline-none"
                 rules={rules}
               >
                 {component}
@@ -215,7 +214,7 @@ const EventForm = ({
           <Button
             type="primary"
             htmlType="submit"
-            className="add-operation-form-submit-button"
+            className="bg-[#344e41] px-[50px] text-base font-bold text-white"
           >
             Add Operations
           </Button>

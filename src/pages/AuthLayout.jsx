@@ -95,6 +95,36 @@ const AuthLayout = () => {
                             alt="Keywords"
                             className="absolute inset-0 z-20 w-full h-auto lg:h-[400px] animate-[spin_12s_linear_infinite]"
                         />
+                          
+                        {/* <div className="absolute inset-0 flex items-center justify-center z-30">
+                                <div className="relative w-[260px] h-[240px] animate-[spin_20s_linear_infinite]">
+                                    {[
+                                    { label: "Farm Report", icon: "/icons/farm.png" },
+                                    { label: "Soil Report", icon: "/icons/soil.png" },
+                                    { label: "Smart Advisory", icon: "/icons/advisory.png" },
+                                    { label: "Disease Detection", icon: "/icons/disease.png" },
+                                    { label: "Operations", icon: "/icons/operations.png" },
+                                    { label: "Weather Report", icon: "/icons/weather.png" },
+                                    { label: "CropGen Analytics", icon: "/icons/analytics.png" },
+                                    ].map((item, i, arr) => {
+                                    const angle = (360 / arr.length) * i;
+                                    return (
+                                        <div
+                                        key={i}
+                                        className="absolute top-1/2 left-1/2"
+                                        style={{
+                                            transform: `rotate(${angle}deg) translate(130px) rotate(-${angle}deg)`,
+                                        }}
+                                        >
+                                        <div className="flex flex-col items-center justify-center bg-white border-[3px] border-[#344E41] text-[#344E41] text-[11px] font-medium rounded-full shadow-md w-[90px] h-[90px]">
+                                            <img src={item.icon} alt={item.label} className="w-6 h-6 mb-1" />
+                                            <span className="text-xs text-center">{item.label}</span>
+                                        </div>
+                                        </div>
+                                    );
+                                    })}
+                                </div>
+                            </div> */}
 
                         <img
                             src={laptop}

@@ -59,10 +59,12 @@ const SmartAdvisorySidebar = ({ setReportData, setIsSidebarVisible }) => {
   return (
     <div className="min-w-[250px] bg-white shadow-md flex flex-col h-full">
       {/* Header */}
-      <div className="flex flex-col border-b border-[#344e41] gap-2 p-4">
-        <div className="flex justify-between items-center cursor-pointer">
-          <SmartAdvisoryDarkIcon />
-          <h2 className="text-[18px] font-bold text-[#344e41]">Smart Advisory</h2>
+      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <SmartAdvisoryDarkIcon />
+            <h2 className="text-[18px] font-bold text-[#344e41]">Smart Advisory</h2>
+          </div>
           <svg
             width="30"
             height="30"
@@ -83,19 +85,19 @@ const SmartAdvisorySidebar = ({ setReportData, setIsSidebarVisible }) => {
 
         {/* Search */}
         <div className="relative flex items-center mx-auto w-full">
-          <CiSearch className="absolute text-white text-lg top-2 left-8" />
+          <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg" />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-[80%] pl-10 py-1 border border-gray-300 rounded-md outline-none text-sm bg-[#344e41] text-white mb-4 ml-6"
+            className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 text-gray-100 text-sm outline-none bg-[#344e41] focus:border-none"
             placeholder="Search"
           />
         </div>
       </div>
 
       {/* Fields List */}
-      <div className="overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-hidden">
+      <div className="overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
         <h2 className="font-bold text-[#344e41] text-[18px] p-2">All Farms</h2>
         {filteredFields?.length > 0 ? (
           filteredFields.map((field, index) => {

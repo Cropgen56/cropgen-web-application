@@ -2,7 +2,6 @@ import React from "react";
 import ReactEcharts from "echarts-for-react";
 import { Card } from "react-bootstrap";
 import rainIcon from "../../../assets/image/Vector.png"; // path to your uploaded icon
-import "./RainChances.css";
 
 const RainChances = ({ forecastData }) => {
   // Defensive fallbacks if data is missing
@@ -93,14 +92,14 @@ const RainChances = ({ forecastData }) => {
   };
 
   return (
-    <Card className="rain-chances-card">
+    <Card className="mt-3 mx-2 rounded-lg shadow-md bg-white">
       <Card.Body>
 
         {/* Chart heading */}
-        <div className="chart-heading" style={{ marginBottom: "12px" }}>
-          <h2 className="text-[20px]">Rain Chances</h2>
-          <div>
-            <p>
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-[#344e41] text-[20px] font-bold">Rain Chances</h2>
+          <div className="flex gap-4">
+            <p className="flex items-center gap-1 px-1 text-[#a7a5a5] text-xs">
               <svg
                 width="10"
                 height="10"
@@ -114,7 +113,7 @@ const RainChances = ({ forecastData }) => {
               Rain Chances (%)
             </p>
 
-            <p>
+            <p className="flex items-center gap-1 px-1 text-[#a7a5a5] text-xs">
               <svg
                 width="10"
                 height="10"
@@ -131,62 +130,50 @@ const RainChances = ({ forecastData }) => {
         </div>
         {/* Details section below chart */}
         <div
-          className="rain-details"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginTop: "20px",
-            fontSize: "14px",
-            color: "#344E41",
-            margin:"5%"
-          }}
+          className="flex items-center justify-between text-[#344e41] text-[14px] lg:mx-8 border-b border-gray-300 pb-3"
         >
           {/* Date & icon */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}>
-            <div>
+          <div className="flex items-center gap-2 font-bold text-[#344E41]" >
+            <div className="text-md">
               <div>{dayName}</div>
               <div>{dayNumber} {monthName}</div>
             </div>
             <img
               src={rainIcon}
               alt="Rain Icon"
-              style={{ width: 40, height: 40 }}
+              style={{ width: 30, height: 30 }}
             />
           </div>
 
           {/* Day/Night Temp */}
-          <div style={{ borderLeft: "1px solid #ccc", paddingLeft: 12, marginLeft: 12 }}>
-            <div style={{ fontWeight: "600" }}>{dayTemp}° Day</div>
-            <div style={{ color: "#666" }}>{nightTemp}° Night</div>
+          <div className="border-l border-gray-300 pl-3 ml-3 text-center">
+            <div className="font-semibold">{dayTemp}° Day</div>
+            <div className="text-[#A7A5A5]">{nightTemp}° Night</div>
           </div>
 
           {/* Wind */}
-          <div style={{ borderLeft: "1px solid #ccc", paddingLeft: 12, marginLeft: 12, textAlign: "center" }}>
-            <div style={{ fontWeight: "600" }}>{windDirection}</div>
-            <div style={{ color: "#666" }}>{windSpeed} km/h</div>
+          <div className="border-l border-gray-300 pl-3 ml-3 text-center">
+            <div className="font-semibold">{windDirection}</div>
+            <div className="text-[#A7A5A5]">{windSpeed} km/h</div>
           </div>
 
           {/* Chance of rain */}
-          <div style={{ borderLeft: "1px solid #ccc", paddingLeft: 12, marginLeft: 12, textAlign: "center" }}>
-            <div style={{ fontWeight: "600" }}>{chanceOfRain}% Chance of rain</div>
+          <div className="border-l border-gray-300 pl-3 ml-3 text-center">
+            <div className="font-semibold">{chanceOfRain}% Chance of rain</div>
           </div>
 
           {/* Precipitation */}
-          <div style={{ borderLeft: "1px solid #ccc", paddingLeft: 12, marginLeft: 12, textAlign: "center" }}>
-            <div style={{ fontWeight: "600" }}>{precipitation} mm</div>
+          <div className="border-l border-gray-300 pl-3 ml-3 text-center">
+            <div className="font-semibold">{precipitation} mm</div>
           </div>
         </div>
 
         {/* Chart */}
         <ReactEcharts
           option={options}
-          className="rain-chances-chart mt-5"
-          style={{ width: "100%", height: "300px" }}
+          className="rain-chances-chart mt-3"
+          style={{ width: "100%", height: "200px" }}
         />
-
-
-
       </Card.Body>
     </Card>
   );

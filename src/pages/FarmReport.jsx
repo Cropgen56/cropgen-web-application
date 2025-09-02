@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "../style/FarmReport.css";
 import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmReportSidebar";
 import { getFarmFields } from "../redux/slices/farmSlice";
 import img1 from "../assets/image/Group 31.png"
@@ -46,7 +45,7 @@ const FarmReport = () => {
 
 
   return (
-    <div className="weather container-fluid m-0 p-0 w-100">
+    <div className="m-0 p-0 w-full flex flex-row">
       {/* farm report sidebar */}
       <FarmReportSidebar
         selectedField={selectedField}
@@ -54,8 +53,8 @@ const FarmReport = () => {
         setIsSidebarVisible={setIsSidebarVisible}
       />
       {/* Main weather body */}
-      <div className="farm-report-body">
-        <div className="farm-report-image">
+      <div className="h-screen w-screen bg-[#5a7c6b] flex justify-center items-center relative body">
+        <div className="absolute">
           <svg
             width="270"
             height="270"
@@ -77,7 +76,7 @@ const FarmReport = () => {
             </defs>
           </svg>
         </div>
-        <p className="instruction-text">
+        <p className="text-[1.3rem] text-[#d9d9d9] font-bold z-20">
           {isFieldSelected()
             ? `Selected Field: ${selectedField.title}`
             : "Select a Field to Generate Report"}

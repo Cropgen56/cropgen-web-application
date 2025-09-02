@@ -8,7 +8,6 @@ import EventForm from "../operationform/EventForm";
 import { getOperationsByFarmField, deleteOperation } from "../../../redux/slices/operationSlice";
 import { Operation } from "../../../assets/Icons";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import "./OperationCalender.css";
 import Days from "react-calendar/dist/cjs/MonthView/Days.js";
 import { query } from "esri-leaflet";
 
@@ -165,7 +164,7 @@ const FarmerScheduler = (selectedField) => {
 
 
   return (
-    <div className="h-screen bg-[#344e41] text-white overflow-y-auto scrollbar-hidden p-4">
+    <div className="h-screen bg-[#344e41] text-white overflow-y-auto no-scrollbar p-4">
       {/* Header + Navigation */}
       <div className="flex justify-between items-center mb-4">
         <button

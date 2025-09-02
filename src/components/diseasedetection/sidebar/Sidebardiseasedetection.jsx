@@ -62,10 +62,12 @@ const DiseaseSidebar = ({ setSelectedField, selectedField }) => {
   return (
     <div className="w-[25vw] bg-white shadow-md flex flex-col h-full ">
       {/* Header */}
-      <div className="flex flex-col border-b border-[#344e41] gap-2 p-4">
-        <div className="flex justify-between items-center cursor-pointer">
-          <DieaseDetactiondark />
-          <h2 className="text-[18px] font-bold text-[#344e41]">Disease Detection</h2>
+      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-1">
+            <DieaseDetactiondark />
+            <h2 className="text-[18px] font-bold text-[#344e41]">Disease Detection</h2>
+          </div>
           <svg
             width="30"
             height="30"
@@ -85,19 +87,19 @@ const DiseaseSidebar = ({ setSelectedField, selectedField }) => {
         </div>
 
         {/* Search Bar */}
-      <div className="soil-report-search">
-                  <CiSearch className="search-icon " />
-                  <input
-                    type="search"
-                    className="search-input w-full text-base bg-[#344e41] text-white placeholder-white pl-10 py-1 border border-gray-300 rounded-md outline-none"
-                    placeholder="Search"
-                  />
-                </div>
+        <div className="relative">
+          <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg " />
+          <input
+            type="search"
+            className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 text-gray-100 text-sm outline-none bg-[#344e41] focus:border-none"
+            placeholder="Search"
+          />
+        </div>
       </div>
 
       {/* Scrollable Fields */}
-      <div className="overflow-y-auto max-h-[calc(100vh-150px)] scrollbar-hide">
-        <h2 className="text-[18px] font-bold text-[#344e41] pl-2 pb-2">All Farms</h2>
+      <div className="overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
+        <h2 className="text-[18px] font-bold text-[#344e41] pl-2 py-2">All Farms</h2>
         {fields && fields.length > 0 ? (
           fields.map((field, index) => {
             const { lat, lon } = calculateCentroid(field.field);

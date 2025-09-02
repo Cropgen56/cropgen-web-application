@@ -1,14 +1,13 @@
 import React from "react";
 import PersonaliseCropScheduleSidebar from "../components/personalizecropshedule/personalizecropshedulesidebar/PersonaliseCropSheduleSidebar";
-import "../style/Personalisecropshedule.css";
 
 const PersonaliseCropSchedule = () => {
   return (
-    <div className="personalise-crop-shedule container-fluid m-0 p-0 d-flex">
+    <div className="h-screen w-screen bg-[#5a7c6b] m-0 p-0 flex">
       <div>
         <PersonaliseCropScheduleSidebar />
       </div>
-      <div className="w-100"> </div>
+      <div className="w-full"> </div>
     </div>
   );
 };

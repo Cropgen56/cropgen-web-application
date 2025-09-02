@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Operation2 } from "../../../assets/Icons";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
-import "./SoilReportSidebar.css";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { fetchSatelliteDates } from "../../../redux/slices/satelliteSlice";
@@ -134,11 +133,13 @@ const SoilReportSidebar = ({
   return (
     <>
       {isSidebarVisible && (
-        <div className="soil-report-sidebar h-screen flex flex-col  shadow-lg  relative overflow-y-auto">
-          <div className="soil-report-heading">
-            <div className="soil-report-first-row">
-              <Operation2 />
-              <p className="text-[18px] font-bold text-[#344e41]">Soil Report</p>
+        <div className="w-[20vw] m-0 p-0 bg-white shadow-md flex flex-col h-screen relative overflow-y-auto">
+          <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Operation2 />
+                <p className="text-[18px] font-bold text-[#344e41] m-0">Soil Report</p>
+              </div>
               <svg
                 width="30"
                 height="30"
@@ -169,11 +170,11 @@ const SoilReportSidebar = ({
                 </defs>
               </svg>
             </div>
-            <div className="soil-report-search">
-              <CiSearch className="search-icon " />
+            <div className="relative flex items-center mx-auto w-full">
+              <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg" />
               <input
                 type="search"
-                className="search-input"
+                className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 text-gray-100 text-sm outline-none bg-[#344e41] focus:border-none"
                 placeholder="Search"
               />
             </div>
@@ -181,9 +182,9 @@ const SoilReportSidebar = ({
           <h2 className="px-4 pt-2 text-[18px] font-bold text-[#344e41]">
               All Farms
             </h2>
-          <div className="soil-report-field flex flex-col">
+          <div className="flex flex-col">
             
-            <div className="overflow-y-auto max-h-[200px] ">
+            <div className="overflow-y-auto max-h-[225px] no-scrollbar">
               {(fields || []).map((fieldObj, index) => (
                 <FieldInfo
                   key={fieldObj._id || index}
@@ -219,7 +220,7 @@ const SoilReportSidebar = ({
             </div>
 
             {selectedOperationIndex !== null && (
-              <div className="mt-5 p-3 flex flex-col gap-3 text-[#344e41] ">
+              <div className="mt-3 p-3 flex flex-col gap-3 text-[#344e41] ">
                 <h4 className="font-bold text-[#344e41]">Crop Details </h4>
                 <label className="font-semibold"> Current Crop</label>
                 <select

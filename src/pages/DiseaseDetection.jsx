@@ -1,6 +1,5 @@
 import React from "react";
 import UploadCropImage from "../components/diseasedetection/uploadcropimage/UploadCropImage";
-import "../style/DiseaseDetection.css";
 import Sidebardiseasedetection from "../components/diseasedetection/sidebar/Sidebardiseasedetection";
 import { useNavigate } from "react-router-dom";
 import img1 from "../assets/image/Group 31.png"
@@ -12,12 +11,6 @@ import { getFarmFields } from "../redux/slices/farmSlice";
 const DiseaseDetection = () => {
     const fields = useSelector((state) => state?.farmfield?.fields);
   const navigate= useNavigate();
-
-
-
-
-
-
 
   if (fields.length === 0) {
   return (
@@ -45,7 +38,7 @@ const DiseaseDetection = () => {
   );
 }
   return (
-    <div className="disease-detection flex flex-col md:flex-row">
+    <div className="bg-[#5f7e6f] h-screen flex flex-col md:flex-row">
       <Sidebardiseasedetection />
       <UploadCropImage />
     </div>
