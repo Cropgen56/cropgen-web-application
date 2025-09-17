@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from "lucide-react";
@@ -21,7 +20,7 @@ const plans = [
             "Growth Stage Tracking (BBCH)",
         ],
         missing: [
-            "Fertilizer (NPK) Advisor",
+            "Fertilizer (NPK) Advisory",
             "Irrigation Updates (ET-based)",
             "Pest & Disease Alerts",
             "Yield Prediction",
@@ -49,7 +48,7 @@ const plans = [
             "Weather Forecast (7–14 days advanced)",
             "Soil Moisture & Temperature (advanced soil)",
             "Growth Stage Tracking (BBCH AI-enhanced)",
-            "Fertilizer (NPK) Advisor (advanced)",
+            "Fertilizer (NPK) Advisory (advanced)",
             "Irrigation Updates (ET-based smart)",
             "Pest & Disease Alerts (AI early-warning)",
             "Yield Prediction",
@@ -76,7 +75,7 @@ const plans = [
             "Weather Forecast (7–14 days)",
             "Soil Moisture & Temperature (surface)",
             "Growth Stage Tracking (BBCH basic)",
-            "Fertilizer (NPK) Advisor",
+            "Fertilizer (NPK) Advisory",
             "Irrigation Updates (ET-based)",
             "Pest & Disease Alerts",
             "Yield Prediction",
@@ -104,7 +103,7 @@ const plans = [
             "Weather Forecast (7–14 days)",
             "Soil Moisture & Temperature (root-soil)",
             "Growth Stage Tracking (BBCH basic)",
-            "Fertilizer (NPK) Advisor",
+            "Fertilizer (NPK) Advisory",
             "Irrigation Updates (ET-based)",
             "Pest & Disease Alerts",
             "Yield Prediction",
@@ -133,7 +132,7 @@ const plans = [
             "Weather Forecast (7–14 days) (multi-field)",
             "Soil Moisture & Temperature (advanced soil)",
             "Growth Stage Tracking (BBCH) (AI-enhanced)",
-            "Fertilizer (NPK) Advisor (advanced)",
+            "Fertilizer (NPK) Advisory (advanced)",
             "Irrigation Updates (ET-based) (smart)",
             "Pest & Disease Alerts (AI early-warning)",
             "Yield Prediction (farm-wide)",
@@ -227,21 +226,32 @@ function PlanCard({ plan }) {
                                     strokeWidth={4}
                                     size={14}
                                     className="text-green-700 shrink-0"
-                                />{" "}
+                                />
                                 {f}
                             </p>
                         ))}
                     </div>
 
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setFlipped(true);
-                        }}
-                        className="mt-3 py-2 rounded-2xl text-sm bg-[#5A7C6B] text-white hover:bg-[#466657]"
-                    >
-                        View All Features
-                    </button>
+                    <div className="mt-3 flex gap-2">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setFlipped(true);
+                            }}
+                            className="flex-1 py-2 rounded-2xl text-xs bg-[#5A7C6B] text-white hover:bg-[#466657] "
+                        >
+                            View All Features
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                alert(`Selected ${plan.name}`);
+                            }}
+                            className="flex-1 py-2 rounded-2xl text-xs bg-white text-[#344E41] hover:bg-gray-200 border-[2px]"
+                        >
+                            Get Started
+                        </button>
+                    </div>
                 </div>
 
                 {/* BACK */}
@@ -275,24 +285,15 @@ function PlanCard({ plan }) {
                             </p>
                         ))}
                     </div>
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-3">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setFlipped(false);
                             }}
-                            className="py-2 px-3 rounded-2xl bg-[#5A7C6B] text-white hover:bg-[#466657]"
+                            className="w-full py-2 px-3 rounded-2xl bg-[#5A7C6B] text-white hover:bg-[#466657]"
                         >
                             Back
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                alert(`Selected ${plan.name}`);
-                            }}
-                            className="py-2 px-3 rounded-2xl bg-white text-[#344E41] hover:bg-gray-200"
-                        >
-                            Get Started
                         </button>
                     </div>
                 </div>
@@ -300,6 +301,7 @@ function PlanCard({ plan }) {
         </div>
     );
 }
+
 export default function PricingOverlay({ onClose }) {
     const [billing, setBilling] = useState("monthly");
     const [currency, setCurrency] = useState("USD");
@@ -482,13 +484,36 @@ export default function PricingOverlay({ onClose }) {
 
 
                 {/* footer */}
-                <div className="mt-6 sm:mt-8 text-center text-white font-bold text-[10px] sm:text-xs md:text-sm">
-                    Prices are exclusive of VAT, GST, or other applicable taxes in your
-                    region.
-                    <br />
-                    If you require an invoice to process your CropGen subscription, please
-                    contact our support team.
-                </div>
+               <div className="mt-6 sm:mt-8 text-center text-white font-bold text-[10px] sm:text-xs md:text-sm space-y-3">
+  {/* Links row */}
+  <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+    <a
+      className="text-white hover:text-gray-300 transition-colors"
+      href="https://www.cropgenapp.com/terms-conditions"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Terms and Conditions
+    </a>
+    <a
+      className="text-white hover:text-gray-300 transition-colors"
+      href="https://www.cropgenapp.com/privacy-policy"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      Privacy Policy
+    </a>
+  </div>
+
+  {/* Disclaimer text */}
+  <p>
+    Prices are exclusive of VAT, GST, or other applicable taxes in your region.
+    <br />
+    If you require an invoice to process your CropGen subscription, please
+    contact our support team.
+  </p>
+</div>
+
             </motion.div>
         </div>
     );
