@@ -23,6 +23,7 @@
     "echarts-for-react": "^3.0.2",
     "esri-leaflet": "^3.0.13",
     "esri-leaflet-geocoder": "^3.1.5",
+    "framer-motion": "^12.23.12",
     "html2canvas": "^1.4.1",
     "idb-keyval": "^6.2.2",
     "jspdf": "^3.0.1",
@@ -59,6 +60,7 @@
     "react-window": "^1.8.10",
     "recharts": "^2.12.7",
     "redux-thunk": "^3.1.0",
+    "swiper": "^12.0.1",
     "tailwind-scrollbar-hide": "^4.0.0",
     "web-vitals": "^2.1.4"
   },
