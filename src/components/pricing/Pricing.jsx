@@ -249,7 +249,7 @@ function PlanCard({ plan }) {
                             }}
                             className="flex-1 py-2 rounded-2xl text-xs bg-white text-[#344E41] hover:bg-gray-200 border-[2px]"
                         >
-                            Get Started
+                            Subscribe
                         </button>
                     </div>
                 </div>
