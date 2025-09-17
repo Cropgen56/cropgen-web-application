@@ -27,7 +27,6 @@ const AddField = () => {
       const height = window.innerHeight;
       setIsTabletView(width >= 768 && width <= 1024 && height <= 1366);
     };
-     setShowOverlay(true);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);

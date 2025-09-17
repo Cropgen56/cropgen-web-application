@@ -484,35 +484,35 @@ export default function PricingOverlay({ onClose }) {
 
 
                 {/* footer */}
-               <div className="mt-6 sm:mt-8 text-center text-white font-bold text-[10px] sm:text-xs md:text-sm space-y-3">
-  {/* Links row */}
-  <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-    <a
-      className="text-white hover:text-gray-300 transition-colors"
-      href="https://www.cropgenapp.com/terms-conditions"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Terms and Conditions
-    </a>
-    <a
-      className="text-white hover:text-gray-300 transition-colors"
-      href="https://www.cropgenapp.com/privacy-policy"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Privacy Policy
-    </a>
-  </div>
+                <div className="mt-6 sm:mt-8 text-center text-white font-bold text-[10px] sm:text-xs md:text-sm space-y-3">
+                    {/* Links row */}
+                    <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+                        <a
+                            className="text-white hover:text-gray-300 transition-colors"
+                            href="https://www.cropgenapp.com/terms-conditions"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Terms and Conditions
+                        </a>
+                        <a
+                            className="text-white hover:text-gray-300 transition-colors"
+                            href="https://www.cropgenapp.com/privacy-policy"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Privacy Policy
+                        </a>
+                    </div>
 
-  {/* Disclaimer text */}
-  <p>
-    Prices are exclusive of VAT, GST, or other applicable taxes in your region.
-    <br />
-    If you require an invoice to process your CropGen subscription, please
-    contact our support team.
-  </p>
-</div>
+                    {/* Disclaimer text */}
+                    <p>
+                        Prices are exclusive of VAT, GST, or other applicable taxes in your region.
+                        <br />
+                        If you require an invoice to process your CropGen subscription, please
+                        contact our support team.
+                    </p>
+                </div>
 
             </motion.div>
         </div>
