@@ -7,6 +7,7 @@ import {
   Marker,
   Popup,
   Polygon,
+  GeoJSON,
   useMapEvents,
   useMap,
 } from "react-leaflet";
@@ -23,6 +24,7 @@ import { Calender, LeftArrow, RightArrow } from "../../assets/DashboardIcons";
 import { getCurrentLocation } from "../../utility/getCurrentLocation";
 import "leaflet-geosearch/dist/geosearch.css";
 import LoadingSpinner from "../comman/loading/LoadingSpinner";
+import FileUploadOverlay from "./FileUploadOverlay"; // Import new component
 
 const AddFieldMap = ({
   setMarkers,
@@ -31,13 +33,64 @@ const AddFieldMap = ({
   isAddingMarkers,
   toggleAddMarkers,
   clearMarkers,
+  onToggleSidebar,
 }) => {
   const [location, setLocation] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState({});
   const navigate = useNavigate();
   const [selectedIcon, setSelectedIcon] = useState("");
   const [loading, setLoading] = useState(true);
+
+  const [showUploadOverlay, setShowUploadOverlay] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [geojsonLayers, setGeojsonLayers] = useState([]);
+  const [isFullMap, setIsFullMap] = useState(false);
   const mapRef = useRef(null);
+
+  // Component to access and store map instance
+  const MapController = () => {
+    const map = useMap();
+    useEffect(() => {
+      mapRef.current = map;
+      window.mapRef = mapRef; // Make globally accessible for overlay
+    }, [map]);
+    return null;
+  };
+
+  // Center map when GeoJSON layers change
+  useEffect(() => {
+    if (geojsonLayers.length === 0 || !mapRef.current) return;
+
+    let allBounds = null;
+    geojsonLayers.forEach((geojson) => {
+      const layer = L.geoJSON(geojson);
+      const bounds = layer.getBounds();
+      if (allBounds === null) {
+        allBounds = bounds;
+      } else {
+        allBounds.extend(bounds);
+      }
+    });
+
+    if (allBounds && allBounds.isValid()) {
+      mapRef.current.fitBounds(allBounds, {
+        padding: [50, 50],
+        animate: true,
+        duration: 1.5,
+      });
+    }
+  }, [geojsonLayers]);
+
+  // Handle sidebar visibility based on overlay state
+  useEffect(() => {
+    if (isTabletView) {
+      if (showUploadOverlay) {
+        onToggleSidebar(false);
+      } else {
+        onToggleSidebar(true);
+      }
+    }
+  }, [isTabletView, showUploadOverlay, onToggleSidebar]);
 
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -77,7 +130,6 @@ const AddFieldMap = ({
     });
   }, []);
 
-  // ✅ Custom marker icon
   const yellowMarkerIcon = new L.divIcon({
     className: "yellow-marker",
     html: `<div style="
@@ -100,7 +152,11 @@ const AddFieldMap = ({
     shadowSize: [41, 41],
   });
 
-  const clearAllMarkers = () => setMarkers([]);
+  const clearAllMarkers = () => {
+    setMarkers([]);
+    setGeojsonLayers([]);
+    setSelectedFiles([]);
+  };
 
   const Markers = () => {
     useMapEvents({
@@ -200,12 +256,14 @@ const AddFieldMap = ({
               zoom={17}
               zoomControl={true}
               className={`w-full m-0 p-0 relative 
-                ${isTabletView ? "h-[60vh]" : "h-screen"} 
-                pointer-events-auto z-0`}
-              whenCreated={(mapInstance) => {
-                mapRef.current = mapInstance;
-              }}
+  ${isTabletView
+                  ? showUploadOverlay
+                    ? "h-screen"   // Full height when overlay open
+                    : "h-[60vh]"  // Normal tablet height
+                  : "h-screen"} 
+  pointer-events-auto z-0`}
             >
+              <MapController />
               <TileLayer
                 attribution="© Google Maps"
                 url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
@@ -243,7 +301,57 @@ const AddFieldMap = ({
               {isTabletView && (
                 <div className="absolute top-1/2 left-0 w-full h-1/2 z-[5000] bg-transparent pointer-events-none"></div>
               )}
+
+              {geojsonLayers.map((geojson, idx) => (
+                <GeoJSON
+                  key={idx}
+                  data={geojson}
+                  style={{
+                    color: "yellow",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.1,
+                  }}
+                  pointToLayer={(feature, latlng) =>
+                    L.circleMarker(latlng, {
+                      radius: 4,
+                      color: "yellow",
+                      fillColor: "yellow",
+                      fillOpacity: 1,
+                    })
+                  }
+                />
+              ))}
             </MapContainer>
+
+            <button
+              onClick={() => {
+                setShowUploadOverlay(true);
+                if (isTabletView) {
+                  setIsFullMap(true);
+                  onToggleSidebar(false);
+                }
+              }}
+              className="absolute top-4 right-4 z-[2000] bg-white text-[#344E41] font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition"
+            >
+              Add Files +
+            </button>
+
+            {/* Render the extracted overlay */}
+            {showUploadOverlay && (
+              <FileUploadOverlay
+                showUploadOverlay={showUploadOverlay}
+                setShowUploadOverlay={setShowUploadOverlay}
+                selectedFiles={selectedFiles}
+                setSelectedFiles={setSelectedFiles}
+                geojsonLayers={geojsonLayers}
+                setGeojsonLayers={setGeojsonLayers}
+                markers={markers}
+                setMarkers={setMarkers}
+                onToggleSidebar={onToggleSidebar}
+                isTabletView={isTabletView}
+              />
+            )}
 
             {/* Right side buttons */}
             <div className="absolute top-[-10%] right-2 h-screen flex flex-col justify-center gap-4 z-[1000] ">
@@ -264,7 +372,7 @@ const AddFieldMap = ({
 
               <button
                 onClick={() => {
-                  clearMarkers();
+                  clearAllMarkers();
                   setSelectedIcon("remove");
                 }}
                 className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${selectedIcon === "remove" ? "ring-2 ring-white" : ""
@@ -308,8 +416,8 @@ const AddFieldMap = ({
             {/* Bottom controls */}
             <div
               className={`z-[1100] w-full px-2 ${isTabletView
-                  ? "absolute bottom-[-15%] left-0"
-                  : "absolute bottom-1 left-1/2 transform -translate-x-1/2"
+                ? "absolute bottom-[-15%] left-0"
+                : "absolute bottom-1 left-1/2 transform -translate-x-1/2"
                 }`}
             >
               <div className="w-full text-center">
