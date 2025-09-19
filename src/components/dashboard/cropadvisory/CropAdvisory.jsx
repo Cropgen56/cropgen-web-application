@@ -12,6 +12,7 @@ import {
   fetchSoilMoisture,
 } from "../../../redux/slices/satelliteSlice";
 import LoadingSpinner from "../../../components/comman/loading/LoadingSpinner";
+import CropAdvisorySkeleton from "../../Skeleton/CropAdvisorySkeleton";
 
 // Define categories outside the component
 const categories = [
@@ -105,17 +106,17 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
   const advisoryData = useMemo(() => {
     return Array.isArray(advisory)
       ? advisory.map((item) => ({
-          day: item.day,
-          activities: {
-            "Disease/Pest Control": `Disease Pest - ${item.disease_pest.replace(
-              /[\[\]]/g,
-              ""
-            )}\nSpray - ${item.spray.replace(/[\[\]]/g, "")}`,
-            Fertigation: item.fertigation,
-            Watering: item.water,
-            Monitoring: item.monitoring,
-          },
-        }))
+        day: item.day,
+        activities: {
+          "Disease/Pest Control": `Disease Pest - ${item.disease_pest.replace(
+            /[\[\]]/g,
+            ""
+          )}\nSpray - ${item.spray.replace(/[\[\]]/g, "")}`,
+          Fertigation: item.fertigation,
+          Watering: item.water,
+          Monitoring: item.monitoring,
+        },
+      }))
       : [];
   }, [advisory]);
 
@@ -212,10 +213,7 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center text-muted flex flex-col items-center gap-1">
-          <LoadingSpinner />
-          <strong>Generating Advisory</strong>
-        </div>
+        <CropAdvisorySkeleton />
       )}
     </div>
   );

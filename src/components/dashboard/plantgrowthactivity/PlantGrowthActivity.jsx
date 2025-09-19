@@ -14,6 +14,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { formatToYYYYMMDD } from "../../../utility/convertYYYYMMDD";
 import { getTheCropGrowthStage } from "../../../redux/slices/satelliteSlice";
 import { calculateAiYield } from "../../../redux/slices/satelliteSlice";
+import PlantGrowthSkeleton from "../../Skeleton/PlantGrowthSkeleton";
 
 // Crop growth duration mapping (in weeks)
 const CROP_GROWTH_DURATIONS = {
@@ -347,14 +348,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
       </div>
 
       {isLoading ? (
-        <div className="w-full h-[350px] flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 border-4 border-[#3A8B0A] border-t-transparent rounded-full animate-spin"></div>
-            <span className="mt-2 text-gray-600 text-sm">
-              Loading growth data...
-            </span>
-          </div>
-        </div>
+      <PlantGrowthSkeleton/>
       ) : (
         <div className="w-full h-[350px]">
           <ResponsiveContainer>
