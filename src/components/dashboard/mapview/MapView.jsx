@@ -14,6 +14,7 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Calender,
   LeftArrow,
@@ -23,7 +24,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchweatherData } from "../../../redux/slices/weatherSlice";
 import { resetSatelliteState } from "../../../redux/slices/satelliteSlice";
-import LoadingSpinner from "../../comman/loading/LoadingSpinner";
+import LogoFlipLoader from "../../comman/loading/LogoFlipLoader";
 import IndexDates from "./indexdates/IndexDates";
 
 const calculatePolygonCentroid = (coordinates) => {
@@ -146,30 +147,56 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
         zoom={18}
         attributionControl={false}
         zoomControl={true}
-        className={`w-full h-full overflow-hidden ${fields.length === 0 ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"}`}
+        className={`w-full h-full overflow-hidden ${fields.length === 0
+          ? "rounded-t-2xl rounded-b-none"
+          : "rounded-2xl"
+          }`}
         ref={mapRef}
         maxZoom={20}
       >
-        {loading.indexData && (
-          <LoadingSpinner height="100%" size={64} color="#86D72F" blurBackground={true} />
-        )}
+        {/* Loader Overlay ONLY over Map */}
+        <AnimatePresence>
+          {loading.indexData && (
+            <motion.div
+              key="map-loader"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-[1000] rounded-2xl"
+            >
+              <LogoFlipLoader />
+              <p className="text-white text-sm mt-4 font-medium animate-pulse">
+                Almost there… optimizing your field insights
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Base map */}
         <TileLayer
           attribution="© Google Maps"
           url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
           subdomains={["mt0", "mt1", "mt2", "mt3"]}
           maxZoom={20}
         />
+
+        {/* Field polygon */}
         {polygonCoordinates.length > 0 && (
           <Polygon
             pathOptions={{ fillColor: "transparent", fillOpacity: 0 }}
-            positions={polygonCoordinates?.map(({ lat, lng }) => [lat, lng])}
+            positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
           />
         )}
+
+        {/* Satellite overlay */}
         {polygonBounds && image && (
           <ImageOverlay url={image} bounds={polygonBounds} opacity={1} interactive />
         )}
+
         <MoveMapToField lat={centroid.lat} lng={centroid.lng} bounds={polygonBounds} />
       </MapContainer>
+
 
       <div className="absolute top-2 right-2 flex flex-row gap-3 items-end z-[1000]">
         {fields.length > 0 && (
