@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import PolygonPreview from "../../polygon/PolygonPreview";
+import FarmSkeletonLoader from "../../Skeleton/FarmSkeletonLoader";
 
 const FarmCard = ({ farm, onClick }) => (
    <div
@@ -74,10 +75,7 @@ const AllFarms = ({onAddFarmClick }) => {
     }, [dispatch, status, userId]);
 
     if (status === "loading") return
-        <div className="flex items-center justify-center w-full h-[200px]">
-            <LoadingSpinner height="100px" size={64} color="#86D72F" />
-            <p className="ml-2 text-gray-700 text-sm">Loading farms...</p>
-        </div>
+       <FarmSkeletonLoader/>
     
     if (!userId) return <p className="p-4 text-gray-500">Please log in to view your farms.</p>
 

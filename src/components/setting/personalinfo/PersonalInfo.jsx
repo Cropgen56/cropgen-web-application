@@ -6,6 +6,7 @@ import { getUserData, updateUserData } from "../../../redux/slices/authSlice";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { message } from "antd";
+import PersonalInfoSkeleton from "../../Skeleton/PersonalInfoSkeleton";
 
 const PersonalInfo = ({ setShowSidebar }) => {
   const dispatch = useDispatch();
@@ -103,7 +104,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
   };
 
   if (loading) {
-    return <LoadingSpinner height="800px" size={80} color="#86D72F" />;
+    return <PersonalInfoSkeleton/>;
   }
 
   return (

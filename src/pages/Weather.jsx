@@ -15,6 +15,7 @@ import {
   createAOI,
   fetchAOIs,
 } from "../redux/slices/weatherSlice";
+import WeatherSkeleton from "../components/Skeleton/WeatherSkeleton";
 
 const formatCoordinates = (data) => {
   if (!data || data.length === 0) return [];
@@ -124,9 +125,7 @@ if (fields.length === 0) {
       <div className="w-full bg-[#5f7e6f] m-0 p-0 ml-[320px] h-screen overflow-y-auto overflow-x-hidden">
       {loading ? (
           // Loader (centered spinner)
-          <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-8 border-white"></div>
-          </div>
+          <WeatherSkeleton/>
         ) : (
           <>
             <WeekWeather selectedField={selectedField} forecastData={forecastData} />
