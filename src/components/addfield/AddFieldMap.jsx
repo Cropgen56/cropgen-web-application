@@ -332,10 +332,19 @@ const AddFieldMap = ({
                   onToggleSidebar(false);
                 }
               }}
-              className="absolute top-4 right-4 z-[2000] bg-white text-[#344E41] font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition"
+              className={`
+    absolute z-[2000] 
+    bg-white text-[#344E41] font-bold 
+    rounded-full shadow-md transition
+
+    ${isTabletView
+                  ? "top-3 right-3 px-3 py-1.5 text-xs"   // Tablet mode → smaller, compact
+                  : "top-4 right-4 px-4 py-2 text-sm lg:text-base"} // Desktop mode → normal size
+  `}
             >
               Add Files +
             </button>
+
 
             {/* Render the extracted overlay */}
             {showUploadOverlay && (

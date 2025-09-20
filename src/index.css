@@ -114,3 +114,9 @@ code {
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
+
+/* Tailwind-compatible custom CSS */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* makes it white */
+  cursor: pointer;
+}
