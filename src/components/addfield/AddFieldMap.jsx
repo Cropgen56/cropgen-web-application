@@ -24,7 +24,7 @@ import { Calender, LeftArrow, RightArrow } from "../../assets/DashboardIcons";
 import { getCurrentLocation } from "../../utility/getCurrentLocation";
 import "leaflet-geosearch/dist/geosearch.css";
 import LoadingSpinner from "../comman/loading/LoadingSpinner";
-import FileUploadOverlay from "./FileUploadOverlay"; // Import new component
+import FileUploadOverlay from "./FileUploadOverlay";
 
 const AddFieldMap = ({
   setMarkers,
@@ -52,7 +52,7 @@ const AddFieldMap = ({
     const map = useMap();
     useEffect(() => {
       mapRef.current = map;
-      window.mapRef = mapRef; // Make globally accessible for overlay
+      window.mapRef = mapRef;
     }, [map]);
     return null;
   };
@@ -239,8 +239,9 @@ const AddFieldMap = ({
   return (
     <div className="min-h-screen w-full flex flex-col items-center relative overflow-hidden">
       <div
-        className={`w-full m-0 p-0 z-[1000] relative ${isTabletView ? "h-[50vh]" : "h-screen"
-          }`}
+        className={`w-full m-0 p-0 z-[1000] relative ${
+          isTabletView ? "h-[50vh]" : "h-screen"
+        }`}
       >
         {loading && (
           <div className="absolute top-0 left-0 w-full h-full z-[999] bg-white bg-opacity-50 flex flex-col items-center justify-center">
@@ -256,11 +257,13 @@ const AddFieldMap = ({
               zoom={17}
               zoomControl={true}
               className={`w-full m-0 p-0 relative 
-  ${isTabletView
-                  ? showUploadOverlay
-                    ? "h-screen"   // Full height when overlay open
-                    : "h-[60vh]"  // Normal tablet height
-                  : "h-screen"} 
+  ${
+    isTabletView
+      ? showUploadOverlay
+        ? "h-screen" // Full height when overlay open
+        : "h-[60vh]" // Normal tablet height
+      : "h-screen"
+  } 
   pointer-events-auto z-0`}
             >
               <MapController />
@@ -337,14 +340,15 @@ const AddFieldMap = ({
     bg-white text-[#344E41] font-bold 
     rounded-full shadow-md transition
 
-    ${isTabletView
-                  ? "top-3 right-3 px-3 py-1.5 text-xs"   // Tablet mode → smaller, compact
-                  : "top-4 right-4 px-4 py-2 text-sm lg:text-base"} // Desktop mode → normal size
+    ${
+      isTabletView
+        ? "top-3 right-3 px-3 py-1.5 text-xs" // Tablet mode → smaller, compact
+        : "top-4 right-4 px-4 py-2 text-sm lg:text-base"
+    } // Desktop mode → normal size
   `}
             >
               Add Files +
             </button>
-
 
             {/* Render the extracted overlay */}
             {showUploadOverlay && (
@@ -373,8 +377,9 @@ const AddFieldMap = ({
                     removeLastMarker();
                   }
                 }}
-                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${selectedIcon === "back-button" ? "ring-2 ring-white" : ""
-                  }`}
+                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${
+                  selectedIcon === "back-button" ? "ring-2 ring-white" : ""
+                }`}
               >
                 <BackButtonIcon />
               </button>
@@ -384,8 +389,9 @@ const AddFieldMap = ({
                   clearAllMarkers();
                   setSelectedIcon("remove");
                 }}
-                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${selectedIcon === "remove" ? "ring-2 ring-white" : ""
-                  }`}
+                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${
+                  selectedIcon === "remove" ? "ring-2 ring-white" : ""
+                }`}
               >
                 <DeleteIcon />
               </button>
@@ -415,8 +421,9 @@ const AddFieldMap = ({
                   }
                   setSelectedIcon("current-location");
                 }}
-                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-300 hover:bg-[#064841] cursor-pointer ${selectedIcon === "current-location" ? "ring-2 ring-white" : ""
-                  }`}
+                className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-300 hover:bg-[#064841] cursor-pointer ${
+                  selectedIcon === "current-location" ? "ring-2 ring-white" : ""
+                }`}
               >
                 <CurrentLocation />
               </button>
@@ -424,15 +431,19 @@ const AddFieldMap = ({
 
             {/* Bottom controls */}
             <div
-              className={`z-[1100] w-full px-2 ${isTabletView
-                ? "absolute bottom-[-15%] left-0"
-                : "absolute bottom-1 left-1/2 transform -translate-x-1/2"
-                }`}
+              className={`z-[1100] w-full px-2 ${
+                isTabletView
+                  ? "absolute bottom-[-15%] left-0"
+                  : "absolute bottom-1 left-1/2 transform -translate-x-1/2"
+              }`}
             >
               <div className="w-full text-center">
                 <div className="flex justify-between items-center gap-4 p-2.5 bg-[#5a7c6b] rounded shadow-md w-full max-w-[900px] mx-auto">
                   <div className="flex items-center gap-2 border-r border-gray-200 pr-2">
-                    <button aria-label="Calendar" className="border-r border-gray-200 pr-2">
+                    <button
+                      aria-label="Calendar"
+                      className="border-r border-gray-200 pr-2"
+                    >
                       <Calender />
                     </button>
                     <button aria-label="Previous">
@@ -447,7 +458,10 @@ const AddFieldMap = ({
                     {isAddingMarkers ? "Stop Adding Markers" : "Add Field"}
                   </button>
 
-                  <button className="border-l border-gray-200 pl-2" aria-label="Next">
+                  <button
+                    className="border-l border-gray-200 pl-2"
+                    aria-label="Next"
+                  >
                     <RightArrow />
                   </button>
                 </div>
