@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useLayoutEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -308,6 +308,27 @@ export default function PricingOverlay({ onClose }) {
     const [groupIndex, setGroupIndex] = useState(0);
     const [cardsPerGroup, setCardsPerGroup] = useState(3);
 
+    // NEW: scale overlay to fit viewport (keeps layout identical, just shrinks if needed)
+    const containerRef = useRef(null);
+    const [scale, setScale] = useState(1);
+
+    useLayoutEffect(() => {
+        function recomputeScale() {
+            const el = containerRef.current;
+            if (!el) return;
+            const naturalW = el.scrollWidth || el.offsetWidth || 1;
+            const naturalH = el.scrollHeight || el.offsetHeight || 1;
+            const availW = window.innerWidth - 24; // small breathing room
+            const availH = window.innerHeight - 24;
+            const s = Math.min(availW / naturalW, availH / naturalH, 1);
+            setScale(Number.isFinite(s) && s > 0 ? s : 1);
+        }
+        recomputeScale();
+        window.addEventListener("resize", recomputeScale);
+        return () => window.removeEventListener("resize", recomputeScale);
+        // re-measure when content width/height could change
+    }, [billing, currency, cardsPerGroup, groupIndex]);
+
     // 🔹 update cardsPerGroup based on screen size
     useEffect(() => {
         function handleResize() {
@@ -342,12 +363,13 @@ export default function PricingOverlay({ onClose }) {
         >
             <motion.div
                 key="cards"
+                ref={containerRef}
                 initial={{ opacity: 0, y: 80 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 60 }}
                 transition={{ duration: 0.55 }}
                 className="relative w-full max-w-7xl rounded-xl p-4 sm:p-6"
-                style={{ backdropFilter: "blur(4px)" }}
+                style={{ backdropFilter: "blur(4px)", transformOrigin: "center", scale }}
             >
                 {onClose && (
                     <button

@@ -31,7 +31,7 @@ code {
 
 .no-scrollbar {
   -ms-overflow-style: none;
-  scrollbar-width: none;  
+  scrollbar-width: none;
 }
 
 /* Position toaster at top-right */
@@ -47,16 +47,16 @@ code {
 
 /* Space between multiple toasts */
 .ant-message-notice {
-  margin-top: 12px !important; 
+  margin-top: 12px !important;
 }
 
 /* Outer box of each toast */
 .ant-message-notice-content {
-  background: #ffffff !important;     
-  color: #344E41 !important;          
-  padding: 15px 25x !important;      
-  border-radius: 10px !important;  
-  min-width: 200px important;  
+  background: #ffffff !important;
+  color: #344e41 !important;
+  padding: 15px 25x !important;
+  border-radius: 10px !important;
+  min-width: 200px important;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
   font-weight: 500 !important;
   pointer-events: all !important;
@@ -67,12 +67,12 @@ code {
   display: flex !important;
   align-items: center !important;
   gap: 4px !important;
-  font-size: 14px !important;  
+  font-size: 14px !important;
   font-weight: 600 !important;
 }
 
 .ant-message-custom-content span {
-  font-size: 14px !important; 
+  font-size: 14px !important;
   line-height: 1.4 !important;
 }
 
@@ -113,4 +113,10 @@ code {
 
 .rotate-y-180 {
   transform: rotateY(180deg);
+}
+
+/* Tailwind-compatible custom CSS */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1); /* makes it white */
+  cursor: pointer;
 }

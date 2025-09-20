@@ -11,6 +11,7 @@
     "@react-google-maps/api": "^2.20.3",
     "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.3.0",
+    "@tmcw/togeojson": "^7.1.2",
     "@turf/turf": "^7.1.0",
     "antd": "^5.20.3",
     "axios": "^1.7.5",
@@ -27,6 +28,7 @@
     "html2canvas": "^1.4.1",
     "idb-keyval": "^6.2.2",
     "jspdf": "^3.0.1",
+    "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
     "leaflet-control-geocoder": "^2.4.0",
     "leaflet-distortableimage": "^0.21.9",
@@ -60,9 +62,12 @@
     "react-window": "^1.8.10",
     "recharts": "^2.12.7",
     "redux-thunk": "^3.1.0",
+    "shapefile": "^0.6.6",
+    "shpjs": "^6.1.0",
     "swiper": "^12.0.1",
     "tailwind-scrollbar-hide": "^4.0.0",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xmldom": "^0.6.0"
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.16.0",

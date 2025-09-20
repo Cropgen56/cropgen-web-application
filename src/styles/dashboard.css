@@ -1,0 +1,126 @@
+/* dashboard.css */
+
+/* Ensure dashboard always covers full viewport */
+.dashboard {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Map view should stretch full area */
+.dashboard .map-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+/* Overlay general styling */
+.dashboard .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+/* Welcome overlay image arrangement */
+.dashboard .overlay img {
+    object-fit: contain;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Instruction steps */
+.dashboard .instructions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: left;
+}
+
+.dashboard .instructions p {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #f1f1f1;
+}
+
+/* Last instruction highlight */
+.dashboard .instructions p.last-step {
+    font-weight: bold;
+    color: #166534;
+    /* Tailwind dark green-700 */
+}
+
+/* Instruction arrow animation */
+.dashboard .instructions .arrow {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+    animation: bounceRight 1.2s infinite ease-in-out;
+}
+
+@keyframes bounceRight {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(6px);
+    }
+}
+
+/* Add Field button */
+.dashboard .start-field-btn {
+    background-color: #16a34a;
+    /* green-600 */
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.dashboard .start-field-btn:hover {
+    background-color: #15803d;
+    /* green-700 */
+    transform: scale(1.05);
+}
+
+/* Skip button in overlay */
+.dashboard .skip-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    transition: background 0.2s ease;
+}
+
+.dashboard .skip-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive tweaks */
+@media (max-width: 1024px) {
+    .dashboard {
+        padding: 0.5rem;
+    }
+
+    .dashboard .instructions p {
+        font-size: 0.8rem;
+    }
+}
