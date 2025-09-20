@@ -158,7 +158,9 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   type="date"
                   value={sowingDate}
                   onChange={setSowingDate}
+                  className="date-white text-white bg-[#344E41]"
                 />
+
                 <FormSelect
                   label="Type Of Irrigation"
                   value={typeOfIrrigation}
