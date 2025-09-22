@@ -188,12 +188,7 @@ const AddFieldMap = ({
     const map = useMap();
 
     useEffect(() => {
-      const provider = new OpenStreetMapProvider({
-        params: {
-          countrycodes: "in",
-          viewbox: "67.0,6.0,99.0,37.0",
-        },
-      });
+      const provider = new OpenStreetMapProvider();
 
       const searchControl = new GeoSearchControl({
         provider,
