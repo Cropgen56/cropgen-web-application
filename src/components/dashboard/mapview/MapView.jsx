@@ -209,7 +209,7 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
                 {fields.find((f) => f._id === selectedField)?.fieldName ||
                   "Select a field "}
               </Listbox.Button>
-              <Listbox.Options className="absolute mt-1 w-full bg-[#344e41] rounded-lg shadow-lg text-white z-[2000]  border border-green-900">
+              <Listbox.Options className="absolute mt-1 w-full bg-[#344e41] rounded-lg shadow-lg text-white z-[2000]  border border-green-900 max-h-[400px] overflow-y-auto no-scrollbar">
                 {fields.map((field) => (
                   <Listbox.Option
                     key={field._id}

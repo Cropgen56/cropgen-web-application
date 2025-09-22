@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getNpkData } from "../../../redux/slices/satelliteSlice";
 import { formatToYYYYMMDD } from "../../../utility/convertYYYYMMDD";
+import NpkChartSkeleton from "../../Skeleton/NpkChartSkeleton";
 
 // Helper: Validate date for formatToYYYYMMDD
 const isValidDate = (dateInput) => {
@@ -178,13 +179,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
   // Early return for loading state
   if (npkLoading) {
     return (
-      <div className="w-full px-2 sm:px-4 md:scale-[0.95] md:pl-1">
-        <div className="bg-gray-100 p-3 sm:p-4 rounded-lg border border-gray-300 mb-4 sm:mb-6">
-          <span className="block text-sm sm:text-base font-semibold text-gray-800 text-center">
-            Loading soil analysis data...
-          </span>
-        </div>
-      </div>
+      <NpkChartSkeleton />
     );
   }
 

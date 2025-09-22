@@ -29,7 +29,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
     const coordinates = corrdinatesPoint.map((p) => [p.lng, p.lat]);
     coordinates.push(coordinates[0]);
     const polygon = turf.polygon([coordinates]);
-    return turf.area(polygon) / 4046.86;
+    return turf.area(polygon) / 10000;
   }, [corrdinatesPoint]);
 
   useEffect(() => {
@@ -68,7 +68,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
             <div className="flex gap-2">
               <span className="font-semibold text-[18px]">Total Area:</span>
               <span className="text-black font-medium text-[18px]">
-                {totalArea.toFixed(1) || "0.0"} Acre
+                {totalArea.toFixed(1) || "0.0"} Ha
               </span>
             </div>
             <div className="flex gap-2">
