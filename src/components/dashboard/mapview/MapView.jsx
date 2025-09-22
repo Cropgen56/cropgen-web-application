@@ -200,32 +200,42 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
 
       <div className="absolute top-2 right-2 flex flex-row gap-3 items-end z-[1000]">
         {fields.length > 0 && (
-          <Listbox
-            value={selectedField}
-            onChange={(value) => setSelectedField(value)}
-          >
-            <div className="relative">
-              <Listbox.Button className="bg-[#344e41] text-white rounded border px-3 py-1.5 cursor-pointer min-w-[150px]">
-                {fields.find((f) => f._id === selectedField)?.fieldName ||
-                  "Select a field "}
-              </Listbox.Button>
-              <Listbox.Options className="absolute mt-1 w-full bg-[#344e41] rounded-lg shadow-lg text-white z-[2000]  border border-green-900 max-h-[400px] overflow-y-auto no-scrollbar">
-                {fields.map((field) => (
-                  <Listbox.Option
-                    key={field._id}
-                    value={field._id}
-                    className={({ active }) =>
-                      `cursor-pointer select-none px-3 py-2 rounded ${active ? "bg-[#5a7c6b]" : ""
-                      }`
-                    }
-                  >
-                    {field.fieldName}
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </div>
-          </Listbox>
+          <div className="relative w-full min-w-[150px]"> {/* Ensure relative wrapper */}
+            <Listbox
+              value={selectedField}
+              onChange={(value) => setSelectedField(value)}
+            >
+              <div className="relative">
+                {/* Button */}
+                <Listbox.Button className="bg-[#344e41] text-white rounded border px-3 py-1.5 cursor-pointer w-full">
+                  {fields.find((f) => f._id === selectedField)?.fieldName ||
+                    "Select a field"}
+                </Listbox.Button>
+
+                {/* Options */}
+                <Listbox.Options
+                  className="absolute mt-1 w-full bg-[#344e41] rounded-lg shadow-lg 
+                     text-white z-50 border border-green-900 
+                     max-h-[300px] overflow-y-auto no-scrollbar"
+                >
+                  {fields.map((field) => (
+                    <Listbox.Option
+                      key={field._id}
+                      value={field._id}
+                      className={({ active }) =>
+                        `cursor-pointer select-none px-3 py-2 rounded ${active ? "bg-[#5a7c6b]" : ""
+                        }`
+                      }
+                    >
+                      {field.fieldName}
+                    </Listbox.Option>
+                  ))}
+                </Listbox.Options>
+              </div>
+            </Listbox>
+          </div>
         )}
+
 
         {/* <div className="legend-dropdown-wrapper absolute top-3 -left-40 z-1000"> */}
 
