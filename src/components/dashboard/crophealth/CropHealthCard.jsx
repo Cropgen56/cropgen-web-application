@@ -5,15 +5,31 @@ import * as turf from "@turf/turf";
 import SoilAnalysisChart from "./SoilAnalysisChart.jsx";
 import SoilHealthChart from "./SoilHealthChart.jsx";
 import { fetchSoilData } from "../../../redux/slices/satelliteSlice.js";
-import cropimage from "../../../assets/image/Rectangle 74@2x.jpg";
+
 import CropHealthStatusBar from "./CropHealthStatusBar.jsx";
+import { fetchCrops } from "../../../redux/slices/cropSlice.js";
+
 
 const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials?.[0];
   const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
   const dispatch = useDispatch();
+  const { crops, loading, error } = useSelector((state) => state.crops);
   const { cropYield, cropHealth } = useSelector((state) => state.satellite);
+
   const { Health_Percentage = 0, Crop_Health = "Unknown" } = cropHealth || {};
+
+  useEffect(() => {
+    dispatch(fetchCrops());
+  }, [dispatch]);
+
+  const cropInfo = useMemo(() => {
+    if (!cropName || !crops?.length) return null;
+    return crops.find(
+      (c) => c.cropName.toLowerCase() === cropName.toLowerCase()
+    );
+  }, [cropName, crops]);
+
 
   const daysFromSowing = useMemo(() => {
     if (!sowingDate) return 0;
@@ -36,6 +52,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
     if (cropDetials) dispatch(fetchSoilData({ farmDetails: cropDetials }));
   }, [cropDetials, dispatch]);
 
+
   return (
     <Card body className="mt-2 mb-6 shadow-md rounded-lg bg-white">
       <h2 className="text-[24px] sm:text-xl font-bold text-[#344E41] px-4 sm:px-6 mb-4">
@@ -43,11 +60,11 @@ const CropHealth = ({ selectedFieldsDetials }) => {
       </h2>
 
       <div className="flex flex-row px-4 gap-6">
-        <div className="flex flex-col items-center border-2 border-[#5A7C6B] rounded-md w-[160px] h-[160px] overflow-hidden">
+        <div className="flex flex-col items-center  shadow-md border border-gray-100 rounded-md w-[160px] h-[160px] overflow-hidden bg-white">
           <img
-            src={cropimage}
-            alt="crop"
-            className="w-full h-full object-cover"
+            src={cropInfo?.cropImage || "https://via.placeholder.com/160"}
+            alt={cropInfo?.cropName || "crop"}
+            className="w-full h-full p-2"
           />
         </div>
 
@@ -56,7 +73,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
             <div className="flex gap-2">
               <span className="font-semibold text-[18px]">Crop Name:</span>
               <span className="text-black font-medium text-[18px]">
-                {cropName || "N/A"}
+                {cropInfo?.cropName || cropName || "N/A"}
               </span>
             </div>
             <div className="flex gap-2">

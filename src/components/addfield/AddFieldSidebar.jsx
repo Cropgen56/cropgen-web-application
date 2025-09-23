@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { message } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { fetchCrops } from "../../redux/slices/cropSlice";
 
 const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   const [farmName, setFarmName] = useState("");
@@ -14,6 +17,16 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   const toggleSidebarVisibility = () => {
     setIsSidebarVisible(!isSidebarVisible);
   };
+
+  const dispatch = useDispatch();
+  const { crops, loading, error } = useSelector((state) => state.crops);
+
+  console.log("Crops from Redux:", crops);
+
+  useEffect(() => {
+    dispatch(fetchCrops());
+  }, [dispatch]);
+
 
   const handleAddField = () => {
     const today = new Date();
@@ -73,7 +86,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
-                  options={tabviewCropOptions}
+                    options={crops.map((crop) => crop.cropName)} 
                 />
                 {/* VARIETY */}
                 <FormInput
@@ -145,7 +158,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
-                  options={desktopCropOptions}
+                    options={crops.map((crop) => crop.cropName)} 
                 />
                 <FormInput
                   label="Variety"
@@ -233,167 +246,6 @@ const FormSelect = ({ label, value, onChange, options }) => (
 );
 
 // Full crop list used for desktop view
-const desktopCropOptions = [
-  "Barley",
-  "Wheat",
-  "PearlMillet",
-  "Sorghum",
-  "FingerMillet",
-  "Chickpea",
-  "RedGram",
-  "GreenGram",
-  "BlackGram",
-  "Lentil",
-  "FieldPea",
-  "HorseGram",
-  "Cowpea",
-  "Groundnut",
-  "Mustard",
-  "Soybean",
-  "Sunflower",
-  "Sesame",
-  "Linseed",
-  "Castor",
-  "Safflower",
-  "Niger",
-  "Sugarcane",
-  "Cotton",
-  "Jute",
-  "Tobacco",
-  "Potato",
-  "Tomato",
-  "Brinjal",
-  "Cabbage",
-  "Cauliflower",
-  "Onion",
-  "Garlic",
-  "Okra",
-  "Carrot",
-  "Radish",
-  "Spinach",
-  "Methi",
-  "GreenPeas",
-  "BitterGourd",
-  "BottleGourd",
-  "Pumpkin",
-  "Cucumber",
-  "Beans",
-  "Mango",
-  "Banana",
-  "Guava",
-  "Apple",
-  "Papaya",
-  "Orange",
-  "Lemon",
-  "Pomegranate",
-  "Grapes",
-  "Pineapple",
-  "Watermelon",
-  "Muskmelon",
-  "Turmeric",
-  "Ginger",
-  "Coriander",
-  "Cumin",
-  "BlackPepper",
-  "RedChilies",
-  "Tea",
-  "Coffee",
-  "Coconut",
-  "Arecanut",
-  "Rubber",
-  "DragonFruit",
-  "SpongeGourd",
-  "SnakeGourd",
-  "AshGourd",
-  "Drumstick",
-  "Chili",
-  "Chia",
-  "Rice",
-  "Kiwi",
-  "Amla",
-  "Capsicum",
-  "Other",
-];
-const tabviewCropOptions = [
-  "Barley",
-  "Wheat",
-  "PearlMillet",
-  "Sorghum",
-  "FingerMillet",
-  "Chickpea",
-  "RedGram",
-  "GreenGram",
-  "BlackGram",
-  "Lentil",
-  "FieldPea",
-  "HorseGram",
-  "Cowpea",
-  "Groundnut",
-  "Mustard",
-  "Soybean",
-  "Sunflower",
-  "Sesame",
-  "Linseed",
-  "Castor",
-  "Safflower",
-  "Niger",
-  "Sugarcane",
-  "Cotton",
-  "Jute",
-  "Tobacco",
-  "Potato",
-  "Tomato",
-  "Brinjal",
-  "Cabbage",
-  "Cauliflower",
-  "Onion",
-  "Garlic",
-  "Okra",
-  "Carrot",
-  "Radish",
-  "Spinach",
-  "Methi",
-  "GreenPeas",
-  "BitterGourd",
-  "BottleGourd",
-  "Pumpkin",
-  "Cucumber",
-  "Beans",
-  "Mango",
-  "Banana",
-  "Guava",
-  "Apple",
-  "Papaya",
-  "Orange",
-  "Lemon",
-  "Pomegranate",
-  "Grapes",
-  "Pineapple",
-  "Watermelon",
-  "Muskmelon",
-  "Turmeric",
-  "Ginger",
-  "Coriander",
-  "Cumin",
-  "BlackPepper",
-  "RedChilies",
-  "Tea",
-  "Coffee",
-  "Coconut",
-  "Arecanut",
-  "Rubber",
-  "DragonFruit",
-  "SpongeGourd",
-  "SnakeGourd",
-  "AshGourd",
-  "Drumstick",
-  "Chili",
-  "Chia",
-  "Rice",
-  "Kiwi",
-  "Amla",
-  "Capsicum",
-  "Other",
-];
+
 
 export default AddFieldSidebar;
