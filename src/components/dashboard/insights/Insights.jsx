@@ -1,5 +1,5 @@
 import React from "react";
-import Card from "react-bootstrap/Card";
+// Card import is removed as we replace it with a div
 import { FcCheckmark } from "react-icons/fc";
 import { FaXmark } from "react-icons/fa6";
 import {
@@ -12,19 +12,22 @@ import {
 
 const Insight = ({ icon, title, description, actions }) => {
   return (
-    <div className="flex items-center gap-3 lg:gap-4 py-2 px-4 border-b border-gray-200 last:border-b-0">
+    // Internal list item borders changed to a light gray/white for visibility
+    <div className="flex items-center gap-3 lg:gap-4 py-2 px-4 border-b border-gray-300 last:border-b-0">
       <div>{icon}</div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm lg:text-base font-semibold text-gray-800">
+        {/* Title: Changed to white text for visibility */}
+        <div className="text-sm lg:text-base font-semibold text-white">
           {title}
         </div>
-        <div className="text-xs lg:text-sm text-gray-500">{description}</div>
+        {/* Description: Changed to gray-300 text */}
+        <div className="text-xs lg:text-sm text-gray-300">{description}</div>
       </div>
       <div className="flex gap-4 ml-auto">
-        <button className="p-2 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
+        <button className="p-2 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors bg-white">
           <FcCheckmark className="text-lg" />
         </button>
-        <button className="p-2 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors">
+        <button className="p-2 border border-gray-300 rounded-full hover:bg-gray-100 transition-colors bg-white">
           <FaXmark className="text-red-500 text-lg" />
         </button>
       </div>
@@ -81,38 +84,48 @@ const Insights = () => {
   ];
 
   return (
-    <Card body className="mt-1 mb-3 shadow-md rounded-lg bg-white">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
-        <div className="flex items-center gap-1">
-          <div className="text-md lg:text-lg font-semibold text-[#344E41]">
-            Insights
-          </div>
-          <div className="flex flex-col items-center">
-            <UpArrow />
-            <DownArrow />
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
+    <div className="w-full flex  mt-8">
+      {/* Main Gradient Card (Replaces Card body) */}
+      <div className="relative w-full max-w-6xl bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden p-4 md:p-6">
+
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
           <div className="flex items-center gap-1">
-            <div className="text-md lg:text-lg font-semibold text-[#344E41]">
-              Action
+            {/* Heading color updated to white */}
+            <div className="text-md lg:text-lg font-semibold text-white">
+              Insights
             </div>
-            <div className="flex flex-col items-center">
+            {/* Icons adjusted for visibility (assuming UpArrow/DownArrow need fill color) */}
+            <div className="flex flex-col items-center [&_svg]:fill-white/70">
               <UpArrow />
               <DownArrow />
             </div>
           </div>
-          <div className="text-xs lg:text-sm text-gray-400 cursor-pointer hover:text-gray-600">
-            See all
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              {/* Action Heading color updated to white */}
+              <div className="text-md lg:text-lg font-semibold text-white">
+                Action
+              </div>
+              <div className="flex flex-col items-center [&_svg]:fill-white/70">
+                <UpArrow />
+                <DownArrow />
+              </div>
+            </div>
+            {/* See All link text color updated */}
+            <div className="text-xs lg:text-sm text-gray-300 cursor-pointer hover:text-white">
+              See all
+            </div>
           </div>
         </div>
+        <div className="flex flex-col rounded-lg shadow-inner">
+          {insights.map((insight, index) => (
+            <Insight key={index} {...insight} />
+          ))}
+        </div>
+
       </div>
-      <div className="flex flex-col">
-        {insights.map((insight, index) => (
-          <Insight key={index} {...insight} />
-        ))}
-      </div>
-    </Card>
+    </div>
   );
 };
 

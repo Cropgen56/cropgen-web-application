@@ -18,14 +18,14 @@ const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
   return (
     <div className="w-full flex flex-col gap-2">
       {/* ✅ Heading */}
-      <span className="text-[#344E41] font-semibold text-[16px]">
+      <span className="text-gray-200 font-semibold text-[16px]">
         Overall Crop Health
       </span>
 
       {/* ✅ Percentage, Message, and Badge Row */}
       <div className="flex items-center justify-between w-full">
         <div className="flex items-baseline gap-3">
-          <span className="text-black font-bold text-[20px] md:text-[20px]">
+          <span className="text-white font-bold text-[20px] md:text-[20px]">
             {Health_Percentage}%
           </span>
           <span className="text-gray-400 text-[12px] md:text-[12px]">

@@ -9,7 +9,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import Card from "react-bootstrap/Card";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWaterIndexData } from "../../../../redux/slices/satelliteSlice";
 import {
@@ -19,6 +18,11 @@ import {
 } from "../../../../utility/formatDate";
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
+
+// Define Water Theme Colors (Using Tailwind's sky-400 equivalent for consistency)
+const WATER_COLOR_MAIN = "#38bdf8"; // Tailwind sky-400
+const WATER_COLOR_LIGHT = "#7dd3fc"; // Tailwind sky-300
+const WATER_COLOR_ACCENT = "#bae6fd"; // Tailwind sky-200
 
 const WaterIndex = ({ selectedFieldsDetials }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
@@ -53,8 +57,8 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
 
   const chartData = useMemo(() => {
     let timeseries = waterIndexData?.data?.timeseries ||
-                     waterIndexData?.timeseries ||
-                     (Array.isArray(waterIndexData) ? waterIndexData : []);
+      waterIndexData?.timeseries ||
+      (Array.isArray(waterIndexData) ? waterIndexData : []);
     if (!Array.isArray(timeseries)) return [];
 
     return timeseries.map((item) => ({
@@ -68,7 +72,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
 
   const summaryData = useMemo(() => {
     const summary = waterIndexData?.data?.summary ||
-                    waterIndexData?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
+      waterIndexData?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
     const timestamp = waterIndexData?.timestamp || null;
 
     const { min = -0.1, mean = 0.2, max = 0.4 } = summary;
@@ -92,7 +96,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   const chartConfig = useMemo(() => {
     const length = chartData.length;
     return {
-      width: Math.max(length * 30, 300),
+      width: Math.max(length * 30, 600),
       interval: 3,
     };
   }, [chartData.length]);
@@ -163,120 +167,157 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   };
 
   return (
-    <Card body className="bg-white shadow rounded-lg relative overflow-hidden">
-      <div className="absolute top-4 right-4 z-10">
-        <select
-          value={index}
-          onChange={handleIndexChange}
-          className="border-2 border-[#5a7c6b] rounded-[25px] px-2 py-1 text-gray-500 text-sm focus:outline-none"
-        >
-          <option value="NDMI">NDMI</option>
-          <option value="NDWI">NDWI</option>
-          <option value="SMI">SMI</option>
-          <option value="MSI">MSI</option>
-          <option value="WI">WI</option>
-          <option value="NMDI">NMDI</option>
-        </select>
-      </div>
+    <div className="w-full flex  mt-8">
+      <div className="relative bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-4 py-4 md:px-6">
 
-      <h6 className="text-[#1E90FF] text-base font-semibold mb-2">Water Index</h6>
+        {/* Background Water Elements (Bottom Left Focus + Bubble Accents) */}
+        <div className="absolute inset-0 hidden md:block">
 
-      <div className="flex flex-row gap-3 mt-[10px]">
-        {/* Left Section */}
-        <div className="w-1/3 lg:w-1/4 flex flex-col items-center justify-center">
-          <h2 className="text-[#1E90FF] text-xl font-bold">{index}</h2>
-          <button className="bg-[#5a7c6b] text-[#1E90FF] px-3 py-2 text-sm font-semibold rounded mt-0">
-            +0.15
-          </button>
-          <p className="my-2 text-[#344e41] text-xs lg:text-sm">
-            Last Update{" "}
-            {summaryData.timestamp
-              ? `${getDaysAgo(summaryData.timestamp)} days Ago`
-              : "N/A"}
-          </p>
-          <div className="border-2 border-[#1E90FF] p-2 rounded text-[#344e41] text-sm lg:mx-auto mx-0 lg:w-2/3">
-            <div className="flex items-start justify-between gap-2">
-              <span className="flex-1">{indexDescriptions[index]}</span>
-              <span className="bg-[#1E90FF] rounded-full">
-                <Info size={16} strokeWidth={1.5} color="#fff"/>
-              </span>
+          {/* 1. MAIN WATER UI (Bottom Left - Focus) - Mimics grass/leaf effect */}
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-sky-400 rounded-full opacity-20 transform rotate-45"></div>
+          <div className="absolute -bottom-20 -left-20 w-56 h-56 bg-sky-300 rounded-full opacity-30 transform rotate-45"></div>
+          <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-sky-200 rounded-full opacity-40 transform rotate-45"></div>
+
+          {/* 2. Water Bubble Accents (Scattered small circles on other corners) */}
+
+          {/* Top Right Bubbles (Near the selector) */}
+          <div className="absolute top-4 right-4 w-4 h-4 bg-sky-200 rounded-full opacity-50"></div>
+          <div className="absolute top-10 right-12 w-6 h-6 bg-sky-300 rounded-full opacity-30"></div>
+
+          {/* Top Left Bubbles */}
+          <div className="absolute top-4 left-4 w-8 h-8 bg-sky-400 rounded-full opacity-20"></div>
+          <div className="absolute top-16 left-2 w-3 h-3 bg-sky-200 rounded-full opacity-60"></div>
+
+          {/* Bottom Right Bubbles */}
+          <div className="absolute bottom-8 right-8 w-5 h-5 bg-sky-300 rounded-full opacity-40"></div>
+          <div className="absolute bottom-2 right-14 w-7 h-7 bg-sky-400 rounded-full opacity-25"></div>
+        </div>
+
+        {/* Index Selector */}
+        <div className="absolute top-4 right-4 z-50">
+          <select
+            value={index}
+            onChange={handleIndexChange}
+            className="border-2 border-white/50 bg-white/20 backdrop-blur-sm rounded-[25px] px-3 py-1 text-white text-sm focus:outline-none"
+          >
+            <option value="NDMI" className="text-gray-700">NDMI</option>
+            <option value="NDWI" className="text-gray-700">NDWI</option>
+            <option value="SMI" className="text-gray-700">SMI</option>
+            <option value="MSI" className="text-gray-700">MSI</option>
+            <option value="WI" className="text-gray-700">WI</option>
+            <option value="NMDI" className="text-gray-700">NMDI</option>
+          </select>
+        </div>
+
+        {/* Main Heading */}
+        <h2 className="text-xl lg:text-2xl font-bold mb-4 relative z-10 text-white">Water Index</h2>
+
+        {/* Content Container - Responsive layout, equal height columns on desktop */}
+        <div className="relative z-10 flex flex-col lg:flex-row gap-4 lg:gap-6 lg:pl-16 lg:items-stretch">
+
+          {/* Left Side (Stat Block) - Translucent, condensed, matches graph height */}
+          <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 lg:p-4 flex flex-col items-center shadow-md border border-white/20 h-full w-full justify-around">
+              {/* Heading Color */}
+              <h2 className="text-sky-400 text-2xl font-bold">{index}</h2>
+              {/* Button Color */}
+              <button className="bg-white/15 text-sky-400 px-4 py-2 text-sm font-semibold rounded mt-2 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all">
+                +0.15
+              </button>
+              <p className="my-2 text-white/90 text-xs lg:text-sm text-center">
+                Last Update{" "}
+                {summaryData.timestamp
+                  ? `${getDaysAgo(summaryData.timestamp)} days Ago`
+                  : "N/A"}
+              </p>
+              <div className="border-2 border-sky-400/50 bg-white/5 backdrop-blur-sm p-3 rounded text-white text-sm w-full">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="flex-1 text-xs lg:text-sm text-white/90">{indexDescriptions[index]}</span>
+                  {/* Info Icon Color */}
+                  <span className="bg-white/15 backdrop-blur-sm rounded-full p-1 border border-sky-400/20">
+                    <Info size={16} strokeWidth={1.5} color={WATER_COLOR_MAIN} />
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Chart */}
-        <div
-          ref={scrollRef}
-          className="w-2/3 lg:w-3/4 overflow-x-auto pr-8 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing"
-        >
-          {isLoading ? (
-            <div className="text-center text-muted">
-              <LoadingSpinner height="200px" size={64} color="#86D72F" />
-              <strong>Water Index</strong>
-            </div>
-          ) : !hasData ? (
-            <Card className="no-data-card mx-auto mt-4 max-w-md">
-              <Card.Body className="text-center">
-                <Card.Title className="text-sm lg:text-lg font text-gray-700">
-                  No Data Available
-                </Card.Title>
-                <Card.Text className="text-sm text-gray-500">
-                  We couldn't find any data for the selected field and time
-                  range. Please verify the field selection or adjust the date
-                  range to ensure data availability.
-                </Card.Text>
-              </Card.Body>
-            </Card>
-          ) : (
-            <div style={{ minWidth: "300px" }}>
-              <ResponsiveContainer width={chartConfig.width} height={200}>
-                <LineChart
-                  data={chartData}
-                  margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
-                >
-                  <CartesianGrid stroke="#ccc" />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 12 }}
-                    interval={chartConfig.interval}
-                    type="category"
-                  />
-                  <YAxis
-                    domain={yAxisConfig.domain}
-                    tick={{ fontSize: 12 }}
-                    ticks={yAxisConfig.ticks}
-                    tickFormatter={tickFormatter}
-                    type="number"
-                  />
-                  <Tooltip
-                    formatter={tooltipFormatter}
-                    labelFormatter={labelFormatter}
-                  />
-                  <Legend
-                    layout="horizontal"
-                    verticalAlign="top"
-                    align="start"
-                    wrapperStyle={{
-                      paddingBottom: "10px",
-                      paddingLeft: "50px",
-                      fontWeight: "bold",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey={index}
-                    stroke="#1E90FF"
-                    dot={{ r: 3 }}
-                    activeDot={{ r: 5 }}
-                    connectNulls={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          {/* Right Graph Section (The height driver) */}
+          <div
+            ref={scrollRef}
+            className="w-full lg:w-3/4 overflow-x-auto pr-8 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-4 flex-grow" >
+            {isLoading ? (
+              <div className="text-center text-white" style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <LoadingSpinner size={64} color={WATER_COLOR_MAIN} />
+                <strong>Loading Water Index...</strong>
+              </div>
+            ) : !hasData ? (
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 mx-auto mt-4 max-w-md">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    No Data Available
+                  </h3>
+                  <p className="text-sm text-white/80">
+                    We couldn't find any data for the selected field and time
+                    range. Please verify the field selection or adjust the date
+                    range to ensure data availability.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full">
+                <ResponsiveContainer width={chartConfig.width} height={200}>
+                  <LineChart
+                    data={chartData}
+                    margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+                  >
+                    <CartesianGrid stroke="rgba(255,255,255,0.2)" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 12, fill: '#fff' }}
+                      interval={chartConfig.interval}
+                      type="category"
+                    />
+                    <YAxis
+                      domain={yAxisConfig.domain}
+                      tick={{ fontSize: 12, fill: WATER_COLOR_MAIN }}
+                      ticks={yAxisConfig.ticks}
+                      tickFormatter={tickFormatter}
+                      type="number"
+                    />
+                    <Tooltip
+                      formatter={tooltipFormatter}
+                      labelFormatter={labelFormatter}
+                      contentStyle={{ backgroundColor: '#344E41', border: 'none', borderRadius: '8px' }}
+                    />
+                    <Legend
+                      layout="horizontal"
+                      verticalAlign="top"
+                      align="start"
+                      wrapperStyle={{
+                        paddingBottom: "10px",
+                        paddingLeft: "50px",
+                        fontWeight: "bold",
+                        color: "#fff"
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey={index}
+                      stroke={WATER_COLOR_MAIN}
+                      strokeWidth={3}
+                      dot={{ r: 3, fill: WATER_COLOR_MAIN }}
+                      activeDot={{ r: 5, fill: WATER_COLOR_LIGHT }}
+                      connectNulls={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

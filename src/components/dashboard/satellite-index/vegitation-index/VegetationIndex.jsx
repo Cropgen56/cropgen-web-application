@@ -9,7 +9,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import Card from "react-bootstrap/Card";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchIndexTimeSeriesSummary } from "../../../../redux/slices/satelliteSlice";
 import {
@@ -50,8 +49,8 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
   const chartData = useMemo(() => {
     let timeseries = indexTimeSeriesSummary?.data?.timeseries ||
-                     indexTimeSeriesSummary?.timeseries ||
-                     (Array.isArray(indexTimeSeriesSummary) ? indexTimeSeriesSummary : []);
+      indexTimeSeriesSummary?.timeseries ||
+      (Array.isArray(indexTimeSeriesSummary) ? indexTimeSeriesSummary : []);
 
     if (!Array.isArray(timeseries)) return [];
 
@@ -66,7 +65,7 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
   const summaryData = useMemo(() => {
     const summary = indexTimeSeriesSummary?.data?.summary ||
-                    indexTimeSeriesSummary?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
+      indexTimeSeriesSummary?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
     const timestamp = indexTimeSeriesSummary?.timestamp || null;
 
     const { min = -0.1, mean = 0.2, max = 0.4 } = summary;
@@ -89,8 +88,9 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
   const chartConfig = useMemo(() => {
     const length = chartData.length;
+    // Set a minimum width for the chart to support scrolling on desktop/large datasets
     return {
-      width: Math.max(length * 30, 300),
+      width: Math.max(length * 30, 600),
       interval: 3,
     };
   }, [chartData.length]);
@@ -153,118 +153,139 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
   const hasData = chartData.length > 0;
 
   return (
-    <Card body className="bg-white shadow rounded-lg relative overflow-hidden">
-      {/* Index Selector */}
-      <div className="absolute top-4 right-4 z-10">
-        <select
-          value={index}
-          onChange={handleIndexChange}
-          className="border-2 border-[#5A7C6B] rounded-[25px] px-2 py-1 text-gray-500 text-sm focus:outline-none"
-        >
-          <option value="NDVI">NDVI</option>
-          <option value="EVI">EVI</option>
-          <option value="SAVI">SAVI</option>
-          <option value="SUCROSE">SUCROSE</option>
-        </select>
-      </div>
+    <div className="w-full flex justify-center mt-8">
+      <div className="relative  bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-4 py-4 md:px-6">
 
-      <h6 className="text-[#5a7c6b] text-base font-semibold mb-2">Vegetation Index</h6>
+        {/* Background Grass Elements - Bottom Left (Visible from MD screens up) */}
+        <div className="absolute inset-0 hidden md:block">
+          {/* Main grass blade circles */}
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-[#86D72F] rounded-full opacity-20 transform rotate-45"></div>
+          <div className="absolute -bottom-20 -left-20 w-56 h-56 bg-[#7CC520] rounded-full opacity-30 transform rotate-45"></div>
+          <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-[#6FB51A] rounded-full opacity-40 transform rotate-45"></div>
 
-      <div className="flex flex-row gap-3 mt-[10px]">
-        {/* Left Side */}
-        <div className="w-1/3 lg:w-1/4 flex flex-col items-center justify-center ">
-          <h2 className="text-[#86d72f] text-xl font-bold">{index}</h2>
-          <button className="bg-[#5a7c6b] text-[#86d72f] px-3 py-2 text-sm font-semibold rounded mt-0">
-            +0.15
-          </button>
-          <p className="my-2 text-[#344e41] text-xs lg:text-sm">
-            Last Update{" "}
-            {summaryData.timestamp
-              ? `${getDaysAgo(summaryData.timestamp)} days Ago`
-              : "N/A"}
-          </p>
-          <div className="border-2 border-[#5A7C6B] p-2 rounded text-[#344E41] text-sm lg:mx-auto mx-0 lg:w-2/3">
-            <div className="flex items-start justify-between gap-2">
-              <span className="flex-1">{index} values help in mapping vegetation and detecting cover changes over time.</span>
-              <span className="bg-[#344E41] rounded-full">
-                <Info size={16} strokeWidth={1.5} color="#fff"/>
-              </span>
+
+        </div>
+
+        {/* Index Selector */}
+        <div className="absolute top-4 right-4 z-50">
+          <select
+            value={index}
+            onChange={handleIndexChange}
+            className="border-2 border-white/50 bg-white/20 backdrop-blur-sm rounded-[25px] px-3 py-1 text-white text-sm focus:outline-none"
+          >
+            <option value="NDVI" className="text-gray-700">NDVI</option>
+            <option value="EVI" className="text-gray-700">EVI</option>
+            <option value="SAVI" className="text-gray-700">SAVI</option>
+            <option value="SUCROSE" className="text-gray-700">SUCROSE</option>
+          </select>
+        </div>
+
+        {/* Main Heading */}
+        <h2 className="text-xl lg:text-2xl font-bold mb-4 relative z-10">Vegetation Index</h2>
+
+        {/* Content Container - Uses lg:items-stretch for equal height columns */}
+        <div className="relative z-10 flex flex-col lg:flex-row gap-4 lg:gap-6 lg:pl-16 lg:items-stretch">
+
+          {/* Left Side (Stat Block) - Smaller padding, uses h-full and justify-around */}
+          <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 lg:p-4 flex flex-col items-center shadow-md border border-white/20 h-full w-full justify-around">
+              <h2 className="text-[#86d72f] text-2xl font-bold">{index}</h2>
+              <button className="bg-white/15 text-[#86d72f] px-4 py-2 text-sm font-semibold rounded mt-2 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all">
+                +0.15
+              </button>
+              <p className="my-2 text-white/90 text-xs lg:text-sm text-center">
+                Last Update{" "}
+                {summaryData.timestamp
+                  ? `${getDaysAgo(summaryData.timestamp)} days Ago`
+                  : "N/A"}
+              </p>
+              <div className="border-2 border-white/20 bg-white/5 backdrop-blur-sm p-3 rounded text-white text-sm w-full">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="flex-1 text-xs lg:text-sm text-white/90">{index} values help in mapping vegetation and detecting cover changes over time.</span>
+                  <span className="bg-white/15 backdrop-blur-sm rounded-full p-1 border border-white/20">
+                    <Info size={16} strokeWidth={1.5} color="#86D72F" />
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Graph Section */}
-        <div
-          ref={scrollRef}
-          className="w-2/3 lg:w-3/4 overflow-x-auto pr-8 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing" >
-          {isLoading ? (
-            <div className="text-center text-muted">
-              <LoadingSpinner height="200px" size={64} color="#86D72F" />
-              <strong>Vegetation Index</strong>
-            </div>
-          ) : !hasData ? (
-            <Card className="no-data-card mx-auto mt-4 max-w-md">
-              <Card.Body className="text-center">
-                <Card.Title className="text-sm lg:text-lg font-semibold text-gray-700">
-                  No Data Available
-                </Card.Title>
-                <Card.Text className="text-sm text-gray-500">
-                  We couldn't find any data for the selected field and time
-                  range. Please verify the field selection or adjust the date
-                  range to ensure data availability.
-                </Card.Text>
-              </Card.Body>
-            </Card>
-          ) : (
-            <div style={{ minWidth: "300px" }}>
-              <ResponsiveContainer width={chartConfig.width} height={200}>
-                <LineChart
-                  data={chartData}
-                  margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
-                >
-                  <CartesianGrid stroke="#ccc" />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 12 }}
-                    interval={chartConfig.interval}
-                    type="category"
-                  />
-                  <YAxis
-                    domain={yAxisConfig.domain}
-                    tick={{ fontSize: 12 }}
-                    ticks={yAxisConfig.ticks}
-                    tickFormatter={tickFormatter}
-                    type="number"
-                  />
-                  <Tooltip
-                    formatter={tooltipFormatter}
-                    labelFormatter={labelFormatter}
-                  />
-                  <Legend
-                    layout="horizontal"
-                    verticalAlign="top"
-                    align="start"
-                    wrapperStyle={{
-                      paddingBottom: "10px",
-                      paddingLeft: "50px",
-                      fontWeight: "bold",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey={index}
-                    stroke="#86D72F"
-                    dot={{ r: 3 }}
-                    activeDot={{ r: 5 }}
-                    connectNulls={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
+          {/* Right Graph Section (The height driver) */}
+          <div
+            ref={scrollRef}
+            className="w-full lg:w-3/4 overflow-x-auto pr-8 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-4 flex-grow" >
+            {isLoading ? (
+              <div className="text-center text-white" style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <LoadingSpinner size={64} color="#86D72F" />
+                <strong>Loading Vegetation Index...</strong>
+              </div>
+            ) : !hasData ? (
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 mx-auto mt-4 max-w-md">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    No Data Available
+                  </h3>
+                  <p className="text-sm text-white/80">
+                    We couldn't find any data for the selected field and time
+                    range. Please verify the field selection or adjust the date
+                    range to ensure data availability.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="w-full">
+                <ResponsiveContainer width={chartConfig.width} height={200}>
+                  <LineChart
+                    data={chartData}
+                    margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+                  >
+                    <CartesianGrid stroke="rgba(255,255,255,0.2)" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 12, fill: '#fff' }}
+                      interval={chartConfig.interval}
+                      type="category"
+                    />
+                    <YAxis
+                      domain={yAxisConfig.domain}
+                      tick={{ fontSize: 12, fill: '#fff' }}
+                      ticks={yAxisConfig.ticks}
+                      tickFormatter={tickFormatter}
+                      type="number"
+                    />
+                    <Tooltip
+                      formatter={tooltipFormatter}
+                      labelFormatter={labelFormatter}
+                      contentStyle={{ backgroundColor: '#344E41', border: 'none', borderRadius: '8px' }}
+                    />
+                    <Legend
+                      layout="horizontal"
+                      verticalAlign="top"
+                      align="start"
+                      wrapperStyle={{
+                        paddingBottom: "10px",
+                        paddingLeft: "50px",
+                        fontWeight: "bold",
+                        color: "#fff"
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey={index}
+                      stroke="#86D72F"
+                      strokeWidth={3}
+                      dot={{ r: 3, fill: '#86D72F' }}
+                      activeDot={{ r: 5, fill: '#7CC520' }}
+                      connectNulls={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
