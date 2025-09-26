@@ -168,7 +168,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
 
   return (
     <div className="w-full flex  mt-8">
-      <div className="relative bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-4 py-4 md:px-6">
+      <div className="relative  w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-4 py-4 md:px-6">
 
         {/* Background Water Elements (Bottom Left Focus + Bubble Accents) */}
         <div className="absolute inset-0 hidden md:block">

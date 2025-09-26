@@ -154,7 +154,7 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
   return (
     <div className="w-full flex justify-center mt-8">
-      <div className="relative  bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-4 py-4 md:px-6">
+      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-4 py-4 md:px-6">
 
         {/* Background Grass Elements - Bottom Left (Visible from MD screens up) */}
         <div className="absolute inset-0 hidden md:block">
@@ -213,7 +213,7 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
           {/* Right Graph Section (The height driver) */}
           <div
             ref={scrollRef}
-            className="w-full lg:w-3/4 overflow-x-auto pr-8 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-4 flex-grow" >
+            className=" lg:w-3/4 overflow-x-auto pr-8 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-4 flex-grow" >
             {isLoading ? (
               <div className="text-center text-white" style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <LoadingSpinner size={64} color="#86D72F" />
