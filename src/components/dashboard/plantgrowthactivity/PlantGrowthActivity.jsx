@@ -161,6 +161,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
   );
   const isLoading = loading?.cropGrowthStage || false;
 
+  // Use "Weeks" as the default interval if data suggests a long growth cycle
   const [interval, setInterval] = React.useState("Weeks");
   const [tooltipPos, setTooltipPos] = useState(null);
 
@@ -179,7 +180,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
     if (isTodayValid) {
       formattedCurrentDate = formatToYYYYMMDD(today);
     } else {
-      formattedCurrentDate = "2025-08-25";
+      formattedCurrentDate = "2025-08-25"; // Fallback
     }
     const sowing = isSowingValid ? new Date(sowingDate) : null;
     const days = sowing
@@ -254,7 +255,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
         })
       );
     }
-  }, [cropGrowthStage]);
+  }, [cropGrowthStage, dispatch, selectedFieldsDetials]);
 
   // Memoize chart data
   const data = useMemo(
@@ -272,9 +273,10 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
 
   if (!isSowingDateValid) {
     return (
-      <div className="w-full  mt-8">
-        <div className="relative  bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white p-4 md:p-6">
-          <div className="w-full  flex items-center justify-center bg-white/10 rounded-lg">
+      // Reduced padding/margin on the outer container for consistency
+      <div className="w-full flex justify-center mt-6"> 
+        <div className="relative w-full max-w-6xl bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white p-4 md:p-5">
+          <div className="w-full  flex items-center justify-center bg-white/10 rounded-lg p-4">
             <span className="text-white/80 text-sm">
               Invalid sowing date. Please provide a valid date.
             </span>
@@ -285,22 +287,14 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
   }
 
   return (
-    <div className="w-full flex justify-center mt-6">
-      <div className="relative w-full max-w-6xl bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden p-4 md:p-6">
+    <div className="w-full flex  mt-6"> {/* Reduced top margin from 8 to 6 */}
+      {/* Outer Container: Reduced padding slightly, maintaining dark gradient */}
+      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden p-3 md:p-5">
+        
+        <div className="relative z-10 w-full bg-white/10 backdrop-blur-sm rounded-xl p-3 "> {/* Inner panel slightly tighter padding */}
 
-        {/* Background Green Glow Elements (Top Right Focus) */}
-        <div className="absolute inset-0 hidden md:block">
-
-          {/* Main Growth UI (Top Right - Focus) - Circular Glow */}
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-[#86D72F] rounded-full opacity-30"></div>
-          <div className="absolute -top-16 -right-16 w-52 h-52 bg-[#7CC520] rounded-full opacity-40"></div>
-          <div className="absolute -top-8 -right-8 w-24 h-24 bg-[#6FB51A] rounded-full opacity-60"></div>
-        </div>
-
-        <div className="relative z-10 w-full bg-white/10 backdrop-blur-sm rounded-lg p-4 ">
-
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex flex-col gap-1">
+          <div className="flex justify-between items-start mb-2"> {/* Reduced mb gap */}
+            <div className="flex flex-col gap-0.5"> {/* Reduced gap between title/subtitle */}
               <h2 className="text-xl font-semibold text-white m-0">
                 Plant Growth Activity
               </h2>
@@ -312,7 +306,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
             <select
               value={interval}
               onChange={(e) => setInterval(e.target.value)}
-              className="w-[100px] h-[40px] px-2 pr-10 py-2 text-sm border-2 border-white/30 rounded-full bg-white/20 text-white focus:outline-none cursor-pointer"
+              className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-white/30 rounded-full bg-white/20 text-white focus:outline-none cursor-pointer"
             >
               <option value="Days" className="text-gray-800">Days</option>
               <option value="Weeks" className="text-gray-800">Weeks</option>
@@ -322,11 +316,15 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
           {isLoading ? (
             <PlantGrowthSkeleton />
           ) : (
-            <div className="w-full h-[350px]">
-              <ResponsiveContainer>
+            // *** HEIGHT REDUCTION APPLIED HERE ***
+            // Chart height reduced from 350px to 300px for less vertical space.
+            // Height is managed by the container div for responsiveness.
+            <div className="w-full h-[300px]"> 
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={data}
-                  margin={{ top: 80, right: 30, left: 30, bottom: 0 }}
+                  // Adjusted margins: reduced top padding significantly
+                  margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
                 >
                   <defs>
                     <linearGradient id="colorHeight" x1="0" y1="0" x2="0" y2="1">
@@ -339,7 +337,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                     dataKey="label"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#fff", fontSize: "12px", fontWeight: "bold" }}
+                    tick={{ fill: "#fff", fontSize: "11px", fontWeight: "bold" }} // Slightly smaller font
                     interval={Math.ceil(data.length / 10)}
                   />
                   <YAxis hide />
@@ -376,7 +374,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
               {/* Always visible Tooltip */}
               {tooltipPos && (
                 <div
-                  className="absolute z-50 bg-[#344E41] text-white text-xs p-2 rounded shadow-lg max-w-[300px]"
+                  className="absolute z-50 bg-[#344E41] text-white text-xs p-2 rounded shadow-xl max-w-[280px]" // Slightly tighter tooltip box
                   style={{
                     left: Math.max(10, tooltipPos.x - 100),
                     top: Math.max(10, tooltipPos.y - 50),
@@ -386,7 +384,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                     {cropGrowthStage?.finalStage?.stage || "Unknown Stage"}
                   </p>
                   <p className="font-semibold mb-1">Key Activities:</p>
-                  <ul className="list-disc list-inside space-y-1 max-h-[150px] overflow-auto">
+                  <ul className="list-disc list-inside space-y-1 max-h-[140px] overflow-auto"> {/* Tighter list max height */}
                     {Array.isArray(cropGrowthStage?.keyActivity) ? (
                       cropGrowthStage.keyActivity.map((act, idx) => (
                         <li key={idx}>{act}</li>
@@ -397,7 +395,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                       </li>
                     )}
                   </ul>
-                  <p className="italic mt-1">
+                  <p className="italic mt-1 text-gray-400">
                     {interval === "Days"
                       ? formatDayToWeekDay(daysSinceSowing)
                       : `Week ${currentWeek}`}

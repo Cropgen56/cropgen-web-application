@@ -88,7 +88,6 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
   const chartConfig = useMemo(() => {
     const length = chartData.length;
-    // Set a minimum width for the chart to support scrolling on desktop/large datasets
     return {
       width: Math.max(length * 30, 600),
       interval: 3,
@@ -153,21 +152,12 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
   const hasData = chartData.length > 0;
 
   return (
-    <div className="w-full flex justify-center mt-8">
-      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-4 py-4 md:px-6">
-
-        {/* Background Grass Elements - Bottom Left (Visible from MD screens up) */}
-        <div className="absolute inset-0 hidden md:block">
-          {/* Main grass blade circles */}
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-[#86D72F] rounded-full opacity-20 transform rotate-45"></div>
-          <div className="absolute -bottom-20 -left-20 w-56 h-56 bg-[#7CC520] rounded-full opacity-30 transform rotate-45"></div>
-          <div className="absolute -bottom-16 -left-16 w-40 h-40 bg-[#6FB51A] rounded-full opacity-40 transform rotate-45"></div>
-
-
-        </div>
-
+    <div className="w-full flex justify-center mt-4">
+      {/* Reduced padding overall */}
+      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-3">
+        
         {/* Index Selector */}
-        <div className="absolute top-4 right-4 z-50">
+        <div className="absolute top-3 right-3 z-50">
           <select
             value={index}
             onChange={handleIndexChange}
@@ -181,27 +171,29 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
         </div>
 
         {/* Main Heading */}
-        <h2 className="text-xl lg:text-2xl font-bold mb-4 relative z-10">Vegetation Index</h2>
+        <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">Vegetation Index</h2>
 
-        {/* Content Container - Uses lg:items-stretch for equal height columns */}
-        <div className="relative z-10 flex flex-col lg:flex-row gap-4 lg:gap-6 lg:pl-16 lg:items-stretch">
-
-          {/* Left Side (Stat Block) - Smaller padding, uses h-full and justify-around */}
+        {/* Content Container: *** REMOVED lg:pl-12 *** to align stat block to the left edge */}
+        <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
+          
+          {/* Left Side (Stat Block) */}
           <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 lg:p-4 flex flex-col items-center shadow-md border border-white/20 h-full w-full justify-around">
-              <h2 className="text-[#86d72f] text-2xl font-bold">{index}</h2>
-              <button className="bg-white/15 text-[#86d72f] px-4 py-2 text-sm font-semibold rounded mt-2 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-white/20 h-full w-full justify-around">
+              <h2 className="text-xl font-bold">
+                {index}
+              </h2>
+              <button className="bg-white/15 text-[#86d72f] px-3 py-1 text-sm font-semibold rounded mt-1 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all">
                 +0.15
               </button>
-              <p className="my-2 text-white/90 text-xs lg:text-sm text-center">
+              <p className="my-1 text-white/90 text-xs lg:text-sm text-center">
                 Last Update{" "}
                 {summaryData.timestamp
                   ? `${getDaysAgo(summaryData.timestamp)} days Ago`
                   : "N/A"}
               </p>
-              <div className="border-2 border-white/20 bg-white/5 backdrop-blur-sm p-3 rounded text-white text-sm w-full">
+              <div className="border-2 border-white/20 bg-white/5 backdrop-blur-sm p-2 rounded text-white text-sm w-full">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="flex-1 text-xs lg:text-sm text-white/90">{index} values help in mapping vegetation and detecting cover changes over time.</span>
+                  <span className="flex-1 text-xs text-white/90">{index} values help in mapping vegetation and detecting cover changes over time.</span>
                   <span className="bg-white/15 backdrop-blur-sm rounded-full p-1 border border-white/20">
                     <Info size={16} strokeWidth={1.5} color="#86D72F" />
                   </span>
@@ -210,19 +202,19 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
             </div>
           </div>
 
-          {/* Right Graph Section (The height driver) */}
+          {/* Right Graph Section */}
           <div
             ref={scrollRef}
-            className=" lg:w-3/4 overflow-x-auto pr-8 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-4 flex-grow" >
+            className=" lg:w-3/4 overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-2 flex-grow" >
             {isLoading ? (
-              <div className="text-center text-white" style={{ minHeight: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <LoadingSpinner size={64} color="#86D72F" />
+              <div className="text-center text-white" style={{ minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <LoadingSpinner size={48} color="#86D72F" />
                 <strong>Loading Vegetation Index...</strong>
               </div>
             ) : !hasData ? (
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6 mx-auto mt-4 max-w-md">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mx-auto mt-2 max-w-md">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-2">
+                  <h3 className="text-lg font-semibold text-white mb-1">
                     No Data Available
                   </h3>
                   <p className="text-sm text-white/80">
@@ -234,10 +226,10 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
               </div>
             ) : (
               <div className="w-full">
-                <ResponsiveContainer width={chartConfig.width} height={200}>
+                <ResponsiveContainer width={chartConfig.width} height={180}>
                   <LineChart
                     data={chartData}
-                    margin={{ top: 10, right: 20, left: 20, bottom: 10 }}
+                    margin={{ top: 5, right: 15, left: 15, bottom: 5 }} 
                   >
                     <CartesianGrid stroke="rgba(255,255,255,0.2)" />
                     <XAxis
@@ -263,8 +255,8 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
                       verticalAlign="top"
                       align="start"
                       wrapperStyle={{
-                        paddingBottom: "10px",
-                        paddingLeft: "50px",
+                        paddingBottom: "8px",
+                        paddingLeft: "40px",
                         fontWeight: "bold",
                         color: "#fff"
                       }}

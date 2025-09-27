@@ -47,11 +47,6 @@ function ForeCast() {
     <div className="mt-8">
       {/* Full-width Main Gradient Card */}
       <div className="relative  bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-6 py-3">
-        <div className="absolute inset-0">
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-yellow-400 rounded-full opacity-30"></div>
-          <div className="absolute -top-16 -right-16 w-52 h-52 bg-yellow-300 rounded-full opacity-40"></div>
-          <div className="absolute -top-8 -right-8 w-24 h-24 bg-yellow-200 rounded-full opacity-60"></div>
-        </div>
 
         {/* Flex Container for Today's Weather + Scrollable Week */}
         <div className="relative z-10 flex items-start w-full gap-6 flex-col lg:flex-row">

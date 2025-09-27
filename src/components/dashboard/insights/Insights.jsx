@@ -86,7 +86,7 @@ const Insights = () => {
   return (
     <div className="w-full flex  mt-8">
       {/* Main Gradient Card (Replaces Card body) */}
-      <div className="relative w-full max-w-6xl bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden p-4 md:p-6">
+      <div className="relative w-full  bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden p-4 md:p-6">
 
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">

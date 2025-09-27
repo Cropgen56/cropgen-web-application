@@ -239,44 +239,43 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
 
         {/* <div className="legend-dropdown-wrapper absolute top-3 -left-40 z-1000"> */}
 
-        <div className="legend-dropdown-wrapper relative w-max">
-          <strong
-            onClick={() => setShowLegend(!showLegend)}
-            className="flex items-center whitespace-nowrap bg-[#344e41] outline-none border border-[#344e41] rounded  z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer"
+     <div className="legend-dropdown-wrapper relative w-max">
+  <strong
+    onClick={() => setShowLegend(!showLegend)}
+    className="flex items-center whitespace-nowrap bg-[#344e41] outline-none border border-[#344e41] rounded z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer"
+  >
+    🗺️ Legend
+  </strong>
+
+  {showLegend && indexData?.legend && indexData?.area_summary_ha && (
+    <div className="absolute top-12 right-0 bg-[#344e41] text-white rounded-lg shadow-lg max-w-[300px] max-h-[300px] overflow-y-auto z-[3000] animate-slideIn no-scrollbar">
+      <ul className="divide-y divide-white/10 list-none p-2 no-scrollbar">
+        {indexData.legend.map((item) => (
+          <li
+            key={item.label}
+            className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#5a7c6b] transition-colors duration-200 rounded"
           >
-            🗺️ Legend
-          </strong>
+            {/* Color box */}
+            <span
+              className="w-[30px] h-[20px] rounded border border-black/10"
+              style={{ backgroundColor: item.color }}
+            ></span>
 
-          {showLegend && indexData?.legend && indexData?.area_summary_ha && (
-            <div className="absolute top-12 right-0 bg-[#344e41] text-white rounded-lg shadow-lg w-max z-[3000] animate-slideIn">
-              <ul className="divide-y divide-white/10 list-none p-2">
-                {indexData.legend.map((item) => (
-                  <li
-                    key={item.label}
-                    className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#5a7c6b] transition-colors duration-200 rounded"
-                  >
-                    {/* Color box */}
-                    <span
-                      className="w-[30px] h-[20px] rounded border border-black/10"
-                      style={{ backgroundColor: item.color }}
-                    ></span>
+            {/* Label */}
+            <span className="flex-1 whitespace-nowrap font-medium">
+              {item.label}
+            </span>
 
-                    {/* Label */}
-                    <span className="flex-1 whitespace-nowrap font-medium">
-                      {item.label}
-                    </span>
-
-                    {/* Area */}
-                    <span className="text-gray-200 font-normal whitespace-nowrap">
-                      {indexData.area_summary_ha[item.label]?.toFixed(2) || "0.00"} ha
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-        </div>
+            {/* Area */}
+            <span className="text-gray-200 font-normal whitespace-nowrap">
+              {indexData.area_summary_ha[item.label]?.toFixed(2) || "0.00"} ha
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
       </div>
 
       {fields?.length > 0 ? (

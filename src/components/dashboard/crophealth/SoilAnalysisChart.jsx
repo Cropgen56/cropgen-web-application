@@ -33,14 +33,14 @@ const NutrientBar = React.memo(
     const requiredWidth = `${(required / max) * 100}%`;
 
     return (
-      <div className="flex items-center gap-2 sm:gap-3 md:gap-2 mb-3 sm:mb-4">
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-2 mb-3 sm:mb-4 bg-white/10 rounded-lg p-2 sm:p-3 md:p-2">
         <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-6 md:h-6 bg-lime-500 rounded-full flex items-center justify-center">
           <span className="text-white font-bold text-xs sm:text-sm md:text-[10px]">
             {symbol}
           </span>
         </div>
         <div className="flex-1">
-          <span className="block text-sm sm:text-base md:text-xs font-semibold text-gray-900 mb-1 sm:mb-2">
+          <span className="block text-sm sm:text-base md:text-xs font-semibold text-white mb-1 sm:mb-2">
             {label}
           </span>
           <div className="bg-gray-200 h-1.5 sm:h-2 md:h-1.5 rounded-full mb-1 overflow-hidden">
@@ -57,8 +57,8 @@ const NutrientBar = React.memo(
           </div>
         </div>
         <div className="flex flex-col items-start pt-4 sm:pt-5 md:pt-4">
-          <span className="text-xs sm:text-sm md:text-[10px] font-bold text-gray-900">{`${current} kg/acre`}</span>
-          <span className="text-xs sm:text-sm md:text-[10px] font-medium text-gray-500">{`${required} kg/acre`}</span>
+          <span className="text-xs sm:text-sm md:text-[10px] font-bold text-white">{`${current} kg/acre`}</span>
+          <span className="text-xs sm:text-sm md:text-[10px] font-medium text-white">{`${required} kg/acre`}</span>
         </div>
       </div>
     );
@@ -222,8 +222,8 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
             />
           ))}
           {newNpkData?.data?.notes && (
-            <div className="mt-4 sm:mt-6 bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-300">
-              <span className="block text-sm sm:text-base font-medium text-gray-700">
+            <div className="mt-4 sm:mt-6 bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-300 bg-white/10">
+              <span className="block text-sm sm:text-base font-medium text-white">
                 Notes: {newNpkData.data.notes}
               </span>
             </div>

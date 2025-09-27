@@ -22,7 +22,7 @@ const SoilHealthChart = () => {
   const latestMoisture15cm = forecastData.current?.soil_moisture_15cm || "N/A"; // 15cm data
 
   return (
-    <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto">
+    <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto bg-white/20 p-4 rounded-2xl shadow-md">
       {/* Temperature & Moisture Cards - 2cm Data */}
       <div className="flex items-center justify-end gap-2 md:gap-6">
         <div className="flex items-center gap-1 md:gap-2 bg-[#344E41] border rounded-xl shadow-md p-2.5 w-42">
@@ -32,7 +32,7 @@ const SoilHealthChart = () => {
             className="w-5 lg:w-10 h-5 lg:h-10 object-contain"
           />
           <div className="flex flex-col gap-1 md:gap-2 items-center">
-            <span className="text-white font-medium sm:whitespace-nowrap text-xs">
+            <span className="text-white font-medium sm:whitespace-nowrap text-xs text-white">
               Soil Temperature
             </span>
             <span className="text-white font-bold text-md">
@@ -48,7 +48,7 @@ const SoilHealthChart = () => {
             className="w-5 lg:w-10 h-5 lg:h-10 object-contain"
           />
           <div className="flex flex-col gap-1 md:gap-2 items-center">
-            <span className="text-white font-medium whitespace-nowrap text-xs">
+            <span className="text-white font-medium whitespace-nowrap text-xs text-white">
               Soil Moisture
             </span>
             <span className="text-white font-bold text-md">
@@ -142,9 +142,9 @@ const SoilHealthChart = () => {
             <span className="absolute bottom-0 left-full w-4 h-[2px] bg-gray-800"></span>
           </div>
           <div className="absolute top-0 right-0 md:right-[-4px] ml-2 h-full flex flex-col justify-around gap-10">
-            <span className="text-[10px] text-gray-700">5cm</span>
+            <span className="text-[10px] text-white">5cm</span>
 
-            <span className="text-[10px] text-gray-700">15cm</span>
+            <span className="text-[10px] text-white">15cm</span>
           </div>
         </div>
 

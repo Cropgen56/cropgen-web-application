@@ -52,22 +52,14 @@ const CropHealth = ({ selectedFieldsDetials }) => {
   }, [cropDetials, dispatch]);
 
   return (
-    <Card body className="mt-2 mb-4 shadow-md rounded-lg bg-white">
+    <Card body className="mt-2 mb-4  bg-white">
       <div className="relative flex flex-col lg:flex-row gap-6 bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl p-6 overflow-hidden">
 
         <h2 className="absolute top-4 left-6 text-[24px] sm:text-xl font-bold text-white z-20">
           Crop Health
         </h2>
 
-        <div className="absolute inset-0 hidden md:block">
 
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-sky-200 rounded-full opacity-30"></div>
-          <div className="absolute -top-16 -right-16 w-52 h-52 bg-sky-100 rounded-full opacity-40"></div>
-          <div className="absolute -top-8 -right-8 w-24 h-24 bg-white rounded-full opacity-60"></div>
-
-        </div>
-
-        {/* Content starts below the heading area (using mt-10 to push content down) */}
         <div className="relative z-10 flex flex-col lg:flex-row gap-6 mt-10 w-full">
 
           {/* Crop Image Container */}
@@ -120,17 +112,18 @@ const CropHealth = ({ selectedFieldsDetials }) => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row items-start justify-between mt-14 px-2 md:px-4 gap-6 lg:gap-12">
+      <div className="flex flex-col lg:flex-row items-start justify-between mt-6 px-2 md:px-4 gap-6 lg:gap-12 bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl p-6 ">
         <div className="w-full lg:w-1/2">
-          {/* Ensure chart headings are white if they are inside the chart's container */}
-          <h2 className="text-left text-[1.3rem] font-semibold text-[#344E41] mb-2 ml-10">
+
+
+          <h2 className="text-left text-[1.3rem] font-semibold text-white mb-2 ml-10">
             Soil Analysis (Based on BBCH Growth Stage)
           </h2>
           <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
 
         <div className="w-full lg:w-1/2">
-          <h2 className="text-left text-[1.3rem] font-semibold text-[#344E41] mb-2 ml-10">
+          <h2 className="text-left text-[1.3rem] font-semibold text-white mb-2 ml-10">
             Soil Health
           </h2>
           <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} />
