@@ -19,7 +19,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   };
 
   const dispatch = useDispatch();
-  const { crops, loading, error } = useSelector((state) => state.crops);
+  const { crops } = useSelector((state) => state.crops);
 
   console.log("Crops from Redux:", crops);
 

@@ -13,9 +13,9 @@ import keywordBg from "../assets/image/login/keyword-bg.svg";
 const AuthLayout = () => {
   const dispatch = useDispatch();
 
-  const [animate, setAnimate] = useState(false);
-  const [height, setHeight] = useState(window.innerHeight);
-  const [width, setWidth] = useState(window.innerWidth);
+  const [ , setAnimate] = useState(false);
+  const [ , setHeight] = useState(window.innerHeight);
+  const [ , setWidth] = useState(window.innerWidth);
 
 //   const isTablet = width <= 1139 && height <= 1367;
 

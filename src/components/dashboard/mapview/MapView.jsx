@@ -132,9 +132,9 @@ const FarmMap = ({ fields = [], selectedField, setSelectedField, selectedFieldsD
     dispatch(resetSatelliteState());
   }, [selectedField, dispatch]);
 
-  const handleFieldChange = useCallback((e) => {
-    setSelectedField(e.target.value);
-  }, [setSelectedField]);
+  // const handleFieldChange = useCallback((e) => {
+  //   setSelectedField(e.target.value);
+  // }, [setSelectedField]);
 
   const defaultCenter = [20.135245, 77.156935];
 

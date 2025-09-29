@@ -13,8 +13,8 @@ const AddField = () => {
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
   const [isTabletView, setIsTabletView] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [pendingRedirect, setPendingRedirect] = useState(false);
+  const [showOverlay, ] = useState(false);
+  const [ , setPendingRedirect] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const dispatch = useDispatch();

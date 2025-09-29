@@ -8,9 +8,9 @@ const SOCreport = (isdownloading) => {
           
       <div className="flex items-center justify-center h-full w-full p-4 bg-green  rounded-lg gap-5">
 
-      
-        <img src={soc1} alt="previous image"  className='w-[45%] border border-black rounded-xl mt-12'/>
-        
+
+        <img src={soc1} alt="SOC report" className='w-[45%] border border-black rounded-xl mt-12'/>
+
         {/* Gradient Bar with labels wrapper */}
          <div className='flex flex-col items-center justify-center h-full gap-1.5'>
               <h2 className="text-2xl font-bold  mt-2">Soil Surface SOC  <span className='text-sm'>(0=low,3=high)</span></h2>
@@ -26,7 +26,7 @@ const SOCreport = (isdownloading) => {
             <span>0</span>
           </div>
         </div>
-        <img src={soc2} alt="SOCimage"  className='w-[50]'/>
+        <img src={soc2} alt="SOC gradient"  className='w-[50]'/>
         </div>
          </div>
       </div>

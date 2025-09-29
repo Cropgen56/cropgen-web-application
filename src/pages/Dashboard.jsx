@@ -80,7 +80,7 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
   });
 
   const [prevFieldsLength, setPrevFieldsLength] = useState(0);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [ , setShowWelcome] = useState(false);
   const navigate = useNavigate();
 
   // const listVariants = {

@@ -107,7 +107,7 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
         if (processedDates.length > 0 && !selectedDate) {
             setSelectedDate(toISODateString(satelliteDates[0].date));
         }
-    }, [satelliteDates]);
+    }, [satelliteDates, visibleDates, selectedDate]);
 
     const handleArrowClick = useCallback(
         (direction) => {

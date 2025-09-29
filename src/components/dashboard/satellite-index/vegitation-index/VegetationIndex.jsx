@@ -25,7 +25,6 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
   const {
     indexTimeSeriesSummary = null,
     loading,
-    error,
   } = useSelector((state) => state.satellite) || {};
 
   const dispatch = useDispatch();

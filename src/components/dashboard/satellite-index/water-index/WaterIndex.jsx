@@ -25,7 +25,6 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   const {
     waterIndexData = null,
     loading,
-    error,
   } = useSelector((state) => state.satellite) || {};
 
   const dispatch = useDispatch();

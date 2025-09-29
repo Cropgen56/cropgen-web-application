@@ -11,7 +11,6 @@ import {
   genrateAdvisory,
   fetchSoilMoisture,
 } from "../../../redux/slices/satelliteSlice";
-import LoadingSpinner from "../../../components/comman/loading/LoadingSpinner";
 import CropAdvisorySkeleton from "../../Skeleton/CropAdvisorySkeleton";
 
 // Define categories outside the component

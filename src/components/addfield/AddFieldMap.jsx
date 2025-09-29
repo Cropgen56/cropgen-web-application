@@ -35,16 +35,15 @@ const AddFieldMap = ({
   clearMarkers,
   onToggleSidebar,
 }) => {
-  const [location, setLocation] = useState(null);
+  const [ , setLocation] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState({});
-  const navigate = useNavigate();
   const [selectedIcon, setSelectedIcon] = useState("");
   const [loading, setLoading] = useState(true);
 
   const [showUploadOverlay, setShowUploadOverlay] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [geojsonLayers, setGeojsonLayers] = useState([]);
-  const [isFullMap, setIsFullMap] = useState(false);
+  const [ , setIsFullMap] = useState(false);
   const mapRef = useRef(null);
 
   // Component to access and store map instance
@@ -92,8 +91,8 @@ const AddFieldMap = ({
     }
   }, [isTabletView, showUploadOverlay, onToggleSidebar]);
 
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
+  const [ , setCity] = useState("");
+  const [ , setState] = useState("");
 
   const plusCursorBase64 =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAARVBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////8+tjvlAAAAHXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHxxS/qf0AAAAqUlEQVQ4y8WSSQ7DIAxFH1oQUb7/f9ERnMbdKYvDoYc2V0F+5koZP+waXQzXcFqIjg4IDR4DofEZ4BLRZbkF6CYHhXkg2w2U5CEo0BNZ0vpslsrK5HAbJXyugEEYZPvboR1xyHcRpsZhYrEdd84l1AFLShTI6wqC1fZTigHkCgnAiRH9sK91cLRE0q3H1/gInV7axjjXcxE8xeJ3X/O4q5Y+JyxbcAAAAASUVORK5CYII=";

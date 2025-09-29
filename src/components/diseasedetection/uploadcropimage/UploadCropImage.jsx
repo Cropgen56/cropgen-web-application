@@ -30,13 +30,13 @@ const UploadCropImage = () => {
               Drag and Drop Files <br />
               or{" "}
               <span>
-                <a
-                  href="#"
+                <button
+                  type="button"
                   className="text-[#00b2eb] text-lg mx-1"
                   onClick={triggerFileUpload}
                 >
                   click here
-                </a>
+                </button>
               </span>{" "}
               to select from your device
             </p>

@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import profileImage from "../../../assets/image/pngimages/profile.png";
 import EditIcon from "../../../assets/edit-icon.svg";
 import { getUserData, updateUserData } from "../../../redux/slices/authSlice";
-import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { message } from "antd";
 import PersonalInfoSkeleton from "../../Skeleton/PersonalInfoSkeleton";

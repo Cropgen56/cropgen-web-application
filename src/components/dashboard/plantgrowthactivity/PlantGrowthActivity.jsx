@@ -234,9 +234,9 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
     let suggestionText = "Awaiting growth stage data...";
     if (cropGrowthStage?.finalStage?.stage && cropGrowthStage?.keyActivity) {
       const stage = cropGrowthStage.finalStage.stage;
-      const activity = Array.isArray(cropGrowthStage.keyActivity)
-        ? cropGrowthStage.keyActivity.join(", ")
-        : cropGrowthStage.keyActivity;
+      // const activity = Array.isArray(cropGrowthStage.keyActivity)
+      //   ? cropGrowthStage.keyActivity.join(", ")
+      //   : cropGrowthStage.keyActivity;
       suggestionText = `Based on BBCH stage ${stage}.`;
     } else if (cropGrowthStage?.finalStage?.stage) {
       suggestionText = `Based on BBCH stage ${cropGrowthStage.finalStage.stage}, monitor crop development.`;
@@ -291,7 +291,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
         })
       );
     }
-  }, [cropGrowthStage]);
+  }, [cropGrowthStage, selectedFieldsDetials, dispatch]);
 
   // Memoize chart data
   const data = useMemo(

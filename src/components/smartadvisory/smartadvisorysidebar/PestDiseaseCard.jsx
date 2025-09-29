@@ -1,4 +1,3 @@
-import { FaBug } from "react-icons/fa";
 import img3 from "../../../assets/image/Frame 268.png"
 
 const PestDiseaseCard = () => {

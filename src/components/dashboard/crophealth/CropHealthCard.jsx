@@ -14,8 +14,8 @@ const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials?.[0];
   const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
   const dispatch = useDispatch();
-  const { crops, loading, error } = useSelector((state) => state.crops);
-  const { cropYield, cropHealth } = useSelector((state) => state.satellite);
+  const { crops } = useSelector((state) => state.crops);
+  const { cropYield } = useSelector((state) => state.satellite);
 
   // const { Health_Percentage = 0, Crop_Health = "Unknown" } = cropHealth || {};
 
