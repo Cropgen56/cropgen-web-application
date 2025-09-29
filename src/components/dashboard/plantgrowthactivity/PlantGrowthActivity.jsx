@@ -274,7 +274,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
   if (!isSowingDateValid) {
     return (
       // Reduced padding/margin on the outer container for consistency
-      <div className="w-full flex justify-center mt-6"> 
+      <div className="w-full flex justify-center mt-6">
         <div className="relative w-full max-w-6xl bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white p-4 md:p-5">
           <div className="w-full  flex items-center justify-center bg-white/10 rounded-lg p-4">
             <span className="text-white/80 text-sm">
@@ -290,7 +290,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
     <div className="w-full flex  mt-6"> {/* Reduced top margin from 8 to 6 */}
       {/* Outer Container: Reduced padding slightly, maintaining dark gradient */}
       <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden p-3 md:p-5">
-        
+
         <div className="relative z-10 w-full bg-white/10 backdrop-blur-sm rounded-xl p-3 "> {/* Inner panel slightly tighter padding */}
 
           <div className="flex justify-between items-start mb-2"> {/* Reduced mb gap */}
@@ -298,10 +298,10 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
               <h2 className="text-xl font-semibold text-white m-0">
                 Plant Growth Activity
               </h2>
-              <div className="text-sm text-gray-300">
+              <div className="text-sm font-bold text-white mt-3">
                 {cropName || "Unknown Crop"}
               </div>
-              <div className="text-sm text-gray-300">{suggestion}</div>
+              <div className="text-sm text-white">{suggestion}</div>
             </div>
             <select
               value={interval}
@@ -319,7 +319,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
             // *** HEIGHT REDUCTION APPLIED HERE ***
             // Chart height reduced from 350px to 300px for less vertical space.
             // Height is managed by the container div for responsiveness.
-            <div className="w-full h-[300px]"> 
+            <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={data}

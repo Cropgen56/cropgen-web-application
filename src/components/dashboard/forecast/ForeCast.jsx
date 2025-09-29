@@ -53,29 +53,30 @@ function ForeCast() {
 
           {/* Today's Weather */}
           <div className="flex flex-col items-center">
-
-            <div className="bg-gradient-to-br from-[#6B9080] to-[#3D5A40] rounded-xl p-4 flex-shrink-0 w-[200px] flex flex-col items-center shadow-md h-full">
-              <h3 className="text-sm lg:text-base font-semibold mb-2">Today's Weather</h3>
-              <div className="flex items-center justify-center mb-2 text-4xl">
-                {getWeatherIcon(weather.temp, weather.cloudCover)}
-              </div>
-              <div className="text-2xl lg:text-3xl font-bold mb-2">
-                {weather.temp ?? "--"}°C
-              </div>
-              <div className="flex flex-col gap-2 text-xs lg:text-sm w-full">
-                <div className="flex justify-between">
-                  <span className="flex items-center gap-1">
-                    <WindSpeedIcon /> {weather.windspeed ?? "--"} km/h
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <DropIcon /> {weather.humidity ?? "--"}%
-                  </span>
+            <div className="p-[2px] rounded-xl bg-gradient-to-br from-[#6B9080] to-[#3D5A40] shadow-xl">
+              <div className="bg-gradient-to-br from-[#6B9080] to-[#3D5A40] rounded-xl p-4 flex-shrink-0 w-[200px] flex flex-col items-center shadow-xl h-full">
+                <h3 className="text-sm lg:text-base font-semibold mb-2">Today's Weather</h3>
+                <div className="flex items-center justify-center mb-2 text-4xl text-white">
+                  {getWeatherIcon(weather.temp, weather.cloudCover)}
                 </div>
-                <div className="flex justify-between">
-                  <span className="flex items-center gap-1">
-                    <WaveIcon /> {weather.pressure ?? "--"} hPa
-                  </span>
-                  <span>{weather.precipitation ?? "--"} mm</span>
+                <div className="text-2xl lg:text-3xl font-bold mb-2">
+                  {weather.temp ?? "--"}°C
+                </div>
+                <div className="flex flex-col gap-2 text-xs lg:text-sm w-full">
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-1">
+                      <WindSpeedIcon /> {weather.windspeed ?? "--"} km/h
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <DropIcon /> {weather.humidity ?? "--"}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-1">
+                      <WaveIcon /> {weather.pressure ?? "--"} hPa
+                    </span>
+                    <span>{weather.precipitation ?? "--"} mm</span>
+                  </div>
                 </div>
               </div>
             </div>

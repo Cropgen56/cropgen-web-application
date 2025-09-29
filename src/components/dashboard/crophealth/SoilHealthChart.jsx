@@ -22,9 +22,9 @@ const SoilHealthChart = () => {
   const latestMoisture15cm = forecastData.current?.soil_moisture_15cm || "N/A"; // 15cm data
 
   return (
-    <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto bg-white/20 p-4 rounded-2xl shadow-md">
+    <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto bg-white/20 p-4 rounded-2xl shadow-md border border-gray-200"> 
       {/* Temperature & Moisture Cards - 2cm Data */}
-      <div className="flex items-center justify-end gap-2 md:gap-6">
+      <div className="flex items-center justify-end gap-2 md:gap-6 mt-4">
         <div className="flex items-center gap-1 md:gap-2 bg-[#344E41] border rounded-xl shadow-md p-2.5 w-42">
           <img
             src={soilTemperature}
@@ -60,7 +60,7 @@ const SoilHealthChart = () => {
 
       <div className="flex justify-between items-center">
         <div className="flex flex-col items-center gap-1 w-[40%]">
-          <h2 className="text-black text-base font-semibold text-center">
+          <h2 className="text-white text-base font-bold text-center">
             Subsoil (5cm)
           </h2>
           <div className="flex flex-col lg:flex-row gap-0.5 mb-2 mb:4">
@@ -74,7 +74,7 @@ const SoilHealthChart = () => {
                 <span className="text-gray-800 font-medium text-xs whitespace-nowrap">
                   Soil Temperature
                 </span>
-                <span className="text-gray-700 font-semibold text-md">
+                <span className="text-gray-300 font-semibold text-md">
                   {latestTemp5cm}°C
                 </span>
               </div>
@@ -90,14 +90,14 @@ const SoilHealthChart = () => {
                 <span className="text-gray-800 font-medium text-xs whitespace-nowrap">
                   Soil Moisture
                 </span>
-                <span className="text-gray-700 font-semibold text-md">
+                <span className="text-gray-300 font-semibold text-md">
                   {latestMoisture5cm} m³/m³
                 </span>
               </div>
             </div>
           </div>
 
-          <h2 className="text-black font-semibold text-base text-center">
+          <h2 className="text-white font-bold text-base text-center">
             Parent Material (15cm)
           </h2>
           <div className="flex flex-col lg:flex-row gap-0.5">
@@ -111,7 +111,7 @@ const SoilHealthChart = () => {
                 <span className="text-gray-800 font-medium text-xs whitespace-nowrap">
                   Soil Temperature
                 </span>
-                <span className="text-gray-700 font-semibold text-md">
+                <span className="text-gray-300 font-semibold text-md">
                   {latestTemp15cm}°C
                 </span>
               </div>
@@ -127,7 +127,7 @@ const SoilHealthChart = () => {
                 <span className="text-gray-800 font-medium text-xs whitespace-nowrap">
                   Soil Moisture
                 </span>
-                <span className="text-gray-700 font-semibold text-md">
+                <span className="text-gray-300 font-semibold text-md">
                   {latestMoisture15cm} m³/m³
                 </span>
               </div>

@@ -199,13 +199,13 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
           <div className="flex justify-end items-center mb-2 sm:mb-3 md:mb-2">
             <div className="flex items-center mr-4 sm:mr-6">
               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-600 rounded-sm mr-1 sm:mr-2" />
-              <span className="text-xs sm:text-sm md:text-xs text-gray-700">
+              <span className="text-xs sm:text-sm md:text-xs text-white">
                 Current
               </span>
             </div>
             <div className="flex items-center">
               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-lime-400 rounded-sm mr-1 sm:mr-2" />
-              <span className="text-xs sm:text-sm md:text-xs text-gray-700">
+              <span className="text-xs sm:text-sm md:text-xs text-white">
                 Required
               </span>
             </div>
