@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { message } from "antd";
-import axios from "axios";
-import { CheckCircle2, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import bgimage from "../../../assets/image/Group1.png"; // new background
 import tick from "../../../assets/image/Group 535.png"; // new tick image
 import { resetPassword } from "../../../api/authApi";

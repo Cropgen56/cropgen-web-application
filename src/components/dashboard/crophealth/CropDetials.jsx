@@ -1,7 +1,5 @@
 // CropDetails.jsx — updated to match `dashboard 2.png` layout
 import React from "react";
-import cropImage from "../../../assets/image/dashboard/crop-image.jpg";
-import CropHealth from "./CropHealthCard";
 
 const CropDetials = ({ cropDetials, daysFromSowing, totalArea, cropYield }) => {
     const crop = cropDetials?.[0];

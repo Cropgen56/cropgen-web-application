@@ -1,6 +1,5 @@
 // src/components/addfield/FileUploadOverlay.js
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import shp from "shpjs";
 import * as toGeoJSON from "@tmcw/togeojson";
 import { DOMParser } from "xmldom";

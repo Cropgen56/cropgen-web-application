@@ -17,7 +17,7 @@ const CropHealth = ({ selectedFieldsDetials }) => {
   const { crops, loading, error } = useSelector((state) => state.crops);
   const { cropYield, cropHealth } = useSelector((state) => state.satellite);
 
-  const { Health_Percentage = 0, Crop_Health = "Unknown" } = cropHealth || {};
+  // const { Health_Percentage = 0, Crop_Health = "Unknown" } = cropHealth || {};
 
   useEffect(() => {
     dispatch(fetchCrops());

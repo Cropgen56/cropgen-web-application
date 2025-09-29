@@ -14,7 +14,7 @@ import {
   Operation,
   SmartAdvisory,
   Weather,
-  PersonaliseCropShedule,
+  // PersonaliseCropShedule,
   Setting,
   Logout,
   Hammer,

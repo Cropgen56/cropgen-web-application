@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { FieldIcon } from "../../assets/Globalicon";
 // import "./AddFieldSidebar.css";
 import cropename from "../../assets/cropname.json";
-import { ArrowLeft, Calendar, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { message } from "antd";
 
 const AddFieldSidebar = ({ saveFarm, markers }) => {
-  const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
+  // const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   // Form state variables
@@ -21,9 +21,9 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
-  const fields = [
-    { title: "Field 1", area: "0.12h", lat: "24.154", lon: "56.165" },
-  ];
+  // const fields = [
+  //   { title: "Field 1", area: "0.12h", lat: "24.154", lon: "56.165" },
+  // ];
 
   const handleAddField = () => {
     const today = new Date();

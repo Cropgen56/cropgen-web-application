@@ -8,15 +8,15 @@ import EventForm from "../operationform/EventForm";
 import { getOperationsByFarmField, deleteOperation } from "../../../redux/slices/operationSlice";
 import { Operation } from "../../../assets/Icons";
 import { RiDeleteBin6Line } from "react-icons/ri";
-import Days from "react-calendar/dist/cjs/MonthView/Days.js";
-import { query } from "esri-leaflet";
+// import Days from "react-calendar/dist/cjs/MonthView/Days.js";
+// import { query } from "esri-leaflet";
 
 const FarmerScheduler = (selectedField) => {
   const dispatch = useDispatch();
   const { operations } = useSelector((state) => state.operation);
   const calendarRef = useRef(null);
 
-  const [view, setView] = useState("timeGridThreeDay");
+  // const [view, setView] = useState("timeGridThreeDay");
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);

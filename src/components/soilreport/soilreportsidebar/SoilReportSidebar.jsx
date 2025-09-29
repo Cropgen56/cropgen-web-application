@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Operation2 } from "../../../assets/Icons";
-import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { fetchSatelliteDates } from "../../../redux/slices/satelliteSlice";
-import { getFarmFields } from "../../../redux/slices/farmSlice";
 import PolygonPreview from "../../polygon/PolygonPreview";
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) => (

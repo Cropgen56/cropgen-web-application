@@ -3,9 +3,7 @@ import UploadCropImage from "../components/diseasedetection/uploadcropimage/Uplo
 import Sidebardiseasedetection from "../components/diseasedetection/sidebar/Sidebardiseasedetection";
 import { useNavigate } from "react-router-dom";
 import img1 from "../assets/image/Group 31.png"
-import { useDispatch, useSelector } from "react-redux";
-import { getFarmFields } from "../redux/slices/farmSlice";
-
+import { useSelector } from "react-redux";
 
 
 const DiseaseDetection = () => {

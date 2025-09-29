@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import {DieaseDetactiondark} from "../../../assets/Icons";
 import PolygonPreview from "../../polygon/PolygonPreview";
@@ -28,7 +27,7 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) 
 );
 
 
-const DiseaseSidebar = ({ setSelectedField, selectedField }) => {
+const DiseaseSidebar = ({ setSelectedField }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const fields = useSelector((state) => state?.farmfield?.fields);

@@ -1,4 +1,3 @@
-import { FaHandshake } from "react-icons/fa";
 import img5 from "../../../assets/image/Frame 282.png"
 
 const Fertigation = () => {

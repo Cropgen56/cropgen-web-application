@@ -30,7 +30,7 @@ const AddFarm = ({ selectedFarm }) => {
   );
   const isTabletSize = () =>
     window.innerWidth <= 1024 && window.innerWidth >= 600;
-  const { crops, loading, error } = useSelector((state) => state.crops);
+  const { crops } = useSelector((state) => state.crops);
 
   const [formData, setFormData] = useState({
     farmName: selectedFarm?.fieldName || "",

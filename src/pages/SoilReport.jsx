@@ -47,7 +47,7 @@ const SoilReport = () => {
       const canvas = await html2canvas(element, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL("image/png");
 
-      const imgHeight = (canvas.height * width) / canvas.width;
+      // const imgHeight = (canvas.height * width) / canvas.width;
       const scaledHeight = height * 0.95; // force fit A4
 
       pdf.addImage(imgData, "PNG", 0, 0, width, scaledHeight);

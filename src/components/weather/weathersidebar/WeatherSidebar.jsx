@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { FieldIcon, Weather2 } from "../../../assets/Globalicon";
+import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import PolygonPreview from "../../polygon/PolygonPreview";
 

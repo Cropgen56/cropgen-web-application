@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmReportSidebar";
-import { getFarmFields } from "../redux/slices/farmSlice";
 import img1 from "../assets/image/Group 31.png"
 import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 const FarmReport = () => {
   const [selectedField, setSelectedField] = useState({});
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [setIsSidebarVisible] = useState(true);
   const fields = useSelector((state) => state?.farmfield?.fields);
   const navigate = useNavigate();
   

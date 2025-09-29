@@ -1,10 +1,8 @@
 import React, { useEffect } from "react";
-import { PlusCircle, Wheat, Leaf, CalendarDays, Plus } from "lucide-react";
-import FarmArea from "../../../assets/image/setting/farmarea.svg";
+import { Wheat, Leaf, CalendarDays, Plus } from "lucide-react";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import PolygonPreview from "../../polygon/PolygonPreview";
 import FarmSkeletonLoader from "../../Skeleton/FarmSkeletonLoader";
 

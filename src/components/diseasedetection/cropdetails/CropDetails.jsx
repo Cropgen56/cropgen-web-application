@@ -1,5 +1,4 @@
 import React from "react";
-// import "./CropDetails.css";
 
 const CropDetails = ({closeModal}) => {
   return (
