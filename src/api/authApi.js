@@ -56,3 +56,32 @@ export const resetPassword = async (token, newPassword) => {
   });
   return response.data;
 };
+
+export const sendOtp = async (otpData) => {
+  const response = await axios.post(
+    "https://server.cropgenapp.com/v1/api/auth/otp",
+    otpData
+  );
+  return response.data;
+};
+
+export const verifyOtp = async ({ email, otp }) => {
+  const response = await axios.post(
+    "https://server.cropgenapp.com/v1/api/auth/verify",
+    { email, otp }
+  );
+  return response.data;
+};
+
+export const completeUserProfile = async ({ token, terms, organizationCode }) => {
+  const response = await axios.post(
+    "https://server.cropgenapp.com/v1/api/auth/complete-profile",
+    { terms, organizationCode },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
