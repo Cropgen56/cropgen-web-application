@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { useDispatch } from "react-redux";
 import {
   fetchIndexData,
@@ -49,9 +55,30 @@ const SatelliteIndexList = ({
   const { field = [], sowingDate = null } = selectedFieldsDetials[0] || {};
   const scrollContainerRef = useRef(null);
 
+  // Validate that the geometry is a closed polygon
+  const validateGeometry = (field) => {
+    if (!field || field.length < 3) return false; // At least 3 points for a polygon (4 with closure)
+    const first = field[0];
+    const last = field[field.length - 1];
+    return first.lat === last.lat && first.lng === last.lng; // Check if first and last points match
+  };
+
   const coordinates = useMemo(() => {
-    return field?.map(({ lat, lng }) => [lng, lat]) || [];
-  }, [field]);
+    const field = selectedFieldsDetials[0]?.field;
+    if (!field || field.length < 3) {
+      console.warn("Invalid geometry provided: insufficient points", field);
+      return [];
+    }
+
+    // Map to [lng, lat] format
+    let coords = field.map(({ lat, lng }) => [lng, lat]);
+
+    if (!validateGeometry(field)) {
+      coords = [...coords, coords[0]];
+    }
+
+    return coords;
+  }, [selectedFieldsDetials]);
 
   const debounce = (func, wait) => {
     let timeout;
@@ -63,17 +90,16 @@ const SatelliteIndexList = ({
 
   const handleFetchIndex = useCallback(
     (index) => {
-      if (!sowingDate || !selectedDate || !coordinates.length || !index) return;
+      if (!selectedDate || !coordinates.length || !index) return;
       dispatch(
         fetchIndexData({
-          startDate: sowingDate,
           endDate: selectedDate,
           geometry: [coordinates],
           index,
         })
       );
     },
-    [sowingDate, selectedDate, coordinates, dispatch]
+    [selectedDate, coordinates, dispatch]
   );
 
   const debouncedFetchIndex = useMemo(

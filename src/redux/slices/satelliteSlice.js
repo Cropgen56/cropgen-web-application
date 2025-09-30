@@ -2,9 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { formatDateToISO } from "../../utility/formatDate";
 import axios from "axios";
 import { get, set } from "idb-keyval";
-import {
-  getTodayAndFifteenDaysAgo,
-} from "../../utility/formatDate";
+import { getTodayAndFifteenDaysAgo } from "../../utility/formatDate";
 
 // 4 days in milliseconds
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
@@ -57,7 +55,7 @@ const initialState = {
 // get the sattelite dates
 export const fetchSatelliteDates = createAsyncThunk(
   "satellite/fetchSatelliteDates",
-  async (geometry, { rejectWithValue }) => {
+  async ({ geometry, selectedFieldsDetials }, { rejectWithValue }) => {
     try {
       const cacheKey = generateCacheKey("satelliteDates", null, geometry);
       const cached = await get(cacheKey);
@@ -71,9 +69,21 @@ export const fetchSatelliteDates = createAsyncThunk(
         return rejectWithValue("Geometry is missing");
       }
 
+      const today = new Date().toISOString().split("T")[0];
+      const payload = {
+        geometry: {
+          type: "Polygon",
+          coordinates: [geometry],
+        },
+        start_date: selectedFieldsDetials[0]?.sowingDate,
+        end_date: today,
+        provider: "both",
+        satellite: "s2",
+      };
+
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/get-true-color-data`,
-        { geometry }
+        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/availability/`,
+        payload
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -86,9 +96,9 @@ export const fetchSatelliteDates = createAsyncThunk(
 
 export const fetchIndexData = createAsyncThunk(
   "satellite/fetchIndexData",
-  async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
+  async ({ endDate, geometry, index }, { rejectWithValue }) => {
     try {
-      const input = { startDate, endDate, geometry, index };
+      const input = { endDate, geometry, index };
       const cacheKey = generateCacheKey("indexData", null, input);
       const cached = await get(cacheKey);
       const now = Date.now();
@@ -98,19 +108,29 @@ export const fetchIndexData = createAsyncThunk(
         return cached.data;
       }
 
-      if (!startDate || !endDate || !geometry || !index) {
+      if (!endDate || !geometry || !index) {
         return rejectWithValue("Missing required parameters");
       }
 
+      const payload = {
+        geometry: {
+          type: "Polygon",
+          coordinates: geometry,
+        },
+        date: endDate,
+        index_name: index,
+        provider: "both",
+        satellite: "s2",
+        width: 800,
+        height: 800,
+        supersample: 1,
+        smooth: false,
+        gaussian_sigma: 1,
+      };
+
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/get-vegetation-index`,
-        {
-          start_date: formatDateToISO(startDate, endDate),
-          end_date: endDate,
-          geometry: geometry,
-          index: index,
-          dataset: "COPERNICUS/S2_SR_HARMONIZED",
-        }
+        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/calculate/index`,
+        payload
       );
 
       // console.log("cache new data");
@@ -577,7 +597,7 @@ const satelliteSlice = createSlice({
       })
       .addCase(fetchSatelliteDates.fulfilled, (state, action) => {
         state.loading.satelliteDates = false;
-        state.satelliteDates = action.payload.last_six_months_metadata;
+        state.satelliteDates = action.payload;
       })
       .addCase(fetchSatelliteDates.rejected, (state, action) => {
         state.loading.satelliteDates = false;
