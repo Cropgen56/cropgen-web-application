@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   LineChart,
   Line,
@@ -20,16 +26,13 @@ import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
 
 // Define Water Theme Colors (Using Tailwind's sky-400 equivalent for consistency)
-const WATER_COLOR_MAIN = "#38bdf8"; // Tailwind sky-400
-const WATER_COLOR_LIGHT = "#7dd3fc"; // Tailwind sky-300
-const WATER_COLOR_ACCENT = "#bae6fd"; // Tailwind sky-200
+const WATER_COLOR_MAIN = "#38bdf8";
+const WATER_COLOR_LIGHT = "#7dd3fc";
 
 const WaterIndex = ({ selectedFieldsDetials }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
-  const {
-    waterIndexData = null,
-    loading,
-  } = useSelector((state) => state.satellite) || {};
+  const { waterIndexData = null, loading } =
+    useSelector((state) => state.satellite) || {};
 
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDMI");
@@ -55,7 +58,8 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   }, [dispatch, fetchParams]);
 
   const chartData = useMemo(() => {
-    let timeseries = waterIndexData?.data?.timeseries ||
+    let timeseries =
+      waterIndexData?.data?.timeseries ||
       waterIndexData?.timeseries ||
       (Array.isArray(waterIndexData) ? waterIndexData : []);
     if (!Array.isArray(timeseries)) return [];
@@ -130,8 +134,12 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
       scrollLeft.current = el.scrollLeft;
     };
 
-    const handleMouseLeave = () => { isDragging.current = false; };
-    const handleMouseUp = () => { isDragging.current = false; };
+    const handleMouseLeave = () => {
+      isDragging.current = false;
+    };
+    const handleMouseUp = () => {
+      isDragging.current = false;
+    };
     const handleMouseMove = (e) => {
       if (!isDragging.current) return;
       e.preventDefault();
@@ -166,70 +174,123 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   };
 
   return (
-    <div className="w-full flex justify-center mt-4"> {/* Reduced top margin */}
-      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4"> {/* Reduced padding */}
-        
+    <div className="w-full flex justify-center mt-4">
+      {" "}
+      {/* Reduced top margin */}
+      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+        {" "}
+        {/* Reduced padding */}
         {/* Index Selector */}
-        <div className="absolute top-3 right-3 z-50"> {/* Reduced vertical position */}
+        <div className="absolute top-3 right-3 z-50">
+          {" "}
+          {/* Reduced vertical position */}
           <select
             value={index}
             onChange={handleIndexChange}
             className="border-2 border-white/50 bg-white/20 backdrop-blur-sm rounded-[25px] px-3 py-1 text-white text-sm focus:outline-none"
           >
-            <option value="NDMI" className="text-gray-700">NDMI</option>
-            <option value="NDWI" className="text-gray-700">NDWI</option>
-            <option value="SMI" className="text-gray-700">SMI</option>
-            <option value="MSI" className="text-gray-700">MSI</option>
-            <option value="WI" className="text-gray-700">WI</option>
-            <option value="NMDI" className="text-gray-700">NMDI</option>
+            <option value="NDMI" className="text-gray-700">
+              NDMI
+            </option>
+            <option value="NDWI" className="text-gray-700">
+              NDWI
+            </option>
+            <option value="SMI" className="text-gray-700">
+              SMI
+            </option>
+            <option value="MSI" className="text-gray-700">
+              MSI
+            </option>
+            <option value="WI" className="text-gray-700">
+              WI
+            </option>
+            <option value="NMDI" className="text-gray-700">
+              NMDI
+            </option>
           </select>
         </div>
-
         {/* Main Heading */}
-        <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">Water Index</h2> {/* Reduced bottom margin */}
-
+        <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">
+          Water Index
+        </h2>{" "}
+        {/* Reduced bottom margin */}
         {/* Content Container */}
-        <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4 "> {/* Reduced gap */}
-          
+        <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4 ">
+          {" "}
+          {/* Reduced gap */}
           {/* Left Side (Stat Block) */}
           <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-white/20 h-full w-full justify-around"> {/* Reduced padding */}
-              <h2 className="text-xl font-bold"> {/* Reduced text size */}
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-white/20 h-full w-full justify-around">
+              {" "}
+              {/* Reduced padding */}
+              <h2 className="text-xl font-bold">
+                {" "}
+                {/* Reduced text size */}
                 {index}
               </h2>
-              <button className="bg-white/15 text-sky-400 px-3 py-1 text-sm font-semibold rounded mt-1 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all"> {/* Reduced padding */}
+              <button className="bg-white/15 text-sky-400 px-3 py-1 text-sm font-semibold rounded mt-1 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all">
+                {" "}
+                {/* Reduced padding */}
                 +0.15
               </button>
-              <p className="my-1 text-white/90 text-xs lg:text-sm text-center"> {/* Reduced margin */}
+              <p className="my-1 text-white/90 text-xs lg:text-sm text-center">
+                {" "}
+                {/* Reduced margin */}
                 Last Update{" "}
                 {summaryData.timestamp
                   ? `${getDaysAgo(summaryData.timestamp)} days Ago`
                   : "N/A"}
               </p>
-              <div className="border-2 border-sky-400/50 bg-white/5 backdrop-blur-sm p-2 rounded text-white text-sm w-full"> {/* Reduced padding */}
+              <div className="border-2 border-sky-400/50 bg-white/5 backdrop-blur-sm p-2 rounded text-white text-sm w-full">
+                {" "}
+                {/* Reduced padding */}
                 <div className="flex items-start justify-between gap-2">
-                  <span className="flex-1 text-xs text-white/90">{indexDescriptions[index]}</span> {/* Reduced text size */}
+                  <span className="flex-1 text-xs text-white/90">
+                    {indexDescriptions[index]}
+                  </span>{" "}
+                  {/* Reduced text size */}
                   <span className="bg-white/15 backdrop-blur-sm rounded-full p-1 border border-sky-400/20">
-                    <Info size={16} strokeWidth={1.5} color={WATER_COLOR_MAIN} />
+                    <Info
+                      size={16}
+                      strokeWidth={1.5}
+                      color={WATER_COLOR_MAIN}
+                    />
                   </span>
                 </div>
               </div>
             </div>
           </div>
-
           {/* Right Graph Section */}
           <div
             ref={scrollRef}
-            className="w-full lg:w-3/4 overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-2 flex-grow" > {/* Reduced padding */}
+            className="w-full lg:w-3/4 overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-2 flex-grow"
+          >
+            {" "}
+            {/* Reduced padding */}
             {isLoading ? (
-              <div className="text-center text-white" style={{ minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}> {/* Reduced min-height */}
-                <LoadingSpinner size={48} color={WATER_COLOR_MAIN} /> {/* Reduced spinner size */}
+              <div
+                className="text-center text-white"
+                style={{
+                  minHeight: "180px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                }}
+              >
+                {" "}
+                {/* Reduced min-height */}
+                <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />{" "}
+                {/* Reduced spinner size */}
                 <strong>Loading Water Index...</strong>
               </div>
             ) : !hasData ? (
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mx-auto mt-2 max-w-md"> {/* Reduced padding */}
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mx-auto mt-2 max-w-md">
+                {" "}
+                {/* Reduced padding */}
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-1"> {/* Reduced margin */}
+                  <h3 className="text-lg font-semibold text-white mb-1">
+                    {" "}
+                    {/* Reduced margin */}
                     No Data Available
                   </h3>
                   <p className="text-sm text-white/80">
@@ -241,15 +302,17 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
               </div>
             ) : (
               <div className="w-full">
-                <ResponsiveContainer width={chartConfig.width} height={180}> {/* Reduced chart height */}
+                <ResponsiveContainer width={chartConfig.width} height={180}>
+                  {" "}
+                  {/* Reduced chart height */}
                   <LineChart
                     data={chartData}
-                    margin={{ top: 5, right: 15, left: 15, bottom: 5 }} 
+                    margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
                   >
                     <CartesianGrid stroke="rgba(255,255,255,0.2)" />
                     <XAxis
                       dataKey="date"
-                      tick={{ fontSize: 12, fill: '#fff' }}
+                      tick={{ fontSize: 12, fill: "#fff" }}
                       interval={chartConfig.interval}
                       type="category"
                     />
@@ -263,7 +326,11 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
                     <Tooltip
                       formatter={tooltipFormatter}
                       labelFormatter={labelFormatter}
-                      contentStyle={{ backgroundColor: '#344E41', border: 'none', borderRadius: '8px' }}
+                      contentStyle={{
+                        backgroundColor: "#344E41",
+                        border: "none",
+                        borderRadius: "8px",
+                      }}
                     />
                     <Legend
                       layout="horizontal"
@@ -273,7 +340,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
                         paddingBottom: "8px",
                         paddingLeft: "40px",
                         fontWeight: "bold",
-                        color: "#fff"
+                        color: "#fff",
                       }}
                     />
                     <Line

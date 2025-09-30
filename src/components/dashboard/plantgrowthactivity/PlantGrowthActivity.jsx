@@ -17,8 +17,6 @@ import PlantGrowthSkeleton from "../../Skeleton/PlantGrowthSkeleton";
 
 // Define Green Theme Colors for decoration (Standard Growth Theme)
 const GRASS_COLOR_MAIN = "#86D72F"; // Bright Green
-const GRASS_COLOR_LIGHT = "#7CC520"; // Medium Green
-const GRASS_COLOR_ACCENT = "#6FB51A"; // Darker Green
 
 // Crop growth duration mapping (in weeks)
 const CROP_GROWTH_DURATIONS = {

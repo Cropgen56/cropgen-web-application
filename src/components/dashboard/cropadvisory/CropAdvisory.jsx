@@ -5,7 +5,6 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { Form } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import {
   genrateAdvisory,
@@ -105,17 +104,17 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
   const advisoryData = useMemo(() => {
     return Array.isArray(advisory)
       ? advisory.map((item) => ({
-        day: item.day,
-        activities: {
-          "Disease/Pest Control": `Disease Pest - ${item.disease_pest.replace(
-            /[\[\]]/g,
-            ""
-          )}\nSpray - ${item.spray.replace(/[\[\]]/g, "")}`,
-          Fertigation: item.fertigation,
-          Watering: item.water,
-          Monitoring: item.monitoring,
-        },
-      }))
+          day: item.day,
+          activities: {
+            "Disease/Pest Control": `Disease Pest - ${item.disease_pest.replace(
+              /[[\]]/g,
+              ""
+            )}\nSpray - ${item.spray.replace(/[[\]]/g, "")}`,
+            Fertigation: item.fertigation,
+            Watering: item.water,
+            Monitoring: item.monitoring,
+          },
+        }))
       : [];
   }, [advisory]);
 
@@ -180,23 +179,24 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-white">Crop Advisory</h2>
 
-  <select
-    value={selectedDay}
-    onChange={(e) => setSelectedDay(e.target.value)}
-    aria-label="Select advisory day"
-    className="border-2 border-white/50 bg-white/20 backdrop-blur-sm rounded-[25px] px-3 py-1 text-white text-sm focus:outline-none"
-  >
-    {advisoryData.length > 0 ? (
-      advisoryData.map((item) => (
-        <option key={item.day} value={item.day} className="text-gray-700">
-          Day {item.day}
-        </option>
-      ))
-    ) : (
-      <option value="Day 1" className="text-gray-700">Day 1</option>
-    )}
-  </select>
-
+        <select
+          value={selectedDay}
+          onChange={(e) => setSelectedDay(e.target.value)}
+          aria-label="Select advisory day"
+          className="border-2 border-white/50 bg-white/20 backdrop-blur-sm rounded-[25px] px-3 py-1 text-white text-sm focus:outline-none"
+        >
+          {advisoryData.length > 0 ? (
+            advisoryData.map((item) => (
+              <option key={item.day} value={item.day} className="text-gray-700">
+                Day {item.day}
+              </option>
+            ))
+          ) : (
+            <option value="Day 1" className="text-gray-700">
+              Day 1
+            </option>
+          )}
+        </select>
       </div>
 
       {advisoryData.length > 0 ? (
