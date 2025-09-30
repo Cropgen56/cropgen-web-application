@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { PersonaliseCropSheduleDarkIcon } from "../../../assets/Icons";
 import { FieldIcon } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
-// import "./PersonaliseCropSheduleSidebar.css";
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick }) => (
   <div

@@ -2,9 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { formatDateToISO } from "../../utility/formatDate";
 import axios from "axios";
 import { get, set } from "idb-keyval";
-import { parseAdvisoryText } from "../../utility/parseAdvisoryText";
 import {
-  getSixMonthsBefore,
   getTodayAndFifteenDaysAgo,
 } from "../../utility/formatDate";
 

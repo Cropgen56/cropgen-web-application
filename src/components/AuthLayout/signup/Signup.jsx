@@ -5,9 +5,7 @@ import SocialButtons from "../shared/socialbuttons/SocialButton";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { message, Spin } from "antd";
-import axios from "axios";
 import { forgotPassword } from "../../../api/authApi";
-
 
 const Signup = () => {
   const dispatch = useDispatch();
@@ -47,26 +45,39 @@ const Signup = () => {
         type === "checkbox"
           ? checked
           : name === "organizationCode"
-            ? value.toUpperCase()
-            : value,
+          ? value.toUpperCase()
+          : value,
     }));
   };
 
   const validate = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email) return message.error("Email is required."), false;
-    if (!emailRegex.test(formData.email))
-      return message.error("Invalid email format."), false;
-    if (!formData.password) return message.error("Password is required."), false;
-    if (formData.password.length < 10 || formData.password.length > 15)
-      return message.error("Password must be between 10 and 15 characters."), false;
-    if (!formData.terms)
-      return (
-        message.error(
-          "You must accept the Terms of Use and Privacy Policy."
-        ),
-        false
-      );
+
+    if (!formData.email) {
+      message.error("Email is required.");
+      return false;
+    }
+
+    if (!emailRegex.test(formData.email)) {
+      message.error("Invalid email format.");
+      return false;
+    }
+
+    if (!formData.password) {
+      message.error("Password is required.");
+      return false;
+    }
+
+    if (formData.password.length < 10 || formData.password.length > 15) {
+      message.error("Password must be between 10 and 15 characters.");
+      return false;
+    }
+
+    if (!formData.terms) {
+      message.error("You must accept the Terms of Use and Privacy Policy.");
+      return false;
+    }
+
     return true;
   };
 
@@ -84,13 +95,17 @@ const Signup = () => {
       }
     });
   };
-  
+
   const openEmailProvider = (email) => {
     const domain = email.split("@")[1].toLowerCase();
 
     if (domain.includes("gmail")) {
       window.open("https://mail.google.com", "_blank");
-    } else if (domain.includes("outlook") || domain.includes("hotmail") || domain.includes("live")) {
+    } else if (
+      domain.includes("outlook") ||
+      domain.includes("hotmail") ||
+      domain.includes("live")
+    ) {
       window.open("https://outlook.live.com", "_blank");
     } else if (domain.includes("yahoo")) {
       window.open("https://mail.yahoo.com", "_blank");
@@ -100,10 +115,8 @@ const Signup = () => {
     }
   };
 
-
   // Handle forgot password
   const handleForgotPassword = async () => {
-
     if (!formData.email) return message.error("Please enter your email first");
     setLoading(true);
     try {
@@ -119,9 +132,7 @@ const Signup = () => {
   };
 
   return (
-    <div
-      className="w-full flex items-center justify-center h-full"
-    >
+    <div className="w-full flex items-center justify-center h-full">
       <div
         style={{
           transform: `scale(${scale})`,
@@ -129,9 +140,7 @@ const Signup = () => {
           transition: "transform 0.2s ease",
         }}
       >
-        <div
-          className="p-6 md:p-10 lg:p-14 w-[90vw] max-w-sm lg:max-w-xl xl:max-w-2xl"
-        >
+        <div className="p-6 md:p-10 lg:p-14 w-[90vw] max-w-sm lg:max-w-xl xl:max-w-2xl">
           {/* Heading */}
           <div className="mb-8 text-center">
             <h2 className="text-lg md:text-2xl lg:text-3xl font-semibold text-black">

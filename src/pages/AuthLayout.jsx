@@ -4,31 +4,20 @@ import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice";
 import { useDispatch } from "react-redux";
 
 // Images
-import defaultBg from "../assets/image/Group 523.png"; // Desktop
-import tabletBg from "../assets/image/image copy.png"; // Tablet-specific
-
-import weather from "../assets/image/login/weather.png";
-import soilTemp from "../assets/image/login/soil t.png";
-import soilMois from "../assets/image/login/soil m.png";
-import sattelite from "../assets/image/login/satellite.png";
 import laptop from "../assets/image/login/laptop-overlay.png";
-import ndvi from "../assets/image/login/ndvi.png";
 import logo from "../assets/image/login/logo.png";
 import sphere from "../assets/image/login/Desktop-background.svg";
 import keywordBg from "../assets/image/login/keyword-bg.svg";
 
 
-import { User } from "lucide-react";
-
 const AuthLayout = () => {
   const dispatch = useDispatch();
 
-  const [animate, setAnimate] = useState(false);
-  const [height, setHeight] = useState(window.innerHeight);
-  const [width, setWidth] = useState(window.innerWidth);
-  const [scaleValue, setScaleValue] = useState(1);
+  const [ , setAnimate] = useState(false);
+  const [ , setHeight] = useState(window.innerHeight);
+  const [ , setWidth] = useState(window.innerWidth);
 
-  const isTablet = width <= 1139 && height <= 1367;
+//   const isTablet = width <= 1139 && height <= 1367;
 
   useEffect(() => {
     dispatch(loadLocalStorage());

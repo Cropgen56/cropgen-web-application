@@ -7,17 +7,15 @@ import { addFarmField } from "../redux/slices/farmSlice";
 import { useNavigate } from "react-router-dom";
 import * as turf from "@turf/turf";
 import { message } from "antd";
-import PricingSimple from "../components/pricing/Pricing";
 import { motion, AnimatePresence } from "framer-motion";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
   const [isTabletView, setIsTabletView] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [pendingRedirect, setPendingRedirect] = useState(false);
+  const [showOverlay, ] = useState(false);
+  const [ , setPendingRedirect] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const [isFullMap, setIsFullMap] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -83,12 +81,12 @@ const AddField = () => {
     });
   };
 
-  const handleClosePricing = () => {
-    setShowOverlay(false);
-    if (pendingRedirect) {
-      navigate("/cropgen-analytics");
-    }
-  };
+  // const handleClosePricing = () => {
+  //   setShowOverlay(false);
+  //   if (pendingRedirect) {
+  //     navigate("/cropgen-analytics");
+  //   }
+  // };
 
   return (
     <div className="relative w-full h-screen">

@@ -2,7 +2,6 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "../layout/MainLayout";
 import Dashboard from "../pages/Dashboard";
-import CropGenAnalytics from "../pages/CropGenAnalytics";
 import AddField from "../pages/AddField";
 import Weather from "../pages/Weather";
 import DiseaseDetection from "../pages/DiseaseDetection";

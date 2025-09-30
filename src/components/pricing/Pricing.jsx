@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useLayoutEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { ChevronLeft, ChevronRight } from "lucide-react"
 

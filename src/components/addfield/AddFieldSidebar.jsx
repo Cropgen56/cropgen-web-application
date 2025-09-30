@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
@@ -19,7 +19,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   };
 
   const dispatch = useDispatch();
-  const { crops, loading, error } = useSelector((state) => state.crops);
+  const { crops } = useSelector((state) => state.crops);
 
   console.log("Crops from Redux:", crops);
 

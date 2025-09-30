@@ -1,4 +1,3 @@
-import { FaCloud } from "react-icons/fa";
 import WeatherGraph from "./WeatherGraph";
 import img2 from "../../../assets/image/Frame 267.png"
 

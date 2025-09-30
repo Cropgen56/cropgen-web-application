@@ -5,7 +5,7 @@ import { fetchCropHealth } from "../../../redux/slices/satelliteSlice";
 const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
   const farmDetails = selectedFieldsDetials?.[0];
-  const { cropHealth, loading } = useSelector((state) => state?.satellite);
+  const { cropHealth } = useSelector((state) => state?.satellite);
 
   const { Health_Percentage = 0, Crop_Health = "Unknown" } = cropHealth || {};
 

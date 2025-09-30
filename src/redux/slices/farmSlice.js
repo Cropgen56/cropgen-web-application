@@ -77,7 +77,7 @@ export const deleteFarmField = createAsyncThunk(
   "farm/deleteFarmField",
   async (fieldId, { rejectWithValue }) => {
     try {
-      const response = await deleteFieldAPI(fieldId);
+      await deleteFieldAPI(fieldId);
       return { fieldId };
     } catch (error) {
       return rejectWithValue(

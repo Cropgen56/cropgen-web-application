@@ -43,8 +43,14 @@ const Dashboard = () => {
 
   // Memoized selectors to prevent unnecessary re-renders
   const user = useSelector((state) => state?.auth?.user);
-  const fields = useSelector((state) => state?.farmfield?.fields) || [];
-  const aois = useSelector((state) => state?.weather?.aois) || [];
+  // const fields = useSelector((state) => state?.farmfield?.fields) || [];
+  // const aois = useSelector((state) => state?.weather?.aois) || [];
+  const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
+const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
+
+const aoisRaw = useSelector((state) => state?.weather?.aois);
+const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
+
   const forecastData = useSelector((state) => state.weather.forecastData) || [];
   const userId = user?.id;
 
@@ -74,17 +80,17 @@ const Dashboard = () => {
   });
 
   const [prevFieldsLength, setPrevFieldsLength] = useState(0);
-  const [showWelcome, setShowWelcome] = useState(false);
+  const [ , setShowWelcome] = useState(false);
   const navigate = useNavigate();
 
-  const listVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 1, duration: 0.6, ease: "easeOut" }, // 1s gap
-    }),
-  };
+  // const listVariants = {
+  //   hidden: { opacity: 0, y: 20 },
+  //   visible: (i) => ({
+  //     opacity: 1,
+  //     y: 0,
+  //     transition: { delay: i * 1, duration: 0.6, ease: "easeOut" }, // 1s gap
+  //   }),
+  // };
 
 
   useEffect(() => {
@@ -185,55 +191,55 @@ const Dashboard = () => {
   }, [dispatch, selectedFieldDetails, aois]);
 
   // Memoized props objects to prevent unnecessary re-renders
-  const mapViewProps = useMemo(
-    () => ({
-      markers,
-      setMarkers,
-      isAddingMarkers,
-      setIsAddingMarkers,
-      selectedField,
-      setSelectedField: handleFieldSelection,
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-      fields,
-    }),
-    [
-      markers,
-      isAddingMarkers,
-      selectedField,
-      handleFieldSelection,
-      selectedFieldDetails,
-      fields,
-    ]
-  );
+  // const mapViewProps = useMemo(
+  //   () => ({
+  //     markers,
+  //     setMarkers,
+  //     isAddingMarkers,
+  //     setIsAddingMarkers,
+  //     selectedField,
+  //     setSelectedField: handleFieldSelection,
+  //     selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+  //     fields,
+  //   }),
+  //   [
+  //     markers,
+  //     isAddingMarkers,
+  //     selectedField,
+  //     handleFieldSelection,
+  //     selectedFieldDetails,
+  //     fields,
+  //   ]
+  // );
 
-  const cropHealthProps = useMemo(
-    () => ({
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-      fields,
-    }),
-    [selectedFieldDetails, fields]
-  );
+  // const cropHealthProps = useMemo(
+  //   () => ({
+  //     selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+  //     fields,
+  //   }),
+  //   [selectedFieldDetails, fields]
+  // );
 
-  const ndviGraphProps = useMemo(
-    () => ({
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-    }),
-    [selectedFieldDetails]
-  );
+  // const ndviGraphProps = useMemo(
+  //   () => ({
+  //     selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+  //   }),
+  //   [selectedFieldDetails]
+  // );
 
-  const cropAdvisoryProps = useMemo(
-    () => ({
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-    }),
-    [selectedFieldDetails]
-  );
+  // const cropAdvisoryProps = useMemo(
+  //   () => ({
+  //     selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+  //   }),
+  //   [selectedFieldDetails]
+  // );
 
-  const plantGrowthProps = useMemo(
-    () => ({
-      selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
-    }),
-    [selectedFieldDetails]
-  );
+  // const plantGrowthProps = useMemo(
+  //   () => ({
+  //     selectedFieldsDetials: selectedFieldDetails ? [selectedFieldDetails] : [],
+  //   }),
+  //   [selectedFieldDetails]
+  // );
 
 
 

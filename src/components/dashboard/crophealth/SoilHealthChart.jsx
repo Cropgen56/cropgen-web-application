@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchSoilData } from "../../../redux/slices/satelliteSlice";
+import React from "react";
+import { useSelector } from "react-redux";
 import soilTemperature from "../../../assets/image/dashboard/soil-temperature.svg";
 import soilMoisture from "../../../assets/image/dashboard/soil-moisture.svg";
 import soilLayerImage from "../../../assets/image/dashboard/soil-layer.svg";

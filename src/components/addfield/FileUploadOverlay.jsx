@@ -1,6 +1,5 @@
 // src/components/addfield/FileUploadOverlay.js
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import shp from "shpjs";
 import * as toGeoJSON from "@tmcw/togeojson";
 import { DOMParser } from "xmldom";
@@ -175,16 +174,16 @@ const FileUploadOverlay = ({
   };
 
 
-  const handleAddField = () => {
-    if (!selectedFiles || selectedFiles.length === 0) {
-      message.error("Please select at least one file to proceed.");
-      return;
-    }
-    setShowUploadOverlay(false);
-    message.success(`${selectedFiles.length} file(s) added. Polygons are displayed on the map.`);
+  // const handleAddField = () => {
+  //   if (!selectedFiles || selectedFiles.length === 0) {
+  //     message.error("Please select at least one file to proceed.");
+  //     return;
+  //   }
+  //   setShowUploadOverlay(false);
+  //   message.success(`${selectedFiles.length} file(s) added. Polygons are displayed on the map.`);
 
-    // Do NOT call fitBounds here — AddFieldMap effect will center once.
-  };
+  //   // Do NOT call fitBounds here — AddFieldMap effect will center once.
+  // };
 
   const closeOverlay = () => {
     setShowUploadOverlay(false);

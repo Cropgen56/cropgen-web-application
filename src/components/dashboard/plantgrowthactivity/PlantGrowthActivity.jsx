@@ -185,11 +185,11 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
     const sowing = isSowingValid ? new Date(sowingDate) : null;
     const days = sowing
       ? Math.max(
-        1,
-        Math.floor(
-          (today.getTime() - sowing.getTime()) / (1000 * 60 * 60 * 24)
-        ) + 1
-      )
+          1,
+          Math.floor(
+            (today.getTime() - sowing.getTime()) / (1000 * 60 * 60 * 24)
+          ) + 1
+        )
       : 1;
     const maxWeeks =
       CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other;
@@ -198,9 +198,9 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
     let suggestionText = "Awaiting growth stage data...";
     if (cropGrowthStage?.finalStage?.stage && cropGrowthStage?.keyActivity) {
       const stage = cropGrowthStage.finalStage.stage;
-      const activity = Array.isArray(cropGrowthStage.keyActivity)
-        ? cropGrowthStage.keyActivity.join(", ")
-        : cropGrowthStage.keyActivity;
+      // const activity = Array.isArray(cropGrowthStage.keyActivity)
+      //   ? cropGrowthStage.keyActivity.join(", ")
+      //   : cropGrowthStage.keyActivity;
       suggestionText = `Based on BBCH stage ${stage}.`;
     } else if (cropGrowthStage?.finalStage?.stage) {
       suggestionText = `Based on BBCH stage ${cropGrowthStage.finalStage.stage}, monitor crop development.`;
@@ -287,14 +287,20 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
   }
 
   return (
-    <div className="w-full flex  mt-6"> {/* Reduced top margin from 8 to 6 */}
+    <div className="w-full flex  mt-6">
+      {" "}
+      {/* Reduced top margin from 8 to 6 */}
       {/* Outer Container: Reduced padding slightly, maintaining dark gradient */}
       <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden p-3 md:p-5">
-
-        <div className="relative z-10 w-full bg-white/10 backdrop-blur-sm rounded-xl p-3 "> {/* Inner panel slightly tighter padding */}
-
-          <div className="flex justify-between items-start mb-2"> {/* Reduced mb gap */}
-            <div className="flex flex-col gap-0.5"> {/* Reduced gap between title/subtitle */}
+        <div className="relative z-10 w-full bg-white/10 backdrop-blur-sm rounded-xl p-3 ">
+          {" "}
+          {/* Inner panel slightly tighter padding */}
+          <div className="flex justify-between items-start mb-2">
+            {" "}
+            {/* Reduced mb gap */}
+            <div className="flex flex-col gap-0.5">
+              {" "}
+              {/* Reduced gap between title/subtitle */}
               <h2 className="text-xl font-semibold text-white m-0">
                 Plant Growth Activity
               </h2>
@@ -308,11 +314,14 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
               onChange={(e) => setInterval(e.target.value)}
               className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-white/30 rounded-full bg-white/20 text-white focus:outline-none cursor-pointer"
             >
-              <option value="Days" className="text-gray-800">Days</option>
-              <option value="Weeks" className="text-gray-800">Weeks</option>
+              <option value="Days" className="text-gray-800">
+                Days
+              </option>
+              <option value="Weeks" className="text-gray-800">
+                Weeks
+              </option>
             </select>
           </div>
-
           {isLoading ? (
             <PlantGrowthSkeleton />
           ) : (
@@ -327,17 +336,38 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                   margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
                 >
                   <defs>
-                    <linearGradient id="colorHeight" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={GRASS_COLOR_MAIN} stopOpacity={0.8} />
-                      <stop offset="95%" stopColor={GRASS_COLOR_MAIN} stopOpacity={0} />
+                    <linearGradient
+                      id="colorHeight"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor={GRASS_COLOR_MAIN}
+                        stopOpacity={0.8}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor={GRASS_COLOR_MAIN}
+                        stopOpacity={0}
+                      />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="rgba(255,255,255,0.2)" vertical={false} />
+                  <CartesianGrid
+                    stroke="rgba(255,255,255,0.2)"
+                    vertical={false}
+                  />
                   <XAxis
                     dataKey="label"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "#fff", fontSize: "11px", fontWeight: "bold" }} // Slightly smaller font
+                    tick={{
+                      fill: "#fff",
+                      fontSize: "11px",
+                      fontWeight: "bold",
+                    }} // Slightly smaller font
                     interval={Math.ceil(data.length / 10)}
                   />
                   <YAxis hide />
@@ -355,7 +385,11 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                     label={({ viewBox }) => {
                       if (!viewBox) return null;
                       const { x, y } = viewBox;
-                      if (!tooltipPos || tooltipPos.x !== x || tooltipPos.y !== y) {
+                      if (
+                        !tooltipPos ||
+                        tooltipPos.x !== x ||
+                        tooltipPos.y !== y
+                      ) {
                         setTooltipPos({ x, y });
                       }
                       return null;
@@ -384,14 +418,17 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                     {cropGrowthStage?.finalStage?.stage || "Unknown Stage"}
                   </p>
                   <p className="font-semibold mb-1">Key Activities:</p>
-                  <ul className="list-disc list-inside space-y-1 max-h-[140px] overflow-auto"> {/* Tighter list max height */}
+                  <ul className="list-disc list-inside space-y-1 max-h-[140px] overflow-auto">
+                    {" "}
+                    {/* Tighter list max height */}
                     {Array.isArray(cropGrowthStage?.keyActivity) ? (
                       cropGrowthStage.keyActivity.map((act, idx) => (
                         <li key={idx}>{act}</li>
                       ))
                     ) : (
                       <li>
-                        {cropGrowthStage?.keyActivity || "No activities available"}
+                        {cropGrowthStage?.keyActivity ||
+                          "No activities available"}
                       </li>
                     )}
                   </ul>

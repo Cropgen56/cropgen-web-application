@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { Navigate, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import Sidebar from "../components/sidebar/Sidebar";
 import { useDispatch } from "react-redux";
 import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice";
@@ -21,7 +21,7 @@ const MainLayout = () => {
   }, [dispatch]);
 
   // Get authentication status from Redux store
-  const { token, loading } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state) => state.auth);
 
   if (loading) {
     return <div>Loading...</div>;
