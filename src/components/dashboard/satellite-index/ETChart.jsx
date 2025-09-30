@@ -1,14 +1,14 @@
 import React from "react";
 import ReactECharts from "echarts-for-react";
-import { Card } from "react-bootstrap";
 import { useSelector } from "react-redux";
+
+const CLOUD_COLOR_MAIN = "#87CEEB"; // Sky Blue
 
 const EvapotranspirationChart = () => {
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
 
   const dateData = forecastData.forecast?.time || [];
-  const evapotranspirationData =
-    forecastData.forecast?.evapotranspiration || [];
+  const evapotranspirationData = forecastData.forecast?.evapotranspiration || [];
 
   // Calculate max and avg evapotranspiration
   const maxEt =
@@ -18,15 +18,15 @@ const EvapotranspirationChart = () => {
   const avgEt =
     evapotranspirationData.length > 0
       ? (
-          evapotranspirationData.reduce((a, b) => a + b, 0) /
-          evapotranspirationData.length
-        ).toFixed(2)
+        evapotranspirationData.reduce((a, b) => a + b, 0) /
+        evapotranspirationData.length
+      ).toFixed(2)
       : "0.00";
   const maxEtDate =
     evapotranspirationData.length > 0
       ? dateData[
-          evapotranspirationData.indexOf(Math.max(...evapotranspirationData))
-        ]
+      evapotranspirationData.indexOf(Math.max(...evapotranspirationData))
+      ]
       : "";
 
   const option = {
@@ -45,19 +45,23 @@ const EvapotranspirationChart = () => {
         rotate: 45,
         interval: 0,
         fontSize: 10,
+        color: "#fff",
       },
+      axisLine: { lineStyle: { color: "rgba(255,255,255,0.5)" } },
     },
     yAxis: {
       type: "value",
       min: 0,
-      max: 12, // Adjusted max to accommodate higher values like 5.36
+      max: 12,
       interval: 2,
       axisLabel: {
         formatter: "{value} mm",
         fontWeight: "bold",
         align: "left",
         padding: [0, 0, 0, 1],
+        color: "#fff",
       },
+      splitLine: { lineStyle: { color: "rgba(255,255,255,0.2)" } },
     },
     series: [
       {
@@ -67,54 +71,71 @@ const EvapotranspirationChart = () => {
         smooth: true,
         symbol: "circle",
         symbolSize: 8,
-        itemStyle: { color: "#2ca02c" },
+        itemStyle: { color: CLOUD_COLOR_MAIN },
+        lineStyle: { color: CLOUD_COLOR_MAIN },
       },
     ],
   };
 
   return (
-    <Card className="mt-3 rounded-lg shadow-md bg-white">
-      <Card.Body>
-        <div className="flex justify-between items-center">
-          <h2 className="text-[#344e41] text-xl font-bold">Evapotranspiration</h2>
-          <div className="flex gap-4">
-            <p className="flex items-center gap-1 px-1 text-[#a7a5a5] text-xs">
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 10 10"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="me-1"
-              >
-                <circle cx="5" cy="5" r="5" fill="#2ca02c" />
-              </svg>
-              Daily ET
-            </p>
+    <div className="w-full flex mt-4">
+      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-white text-2xl font-bold">Evapotranspiration</h2>
+          <div className="flex items-center gap-1 px-1 text-white font-bold text-md">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 10 10"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="me-1"
+            >
+              <circle cx="5" cy="5" r="5" fill={CLOUD_COLOR_MAIN} />
+            </svg>
+            Daily ET
           </div>
         </div>
-        <div className="flex ml-12 text-center">
-          <div>
-            <p className="text-[#9a9898]-500 text-[11px] m-0">ET High</p>
-            <h2 className="text-[#344e41] text-2xl font-bold">{maxEt} mm</h2>
-            <p className="text-gray-500 text-[11px] m-0">{maxEtDate}</p>
+
+        {/* Body layout - Tablet: vertical stack, Desktop: horizontal */}
+        <div className="flex flex-col lg:flex-row w-full mt-2">
+          {/* Stats section - Tablet: horizontal stats, Desktop: vertical stats */}
+          <div className="flex sm:flex-row md:flex-col w-full lg:w-[140px] gap-2 h-auto lg:h-full mb-3 lg:mb-0">
+            <div className="flex-1 lg:flex-none bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center flex flex-col justify-center lg:h-[50%]">
+              <p className="text-gray-300 text-[10px] m-0">ET High</p>
+              <h2 className="text-white text-base md:text-lg font-bold">
+                {maxEt} mm
+              </h2>
+              <p className="text-gray-400 text-[10px] m-0">{maxEtDate || "N/A"}</p>
+            </div>
+            <div className="flex-1 lg:flex-none bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center flex flex-col justify-center lg:h-[50%]">
+              <p className="text-gray-300 text-[10px] m-0">ET Average</p>
+              <h2 className="text-white text-base md:text-lg font-bold">
+                {avgEt} mm
+              </h2>
+              <p className="text-gray-400 text-[10px] m-0">16-day avg</p>
+            </div>
           </div>
-          <div className="ms-5">
-            <p className="text-[#9a9898]-500 text-[11px] m-0">ET Average</p>
-            <h2 className="text-[#344e41] text-2xl font-bold">{avgEt} mm</h2>
-            <p className="text-gray-500 text-[11px] m-0">16-day average</p>
+
+          {/* Chart */}
+          <div className="flex-1 lg:ml-3 bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-1">
+            <ReactECharts
+              option={option}
+              className="w-full"
+              style={{ width: "100%", height: "220px" }}
+            />
           </div>
         </div>
-        <div className="relative w-full h-[250px] ">
-          <ReactECharts
-            option={option}
-            className="w-full"
-            style={{ width: "100%", padding: "0px", height:"250px" }}
-          />
-        </div>
-      </Card.Body>
-    </Card>
+      </div>
+    </div>
   );
 };
 
 export default EvapotranspirationChart;
+
+
+
+
+
+

@@ -164,7 +164,7 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
     }
 
     return (
-      <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-[#5A7C6BB2] text-white border border-gray-300 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto scrollbar-hide">
+      <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-white/10 text-black border border-gray-300 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto scrollbar-hide">
         <h3 className="text-sm lg:text-base font-bold text-[#344e41] mb-1 md:mb-0.5">
           {category}
         </h3>
@@ -176,26 +176,27 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
   });
 
   return (
-    <div className="flex flex-col gap-4 mt-2 mb-3 rounded-lg shadow border border-gray-300 bg-white md:h-auto lg:h-auto p-3 overflow-hidden">
+    <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow border border-gray-300 bg-gradient-to-br from-[#6B9080] to-[#3D5A40] md:h-auto lg:h-auto p-3 overflow-hidden ">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-[#344e41]">Crop Advisory</h2>
-        <Form.Select
-          value={selectedDay}
-          onChange={(e) => setSelectedDay(e.target.value)}
-          aria-label="Select advisory day"
-          style={{ width: "100px", height: "30px" }}
-          className="text-[14px] md:text-[11px] p-1 appearance-auto bg-no-repeat bg-[right_0.5rem_center]"
-        >
-          {advisoryData.length > 0 ? (
-            advisoryData.map((item) => (
-              <option key={item.day} value={item.day}>
-                Day {item.day}
-              </option>
-            ))
-          ) : (
-            <option value="Day 1">Day 1</option>
-          )}
-        </Form.Select>
+        <h2 className="text-xl font-bold text-white">Crop Advisory</h2>
+
+  <select
+    value={selectedDay}
+    onChange={(e) => setSelectedDay(e.target.value)}
+    aria-label="Select advisory day"
+    className="border-2 border-white/50 bg-white/20 backdrop-blur-sm rounded-[25px] px-3 py-1 text-white text-sm focus:outline-none"
+  >
+    {advisoryData.length > 0 ? (
+      advisoryData.map((item) => (
+        <option key={item.day} value={item.day} className="text-gray-700">
+          Day {item.day}
+        </option>
+      ))
+    ) : (
+      <option value="Day 1" className="text-gray-700">Day 1</option>
+    )}
+  </select>
+
       </div>
 
       {advisoryData.length > 0 ? (

@@ -9,12 +9,16 @@ import {
   ReferenceLine,
   ReferenceDot,
 } from "recharts";
-import Card from "react-bootstrap/Card";
 import { useSelector, useDispatch } from "react-redux";
 import { formatToYYYYMMDD } from "../../../utility/convertYYYYMMDD";
 import { getTheCropGrowthStage } from "../../../redux/slices/satelliteSlice";
 import { calculateAiYield } from "../../../redux/slices/satelliteSlice";
 import PlantGrowthSkeleton from "../../Skeleton/PlantGrowthSkeleton";
+
+// Define Green Theme Colors for decoration (Standard Growth Theme)
+const GRASS_COLOR_MAIN = "#86D72F"; // Bright Green
+const GRASS_COLOR_LIGHT = "#7CC520"; // Medium Green
+const GRASS_COLOR_ACCENT = "#6FB51A"; // Darker Green
 
 // Crop growth duration mapping (in weeks)
 const CROP_GROWTH_DURATIONS = {
@@ -109,58 +113,18 @@ const formatDayToWeekDay = (day) => {
 // Helper: Validate date for formatToYYYYMMDD
 const isValidDate = (dateInput) => {
   if (!dateInput) return false;
-
-  // Check for yyyy-mm-dd or yyyy/mm/dd formats
   const regexDash = /^\d{4}-\d{2}-\d{2}$/;
   const regexSlash = /^\d{4}\/\d{2}\/\d{2}$/;
   if (
     typeof dateInput === "string" &&
     (regexDash.test(dateInput) || regexSlash.test(dateInput))
   ) {
-    // Additional validation to ensure the date is parseable
     const date = new Date(dateInput.replace(/\//g, "-"));
     return !isNaN(date.getTime());
   }
-
-  // Check if it's a valid Date object or parseable string
   const date = new Date(dateInput);
   return !isNaN(date.getTime());
 };
-
-// Custom Tooltip for ReferenceDot
-// const CustomTooltip = ({ viewBox, stage, activity, timeLabel }) => {
-//   if (!viewBox) return null;
-//   const { x, y } = viewBox;
-//   const activities = Array.isArray(activity) ? activity : [activity];
-
-//   // Adjust position to prevent tooltip from being cut off
-//   const tooltipWidth = window.innerWidth < 640 ? 150 : 300;
-//   const tooltipX = Math.max(
-//     10,
-//     Math.min(x - tooltipWidth / 2, window.innerWidth - tooltipWidth - 10)
-//   );
-
-//   return (
-//     <foreignObject
-//       x={tooltipX}
-//       y={y - 220}
-//       width={tooltipWidth}
-//       height={200}
-//       className="absolute z-10"
-//     >
-//       <div className="bg-[#7BB34F] text-white text-xs p-2 rounded shadow-lg max-h-[200px] overflow-auto sm:text-sm ">
-//         <p className="font-bold sm:text-base">{stage}</p>
-//         <p className="font-semibold mb-1">Key Activities:</p>
-//         <ul className="list-disc list-inside space-y-1">
-//           {activities.map((act, idx) => (
-//             <li key={idx}>{act}</li>
-//           ))}
-//         </ul>
-//         <p className="italic mt-1">{timeLabel}</p>
-//       </div>
-//     </foreignObject>
-//   );
-// };
 
 // Generate chart data for Days/Weeks
 const generateCurveData = (interval, cropName) => {
@@ -197,6 +161,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
   );
   const isLoading = loading?.cropGrowthStage || false;
 
+  // Use "Weeks" as the default interval if data suggests a long growth cycle
   const [interval, setInterval] = React.useState("Weeks");
   const [tooltipPos, setTooltipPos] = useState(null);
 
@@ -215,8 +180,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
     if (isTodayValid) {
       formattedCurrentDate = formatToYYYYMMDD(today);
     } else {
-      // Fallback (unlikely with new Date())
-      formattedCurrentDate = "2025-08-25";
+      formattedCurrentDate = "2025-08-25"; // Fallback
     }
     const sowing = isSowingValid ? new Date(sowingDate) : null;
     const days = sowing
@@ -291,7 +255,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
         })
       );
     }
-  }, [cropGrowthStage, selectedFieldsDetials, dispatch]);
+  }, [cropGrowthStage, dispatch, selectedFieldsDetials]);
 
   // Memoize chart data
   const data = useMemo(
@@ -309,132 +273,177 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
 
   if (!isSowingDateValid) {
     return (
-      <Card
-        body
-        className="bg-white rounded-lg p-4 border border-gray-300 shadow"
-      >
-        <div className="w-full h-[350px] flex items-center justify-center">
-          <span className="text-gray-600 text-sm">
-            Invalid sowing date. Please provide a valid date.
-          </span>
+      // Reduced padding/margin on the outer container for consistency
+      <div className="w-full flex justify-center mt-6">
+        <div className="relative w-full max-w-6xl bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white p-4 md:p-5">
+          <div className="w-full  flex items-center justify-center bg-white/10 rounded-lg p-4">
+            <span className="text-white/80 text-sm">
+              Invalid sowing date. Please provide a valid date.
+            </span>
+          </div>
         </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card
-      body
-      className="bg-white rounded-lg p-4 border border-gray-300 shadow"
-    >
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-xl font-semibold text-[#344e41] m-0">
-            Plant Growth Activity
-          </h2>
-          <div className="text-sm text-gray-600">
-            {cropName || "Unknown Crop"}
+    <div className="w-full flex  mt-6">
+      {" "}
+      {/* Reduced top margin from 8 to 6 */}
+      {/* Outer Container: Reduced padding slightly, maintaining dark gradient */}
+      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden p-3 md:p-5">
+        <div className="relative z-10 w-full bg-white/10 backdrop-blur-sm rounded-xl p-3 ">
+          {" "}
+          {/* Inner panel slightly tighter padding */}
+          <div className="flex justify-between items-start mb-2">
+            {" "}
+            {/* Reduced mb gap */}
+            <div className="flex flex-col gap-0.5">
+              {" "}
+              {/* Reduced gap between title/subtitle */}
+              <h2 className="text-xl font-semibold text-white m-0">
+                Plant Growth Activity
+              </h2>
+              <div className="text-sm font-bold text-white mt-3">
+                {cropName || "Unknown Crop"}
+              </div>
+              <div className="text-sm text-white">{suggestion}</div>
+            </div>
+            <select
+              value={interval}
+              onChange={(e) => setInterval(e.target.value)}
+              className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-white/30 rounded-full bg-white/20 text-white focus:outline-none cursor-pointer"
+            >
+              <option value="Days" className="text-gray-800">
+                Days
+              </option>
+              <option value="Weeks" className="text-gray-800">
+                Weeks
+              </option>
+            </select>
           </div>
-          <div className="text-sm text-gray-600">{suggestion}</div>
-        </div>
-        <select
-          value={interval}
-          onChange={(e) => setInterval(e.target.value)}
-          className="w-[100px] h-[40px] px-2 pr-10 py-2 text-sm border-2 border-[#5a7c6b] rounded-full bg-white text-gray-600 focus:outline-none cursor-pointer"
-        >
-          <option>Days</option>
-          <option>Weeks</option>
-        </select>
-      </div>
-
-      {isLoading ? (
-      <PlantGrowthSkeleton/>
-      ) : (
-        <div className="w-full h-[350px]">
-          <ResponsiveContainer>
-            <AreaChart
-              data={data}
-              margin={{ top: 80, right: 30, left: 30, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="colorHeight" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3A8B0A" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#3A8B0A" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="#ccc" vertical={false} />
-              <XAxis
-                dataKey="label"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "#000", fontSize: "12px", fontWeight: "bold" }}
-                interval={Math.ceil(data.length / 10)}
-              />
-              <YAxis hide />
-              <ReferenceLine
-                x={referenceData.label}
-                stroke="#3A8B0A"
-                strokeWidth={2}
-              />
-              <ReferenceDot
-                x={referenceData.label}
-                y={referenceData.height}
-                r={0}
-                fill="#3A8B0A"
-                isFront={true}
-                label={({ viewBox }) => {
-                  if (!viewBox) return null;
-                  const { x, y } = viewBox;
-                  if (!tooltipPos || tooltipPos.x !== x || tooltipPos.y !== y) {
-                    setTooltipPos({ x, y });
-                  }
-                  return null;
-                }}
-              />
-              <Area
-                type="monotone"
-                dataKey="height"
-                stroke="#3A8B0A"
-                fillOpacity={1}
-                fill="url(#colorHeight)"
-                name="Plant Height"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-          {/* Always visible Tooltip */}
-          {tooltipPos && (
-            <div
-              className="absolute z-50 bg-[#7BB34F] text-white text-xs p-2 rounded shadow-lg max-w-[300px]"
-              style={{
-                left: Math.max(10, tooltipPos.x - 100),
-                top: Math.max(10, tooltipPos.y - 50),
-              }}
-            >
-              <p className="font-bold sm:text-base">
-                {cropGrowthStage?.finalStage?.stage || "Unknown Stage"}
-              </p>
-              <p className="font-semibold mb-1">Key Activities:</p>
-              <ul className="list-disc list-inside space-y-1 max-h-[150px] overflow-auto">
-                {Array.isArray(cropGrowthStage?.keyActivity) ? (
-                  cropGrowthStage.keyActivity.map((act, idx) => (
-                    <li key={idx}>{act}</li>
-                  ))
-                ) : (
-                  <li>
-                    {cropGrowthStage?.keyActivity || "No activities available"}
-                  </li>
-                )}
-              </ul>
-              <p className="italic mt-1">
-                {interval === "Days"
-                  ? formatDayToWeekDay(daysSinceSowing)
-                  : `Week ${currentWeek}`}
-              </p>
+          {isLoading ? (
+            <PlantGrowthSkeleton />
+          ) : (
+            // *** HEIGHT REDUCTION APPLIED HERE ***
+            // Chart height reduced from 350px to 300px for less vertical space.
+            // Height is managed by the container div for responsiveness.
+            <div className="w-full h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={data}
+                  // Adjusted margins: reduced top padding significantly
+                  margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient
+                      id="colorHeight"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor={GRASS_COLOR_MAIN}
+                        stopOpacity={0.8}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor={GRASS_COLOR_MAIN}
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    stroke="rgba(255,255,255,0.2)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="label"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{
+                      fill: "#fff",
+                      fontSize: "11px",
+                      fontWeight: "bold",
+                    }} // Slightly smaller font
+                    interval={Math.ceil(data.length / 10)}
+                  />
+                  <YAxis hide />
+                  <ReferenceLine
+                    x={referenceData.label}
+                    stroke={GRASS_COLOR_MAIN}
+                    strokeWidth={2}
+                  />
+                  <ReferenceDot
+                    x={referenceData.label}
+                    y={referenceData.height}
+                    r={0}
+                    fill={GRASS_COLOR_MAIN}
+                    isFront={true}
+                    label={({ viewBox }) => {
+                      if (!viewBox) return null;
+                      const { x, y } = viewBox;
+                      if (
+                        !tooltipPos ||
+                        tooltipPos.x !== x ||
+                        tooltipPos.y !== y
+                      ) {
+                        setTooltipPos({ x, y });
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="height"
+                    stroke={GRASS_COLOR_MAIN}
+                    fillOpacity={1}
+                    fill="url(#colorHeight)"
+                    name="Plant Height"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+              {/* Always visible Tooltip */}
+              {tooltipPos && (
+                <div
+                  className="absolute z-50 bg-[#344E41] text-white text-xs p-2 rounded shadow-xl max-w-[280px]" // Slightly tighter tooltip box
+                  style={{
+                    left: Math.max(10, tooltipPos.x - 100),
+                    top: Math.max(10, tooltipPos.y - 50),
+                  }}
+                >
+                  <p className="font-bold sm:text-base">
+                    {cropGrowthStage?.finalStage?.stage || "Unknown Stage"}
+                  </p>
+                  <p className="font-semibold mb-1">Key Activities:</p>
+                  <ul className="list-disc list-inside space-y-1 max-h-[140px] overflow-auto">
+                    {" "}
+                    {/* Tighter list max height */}
+                    {Array.isArray(cropGrowthStage?.keyActivity) ? (
+                      cropGrowthStage.keyActivity.map((act, idx) => (
+                        <li key={idx}>{act}</li>
+                      ))
+                    ) : (
+                      <li>
+                        {cropGrowthStage?.keyActivity ||
+                          "No activities available"}
+                      </li>
+                    )}
+                  </ul>
+                  <p className="italic mt-1 text-gray-400">
+                    {interval === "Days"
+                      ? formatDayToWeekDay(daysSinceSowing)
+                      : `Week ${currentWeek}`}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
-      )}
-    </Card>
+      </div>
+    </div>
   );
 });
 

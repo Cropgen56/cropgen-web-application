@@ -1,22 +1,11 @@
 import React from "react";
-import {
-  DropIcon,
-  WaveIcon,
-  WindSpeedIcon,
-  Dots,
-} from "../../../assets/DashboardIcons";
-import {
-  Sun,
-  RainSun,
-  Cloudesun,
-  RainCloude,
-} from "../../../assets/image/weather/index.js";
 import { useSelector } from "react-redux";
+import { DropIcon, WaveIcon, WindSpeedIcon } from "../../../assets/DashboardIcons";
+import { Sun, RainSun, Cloudesun, RainCloude } from "../../../assets/image/weather/index.js";
 
 function ForeCast() {
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
 
-  // Derived state directly from Redux data
   const weatherData = {
     currentConditions: {
       temp: forecastData.current?.temp || null,
@@ -24,23 +13,22 @@ function ForeCast() {
       pressure: forecastData.current?.surface_pressure || null,
       windspeed: forecastData.current?.wind_speed || null,
       precipitation: forecastData.current?.precipitation || null,
+      cloudCover: forecastData.current?.cloud_cover || 0,
     },
     days: forecastData.forecast
       ? forecastData.forecast.time.slice(0, 16).map((date, index) => ({
-          datetime: date,
-          temp: forecastData.forecast.temp_mean[index] || null,
-          precipprob: forecastData.forecast.precipitation[index] || 0,
-          description: null,
-        }))
+        datetime: date,
+        temp: forecastData.forecast.temp_mean[index] || null,
+        precipprob: forecastData.forecast.precipitation[index] || 0,
+        cloudCover: forecastData.forecast.cloud_cover?.[index] || 0,
+      }))
       : [],
   };
 
   const getWeatherIcon = (temperature, cloudCover) => {
     if (!cloudCover && !temperature) return "🧊";
-    if (cloudCover >= 90)
-      return <RainCloude className="w-8 h-8 lg:w-11 lg:h-11" />;
-    if (cloudCover >= 70)
-      return <RainSun className="w-8 h-8 lg:w-11 lg:h-11" />;
+    if (cloudCover >= 90) return <RainCloude className="w-8 h-8 lg:w-11 lg:h-11" />;
+    if (cloudCover >= 70) return <RainSun className="w-8 h-8 lg:w-11 lg:h-11" />;
     if (cloudCover >= 40) return <Cloudesun />;
     if (cloudCover < 40) return <Sun />;
 
@@ -56,111 +44,80 @@ function ForeCast() {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="mt-4 mb-3 bg-white p-2.5 sm:p-4 rounded-lg shadow-md overflow-x-auto scrollbar-hide scroll-smooth no-scrollbar">
-      <div className="flex flex-col font-sans text-gray-800">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg sm:text-xl font-bold text-[#344E41] pl-2">
-            Forecast
-          </h3>
-          <Dots />
-        </div>
+    <div className="mt-8">
+      {/* Full-width Main Gradient Card */}
+      <div className="relative  bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-6 py-3">
 
-        <div className="flex flex-row overflow-hidden">
+        {/* Flex Container for Today's Weather + Scrollable Week */}
+        <div className="relative z-10 flex items-start w-full gap-6 flex-col lg:flex-row">
+
           {/* Today's Weather */}
-          <div className="flex flex-col gap-6 items-center justify-center border-r border-[#344E41] text-center w-1/3 lg:w-[25%] py-2 lg:py-4 lg:pr-2 pr-0.5 shrink-0">
-            <h2 className="text-xs md:text-sm text-gray-400">
-              Weather's Today
-            </h2>
-            <div className="flex flex-col sm:flex-row gap-2 items-center justify-center px-4 sm:px-5">
-              <span className="text-2xl sm:text-xl md:text-lg lg:text-2xl">
-                {getWeatherIcon(
-                  weather.temp,
-                  forecastData.current?.cloud_cover
-                )}
-              </span>
-              <div className="text-sm lg:text-xl font-bold text-[#344E41]">
-                {weather.temp}°C
-              </div>
-            </div>
-            <div className="flex flex-col gap-1 lg:gap-2 sm:flex-row justify-center w-full sm:w-auto text-gray-600">
-              <div className="flex items-center gap-0.5 lg:gap-2">
-                <WindSpeedIcon />
-                <span className="text-[10px] lg:text-sm whitespace-nowrap">
-                  {weather.windspeed ?? "--"} km/h
-                </span>
-              </div>
-              <div className="flex items-center gap-0.5 lg:gap-2">
-                <DropIcon />
-                <span className="text-[10px] lg:text-sm whitespace-nowrap">
-                  {weather.humidity ?? "--"}%
-                </span>
-              </div>
-              <div className="flex items-center gap-0.5 lg:gap-2">
-                <WaveIcon />
-                <span className="text-[10px] lg:text-sm whitespace-nowrap">
-                  {weather.pressure ?? "--"} hPa
-                </span>
+          <div className="flex flex-col items-center">
+            <div className="p-[2px] rounded-xl bg-gradient-to-br from-[#6B9080] to-[#3D5A40] shadow-xl">
+              <div className="bg-gradient-to-br from-[#6B9080] to-[#3D5A40] rounded-xl p-4 flex-shrink-0 w-[200px] flex flex-col items-center shadow-xl h-full">
+                <h3 className="text-sm lg:text-base font-semibold mb-2">Today's Weather</h3>
+                <div className="flex items-center justify-center mb-2 text-4xl text-white">
+                  {getWeatherIcon(weather.temp, weather.cloudCover)}
+                </div>
+                <div className="text-2xl lg:text-3xl font-bold mb-2">
+                  {weather.temp ?? "--"}°C
+                </div>
+                <div className="flex flex-col gap-2 text-xs lg:text-sm w-full">
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-1">
+                      <WindSpeedIcon /> {weather.windspeed ?? "--"} km/h
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <DropIcon /> {weather.humidity ?? "--"}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-1">
+                      <WaveIcon /> {weather.pressure ?? "--"} hPa
+                    </span>
+                    <span>{weather.precipitation ?? "--"} mm</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+          <div className="relative z-10 flex items-start w-full gap-6">
 
-          {/* Weekly Weather */}
-          <div className="flex flex-col items-start justify-center w-2/3 lg:w-[70%] pl-4 pt-2 overflow-x-auto no-scrollbar">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-xs md:text-sm text-gray-400">This Week</h2>
-              <div className="flex flex-row gap-3.5 lg:gap-2 w-max lg:w-full">
+            {/* Today's Weather (left) - unchanged */}
+
+            <div className="flex flex-col flex-1 w-full"> {/* removed mt-10 */}
+              {/* Weekly Weather Heading (left-aligned like cards) */}
+              <h3 className="text-[22px] font-bold text-gray-200 mb-2 pl-2">
+                Weekly Weather
+              </h3>
+
+              {/* Scrollable Forecast Cards */}
+              <div className="flex overflow-x-auto no-scrollbar gap-4 py-2 w-full">
                 {weekForecast.map((day, index) => {
-                  const icon = getWeatherIcon(
-                    day.temp,
-                    forecastData.forecast?.cloud_cover?.[index] ||
-                      forecastData.current?.cloud_cover
-                  );
-                  const temperature = day.temp;
+                  const icon = getWeatherIcon(day.temp, day.cloudCover);
                   const isToday = day.datetime === today;
 
                   return (
                     <div
                       key={index}
-                      className={`flex flex-col items-center gap-1 text-center w-24 lg:w-32 p-3 lg:p-3 rounded-lg shrink-0
-                            ${isToday ? "bg-[#5A7C6B] text-white" : ""}`}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl min-w-[130px] h-[150px] transition-all
+              ${isToday ? "bg-[#344E41] text-white" : "bg-white/20 text-white"}
+              flex-shrink-0`}
                     >
-                      <div
-                        className={`font-semibold mb-1 text-xs lg:text-sm ${
-                          isToday ? "text-white" : "text-black"
-                        }`}
-                      >
-                        {new Date(day.datetime)
-                          .toLocaleDateString("en-US", {
-                            weekday: "short",
-                          })
-                          .toUpperCase()}
-                      </div>
-                      <div className="flex items-center justify-center gap-1 w-full">
-                        <span className="text-base sm:text-lg md:text-[12px] lg:text-xl">
-                          {icon}
-                        </span>
-                        <span
-                          className={`ml-1 text-xs lg:text-base font-bold ${
-                            isToday ? "text-white" : "text-[#344E41]"
-                          }`}
-                        >
-                          {temperature}°C
-                        </span>
-                      </div>
-                      <div
-                        className={`mt-2 text-xs lg:text-sm font-bold ${
-                          isToday ? "text-white" : "text-[#5A7C6B]"
-                        }`}
-                      >
-                        {day.precipprob ?? 0}%
-                      </div>
+                      <span className="text-sm font-semibold mb-1">
+                        {new Date(day.datetime).toLocaleDateString("en-US", { weekday: "short" })}
+                      </span>
+                      <span className="text-3xl mb-1">{icon}</span>
+                      <span className="text-lg font-bold">{day.temp ?? "--"}°C</span>
+                      <span className="text-sm mt-1">{day.precipprob ?? 0}%</span>
                     </div>
                   );
                 })}
               </div>
             </div>
+
           </div>
+
         </div>
       </div>
     </div>
