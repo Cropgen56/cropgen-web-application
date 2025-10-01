@@ -196,9 +196,6 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
     let suggestionText = "Awaiting growth stage data...";
     if (cropGrowthStage?.finalStage?.stage && cropGrowthStage?.keyActivity) {
       const stage = cropGrowthStage.finalStage.stage;
-      // const activity = Array.isArray(cropGrowthStage.keyActivity)
-      //   ? cropGrowthStage.keyActivity.join(", ")
-      //   : cropGrowthStage.keyActivity;
       suggestionText = `Based on BBCH stage ${stage}.`;
     } else if (cropGrowthStage?.finalStage?.stage) {
       suggestionText = `Based on BBCH stage ${cropGrowthStage.finalStage.stage}, monitor crop development.`;
@@ -271,11 +268,10 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
 
   if (!isSowingDateValid) {
     return (
-      // Reduced padding/margin on the outer container for consistency
       <div className="w-full flex justify-center mt-6">
-        <div className="relative w-full max-w-6xl bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white p-4 md:p-5">
-          <div className="w-full  flex items-center justify-center bg-white/10 rounded-lg p-4">
-            <span className="text-white/80 text-sm">
+        <div className="relative w-full max-w-6xl rounded-2xl shadow-lg text-white p-4 md:p-5">
+          <div className="w-full flex items-center justify-center bg-gray-100 rounded-lg p-4">
+            <span className="text-gray-800 text-sm">
               Invalid sowing date. Please provide a valid date.
             </span>
           </div>
@@ -285,32 +281,23 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
   }
 
   return (
-    <div className="w-full flex  mt-6">
-      {" "}
-      {/* Reduced top margin from 8 to 6 */}
-      {/* Outer Container: Reduced padding slightly, maintaining dark gradient */}
-      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden p-3 md:p-5">
-        <div className="relative z-10 w-full bg-white/10 backdrop-blur-sm rounded-xl p-3 ">
-          {" "}
-          {/* Inner panel slightly tighter padding */}
+    <div className="w-full flex mt-6">
+      <div className="relative w-full rounded-2xl shadow-lg flex flex-col overflow-hidden p-3 md:p-5">
+        <div className="relative z-10 w-full bg-white backdrop-blur-sm rounded-xl p-3">
           <div className="flex justify-between items-start mb-2">
-            {" "}
-            {/* Reduced mb gap */}
             <div className="flex flex-col gap-0.5">
-              {" "}
-              {/* Reduced gap between title/subtitle */}
-              <h2 className="text-xl font-semibold text-white m-0">
+              <h2 className="text-xl font-semibold text-[#344E41] m-0">
                 Plant Growth Activity
               </h2>
-              <div className="text-sm font-bold text-white mt-3">
+              <div className="text-sm font-bold text-[#344E41] mt-3">
                 {cropName || "Unknown Crop"}
               </div>
-              <div className="text-sm text-white">{suggestion}</div>
+              <div className="text-sm text-gray-700">{suggestion}</div>
             </div>
             <select
               value={interval}
               onChange={(e) => setInterval(e.target.value)}
-              className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-white/30 rounded-full bg-white/20 text-white focus:outline-none cursor-pointer"
+              className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer"
             >
               <option value="Days" className="text-gray-800">
                 Days
@@ -323,14 +310,10 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
           {isLoading ? (
             <PlantGrowthSkeleton />
           ) : (
-            // *** HEIGHT REDUCTION APPLIED HERE ***
-            // Chart height reduced from 350px to 300px for less vertical space.
-            // Height is managed by the container div for responsiveness.
-            <div className="w-full h-[300px]">
+            <div className="w-full h-[300px] bg-gray-100 rounded-2xl">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={data}
-                  // Adjusted margins: reduced top padding significantly
                   margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
                 >
                   <defs>
@@ -354,7 +337,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid
-                    stroke="rgba(255,255,255,0.2)"
+                    stroke="rgba(0, 0, 0, 0.1)"
                     vertical={false}
                   />
                   <XAxis
@@ -362,10 +345,10 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                     axisLine={false}
                     tickLine={false}
                     tick={{
-                      fill: "#fff",
+                      fill: "#333",
                       fontSize: "11px",
                       fontWeight: "bold",
-                    }} // Slightly smaller font
+                    }}
                     interval={Math.ceil(data.length / 10)}
                   />
                   <YAxis hide />
@@ -403,10 +386,9 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                   />
                 </AreaChart>
               </ResponsiveContainer>
-              {/* Always visible Tooltip */}
               {tooltipPos && (
                 <div
-                  className="absolute z-50 bg-[#344E41] text-white text-xs p-2 rounded shadow-xl max-w-[280px]" // Slightly tighter tooltip box
+                  className="absolute z-50 bg-[#344E41] text-white text-xs p-2 rounded shadow-xl max-w-[280px]"
                   style={{
                     left: Math.max(10, tooltipPos.x - 100),
                     top: Math.max(10, tooltipPos.y - 50),
@@ -417,8 +399,6 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                   </p>
                   <p className="font-semibold mb-1">Key Activities:</p>
                   <ul className="list-disc list-inside space-y-1 max-h-[140px] overflow-auto">
-                    {" "}
-                    {/* Tighter list max height */}
                     {Array.isArray(cropGrowthStage?.keyActivity) ? (
                       cropGrowthStage.keyActivity.map((act, idx) => (
                         <li key={idx}>{act}</li>

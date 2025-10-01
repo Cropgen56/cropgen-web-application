@@ -2,7 +2,7 @@ import React from "react";
 import ReactECharts from "echarts-for-react";
 import { useSelector } from "react-redux";
 
-const CLOUD_COLOR_MAIN = "#87CEEB"; // Sky Blue
+const CLOUD_COLOR_MAIN = "#87CEEB"; 
 
 const EvapotranspirationChart = () => {
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
@@ -10,7 +10,6 @@ const EvapotranspirationChart = () => {
   const dateData = forecastData.forecast?.time || [];
   const evapotranspirationData = forecastData.forecast?.evapotranspiration || [];
 
-  // Calculate max and avg evapotranspiration
   const maxEt =
     evapotranspirationData.length > 0
       ? Math.max(...evapotranspirationData).toFixed(2)
@@ -45,9 +44,9 @@ const EvapotranspirationChart = () => {
         rotate: 45,
         interval: 0,
         fontSize: 10,
-        color: "#fff",
+        color: "#333",
       },
-      axisLine: { lineStyle: { color: "rgba(255,255,255,0.5)" } },
+      axisLine: { lineStyle: { color: "rgba(0, 0, 0, 0.1)" } },
     },
     yAxis: {
       type: "value",
@@ -59,9 +58,9 @@ const EvapotranspirationChart = () => {
         fontWeight: "bold",
         align: "left",
         padding: [0, 0, 0, 1],
-        color: "#fff",
+        color: "#333",
       },
-      splitLine: { lineStyle: { color: "rgba(255,255,255,0.2)" } },
+      splitLine: { lineStyle: { color: "rgba(0, 0, 0, 0.1)" } },
     },
     series: [
       {
@@ -79,11 +78,11 @@ const EvapotranspirationChart = () => {
 
   return (
     <div className="w-full flex mt-4">
-      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+      <div className="relative w-full bg-gray-50 rounded-2xl shadow-lg text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
         {/* Header */}
         <div className="flex justify-between items-center mb-2">
-          <h2 className="text-white text-2xl font-bold">Evapotranspiration</h2>
-          <div className="flex items-center gap-1 px-1 text-white font-bold text-md">
+          <h2 className="text-gray-900 text-2xl font-bold">Evapotranspiration</h2>
+          <div className="flex items-center gap-1 px-1 text-gray-900 font-bold text-md">
             <svg
               width="10"
               height="10"
@@ -98,28 +97,28 @@ const EvapotranspirationChart = () => {
           </div>
         </div>
 
-        {/* Body layout - Tablet: vertical stack, Desktop: horizontal */}
+  
         <div className="flex flex-col lg:flex-row w-full mt-2">
-          {/* Stats section - Tablet: horizontal stats, Desktop: vertical stats */}
+
           <div className="flex sm:flex-row md:flex-col w-full lg:w-[140px] gap-2 h-auto lg:h-full mb-3 lg:mb-0">
-            <div className="flex-1 lg:flex-none bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center flex flex-col justify-center lg:h-[50%]">
-              <p className="text-gray-300 text-[10px] m-0">ET High</p>
-              <h2 className="text-white text-base md:text-lg font-bold">
+            <div className="flex-1 lg:flex-none bg-white rounded-lg p-2 text-center flex flex-col justify-center lg:h-[50%]">
+              <p className="text-gray-500 text-[10px] m-0">ET High</p>
+              <h2 className="text-gray-900 text-base md:text-lg font-bold">
                 {maxEt} mm
               </h2>
-              <p className="text-gray-400 text-[10px] m-0">{maxEtDate || "N/A"}</p>
+              <p className="text-gray-500 text-[10px] m-0">{maxEtDate || "N/A"}</p>
             </div>
-            <div className="flex-1 lg:flex-none bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center flex flex-col justify-center lg:h-[50%]">
-              <p className="text-gray-300 text-[10px] m-0">ET Average</p>
-              <h2 className="text-white text-base md:text-lg font-bold">
+            <div className="flex-1 lg:flex-none bg-white rounded-lg p-2 text-center flex flex-col justify-center lg:h-[50%]">
+              <p className="text-gray-500 text-[10px] m-0">ET Average</p>
+              <h2 className="text-gray-900 text-base md:text-lg font-bold">
                 {avgEt} mm
               </h2>
-              <p className="text-gray-400 text-[10px] m-0">16-day avg</p>
+              <p className="text-gray-500 text-[10px] m-0">16-day avg</p>
             </div>
           </div>
 
           {/* Chart */}
-          <div className="flex-1 lg:ml-3 bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-1">
+          <div className="flex-1 lg:ml-3 bg-white rounded-xl p-1">
             <ReactECharts
               option={option}
               className="w-full"
@@ -133,9 +132,3 @@ const EvapotranspirationChart = () => {
 };
 
 export default EvapotranspirationChart;
-
-
-
-
-
-
