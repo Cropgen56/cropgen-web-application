@@ -12,10 +12,10 @@ import "../styles/dashboard.css";
 import NdviGraph from "../components/dashboard/satellite-index/vegitation-index/VegetationIndex";
 import WaterIndex from "../components/dashboard/satellite-index/water-index/WaterIndex";
 import logo from "../assets/image/login/logo.svg";
-import tut from "../assets/image/login/video.mp4"
-import forcast from "../assets/image/login/doughnut.png"
-import ndvi from "../assets/image/login/index-image.png"
-import report from "../assets/image/login/report-cards.png"
+import tut from "../assets/image/login/video.mp4";
+import forcast from "../assets/image/login/doughnut.png";
+import ndvi from "../assets/image/login/index-image.png";
+import report from "../assets/image/login/report-cards.png";
 import {
   fetchAOIs,
   createAOI,
@@ -46,16 +46,15 @@ const Dashboard = () => {
   // const fields = useSelector((state) => state?.farmfield?.fields) || [];
   // const aois = useSelector((state) => state?.weather?.aois) || [];
   const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
-const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
+  const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
 
-const aoisRaw = useSelector((state) => state?.weather?.aois);
-const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
+  const aoisRaw = useSelector((state) => state?.weather?.aois);
+  const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
 
   const forecastData = useSelector((state) => state.weather.forecastData) || [];
   const userId = user?.id;
 
   const [delayPassed, setDelayPassed] = useState(false);
-
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -64,7 +63,6 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
 
     return () => clearTimeout(timer);
   }, []);
-
 
   const { forecast, units } = forecastData;
 
@@ -80,7 +78,7 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
   });
 
   const [prevFieldsLength, setPrevFieldsLength] = useState(0);
-  const [ , setShowWelcome] = useState(false);
+  const [, setShowWelcome] = useState(false);
   const navigate = useNavigate();
 
   // const listVariants = {
@@ -91,7 +89,6 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
   //     transition: { delay: i * 1, duration: 0.6, ease: "easeOut" }, // 1s gap
   //   }),
   // };
-
 
   useEffect(() => {
     if (
@@ -241,12 +238,8 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
   //   [selectedFieldDetails]
   // );
 
-
-
   return (
     <div className="dashboard min-h-screen w-full overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden float-end p-1.5 lg:p-3">
-
-
       {/* Main content */}
       <MapView
         markers={markers}
@@ -255,26 +248,49 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
         setIsAddingMarkers={setIsAddingMarkers}
         selectedField={selectedField}
         setSelectedField={handleFieldSelection}
-        selectedFieldsDetials={selectedFieldDetails ? [selectedFieldDetails] : []}
+        selectedFieldsDetials={
+          selectedFieldDetails ? [selectedFieldDetails] : []
+        }
         fields={fields}
       />
 
       {fields.length > 0 && (
         <>
-          <CropHealth selectedFieldsDetials={selectedFieldDetails ? [selectedFieldDetails] : []} fields={fields} />
+          <CropHealth
+            selectedFieldsDetials={
+              selectedFieldDetails ? [selectedFieldDetails] : []
+            }
+            fields={fields}
+          />
           <ForeCast forecastData={forecastData} />
-          <NdviGraph selectedFieldsDetials={selectedFieldDetails ? [selectedFieldDetails] : []} />
-          <WaterIndex selectedFieldsDetials={selectedFieldDetails ? [selectedFieldDetails] : []} />
+          <NdviGraph
+            selectedFieldsDetials={
+              selectedFieldDetails ? [selectedFieldDetails] : []
+            }
+          />
+          <WaterIndex
+            selectedFieldsDetials={
+              selectedFieldDetails ? [selectedFieldDetails] : []
+            }
+          />
           <EvapotranspirationDashboard forecast={forecast} units={units} />
           <Insights />
-          <CropAdvisory selectedFieldsDetials={selectedFieldDetails ? [selectedFieldDetails] : []} />
-          <PlantGrowthActivity selectedFieldsDetials={selectedFieldDetails ? [selectedFieldDetails] : []} />
+          <CropAdvisory
+            selectedFieldsDetials={
+              selectedFieldDetails ? [selectedFieldDetails] : []
+            }
+          />
+          <PlantGrowthActivity
+            selectedFieldsDetials={
+              selectedFieldDetails ? [selectedFieldDetails] : []
+            }
+          />
         </>
       )}
 
       {/* Welcome Overlay */}
       {/* Welcome Overlay */}
-      < AnimatePresence mode="wait">
+      <AnimatePresence mode="wait">
         {delayPassed && fields.length === 0 && !showAddFieldInfo && (
           <motion.div
             key="welcome"
@@ -305,7 +321,11 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                   transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
                 >
                   New to
-                  <img src={logo} alt="CropGen" className="w-6 sm:w-8 lg:w-10 h-auto inline-block" />
+                  <img
+                    src={logo}
+                    alt="CropGen"
+                    className="w-6 sm:w-8 lg:w-10 h-auto inline-block"
+                  />
                   CropGen?
                 </motion.h2>
               </div>
@@ -323,7 +343,8 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                     <span className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#5a7c6b] via-[#4caf50] to-[#a8e6a1] bg-clip-text text-transparent">
                       Smart Farming
                     </span>{" "}
-                    journey with us. Add a field and start monitoring your farm today.
+                    journey with us. Add a field and start monitoring your farm
+                    today.
                   </p>
                 </motion.h4>
 
@@ -334,7 +355,10 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                   transition={{ duration: 0.6, ease: "backOut", delay: 0.4 }}
                 >
                   <motion.button
-                    onClick={() => setShowAddFieldInfo(true)}
+                    onClick={() => {
+                      setShowAddFieldInfo(true);
+                      navigate("/addfield");
+                    }}
                     className="px-4 sm:px-5 md:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 rounded-xl 
                          text-sm sm:text-base md:text-lg text-white font-semibold shadow-lg"
                     whileHover={{ scale: 1.1 }}
@@ -351,9 +375,17 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                     stroke="white"
                     className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mt-3 sm:mt-4 mx-auto"
                     animate={{ y: [0, 12, 0] }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </motion.svg>
                 </motion.div>
               </div>
@@ -371,7 +403,11 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                 alt="Report"
                 className="relative z-10 w-0 sm:w-0  lg:w-[520px] opacity-95 mt-6 sm:mt-12 lg:mt-20"
                 animate={{ y: [0, -12, 0] }}
-                transition={{ duration: 2.1, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 2.1,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
               <motion.img
                 src={forcast}
@@ -379,7 +415,11 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                 className="absolute -top-6 sm:-top-8 lg:-top-10 left-[40px] sm:left-[50px] lg:left-[60px] 
                      w-28 sm:w-36 md:w-[160px] lg:w-[200px] opacity-90 mt-6 lg:mt-10"
                 animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
               <motion.img
                 src={ndvi}
@@ -387,7 +427,11 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                 className="absolute -top-6 sm:-top-8 lg:-top-10 right-[40px] sm:right-[50px] lg:right-[60px] 
                      w-28 sm:w-36 md:w-[160px] lg:w-[200px] opacity-90 mt-6 lg:mt-10"
                 animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 2.3, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 2.3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
             </motion.div>
           </motion.div>
@@ -403,8 +447,6 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
             exit={{ opacity: 0, y: "-100%" }}
             transition={{ duration: 0.7, ease: "easeInOut" }}
           >
-
-
             {/* Skip Preview Button */}
             <motion.button
               onClick={() => {
@@ -482,7 +524,7 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                 "Open the Add Field section from your dashboard and navigate to the map view.",
                 "Locate your farm on the map and use the 'Start Adding Markers' tool to carefully mark your field boundaries.",
                 "Fill in all the necessary details such as crop name, sowing date, and other required information.",
-                "Finally, click on 'Add Field' to save your field and start monitoring your crops in real-time."
+                "Finally, click on 'Add Field' to save your field and start monitoring your crops in real-time.",
               ].map((step, i, arr) => (
                 <motion.div
                   key={i}
@@ -501,23 +543,37 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                     className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 mt-[2px] flex-shrink-0"
                     style={{ transform: "rotate(-90deg)" }}
                     animate={{ x: [0, 6, 0] }}
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </motion.svg>
 
                   {/* Text + Button only for last step */}
                   {i === arr.length - 1 ? (
                     <div className="flex justify-between items-start w-full ">
-                      <p className="text-sm sm:text-xl font-bold text-green-600 leading-snug break-words  bg-gradient-to-r from-[#5a7c6b] via-[#4caf50] to-[#a8e6a1] 
-                 bg-clip-text text-transparent   flex-1">
+                      <p
+                        className="text-sm sm:text-xl font-bold text-green-600 leading-snug break-words  bg-gradient-to-r from-[#5a7c6b] via-[#4caf50] to-[#a8e6a1] 
+                 bg-clip-text text-transparent   flex-1"
+                      >
                         {step}
                       </p>
                       <motion.div
                         className="relative flex flex-col items-center lg:items-start"
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.6, ease: "backOut", delay: 0.4 }}
+                        transition={{
+                          duration: 0.6,
+                          ease: "backOut",
+                          delay: 0.4,
+                        }}
                       >
                         <motion.button
                           onClick={() => {
@@ -545,9 +601,17 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                           stroke="white"
                           className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mt-3 sm:mt-4 mx-auto"
                           animate={{ y: [0, 12, 0] }}
-                          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                          transition={{
+                            duration: 1.2,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                          }}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19 9l-7 7-7-7"
+                          />
                         </motion.svg>
                       </motion.div>
                     </div>
@@ -557,20 +621,10 @@ const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
                 </motion.div>
               ))}
             </div>
-
-
-
-
           </motion.div>
         )}
-
-
       </AnimatePresence>
-
-
-
     </div>
-
   );
 };
 

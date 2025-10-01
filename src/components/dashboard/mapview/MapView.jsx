@@ -201,7 +201,7 @@ const FarmMap = ({
             {/* Masking Polygon to hide white patch */}
             <Polygon
               pathOptions={{
-                fillColor: "#e9ecef", // Match base map background (light gray)
+                fillColor: "#e9ecef",
                 fillOpacity: 1,
                 color: "transparent",
                 weight: 0,
@@ -213,8 +213,8 @@ const FarmMap = ({
               pathOptions={{
                 fillColor: "transparent",
                 fillOpacity: 0,
-                color: "#FFD700",
-                weight: 2,
+                color: "green",
+                weight: 4,
               }}
               positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
             />
@@ -225,6 +225,7 @@ const FarmMap = ({
                 bounds={polygonBounds}
                 opacity={1}
                 zIndex={400}
+                className="leaflet-image-overlay-custom"
               />
             )}
           </>
@@ -238,7 +239,7 @@ const FarmMap = ({
       </MapContainer>
 
       <div className="absolute top-2 right-2 flex flex-row gap-3 items-end z-[1000]">
-        {fields.length > 0 && (
+        {fields?.length > 0 && (
           <div className="relative w-full min-w-[150px]">
             <Listbox
               value={selectedField}
@@ -275,12 +276,15 @@ const FarmMap = ({
 
         <div className="legend-dropdown-wrapper relative w-max">
           <strong
-            onClick={() => setShowLegend(!showLegend)}
+            onClick={() => {
+              setShowLegend(!showLegend);
+              console.log(indexData?.legend);
+            }}
             className="flex items-center whitespace-nowrap bg-[#344e41] outline-none border border-[#344e41] rounded z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer"
           >
             🗺️ Legend
           </strong>
-          {showLegend && indexData?.legend && indexData?.area_summary_ha && (
+          {showLegend && indexData?.legend && (
             <div className="absolute top-12 right-0 bg-[#344e41] text-white rounded-lg shadow-lg max-w-[300px] max-h-[300px] overflow-y-auto z-[3000] animate-slideIn no-scrollbar">
               <ul className="divide-y divide-white/10 list-none p-2 no-scrollbar">
                 {indexData.legend.map((item) => (
@@ -296,9 +300,8 @@ const FarmMap = ({
                       {item.label}
                     </span>
                     <span className="text-gray-200 font-normal whitespace-nowrap">
-                      {indexData.area_summary_ha[item.label]?.toFixed(2) ||
-                        "0.00"}{" "}
-                      ha
+                      {item.hectares?.toFixed(2) || "0.00"} ha (
+                      {item.percent?.toFixed(2) || "0.00"}%)
                     </span>
                   </li>
                 ))}

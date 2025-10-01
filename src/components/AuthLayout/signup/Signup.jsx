@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { sendotp, verifyuserotp, completeProfile } from "../../../redux/slices/authSlice";
+import {
+  sendotp,
+  verifyuserotp,
+  completeProfile,
+} from "../../../redux/slices/authSlice";
 import SocialButtons from "../shared/socialbuttons/SocialButton";
 import { useNavigate } from "react-router-dom";
-import { message, Spin } from "antd";
+import { message } from "antd";
 
 const Signup = () => {
   const dispatch = useDispatch();
@@ -15,13 +19,12 @@ const Signup = () => {
 
   const [otpVerified, setOtpVerified] = useState(false);
   const [orgCodeError, setOrgCodeError] = useState("");
-  const [orgCodeTouched, setOrgCodeTouched] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
     otp: "",
     terms: false,
-    organizationCode: ""
+    organizationCode: "",
   });
 
   const [otpInputs, setOtpInputs] = useState(Array(6).fill(""));
@@ -65,8 +68,8 @@ const Signup = () => {
       return message.error("Enter a valid 6-digit OTP");
 
     setVerifyingOtp(true);
-    dispatch(verifyuserotp({ email: formData.email, otp: formData.otp }))
-      .then((res) => {
+    dispatch(verifyuserotp({ email: formData.email, otp: formData.otp })).then(
+      (res) => {
         setVerifyingOtp(false);
         if (res.meta.requestStatus === "fulfilled") {
           setOtpVerified(true);
@@ -78,9 +81,9 @@ const Signup = () => {
         } else {
           message.error(res.payload?.message || "OTP verification failed");
         }
-      });
+      }
+    );
   };
-
 
   const handleCompleteProfile = () => {
     if (!formData.terms) {
@@ -101,13 +104,10 @@ const Signup = () => {
         message.success("Profile Completed!");
         navigate("/cropgen-analytics");
       } else {
-        console.log(res.payload?.message)
         setOrgCodeError(res.payload?.message || "Profile completion failed");
       }
     });
   };
-
-
 
   const handleOrgCodeChange = (e) => {
     setFormData({ ...formData, organizationCode: e.target.value });
@@ -153,7 +153,9 @@ const Signup = () => {
                   name="email"
                   placeholder="example@gmail.com*"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   className="w-full md:flex-[0.8] rounded-md px-3 py-2 text-sm bg-white/80 
                  border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
                 />
@@ -172,7 +174,6 @@ const Signup = () => {
                 </button>
               </div>
             </div>
-
 
             <div className="relative mt-4">
               <label className="text-xs md:text-sm font-medium text-gray-800">
@@ -208,10 +209,20 @@ const Signup = () => {
 
               {otpVerified && (
                 <div className="flex items-center gap-2 mt-2 text-green-600">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
                   </svg>
-                  <span className="text-xs md:text-sm">OTP verified successfully</span>
+                  <span className="text-xs md:text-sm">
+                    OTP verified successfully
+                  </span>
                 </div>
               )}
             </div>
@@ -229,14 +240,23 @@ const Signup = () => {
                 placeholder="Enter Code Eg: CropGen01234"
                 value={formData.organizationCode || ""}
                 onChange={handleOrgCodeChange}
-                className={`mt-1 w-full rounded-md px-3 py-2 text-sm bg-white/80 border ${orgCodeError ? "border-red-500" : "border-gray-300"
-                  } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
+                className={`mt-1 w-full rounded-md px-3 py-2 text-sm bg-white/80 border ${
+                  orgCodeError ? "border-red-500" : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
               />
 
               {orgCodeError && (
                 <div className="flex items-center gap-2 mt-1 text-red-600">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   <span className="text-xs">{orgCodeError}</span>
                 </div>

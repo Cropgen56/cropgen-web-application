@@ -52,7 +52,7 @@ const SatelliteIndexList = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState("NDVI");
   const dispatch = useDispatch();
-  const { field = [], sowingDate = null } = selectedFieldsDetials[0] || {};
+  const { sowingDate = null } = selectedFieldsDetials[0] || {};
   const scrollContainerRef = useRef(null);
 
   // Validate that the geometry is a closed polygon
