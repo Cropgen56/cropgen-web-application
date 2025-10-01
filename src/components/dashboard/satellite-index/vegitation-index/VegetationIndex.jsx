@@ -152,74 +152,66 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
   return (
     <div className="w-full flex justify-center mt-4">
-      {/* Reduced padding overall */}
-      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-3">
+      <div className="relative w-full bg-white rounded-2xl shadow-lg text-black flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-3">
         
-        {/* Index Selector */}
         <div className="absolute top-3 right-3 z-50">
           <select
             value={index}
             onChange={handleIndexChange}
-            className="border-2 border-white/50 bg-white/20 backdrop-blur-sm rounded-[25px] px-3 py-1 text-white text-sm focus:outline-none"
+            className="border-2 border-gray-300 bg-white/90 rounded-[25px] px-3 py-1 text-black text-sm focus:outline-none focus:border-green-500"
           >
-            <option value="NDVI" className="text-gray-700">NDVI</option>
-            <option value="EVI" className="text-gray-700">EVI</option>
-            <option value="SAVI" className="text-gray-700">SAVI</option>
-            <option value="SUCROSE" className="text-gray-700">SUCROSE</option>
+            <option value="NDVI">NDVI</option>
+            <option value="EVI">EVI</option>
+            <option value="SAVI">SAVI</option>
+            <option value="SUCROSE">SUCROSE</option>
           </select>
         </div>
 
-        {/* Main Heading */}
         <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">Vegetation Index</h2>
 
-        {/* Content Container: *** REMOVED lg:pl-12 *** to align stat block to the left edge */}
         <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
           
-          {/* Left Side (Stat Block) */}
           <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-white/20 h-full w-full justify-around">
-              <h2 className="text-xl font-bold">
+            <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
+              <h2 className="text-xl font-bold text-green-600">
                 {index}
               </h2>
-              <button className="bg-white/15 text-[#86d72f] px-3 py-1 text-sm font-semibold rounded mt-1 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all">
+              <button className="bg-green-100 text-green-600 px-3 py-1 text-sm font-semibold rounded mt-1 border border-green-200 hover:bg-green-200 transition-all">
                 +0.15
               </button>
-              <p className="my-1 text-white/90 text-xs lg:text-sm text-center">
+              <p className="my-1 text-gray-600 text-sm text-center">
                 Last Update{" "}
                 {summaryData.timestamp
                   ? `${getDaysAgo(summaryData.timestamp)} days Ago`
                   : "N/A"}
               </p>
-              <div className="border-2 border-white/20 bg-white/5 backdrop-blur-sm p-2 rounded text-white text-sm w-full">
+              <div className="border border-gray-200 bg-white/90 p-2 rounded text-black text-sm w-full">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="flex-1 text-xs text-white/90">{index} values help in mapping vegetation and detecting cover changes over time.</span>
-                  <span className="bg-white/15 backdrop-blur-sm rounded-full p-1 border border-white/20">
-                    <Info size={16} strokeWidth={1.5} color="#86D72F" />
+                  <span className="flex-1 text-xs text-gray-500">{index} values help in mapping vegetation and detecting cover changes over time.</span>
+                  <span className="bg-white/90 rounded-full p-1 border border-gray-200">
+                    <Info size={16} strokeWidth={1.5} color="#22c55e" />
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Graph Section */}
           <div
             ref={scrollRef}
-            className=" lg:w-3/4 overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-2 flex-grow" >
+            className="lg:w-3/4 overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 flex-grow" >
             {isLoading ? (
-              <div className="text-center text-white" style={{ minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <LoadingSpinner size={48} color="#86D72F" />
+              <div className="text-center text-green-600" style={{ minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <LoadingSpinner size={48} color="#22c55e" />
                 <strong>Loading Vegetation Index...</strong>
               </div>
             ) : !hasData ? (
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mx-auto mt-2 max-w-md">
+              <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-1">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">
                     No Data Available
                   </h3>
-                  <p className="text-sm text-white/80">
-                    We couldn't find any data for the selected field and time
-                    range. Please verify the field selection or adjust the date
-                    range to ensure data availability.
+                  <p className="text-sm text-gray-500">
+                    We couldn't find any data for the selected field and time range. Please verify the field selection or adjust the date range to ensure data availability.
                   </p>
                 </div>
               </div>
@@ -230,16 +222,16 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
                     data={chartData}
                     margin={{ top: 5, right: 15, left: 15, bottom: 5 }} 
                   >
-                    <CartesianGrid stroke="rgba(255,255,255,0.2)" />
+                    <CartesianGrid stroke="rgba(0,0,0,0.1)" />
                     <XAxis
                       dataKey="date"
-                      tick={{ fontSize: 12, fill: '#fff' }}
+                      tick={{ fontSize: 12, fill: '#333' }}
                       interval={chartConfig.interval}
                       type="category"
                     />
                     <YAxis
                       domain={yAxisConfig.domain}
-                      tick={{ fontSize: 12, fill: '#fff' }}
+                      tick={{ fontSize: 12, fill: '#333' }}
                       ticks={yAxisConfig.ticks}
                       tickFormatter={tickFormatter}
                       type="number"
@@ -247,7 +239,7 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
                     <Tooltip
                       formatter={tooltipFormatter}
                       labelFormatter={labelFormatter}
-                      contentStyle={{ backgroundColor: '#344E41', border: 'none', borderRadius: '8px' }}
+                      contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px' }}
                     />
                     <Legend
                       layout="horizontal"
@@ -257,16 +249,16 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
                         paddingBottom: "8px",
                         paddingLeft: "40px",
                         fontWeight: "bold",
-                        color: "#fff"
+                        color: "#333"
                       }}
                     />
                     <Line
                       type="monotone"
                       dataKey={index}
-                      stroke="#86D72F"
+                      stroke="#22c55e"
                       strokeWidth={3}
-                      dot={{ r: 3, fill: '#86D72F' }}
-                      activeDot={{ r: 5, fill: '#7CC520' }}
+                      dot={{ r: 3, fill: '#22c55e' }}
+                      activeDot={{ r: 5, fill: '#16a34a' }}
                       connectNulls={false}
                     />
                   </LineChart>

@@ -107,9 +107,9 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
           day: item.day,
           activities: {
             "Disease/Pest Control": `Disease Pest - ${item.disease_pest.replace(
-              /[[\]]/g,
+              /[[```]/g,
               ""
-            )}\nSpray - ${item.spray.replace(/[[\]]/g, "")}`,
+            )}\nSpray - ${item.spray.replace(/[[```]/g, "")}`,
             Fertigation: item.fertigation,
             Watering: item.water,
             Monitoring: item.monitoring,
@@ -163,11 +163,11 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
     }
 
     return (
-      <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-white/10 text-black border border-gray-300 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto scrollbar-hide">
-        <h3 className="text-sm lg:text-base font-bold text-[#344e41] mb-1 md:mb-0.5">
+      <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-white border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto scrollbar-hide">
+        <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-1 md:mb-0.5">
           {category}
         </h3>
-        <div className="text-xs lg:text-sm text-white font-medium leading-tight">
+        <div className="text-xs lg:text-sm text-gray-700 font-medium leading-tight">
           {content}
         </div>
       </div>
@@ -175,15 +175,15 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
   });
 
   return (
-    <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow border border-gray-300 bg-gradient-to-br from-[#6B9080] to-[#3D5A40] md:h-auto lg:h-auto p-3 overflow-hidden ">
+    <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-white">Crop Advisory</h2>
+        <h2 className="text-xl font-bold text-gray-900">Crop Advisory</h2>
 
         <select
           value={selectedDay}
           onChange={(e) => setSelectedDay(e.target.value)}
           aria-label="Select advisory day"
-          className="border-2 border-white/50 bg-white/20 backdrop-blur-sm rounded-[25px] px-3 py-1 text-white text-sm focus:outline-none"
+          className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {advisoryData.length > 0 ? (
             advisoryData.map((item) => (
@@ -214,6 +214,7 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
         </div>
       ) : (
         <CropAdvisorySkeleton />
+        
       )}
     </div>
   );

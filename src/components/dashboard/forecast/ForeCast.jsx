@@ -45,24 +45,24 @@ function ForeCast() {
 
   return (
     <div className="mt-8">
-      {/* Full-width Main Gradient Card */}
-      <div className="relative  bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-6 py-3">
 
-        {/* Flex Container for Today's Weather + Scrollable Week */}
+      <div className="relative bg-white border border-gray-200 rounded-2xl shadow-lg text-gray-800 flex flex-col overflow-hidden px-6 py-3">
+
+
         <div className="relative z-10 flex items-start w-full gap-6 flex-col lg:flex-row">
 
           {/* Today's Weather */}
           <div className="flex flex-col items-center">
-            <div className="p-[2px] rounded-xl bg-gradient-to-br from-[#6B9080] to-[#3D5A40] shadow-xl">
-              <div className="bg-gradient-to-br from-[#6B9080] to-[#3D5A40] rounded-xl p-4 flex-shrink-0 w-[200px] flex flex-col items-center shadow-xl h-full">
-                <h3 className="text-sm lg:text-base font-semibold mb-2">Today's Weather</h3>
-                <div className="flex items-center justify-center mb-2 text-4xl text-white">
+            <div className="p-[2px] rounded-xl bg-gray-100 shadow-xl">
+              <div className="bg-white rounded-xl p-4 flex-shrink-0 w-[200px] flex flex-col items-center shadow-xl h-full">
+                <h3 className="text-sm lg:text-base font-semibold mb-2 text-gray-700">Today's Weather</h3>
+                <div className="flex items-center justify-center mb-2 text-4xl text-gray-800">
                   {getWeatherIcon(weather.temp, weather.cloudCover)}
                 </div>
-                <div className="text-2xl lg:text-3xl font-bold mb-2">
+                <div className="text-2xl lg:text-3xl font-bold mb-2 text-gray-900">
                   {weather.temp ?? "--"}°C
                 </div>
-                <div className="flex flex-col gap-2 text-xs lg:text-sm w-full">
+                <div className="flex flex-col gap-2 text-xs lg:text-sm w-full text-gray-600">
                   <div className="flex justify-between">
                     <span className="flex items-center gap-1">
                       <WindSpeedIcon /> {weather.windspeed ?? "--"} km/h
@@ -82,16 +82,13 @@ function ForeCast() {
             </div>
           </div>
           <div className="relative z-10 flex items-start w-full gap-6">
+            <div className="flex flex-col flex-1 w-full">
 
-            {/* Today's Weather (left) - unchanged */}
-
-            <div className="flex flex-col flex-1 w-full"> {/* removed mt-10 */}
-              {/* Weekly Weather Heading (left-aligned like cards) */}
-              <h3 className="text-[22px] font-bold text-gray-200 mb-2 pl-2">
+              <h3 className="text-[22px] font-bold text-gray-700 mb-2 pl-2">
                 Weekly Weather
               </h3>
 
-              {/* Scrollable Forecast Cards */}
+
               <div className="flex overflow-x-auto no-scrollbar gap-4 py-2 w-full">
                 {weekForecast.map((day, index) => {
                   const icon = getWeatherIcon(day.temp, day.cloudCover);
@@ -101,8 +98,10 @@ function ForeCast() {
                     <div
                       key={index}
                       className={`flex flex-col items-center justify-center p-4 rounded-xl min-w-[130px] h-[150px] transition-all
-              ${isToday ? "bg-[#344E41] text-white" : "bg-white/20 text-white"}
-              flex-shrink-0`}
+                      ${isToday 
+                        ? "bg-gray-200 text-gray-900" 
+                        : "bg-gray-100 text-gray-700"}
+                      flex-shrink-0`}
                     >
                       <span className="text-sm font-semibold mb-1">
                         {new Date(day.datetime).toLocaleDateString("en-US", { weekday: "short" })}
@@ -115,9 +114,7 @@ function ForeCast() {
                 })}
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
     </div>

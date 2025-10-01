@@ -5,10 +5,8 @@ import * as turf from "@turf/turf";
 import SoilAnalysisChart from "./SoilAnalysisChart.jsx";
 import SoilHealthChart from "./SoilHealthChart.jsx";
 import { fetchSoilData } from "../../../redux/slices/satelliteSlice.js";
-
 import CropHealthStatusBar from "./CropHealthStatusBar.jsx";
 import { fetchCrops } from "../../../redux/slices/cropSlice.js";
-
 
 const CropHealth = ({ selectedFieldsDetials }) => {
   const cropDetials = selectedFieldsDetials?.[0];
@@ -16,8 +14,6 @@ const CropHealth = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
   const { crops } = useSelector((state) => state.crops);
   const { cropYield } = useSelector((state) => state.satellite);
-
-  // const { Health_Percentage = 0, Crop_Health = "Unknown" } = cropHealth || {};
 
   useEffect(() => {
     dispatch(fetchCrops());
@@ -52,18 +48,15 @@ const CropHealth = ({ selectedFieldsDetials }) => {
   }, [cropDetials, dispatch]);
 
   return (
-    <Card body className="mt-2 mb-4  bg-white">
-      <div className="relative flex flex-col lg:flex-row gap-6 bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl p-6 overflow-hidden">
-
-        <h2 className="absolute top-4 left-6 text-[24px] sm:text-xl font-bold text-white z-20">
+    <Card body className="mt-2 mb-4 bg-white">
+      <div className="relative flex flex-col lg:flex-row gap-6 rounded-2xl p-6 overflow-hidden bg-white shadow-md border border-gray-200">
+        <h2 className="absolute top-4 left-6 text-[24px] sm:text-xl font-bold text-[#344E41] z-20">
           Crop Health
         </h2>
 
-
         <div className="relative z-10 flex flex-col lg:flex-row gap-6 mt-10 w-full">
-
           {/* Crop Image Container */}
-          <div className="flex flex-col items-center bg-white/10 backdrop-blur-sm rounded-xl w-[160px] h-[160px] overflow-hidden flex-shrink-0 mx-auto lg:mx-0">
+          <div className="flex flex-col items-center bg-gray-100 rounded-xl w-[160px] h-[160px] overflow-hidden flex-shrink-0 mx-auto lg:mx-0 shadow-sm border border-gray-200">
             <img
               src={cropInfo?.cropImage || "https://via.placeholder.com/160"}
               alt={cropInfo?.cropName || "crop"}
@@ -74,32 +67,32 @@ const CropHealth = ({ selectedFieldsDetials }) => {
           <div className="flex flex-col justify-between w-full gap-4">
             <div className="grid grid-cols-2 gap-x-20 gap-y-5 text-sm md:text-[10px]">
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] text-white/80">Crop Name:</span>
-                <span className="text-white font-medium text-[18px]">
+                <span className="font-semibold text-[18px] text-[#5A7C6B]">Crop Name:</span>
+                <span className="text-gray-900 font-medium text-[18px]">
                   {cropInfo?.cropName || cropName || "N/A"}
                 </span>
               </div>
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] text-white/80">Crop Age:</span>
-                <span className="text-white font-medium text-[18px]">
+                <span className="font-semibold text-[18px] text-[#5A7C6B]">Crop Age:</span>
+                <span className="text-gray-900 font-medium text-[18px]">
                   {daysFromSowing} days
                 </span>
               </div>
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] text-white/80">Total Area:</span>
-                <span className="text-white font-medium text-[18px]">
+                <span className="font-semibold text-[18px] text-[#5A7C6B]">Total Area:</span>
+                <span className="text-gray-900 font-medium text-[18px]">
                   {totalArea.toFixed(1) || "0.0"} Ha
                 </span>
               </div>
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] text-white/80">Standard Yield:</span>
-                <span className="text-white font-medium text-[18px]">
+                <span className="font-semibold text-[18px] text-[#5A7C6B]">Standard Yield:</span>
+                <span className="text-gray-900 font-medium text-[18px]">
                   {cropYield?.data?.standard_yield || "N/A"}
                 </span>
               </div>
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] text-white/80">AI Yield:</span>
-                <span className="text-white font-medium text-[18px]">
+                <span className="font-semibold text-[18px] text-[#5A7C6B]">AI Yield:</span>
+                <span className="text-gray-900 font-medium text-[18px]">
                   {cropYield?.data?.ai_predicted_yield ||
                     cropYield?.data?.message ||
                     "N/A"}
@@ -112,18 +105,16 @@ const CropHealth = ({ selectedFieldsDetials }) => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row items-center justify-between mt-6 px-2 md:px-4 gap-6 lg:gap-12 bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl p-6 ">
+      <div className="flex flex-col lg:flex-row items-center justify-between mt-6 px-2 md:px-4 gap-6 lg:gap-12 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
         <div className="w-full lg:w-1/2">
-
-
-          <h2 className="text-left text-[1.3rem] font-semibold text-white mb-2 ml-10">
+          <h2 className="text-left text-[1.3rem] font-semibold text-[#5A7C6B] mb-2 ml-10">
             Soil Analysis (Based on BBCH Growth Stage)
           </h2>
           <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
         </div>
 
         <div className="w-full lg:w-1/2">
-          <h2 className="text-left text-[1.3rem] font-semibold text-white mb-7 ml-10">
+          <h2 className="text-left text-[1.3rem] font-semibold text-[#5A7C6B] mb-7 ml-10">
             Soil Health
           </h2>
           <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} />

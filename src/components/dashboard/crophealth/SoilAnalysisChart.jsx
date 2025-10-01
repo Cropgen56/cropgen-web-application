@@ -33,14 +33,14 @@ const NutrientBar = React.memo(
     const requiredWidth = `${(required / max) * 100}%`;
 
     return (
-      <div className="flex items-center gap-2 sm:gap-3 md:gap-2 mb-3 sm:mb-4 bg-white/10 rounded-lg p-2 sm:p-3 md:p-2">
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-2 mb-3 sm:mb-4 bg-gray-50 rounded-lg p-2 sm:p-3 md:p-2 shadow-sm border border-gray-200">
         <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-6 md:h-6 bg-lime-500 rounded-full flex items-center justify-center">
           <span className="text-white font-bold text-xs sm:text-sm md:text-[10px]">
             {symbol}
           </span>
         </div>
         <div className="flex-1">
-          <span className="block text-sm sm:text-base md:text-xs font-semibold text-white mb-1 sm:mb-2">
+          <span className="block text-sm sm:text-base md:text-xs font-semibold text-[#344E41] mb-1 sm:mb-2">
             {label}
           </span>
           <div className="bg-gray-200 h-1.5 sm:h-2 md:h-1.5 rounded-full mb-1 overflow-hidden">
@@ -57,8 +57,8 @@ const NutrientBar = React.memo(
           </div>
         </div>
         <div className="flex flex-col items-start pt-4 sm:pt-5 md:pt-4">
-          <span className="text-xs sm:text-sm md:text-[10px] font-bold text-white">{`${current} kg/acre`}</span>
-          <span className="text-xs sm:text-sm md:text-[10px] font-medium text-white">{`${required} kg/acre`}</span>
+          <span className="text-xs sm:text-sm md:text-[10px] font-bold text-gray-900">{`${current} kg/acre`}</span>
+          <span className="text-xs sm:text-sm md:text-[10px] font-medium text-gray-600">{`${required} kg/acre`}</span>
         </div>
       </div>
     );
@@ -123,7 +123,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
     };
   }, [sowingDate, newNpkData]);
 
-  // Fetch NPK data only when dependencies change
+
   useEffect(() => {
     if (
       !cropName ||
@@ -163,7 +163,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
     farmDetails?.field,
   ]);
 
-  // Early return for invalid sowing date
+
   if (!isSowingDateValid) {
     return (
       <div className="w-full px-2 sm:px-4 md:scale-[0.95] md:pl-1">
@@ -176,14 +176,12 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
     );
   }
 
-  // Early return for loading state
   if (npkLoading) {
     return (
       <NpkChartSkeleton />
     );
   }
 
-  // Constant for final harvest check (assumed false as per original code)
   const isFinalHarvest = false;
 
   return (
@@ -199,13 +197,13 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
           <div className="flex justify-end items-center mb-2 sm:mb-3 md:mb-2">
             <div className="flex items-center mr-4 sm:mr-6">
               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-600 rounded-sm mr-1 sm:mr-2" />
-              <span className="text-xs sm:text-sm md:text-xs text-white">
+              <span className="text-xs sm:text-sm md:text-xs text-gray-700">
                 Current
               </span>
             </div>
             <div className="flex items-center">
               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-lime-400 rounded-sm mr-1 sm:mr-2" />
-              <span className="text-xs sm:text-sm md:text-xs text-white">
+              <span className="text-xs sm:text-sm md:text-xs text-gray-700">
                 Required
               </span>
             </div>
@@ -222,8 +220,8 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
             />
           ))}
           {newNpkData?.data?.notes && (
-            <div className="mt-4 sm:mt-6 bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-300 bg-white/10">
-              <span className="block text-sm sm:text-base font-medium text-white">
+            <div className="mt-4 sm:mt-6 bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-300">
+              <span className="block text-sm sm:text-base font-medium text-gray-800">
                 Notes: {newNpkData.data.notes}
               </span>
             </div>

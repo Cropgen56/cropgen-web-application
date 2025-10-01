@@ -19,6 +19,7 @@ const Signup = () => {
 
   const [otpVerified, setOtpVerified] = useState(false);
   const [orgCodeError, setOrgCodeError] = useState("");
+  const [orgCodeTouched, setOrgCodeTouched] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",

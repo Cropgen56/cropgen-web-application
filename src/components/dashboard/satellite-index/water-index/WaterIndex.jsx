@@ -25,7 +25,7 @@ import {
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
 
-// Define Water Theme Colors (Using Tailwind's sky-400 equivalent for consistency)
+
 const WATER_COLOR_MAIN = "#38bdf8";
 const WATER_COLOR_LIGHT = "#7dd3fc";
 
@@ -123,7 +123,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   const labelFormatter = useCallback((label) => `Date: ${label}`, []);
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
-  // Drag-to-scroll logic
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -175,19 +175,13 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
 
   return (
     <div className="w-full flex justify-center mt-4">
-      {" "}
-      {/* Reduced top margin */}
-      <div className="relative w-full bg-gradient-to-br from-[#5A7C6B] to-[#344E41] rounded-2xl shadow-lg text-white flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
-        {" "}
-        {/* Reduced padding */}
+      <div className="relative w-full bg-gray-50 rounded-2xl shadow-lg text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
         {/* Index Selector */}
         <div className="absolute top-3 right-3 z-50">
-          {" "}
-          {/* Reduced vertical position */}
           <select
             value={index}
             onChange={handleIndexChange}
-            className="border-2 border-white/50 bg-white/20 backdrop-blur-sm rounded-[25px] px-3 py-1 text-white text-sm focus:outline-none"
+            className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
             <option value="NDMI" className="text-gray-700">
               NDMI
@@ -209,47 +203,35 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
             </option>
           </select>
         </div>
-        {/* Main Heading */}
+
+
         <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">
           Water Index
-        </h2>{" "}
-        {/* Reduced bottom margin */}
-        {/* Content Container */}
-        <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4 ">
-          {" "}
-          {/* Reduced gap */}
-          {/* Left Side (Stat Block) */}
+        </h2>
+
+
+        <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
+
           <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-white/20 h-full w-full justify-around">
-              {" "}
-              {/* Reduced padding */}
-              <h2 className="text-xl font-bold">
-                {" "}
-                {/* Reduced text size */}
+            <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
+              <h2 className="text-xl font-bold text-sky-700">
                 {index}
               </h2>
-              <button className="bg-white/15 text-sky-400 px-3 py-1 text-sm font-semibold rounded mt-1 backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-all">
-                {" "}
-                {/* Reduced padding */}
+              <button className="bg-sky-50 text-sky-700 px-3 py-1 text-sm font-semibold rounded mt-1 border border-sky-200 hover:bg-sky-100 transition-all">
                 +0.15
               </button>
-              <p className="my-1 text-white/90 text-xs lg:text-sm text-center">
-                {" "}
-                {/* Reduced margin */}
+              <p className="my-1 text-gray-600 text-xs lg:text-sm text-center">
                 Last Update{" "}
                 {summaryData.timestamp
                   ? `${getDaysAgo(summaryData.timestamp)} days Ago`
                   : "N/A"}
               </p>
-              <div className="border-2 border-sky-400/50 bg-white/5 backdrop-blur-sm p-2 rounded text-white text-sm w-full">
-                {" "}
-                {/* Reduced padding */}
+              <div className="border-2 border-gray-200 bg-white p-2 rounded text-gray-700 text-sm w-full">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="flex-1 text-xs text-white/90">
+                  <span className="flex-1 text-xs text-gray-600">
                     {indexDescriptions[index]}
-                  </span>{" "}
-                  {/* Reduced text size */}
-                  <span className="bg-white/15 backdrop-blur-sm rounded-full p-1 border border-sky-400/20">
+                  </span>
+                  <span className="bg-gray-100 rounded-full p-1 border border-gray-200">
                     <Info
                       size={16}
                       strokeWidth={1.5}
@@ -260,16 +242,15 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
               </div>
             </div>
           </div>
-          {/* Right Graph Section */}
+
+
           <div
             ref={scrollRef}
-            className="w-full lg:w-3/4 overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-gradient-to-br from-[#6B9080] to-[#3D5A40] backdrop-blur-sm rounded-xl p-2 flex-grow"
+            className="w-full lg:w-3/4 overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 flex-grow"
           >
-            {" "}
-            {/* Reduced padding */}
             {isLoading ? (
               <div
-                className="text-center text-white"
+                className="text-center text-gray-900"
                 style={{
                   minHeight: "180px",
                   display: "flex",
@@ -277,23 +258,16 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
                   justifyContent: "center",
                 }}
               >
-                {" "}
-                {/* Reduced min-height */}
-                <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />{" "}
-                {/* Reduced spinner size */}
+                <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />
                 <strong>Loading Water Index...</strong>
               </div>
             ) : !hasData ? (
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mx-auto mt-2 max-w-md">
-                {" "}
-                {/* Reduced padding */}
+              <div className="bg-gray-100 rounded-lg p-4 mx-auto mt-2 max-w-md">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-white mb-1">
-                    {" "}
-                    {/* Reduced margin */}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
                     No Data Available
                   </h3>
-                  <p className="text-sm text-white/80">
+                  <p className="text-sm text-gray-600">
                     We couldn't find any data for the selected field and time
                     range. Please verify the field selection or adjust the date
                     range to ensure data availability.
@@ -303,22 +277,20 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
             ) : (
               <div className="w-full">
                 <ResponsiveContainer width={chartConfig.width} height={180}>
-                  {" "}
-                  {/* Reduced chart height */}
                   <LineChart
                     data={chartData}
                     margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
                   >
-                    <CartesianGrid stroke="rgba(255,255,255,0.2)" />
+                    <CartesianGrid stroke="rgba(0, 0, 0, 0.1)" />
                     <XAxis
                       dataKey="date"
-                      tick={{ fontSize: 12, fill: "#fff" }}
+                      tick={{ fontSize: 12, fill: "#333" }}
                       interval={chartConfig.interval}
                       type="category"
                     />
                     <YAxis
                       domain={yAxisConfig.domain}
-                      tick={{ fontSize: 12, fill: WATER_COLOR_MAIN }}
+                      tick={{ fontSize: 12, fill: "#333" }}
                       ticks={yAxisConfig.ticks}
                       tickFormatter={tickFormatter}
                       type="number"
@@ -327,9 +299,10 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
                       formatter={tooltipFormatter}
                       labelFormatter={labelFormatter}
                       contentStyle={{
-                        backgroundColor: "#344E41",
+                        backgroundColor: "#fff",
                         border: "none",
                         borderRadius: "8px",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
                       }}
                     />
                     <Legend
@@ -340,7 +313,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
                         paddingBottom: "8px",
                         paddingLeft: "40px",
                         fontWeight: "bold",
-                        color: "#fff",
+                        color: "#333",
                       }}
                     />
                     <Line
