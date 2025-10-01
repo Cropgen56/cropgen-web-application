@@ -5,7 +5,6 @@ import SocialButtons from "../shared/socialbuttons/SocialButton";
 import { useNavigate } from "react-router-dom";
 import { message, Spin } from "antd";
 
-
 const Signup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -14,10 +13,15 @@ const Signup = () => {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [completingProfile, setCompletingProfile] = useState(false);
 
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [orgCodeError, setOrgCodeError] = useState("");
+  const [orgCodeTouched, setOrgCodeTouched] = useState(false);
+
   const [formData, setFormData] = useState({
     email: "",
     otp: "",
     terms: false,
+    organizationCode: ""
   });
 
   const [otpInputs, setOtpInputs] = useState(Array(6).fill(""));
@@ -42,7 +46,6 @@ const Signup = () => {
     }
   };
 
-
   const handleSendOtp = () => {
     if (!formData.email) return message.error("Please enter your email");
 
@@ -57,7 +60,6 @@ const Signup = () => {
     });
   };
 
-
   const handleVerifyOtp = () => {
     if (!formData.otp || formData.otp.length !== 6)
       return message.error("Enter a valid 6-digit OTP");
@@ -67,10 +69,9 @@ const Signup = () => {
       .then((res) => {
         setVerifyingOtp(false);
         if (res.meta.requestStatus === "fulfilled") {
-          message.success("Logged In Successfully!");
+          setOtpVerified(true);
 
           if (res.payload.onboardingRequired) {
-            message.info("Please accept Terms & Conditions to continue");
           } else {
             navigate("/cropgen-analytics");
           }
@@ -80,9 +81,13 @@ const Signup = () => {
       });
   };
 
+
   const handleCompleteProfile = () => {
-    if (!formData.terms)
-      return message.error("You must accept Terms & Conditions");
+    if (!formData.terms) {
+      setOrgCodeError("You must accept Terms & Conditions");
+      return;
+    }
+    setCompletingProfile(true);
 
     dispatch(
       completeProfile({
@@ -91,30 +96,37 @@ const Signup = () => {
         organizationCode: formData.organizationCode || null,
       })
     ).then((res) => {
+      setCompletingProfile(false);
       if (res.meta.requestStatus === "fulfilled") {
         message.success("Profile Completed!");
         navigate("/cropgen-analytics");
       } else {
-        message.error(res.payload?.message || "Profile completion failed");
+        console.log(res.payload?.message)
+        setOrgCodeError(res.payload?.message || "Profile completion failed");
       }
     });
   };
 
 
+
+  const handleOrgCodeChange = (e) => {
+    setFormData({ ...formData, organizationCode: e.target.value });
+    setOrgCodeTouched(true);
+    if (orgCodeError) {
+      setOrgCodeError("");
+    }
+  };
+
+  useEffect(() => {
+    setOtpVerified(false);
+    setOrgCodeError("");
+    setOrgCodeTouched(false);
+  }, [formData.email]);
+
   return (
-    <div
-      className="w-full flex items-center justify-center h-full"
-    >
-      <div
-        style={{
-          // transform: `scale(${scale})`,
-          transformOrigin: "center",
-          transition: "transform 0.2s ease",
-        }}
-      >
-        <div
-          className="p-6 md:p-10 lg:p-14 w-[90vw] max-w-sm lg:max-w-xl xl:max-w-2xl"
-        >
+    <div className="w-full flex items-center justify-center h-full">
+      <div>
+        <div className="p-6 md:p-10 lg:p-14 w-[90vw] max-w-sm lg:max-w-xl xl:max-w-2xl">
           {/* Heading */}
           <div className="mb-8 text-center">
             <h2 className="text-lg md:text-2xl lg:text-3xl font-semibold text-black">
@@ -127,7 +139,6 @@ const Signup = () => {
 
           {/* Form */}
           <div className="space-y-4">
-            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -137,7 +148,6 @@ const Signup = () => {
               </label>
 
               <div className="flex flex-col md:flex-row gap-3 mt-2 w-full">
-                {/* Email Input (80% on md+, full width on mobile) */}
                 <input
                   type="email"
                   name="email"
@@ -160,18 +170,16 @@ const Signup = () => {
                     "Get OTP"
                   )}
                 </button>
-
               </div>
             </div>
 
-            {/* OTP */}
+
             <div className="relative mt-4">
               <label className="text-xs md:text-sm font-medium text-gray-800">
                 Enter OTP
               </label>
 
               <div className="flex flex-col md:flex-row gap-3 mt-2 w-full">
-                {/* OTP Inputs */}
                 <div className="grid grid-cols-6 gap-2 w-full md:flex-[0.8]">
                   {otpInputs.map((digit, idx) => (
                     <input
@@ -188,22 +196,26 @@ const Signup = () => {
                   ))}
                 </div>
 
-
-                {/* Verify OTP Button */}
                 <button
                   onClick={handleVerifyOtp}
                   className="w-full md:flex-[0.2] h-8 md:h-10 text-xs md:text-sm bg-[#344E41] 
-    text-white rounded-md hover:bg-emerald-900 transition font-semibold"
+                  text-white rounded-md hover:bg-emerald-900 transition font-semibold"
                   disabled={verifyingOtp}
                 >
                   {verifyingOtp ? "Verifying..." : "Verify OTP"}
                 </button>
               </div>
+
+              {otpVerified && (
+                <div className="flex items-center gap-2 mt-2 text-green-600">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs md:text-sm">OTP verified successfully</span>
+                </div>
+              )}
             </div>
 
-
-
-            {/* Organization Code */}
             <div className="mt-5">
               <label
                 htmlFor="organizationCode"
@@ -216,15 +228,21 @@ const Signup = () => {
                 name="organizationCode"
                 placeholder="Enter Code Eg: CropGen01234"
                 value={formData.organizationCode || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, organizationCode: e.target.value })
-                }
-                className="mt-1 w-full rounded-md px-3 py-2 text-sm bg-white/80 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                onChange={handleOrgCodeChange}
+                className={`mt-1 w-full rounded-md px-3 py-2 text-sm bg-white/80 border ${orgCodeError ? "border-red-500" : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
               />
 
+              {orgCodeError && (
+                <div className="flex items-center gap-2 mt-1 text-red-600">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs">{orgCodeError}</span>
+                </div>
+              )}
             </div>
 
-            {/* Terms */}
             {onboardingRequired && (
               <div className="flex items-start gap-2">
                 <input
@@ -254,7 +272,6 @@ const Signup = () => {
               </div>
             )}
 
-            {/* Submit */}
             <button
               type="button"
               onClick={() => {
@@ -270,15 +287,12 @@ const Signup = () => {
               {completingProfile ? "Processing..." : "Login / Sign Up"}
             </button>
 
-
-            {/* OR */}
             <div className="flex items-center gap-2 mt-2">
               <hr className="flex-1 border-[#075A53]" />
               <span className="text-xs text-gray-600">OR</span>
               <hr className="flex-1 border-[#075A53]" />
             </div>
 
-            {/* Google Sign-In */}
             <SocialButtons />
           </div>
         </div>

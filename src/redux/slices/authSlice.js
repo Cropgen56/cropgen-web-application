@@ -69,16 +69,16 @@ export const verifyuserotp = createAsyncThunk(
 
 export const completeProfile = createAsyncThunk(
   "auth/completeProfile",
-  async ({ token, terms }, { rejectWithValue }) => {
+  async ({ token, terms, organizationCode }, { rejectWithValue }) => {
     try {
-      const response = await completeUserProfile({ token, terms });
+      const response = await completeUserProfile({ token, terms, organizationCode });
       return response;
-    }
-    catch (error) {
-      return rejectWithValue(error.response?.data || "Profile completion failed");
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: "Profile completion failed" });
     }
   }
 );
+
 
 // Initial state
 const initialState = {
