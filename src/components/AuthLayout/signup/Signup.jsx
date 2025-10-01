@@ -1,145 +1,131 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { userLoginSignup } from "../../../redux/slices/authSlice";
+import { sendotp, verifyuserotp, completeProfile } from "../../../redux/slices/authSlice";
 import SocialButtons from "../shared/socialbuttons/SocialButton";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
 import { message, Spin } from "antd";
-import { forgotPassword } from "../../../api/authApi";
 
 const Signup = () => {
   const dispatch = useDispatch();
-  const { status } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const { token, onboardingRequired } = useSelector((state) => state.auth);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [completingProfile, setCompletingProfile] = useState(false);
 
-  const [scale, setScale] = useState(1);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [orgCodeError, setOrgCodeError] = useState("");
+  const [orgCodeTouched, setOrgCodeTouched] = useState(false);
+
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
-    organizationCode: "",
+    otp: "",
     terms: false,
+    organizationCode: ""
   });
-  const [showPassword, setShowPassword] = useState(false);
 
-  // Shrink UI if height is small
-  useEffect(() => {
-    const handleResize = () => {
-      const screenHeight = window.innerHeight;
-      if (screenHeight < 700) {
-        setScale(screenHeight / 700);
-      } else {
-        setScale(1);
+  const [otpInputs, setOtpInputs] = useState(Array(6).fill(""));
+  const inputRefs = useRef([]);
+
+  const handleOtpChange = (value, index) => {
+    if (/^\d?$/.test(value)) {
+      const newOtp = [...otpInputs];
+      newOtp[index] = value;
+      setOtpInputs(newOtp);
+      setFormData((prev) => ({ ...prev, otp: newOtp.join("") }));
+
+      if (value && index < 5) {
+        inputRefs.current[index + 1]?.focus();
       }
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === "checkbox"
-          ? checked
-          : name === "organizationCode"
-          ? value.toUpperCase()
-          : value,
-    }));
+    }
   };
 
-  const validate = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!formData.email) {
-      message.error("Email is required.");
-      return false;
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !otpInputs[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
     }
-
-    if (!emailRegex.test(formData.email)) {
-      message.error("Invalid email format.");
-      return false;
-    }
-
-    if (!formData.password) {
-      message.error("Password is required.");
-      return false;
-    }
-
-    if (formData.password.length < 10 || formData.password.length > 15) {
-      message.error("Password must be between 10 and 15 characters.");
-      return false;
-    }
-
-    if (!formData.terms) {
-      message.error("You must accept the Terms of Use and Privacy Policy.");
-      return false;
-    }
-
-    return true;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-    dispatch(userLoginSignup(formData)).then((res) => {
-      if (res?.payload?.token) {
-        message.success("Signup successful!");
-        navigate("/");
+  const handleSendOtp = () => {
+    if (!formData.email) return message.error("Please enter your email");
+
+    setSendingOtp(true);
+    dispatch(sendotp({ email: formData.email })).then((res) => {
+      setSendingOtp(false);
+      if (res.meta.requestStatus === "fulfilled") {
+        message.success("OTP sent to your email");
       } else {
-        message.error(
-          res?.payload?.message || "Signup failed. Please try again."
-        );
+        message.error(res.payload?.message || "Failed to send OTP");
       }
     });
   };
 
-  const openEmailProvider = (email) => {
-    const domain = email.split("@")[1].toLowerCase();
+  const handleVerifyOtp = () => {
+    if (!formData.otp || formData.otp.length !== 6)
+      return message.error("Enter a valid 6-digit OTP");
 
-    if (domain.includes("gmail")) {
-      window.open("https://mail.google.com", "_blank");
-    } else if (
-      domain.includes("outlook") ||
-      domain.includes("hotmail") ||
-      domain.includes("live")
-    ) {
-      window.open("https://outlook.live.com", "_blank");
-    } else if (domain.includes("yahoo")) {
-      window.open("https://mail.yahoo.com", "_blank");
-    } else {
-      // Fallback
-      window.open("https://" + domain, "_blank");
+    setVerifyingOtp(true);
+    dispatch(verifyuserotp({ email: formData.email, otp: formData.otp }))
+      .then((res) => {
+        setVerifyingOtp(false);
+        if (res.meta.requestStatus === "fulfilled") {
+          setOtpVerified(true);
+
+          if (res.payload.onboardingRequired) {
+          } else {
+            navigate("/cropgen-analytics");
+          }
+        } else {
+          message.error(res.payload?.message || "OTP verification failed");
+        }
+      });
+  };
+
+
+  const handleCompleteProfile = () => {
+    if (!formData.terms) {
+      setOrgCodeError("You must accept Terms & Conditions");
+      return;
+    }
+    setCompletingProfile(true);
+
+    dispatch(
+      completeProfile({
+        token: token || localStorage.getItem("authToken"),
+        terms: true,
+        organizationCode: formData.organizationCode || null,
+      })
+    ).then((res) => {
+      setCompletingProfile(false);
+      if (res.meta.requestStatus === "fulfilled") {
+        message.success("Profile Completed!");
+        navigate("/cropgen-analytics");
+      } else {
+        console.log(res.payload?.message)
+        setOrgCodeError(res.payload?.message || "Profile completion failed");
+      }
+    });
+  };
+
+
+
+  const handleOrgCodeChange = (e) => {
+    setFormData({ ...formData, organizationCode: e.target.value });
+    setOrgCodeTouched(true);
+    if (orgCodeError) {
+      setOrgCodeError("");
     }
   };
 
-  // Handle forgot password
-  const handleForgotPassword = async () => {
-    if (!formData.email) return message.error("Please enter your email first");
-    setLoading(true);
-    try {
-      const res = await forgotPassword(formData.email);
-      message.success(res.message || "Password reset email sent!");
-      setTimeout(() => {
-        setLoading(false);
-        openEmailProvider(formData.email);
-      }, 1000);
-    } catch (err) {
-      message.error(err.response?.data?.message || "Error sending reset email");
-    }
-  };
+  useEffect(() => {
+    setOtpVerified(false);
+    setOrgCodeError("");
+    setOrgCodeTouched(false);
+  }, [formData.email]);
 
   return (
     <div className="w-full flex items-center justify-center h-full">
-      <div
-        style={{
-          transform: `scale(${scale})`,
-          transformOrigin: "center",
-          transition: "transform 0.2s ease",
-        }}
-      >
+      <div>
         <div className="p-6 md:p-10 lg:p-14 w-[90vw] max-w-sm lg:max-w-xl xl:max-w-2xl">
           {/* Heading */}
           <div className="mb-8 text-center">
@@ -153,7 +139,6 @@ const Signup = () => {
 
           {/* Form */}
           <div className="space-y-4">
-            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -161,53 +146,77 @@ const Signup = () => {
               >
                 Email
               </label>
-              <input
-                type="email"
-                name="email"
-                placeholder="example@gmail.com*"
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-md px-3 py-2 text-sm bg-white/80 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-              />
-            </div>
 
-            {/* Password */}
-            <div className="relative">
-              <label
-                htmlFor="password"
-                className="text-xs md:text-sm font-medium text-gray-800"
-              >
-                Password
-              </label>
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password*"
-                value={formData.password}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-md px-3 py-2 text-sm bg-white/80 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-9 text-gray-500"
-              >
-                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
-              </button>
-              {/*  Forgot Password Button */}
-              <div className="text-right text-xs mt-1">
+              <div className="flex flex-col md:flex-row gap-3 mt-2 w-full">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="example@gmail.com*"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full md:flex-[0.8] rounded-md px-3 py-2 text-sm bg-white/80 
+                 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                />
+
                 <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="text-gray-600 hover:underline"
+                  onClick={handleSendOtp}
+                  className="w-full md:flex-[0.2] h-9 text-xs md:text-sm bg-[#344E41] text-white 
+                  rounded-md hover:bg-emerald-900 transition font-semibold flex items-center justify-center gap-2"
+                  disabled={sendingOtp}
                 >
-                  {loading ? <Spin size="small" /> : "Forgot Password"}
+                  {sendingOtp ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    "Get OTP"
+                  )}
                 </button>
               </div>
             </div>
 
-            {/* Organization Code */}
-            <div>
+
+            <div className="relative mt-4">
+              <label className="text-xs md:text-sm font-medium text-gray-800">
+                Enter OTP
+              </label>
+
+              <div className="flex flex-col md:flex-row gap-3 mt-2 w-full">
+                <div className="grid grid-cols-6 gap-2 w-full md:flex-[0.8]">
+                  {otpInputs.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => (inputRefs.current[idx] = el)}
+                      type="text"
+                      maxLength="1"
+                      value={digit}
+                      onChange={(e) => handleOtpChange(e.target.value, idx)}
+                      onKeyDown={(e) => handleKeyDown(e, idx)}
+                      className="w-full h-8 md:h-10 text-center border border-gray-900 rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-emerald-600 text-xs md:text-sm"
+                    />
+                  ))}
+                </div>
+
+                <button
+                  onClick={handleVerifyOtp}
+                  className="w-full md:flex-[0.2] h-8 md:h-10 text-xs md:text-sm bg-[#344E41] 
+                  text-white rounded-md hover:bg-emerald-900 transition font-semibold"
+                  disabled={verifyingOtp}
+                >
+                  {verifyingOtp ? "Verifying..." : "Verify OTP"}
+                </button>
+              </div>
+
+              {otpVerified && (
+                <div className="flex items-center gap-2 mt-2 text-green-600">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs md:text-sm">OTP verified successfully</span>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5">
               <label
                 htmlFor="organizationCode"
                 className="text-xs md:text-sm font-medium text-gray-800"
@@ -218,56 +227,72 @@ const Signup = () => {
                 type="text"
                 name="organizationCode"
                 placeholder="Enter Code Eg: CropGen01234"
-                value={formData.organizationCode}
-                onChange={handleChange}
-                className="mt-1 w-full rounded-md px-3 py-2 text-sm bg-white/80 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                value={formData.organizationCode || ""}
+                onChange={handleOrgCodeChange}
+                className={`mt-1 w-full rounded-md px-3 py-2 text-sm bg-white/80 border ${orgCodeError ? "border-red-500" : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
               />
+
+              {orgCodeError && (
+                <div className="flex items-center gap-2 mt-1 text-red-600">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs">{orgCodeError}</span>
+                </div>
+              )}
             </div>
 
-            {/* Terms */}
-            <div className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                name="terms"
-                checked={formData.terms}
-                onChange={handleChange}
-                className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded"
-              />
-              <label
-                htmlFor="terms"
-                className="text-[10px] md:text-xs text-gray-700"
-              >
-                I agree to the{" "}
-                <a
-                  href="https://www.cropgenapp.com/terms-conditions"
-                  className="text-sky-600 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
+            {onboardingRequired && (
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  name="terms"
+                  checked={formData.terms}
+                  onChange={(e) =>
+                    setFormData({ ...formData, terms: e.target.checked })
+                  }
+                  className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="terms"
+                  className="text-[10px] md:text-xs text-gray-700"
                 >
-                  Terms of Use and Privacy Policy
-                </a>
-                , to the processing of my personal data, and to receive emails
-              </label>
-            </div>
+                  I agree to the{" "}
+                  <a
+                    href="https://www.cropgenapp.com/terms-conditions"
+                    className="text-sky-600 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Terms of Use and Privacy Policy
+                  </a>
+                  , to the processing of my personal data, and to receive emails
+                </label>
+              </div>
+            )}
 
-            {/* Submit */}
             <button
               type="button"
-              onClick={handleSubmit}
-              disabled={status === "loading"}
+              onClick={() => {
+                if (onboardingRequired) {
+                  handleCompleteProfile();
+                } else {
+                  handleVerifyOtp();
+                }
+              }}
+              disabled={completingProfile}
               className="w-full bg-[#344E41] text-white py-2 rounded-md font-medium hover:bg-emerald-900 transition"
             >
-              {status === "loading" ? "Signing Up..." : "Login / Sign Up"}
+              {completingProfile ? "Processing..." : "Login / Sign Up"}
             </button>
 
-            {/* OR */}
             <div className="flex items-center gap-2 mt-2">
               <hr className="flex-1 border-[#075A53]" />
               <span className="text-xs text-gray-600">OR</span>
               <hr className="flex-1 border-[#075A53]" />
             </div>
 
-            {/* Google Sign-In */}
             <SocialButtons />
           </div>
         </div>
