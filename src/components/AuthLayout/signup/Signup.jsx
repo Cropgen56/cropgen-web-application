@@ -19,6 +19,7 @@ const Signup = () => {
 
   const [otpVerified, setOtpVerified] = useState(false);
   const [orgCodeError, setOrgCodeError] = useState("");
+  const [orgCodeTouched, setOrgCodeTouched] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -104,6 +105,7 @@ const Signup = () => {
         message.success("Profile Completed!");
         navigate("/cropgen-analytics");
       } else {
+        console.log(res.payload?.message);
         setOrgCodeError(res.payload?.message || "Profile completion failed");
       }
     });

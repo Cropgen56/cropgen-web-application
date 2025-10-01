@@ -126,3 +126,18 @@ function formatDate(date) {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+// calcualte the 6 months before date form today in format YYYY-MM-DD
+
+export function getSixMonthsBeforeDate() {
+  const today = new Date();
+  const sixMonthsAgo = new Date(today);
+  sixMonthsAgo.setMonth(today.getMonth() - 6);
+
+  // Format to YYYY-MM-DD
+  const year = sixMonthsAgo.getFullYear();
+  const month = String(sixMonthsAgo.getMonth() + 1).padStart(2, "0");
+  const day = String(sixMonthsAgo.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}

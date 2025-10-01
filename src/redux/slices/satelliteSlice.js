@@ -2,7 +2,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { formatDateToISO } from "../../utility/formatDate";
 import axios from "axios";
 import { get, set } from "idb-keyval";
-import { getTodayAndFifteenDaysAgo } from "../../utility/formatDate";
+import {
+  getTodayAndFifteenDaysAgo,
+  getSixMonthsBeforeDate,
+} from "../../utility/formatDate";
 
 // 4 days in milliseconds
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
@@ -70,12 +73,13 @@ export const fetchSatelliteDates = createAsyncThunk(
       }
 
       const today = new Date().toISOString().split("T")[0];
+      const sixMonthsBefore = getSixMonthsBeforeDate();
       const payload = {
         geometry: {
           type: "Polygon",
           coordinates: [geometry],
         },
-        start_date: selectedFieldsDetials[0]?.sowingDate,
+        start_date: sixMonthsBefore,
         end_date: today,
         provider: "both",
         satellite: "s2",

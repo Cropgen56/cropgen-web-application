@@ -89,7 +89,7 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     const uniqueDates = Array.from(
       new Map(
         items.map((item) => [
-          formatDate(item.date),
+          toISODateString(item.date), // Use ISO string for sorting
           {
             date: formatDate(item.date),
             value: item.cloud_cover ?? 0,
@@ -97,10 +97,10 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
           },
         ])
       ).values()
-    );
+    ).sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort descending (latest first)
 
     setDates(uniqueDates);
-    setVisibleDates(uniqueDates.slice(0, VISIBLE_DATES_COUNT));
+    setVisibleDates(uniqueDates.slice(0, VISIBLE_DATES_COUNT)); // Show latest dates first
 
     if (!selectedDate && uniqueDates.length)
       setSelectedDate(toISODateString(items[0].date));
