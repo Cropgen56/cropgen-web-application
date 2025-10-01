@@ -124,7 +124,7 @@ export const fetchIndexData = createAsyncThunk(
         width: 800,
         height: 800,
         supersample: 1,
-        smooth: false,
+        smooth: true,
         gaussian_sigma: 1,
       };
 

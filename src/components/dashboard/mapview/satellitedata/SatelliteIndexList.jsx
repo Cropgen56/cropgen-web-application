@@ -57,10 +57,10 @@ const SatelliteIndexList = ({
 
   // Validate that the geometry is a closed polygon
   const validateGeometry = (field) => {
-    if (!field || field.length < 3) return false; // At least 3 points for a polygon (4 with closure)
+    if (!field || field.length < 3) return false;
     const first = field[0];
     const last = field[field.length - 1];
-    return first.lat === last.lat && first.lng === last.lng; // Check if first and last points match
+    return first.lat === last.lat && first.lng === last.lng;
   };
 
   const coordinates = useMemo(() => {
