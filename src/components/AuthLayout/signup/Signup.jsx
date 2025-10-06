@@ -126,46 +126,36 @@ const Signup = () => {
   }, [formData.email]);
 
   return (
-    <div className="w-full flex items-center justify-center h-full">
-      <div>
-        <div className="p-6 md:p-10 lg:p-14 w-[90vw] max-w-sm lg:max-w-xl xl:max-w-2xl">
-          {/* Heading */}
-          <div className="mb-8 text-center">
-            <h2 className="text-lg md:text-2xl lg:text-3xl font-semibold text-black">
-              Get started with CropGen
-            </h2>
-            <p className="text-xs md:text-sm lg:text-base text-[#9A9898] mt-1 font-medium">
-              Enter Your Personal data to Create your account
-            </p>
-          </div>
+    <div className="w-full min-h-screen flex items-center justify-center items-center bg-white p-4">
+      <div className="w-full max-w-xl bg-white rounded-xl p-4 sm:p-6 md:p-10 flex flex-col justify-center
+                      overflow-y-auto h-[90vh] sm:h-[85vh] md:h-[80vh]">
+        <div className="mb-6 sm:mb-8 text-center flex-shrink-0">
+          <h2 className="text-lg sm:text-2xl md:text-3xl font-semibold text-black">
+            Get started with CropGen
+          </h2>
+          <p className="text-xs sm:text-sm md:text-base text-gray-500 mt-1 font-medium">
+            Enter Your Personal data to Create your account
+          </p>
+        </div>
 
-          {/* Form */}
+
+        <div className="space-y-4 flex-1 flex flex-col ">
           <div className="space-y-4">
             <div>
-              <label
-                htmlFor="email"
-                className="text-xs md:text-sm font-medium text-gray-800"
-              >
-                Email
-              </label>
-
-              <div className="flex flex-col md:flex-row gap-3 mt-2 w-full">
+              <label className="text-xs sm:text-sm font-medium text-gray-800">Email</label>
+              <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full">
                 <input
                   type="email"
-                  name="email"
                   placeholder="example@gmail.com*"
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  className="w-full md:flex-[0.8] rounded-md px-3 py-2 text-sm bg-white/80 
-                 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full sm:flex-[0.8] rounded-md px-3 py-2 text-sm bg-white border-1 border-gray-300
+            focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                 />
-
                 <button
                   onClick={handleSendOtp}
-                  className="w-full md:flex-[0.2] h-9 text-xs md:text-sm bg-[#344E41] text-white 
-                  rounded-md hover:bg-emerald-900 transition font-semibold flex items-center justify-center gap-2"
+                  className="w-full sm:flex-[0.2] h-9 sm:h-10 text-xs sm:text-sm bg-[#344E41] text-white rounded-md
+                             hover:bg-emerald-900 transition font-semibold flex items-center justify-center gap-2"
                   disabled={sendingOtp}
                 >
                   {sendingOtp ? (
@@ -177,13 +167,10 @@ const Signup = () => {
               </div>
             </div>
 
-            <div className="relative mt-4">
-              <label className="text-xs md:text-sm font-medium text-gray-800">
-                Enter OTP
-              </label>
-
-              <div className="flex flex-col md:flex-row gap-3 mt-2 w-full">
-                <div className="grid grid-cols-6 gap-2 w-full md:flex-[0.8]">
+            <div className="relative">
+              <label className="text-xs sm:text-sm font-medium text-gray-800">Enter OTP</label>
+              <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full">
+                <div className="grid grid-cols-6 gap-2 w-full sm:flex-[0.8]">
                   {otpInputs.map((digit, idx) => (
                     <input
                       key={idx}
@@ -193,93 +180,71 @@ const Signup = () => {
                       value={digit}
                       onChange={(e) => handleOtpChange(e.target.value, idx)}
                       onKeyDown={(e) => handleKeyDown(e, idx)}
-                      className="w-full h-8 md:h-10 text-center border border-gray-900 rounded-md 
-                       focus:outline-none focus:ring-2 focus:ring-emerald-600 text-xs md:text-sm"
+                      className="w-full h-8 sm:h-10 text-center border-1 border-gray-300 rounded-md
+                                 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-xs sm:text-sm"
                     />
                   ))}
                 </div>
-
                 <button
                   onClick={handleVerifyOtp}
-                  className="w-full md:flex-[0.2] h-8 md:h-10 text-xs md:text-sm bg-[#344E41] 
-                  text-white rounded-md hover:bg-emerald-900 transition font-semibold"
+                  className="w-full sm:flex-[0.2] h-8 sm:h-10 text-xs sm:text-sm bg-[#344E41] text-white
+                             rounded-md hover:bg-emerald-900 transition font-semibold"
                   disabled={verifyingOtp}
                 >
                   {verifyingOtp ? "Verifying..." : "Verify OTP"}
                 </button>
               </div>
-
               {otpVerified && (
-                <div className="flex items-center gap-2 mt-2 text-green-600">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                <div className="flex items-center gap-2 mt-2 text-green-600 text-xs sm:text-sm">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-xs md:text-sm">
-                    OTP verified successfully
-                  </span>
+                  <span>OTP verified successfully</span>
                 </div>
               )}
             </div>
 
-            <div className="mt-5">
-              <label
-                htmlFor="organizationCode"
-                className="text-xs md:text-sm font-medium text-gray-800"
-              >
+            <div>
+              <label className="text-xs sm:text-sm font-medium text-gray-800">
                 Organization Code (Optional)
               </label>
               <input
                 type="text"
-                name="organizationCode"
                 placeholder="Enter Code Eg: CropGen01234"
                 value={formData.organizationCode || ""}
                 onChange={handleOrgCodeChange}
-                className={`mt-1 w-full rounded-md px-3 py-2 text-sm bg-white/80 border ${
-                  orgCodeError ? "border-red-500" : "border-gray-300"
-                } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
+                className={`mt-1 w-full rounded-md px-3 py-2 text-sm bg-white border-1 ${orgCodeError ? "border-red-500" : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
               />
-
               {orgCodeError && (
-                <div className="flex items-center gap-2 mt-1 text-red-600">
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                <div className="flex items-center gap-2 mt-1 text-red-600 text-xs sm:text-sm">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-xs">{orgCodeError}</span>
+                  <span>{orgCodeError}</span>
                 </div>
               )}
             </div>
+          </div>
 
+          <div className="flex flex-col gap-3 mt-4 flex-shrink-0">
             {onboardingRequired && (
               <div className="flex items-start gap-2">
                 <input
                   type="checkbox"
-                  name="terms"
                   checked={formData.terms}
-                  onChange={(e) =>
-                    setFormData({ ...formData, terms: e.target.checked })
-                  }
+                  onChange={(e) => setFormData({ ...formData, terms: e.target.checked })}
                   className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded"
                 />
-                <label
-                  htmlFor="terms"
-                  className="text-[10px] md:text-xs text-gray-700"
-                >
+                <label className="text-[10px] sm:text-xs text-gray-700">
                   I agree to the{" "}
                   <a
                     href="https://www.cropgenapp.com/terms-conditions"
@@ -297,11 +262,8 @@ const Signup = () => {
             <button
               type="button"
               onClick={() => {
-                if (onboardingRequired) {
-                  handleCompleteProfile();
-                } else {
-                  handleVerifyOtp();
-                }
+                if (onboardingRequired) handleCompleteProfile();
+                else handleVerifyOtp();
               }}
               disabled={completingProfile}
               className="w-full bg-[#344E41] text-white py-2 rounded-md font-medium hover:bg-emerald-900 transition"

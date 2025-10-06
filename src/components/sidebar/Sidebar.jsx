@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, memo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
@@ -58,11 +58,50 @@ const Sidebar = ({ onToggleCollapse }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (location.pathname === "/cropgen-analytics") {
-      setIsCollapsed(false);
-      onToggleCollapse(false);
+    if (window.innerWidth < 850) {
+      setIsCollapsed(true);
+      onToggleCollapse(true);
     }
-  }, [location.pathname, onToggleCollapse]);
+  }, []);
+
+  const isInitialized = useRef(false);
+
+  useEffect(() => {
+    const BREAKPOINT = 850;
+
+    const updateSidebar = () => {
+      const isMobile = window.innerWidth < BREAKPOINT;
+
+      // Only set initial state once
+      if (!isInitialized.current) {
+        setIsCollapsed(isMobile);
+        onToggleCollapse(isMobile);
+        isInitialized.current = true;
+        return;
+      }
+      if (!isMobile) {
+        setIsCollapsed(false);
+        onToggleCollapse(false);
+      }
+
+    };
+
+    updateSidebar();
+
+
+    let resizeTimer;
+    const onResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(updateSidebar, 100);
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      clearTimeout(resizeTimer);
+    };
+  }, [onToggleCollapse]);
+
 
   const handleCollapseToggle = (collapse) => {
     const newCollapsedState = collapse ?? !isCollapsed;
@@ -72,11 +111,12 @@ const Sidebar = ({ onToggleCollapse }) => {
 
   const handleNavigation = (path) => {
     navigate(path);
-    if (path === "/cropgen-analytics") {
-      handleCollapseToggle(false);
-    } else if (location.pathname === "/cropgen-analytics") {
-      handleCollapseToggle(true);
+
+    if (window.innerWidth < 850) {
+      setIsCollapsed(true);
+      onToggleCollapse(true);
     }
+
   };
 
   const handleLogout = async () => {
@@ -122,7 +162,6 @@ const Sidebar = ({ onToggleCollapse }) => {
         className={`offcanvas ${isCollapsed ? "collapsed" : ""}`}
       >
         <Offcanvas.Body className="p-0 m-0">
-          {/* Logo */}
           {!isCollapsed && (
             <div
               className="title-container flex items-center justify-center"
@@ -132,7 +171,6 @@ const Sidebar = ({ onToggleCollapse }) => {
             </div>
           )}
 
-          {/* User Card */}
           {!isCollapsed && (
             <Card
               style={{ width: "13rem" }}
@@ -151,33 +189,30 @@ const Sidebar = ({ onToggleCollapse }) => {
             </Card>
           )}
 
-          {/* Navigation */}
           <nav className="sidebar-nav">
             <ul className={!isCollapsed ? "" : "collapsed-nav-list"}>
               {!isCollapsed
                 ? NAV_ITEMS.map(({ path, label, Icon }) => (
-                    <li
-                      key={path}
-                      onClick={() => handleNavigation(path)}
-                      className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${
-                        location.pathname === path
-                          ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
-                          : ""
+                  <li
+                    key={path}
+                    onClick={() => handleNavigation(path)}
+                    className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${location.pathname === path
+                        ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
+                        : ""
                       }`}
-                    >
-                      <Icon />
-                      {label}
-                    </li>
-                  ))
+                  >
+                    <Icon />
+                    {label}
+                  </li>
+                ))
                 : collapsedNavItems.map((item, index) => (
-                    <div key={index} style={{ height: `${spacing}vh` }}>
-                      {item}
-                    </div>
-                  ))}
+                  <div key={index} style={{ height: `${spacing}vh` }}>
+                    {item}
+                  </div>
+                ))}
             </ul>
           </nav>
 
-          {/* Logout Button (only when expanded) */}
           {!isCollapsed && (
             <div
               className="offcanvas-footer cursor-pointer mt-5"
