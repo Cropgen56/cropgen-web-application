@@ -16,7 +16,6 @@ const Signup = () => {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [completingProfile, setCompletingProfile] = useState(false);
-
   const [otpVerified, setOtpVerified] = useState(false);
   const [orgCodeError, setOrgCodeError] = useState("");
   const [orgCodeTouched, setOrgCodeTouched] = useState(false);
@@ -74,7 +73,6 @@ const Signup = () => {
         setVerifyingOtp(false);
         if (res.meta.requestStatus === "fulfilled") {
           setOtpVerified(true);
-
           if (res.payload.onboardingRequired) {
           } else {
             navigate("/cropgen-analytics");
@@ -126,40 +124,41 @@ const Signup = () => {
   }, [formData.email]);
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center items-center bg-white p-4">
-      <div className="w-full max-w-xl bg-white rounded-xl p-4 sm:p-6 md:p-10 flex flex-col justify-center
-                      overflow-y-auto h-[90vh] sm:h-[85vh] md:h-[80vh]">
-        <div className="mb-6 sm:mb-8 text-center flex-shrink-0">
-          <h2 className="text-lg sm:text-2xl md:text-3xl font-semibold text-black">
+    <div className="w-full h-full flex items-center justify-center bg-white p-2 lg:p-4 mt-10" >
+      {/* Base styles are for tablet, lg: styles are for desktop */}
+      <div className="w-full max-w-lg lg:max-w-xl bg-white rounded-xl p-3 sm:p-4 md:p-6 lg:p-10 flex flex-col justify-center
+                      h-full max-h-[90vh] lg:h-[80vh] overflow-y-auto">
+        <div className="mb-4 lg:mb-8 text-center flex-shrink-0">
+          <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-semibold text-black">
             Get started with CropGen
           </h2>
-          <p className="text-xs sm:text-sm md:text-base text-gray-500 mt-1 font-medium">
+          <p className="text-xs sm:text-sm lg:text-base text-gray-500 mt-1 font-medium">
             Enter Your Personal data to Create your account
           </p>
         </div>
 
 
-        <div className="space-y-4 flex-1 flex flex-col ">
-          <div className="space-y-4">
+        <div className="space-y-3 lg:space-y-4 flex-1 flex flex-col ">
+          <div className="space-y-3 lg:space-y-4">
             <div>
-              <label className="text-xs sm:text-sm font-medium text-gray-800">Email</label>
-              <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full">
+              <label className="text-xs lg:text-sm font-medium text-gray-800">Email</label>
+              <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 mt-1 lg:mt-2 w-full">
                 <input
                   type="email"
                   placeholder="example@gmail.com*"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full sm:flex-[0.8] rounded-md px-3 py-2 text-sm bg-white border-1 border-gray-300
-            focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
+                  className="w-full sm:flex-[0.8] rounded-md px-2 py-1.5 lg:px-3 lg:py-2 text-xs lg:text-sm bg-white border-1 border-gray-300
+                             focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                 />
                 <button
                   onClick={handleSendOtp}
-                  className="w-full sm:flex-[0.2] h-9 sm:h-10 text-xs sm:text-sm bg-[#344E41] text-white rounded-md
+                  className="w-full sm:flex-[0.2] h-8 lg:h-10 text-xs lg:text-sm bg-[#344E41] text-white rounded-md
                              hover:bg-emerald-900 transition font-semibold flex items-center justify-center gap-2"
                   disabled={sendingOtp}
                 >
                   {sendingOtp ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-3 h-3 lg:w-4 lg:h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     "Get OTP"
                   )}
@@ -168,9 +167,9 @@ const Signup = () => {
             </div>
 
             <div className="relative">
-              <label className="text-xs sm:text-sm font-medium text-gray-800">Enter OTP</label>
-              <div className="flex flex-col sm:flex-row gap-3 mt-2 w-full">
-                <div className="grid grid-cols-6 gap-2 w-full sm:flex-[0.8]">
+              <label className="text-xs lg:text-sm font-medium text-gray-800">Enter OTP</label>
+              <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 mt-1 lg:mt-2 w-full">
+                <div className="grid grid-cols-6 gap-1 lg:gap-2 w-full sm:flex-[0.8]">
                   {otpInputs.map((digit, idx) => (
                     <input
                       key={idx}
@@ -180,14 +179,14 @@ const Signup = () => {
                       value={digit}
                       onChange={(e) => handleOtpChange(e.target.value, idx)}
                       onKeyDown={(e) => handleKeyDown(e, idx)}
-                      className="w-full h-8 sm:h-10 text-center border-1 border-gray-300 rounded-md
-                                 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-xs sm:text-sm"
+                      className="w-full h-7 lg:h-10 text-center border-1 border-gray-300 rounded-md
+                                 focus:outline-none focus:ring-2 focus:ring-emerald-600 text-xs lg:text-sm"
                     />
                   ))}
                 </div>
                 <button
                   onClick={handleVerifyOtp}
-                  className="w-full sm:flex-[0.2] h-8 sm:h-10 text-xs sm:text-sm bg-[#344E41] text-white
+                  className="w-full sm:flex-[0.2] h-7 lg:h-10 text-xs lg:text-sm bg-[#344E41] text-white
                              rounded-md hover:bg-emerald-900 transition font-semibold"
                   disabled={verifyingOtp}
                 >
@@ -195,8 +194,8 @@ const Signup = () => {
                 </button>
               </div>
               {otpVerified && (
-                <div className="flex items-center gap-2 mt-2 text-green-600 text-xs sm:text-sm">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex items-center gap-1 lg:gap-2 mt-1 lg:mt-2 text-green-600 text-xs lg:text-sm">
+                  <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -209,7 +208,7 @@ const Signup = () => {
             </div>
 
             <div>
-              <label className="text-xs sm:text-sm font-medium text-gray-800">
+              <label className="text-xs lg:text-sm font-medium text-gray-800">
                 Organization Code (Optional)
               </label>
               <input
@@ -217,12 +216,12 @@ const Signup = () => {
                 placeholder="Enter Code Eg: CropGen01234"
                 value={formData.organizationCode || ""}
                 onChange={handleOrgCodeChange}
-                className={`mt-1 w-full rounded-md px-3 py-2 text-sm bg-white border-1 ${orgCodeError ? "border-red-500" : "border-gray-300"
+                className={`mt-1 w-full rounded-md px-2 py-1.5 lg:px-3 lg:py-2 text-xs lg:text-sm bg-white border-1 ${orgCodeError ? "border-red-500" : "border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
               />
               {orgCodeError && (
-                <div className="flex items-center gap-2 mt-1 text-red-600 text-xs sm:text-sm">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex items-center gap-1 lg:gap-2 mt-1 text-red-600 text-xs lg:text-sm">
+                  <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
@@ -235,16 +234,16 @@ const Signup = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 mt-4 flex-shrink-0">
+          <div className="flex flex-col gap-2 lg:gap-3 mt-3 lg:mt-4 flex-shrink-0">
             {onboardingRequired && (
               <div className="flex items-start gap-2">
                 <input
                   type="checkbox"
                   checked={formData.terms}
                   onChange={(e) => setFormData({ ...formData, terms: e.target.checked })}
-                  className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded"
+                  className="mt-0.5 lg:mt-1 w-3 h-3 lg:w-4 lg:h-4 text-emerald-600 border-gray-300 rounded"
                 />
-                <label className="text-[10px] sm:text-xs text-gray-700">
+                <label className="text-[10px] lg:text-xs text-gray-700">
                   I agree to the{" "}
                   <a
                     href="https://www.cropgenapp.com/terms-conditions"
@@ -266,12 +265,12 @@ const Signup = () => {
                 else handleVerifyOtp();
               }}
               disabled={completingProfile}
-              className="w-full bg-[#344E41] text-white py-2 rounded-md font-medium hover:bg-emerald-900 transition"
+              className="w-full bg-[#344E41] text-white py-1.5 lg:py-2 rounded-md font-medium hover:bg-emerald-900 transition text-xs lg:text-base"
             >
               {completingProfile ? "Processing..." : "Login / Sign Up"}
             </button>
 
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-1 lg:mt-2">
               <hr className="flex-1 border-[#075A53]" />
               <span className="text-xs text-gray-600">OR</span>
               <hr className="flex-1 border-[#075A53]" />
