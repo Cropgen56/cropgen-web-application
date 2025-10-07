@@ -175,7 +175,7 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
 
   return (
     <div className="w-full flex justify-center mt-4">
-      <div className="relative w-full bg-gray-50 rounded-2xl shadow-lg text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+      <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
         {/* Index Selector */}
         <div className="absolute top-3 right-3 z-50">
           <select

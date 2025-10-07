@@ -21,9 +21,9 @@ const SoilHealthChart = () => {
   const latestMoisture15cm = forecastData.current?.soil_moisture_15cm || "N/A"; // 15cm data
 
   return (
-    <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+    <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto bg-white p-4 rounded-2xl mt-3 ">
 
-   <div className="flex items-center justify-end gap-2 md:gap-6 mt-4">
+      <div className="flex items-center justify-end gap-2 md:gap-6 mt-4">
         <div className="flex items-center gap-1 md:gap-2 bg-[#344E41] border rounded-xl shadow-md p-2.5 w-42">
           <img
             src={soilTemperature}
@@ -62,7 +62,7 @@ const SoilHealthChart = () => {
           <h2 className="text-[#344E41] text-base font-bold text-center">
             Subsoil (5cm)
           </h2>
-          <div className="flex flex-col lg:flex-row gap-0.5 mb-2 mb:4">
+          <div className="flex flex-row gap-2 mb-2 mb:4">
             <div className="flex items-center gap-1 p-1.5">
               <img
                 src={soil_Temperature}
@@ -99,7 +99,7 @@ const SoilHealthChart = () => {
           <h2 className="text-[#344E41] font-bold text-base text-center">
             Parent Material (15cm)
           </h2>
-          <div className="flex flex-col lg:flex-row gap-0.5">
+          <div className="flex flex-row gap-4">
             <div className="flex items-center gap-1 sm:gap-0 p-1.5">
               <img
                 src={soil_Temperature}

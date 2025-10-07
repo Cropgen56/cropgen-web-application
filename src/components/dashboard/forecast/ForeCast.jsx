@@ -46,10 +46,10 @@ function ForeCast() {
   return (
     <div className="mt-8">
 
-      <div className="relative bg-white border border-gray-200 rounded-2xl shadow-lg text-gray-800 flex flex-col overflow-hidden px-6 py-3">
+      <div className="relative bg-white border border-gray-200 rounded-2xl shadow-md text-gray-800 flex flex-col overflow-hidden px-6 py-3">
 
 
-        <div className="relative z-10 flex items-start w-full gap-6 flex-col lg:flex-row">
+        <div className="relative z-10 flex items-start w-full gap-6  lg:flex-row">
 
           {/* Today's Weather */}
           <div className="flex flex-col items-center">

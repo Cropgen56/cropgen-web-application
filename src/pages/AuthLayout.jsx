@@ -6,13 +6,34 @@ import laptop from "../assets/image/login/laptop-overlay.png";
 import logo from "../assets/image/login/logo.png";
 import sphere from "../assets/image/login/Desktop-background.svg";
 import keywordBg from "../assets/image/login/keyword-bg.svg";
+import img1 from "../assets/logo/Group 503.svg";
+import img2 from "../assets/logo/Group 504.svg";
+import img3 from "../assets/logo/Group 505.svg";
+import img4 from "../assets/logo/Group 506.svg";
+import img5 from "../assets/logo/Group 507.svg";
+import img6 from "../assets/logo/Group 508.svg";
+import img7 from "../assets/logo/Group 509.svg";
 
 const AuthLayout = () => {
     const dispatch = useDispatch();
     const [animate, setAnimate] = useState(false);
     const [height, setHeight] = useState(window.innerHeight);
     const [width, setWidth] = useState(window.innerWidth);
-    const isSmallTablet = width <= 820;
+    const isSmallTablet = width <= 834;
+    const animationDuration = 15;
+
+    const planets = [
+        { img: img1, label: "Crop Advisory" },
+        { img: img2, label: "Weather Insights" },
+        { img: img3, label: "Soil Health" },
+        { img: img4, label: "Pest & Disease" },
+        { img: img5, label: "Irrigation Status" },
+        { img: img6, label: "NDVI Map" },
+        { img: img7, label: "Field Analytics" },
+    ];
+
+
+
 
     useEffect(() => {
         dispatch(loadLocalStorage());
@@ -36,7 +57,7 @@ const AuthLayout = () => {
     return (
         <div className="relative w-full h-screen overflow-hidden font-poppins">
             {!isSmallTablet ? (
-                // Desktop Layout (Two-Column)
+
                 <div className="flex flex-row w-full h-full">
                     <div className="w-1/2 relative h-full bg-[#344E41]">
                         <div className="absolute top-4 left-4 lg:top-6 lg:left-6 flex items-center gap-2">
@@ -51,22 +72,63 @@ const AuthLayout = () => {
                                     Powered by satellite insights, CropGen helps you detect, decide, and grow better—field by field.
                                 </p>
                                 <div className="relative mt-2 w-80 lg:w-[28rem] mx-auto">
-                                    <img src={sphere} alt="Background" className="relative z-10 w-full h-auto" />
-                                    <div
-                                        className="absolute inset-0 z-20 w-full h-auto lg:h-[400px] rounded-full overflow-hidden flex items-center justify-center"
-                                        style={{
-                                            clipPath: "circle(50% at 50%)",
-                                        }}
-                                    >
-                                        <img
-                                            src={keywordBg}
-                                            alt="Keywords"
-                                            className="max-w-[75%] max-h-[85%] object-contain animate-[spin_12s_linear_infinite]"
-                                        />
+
+                                    <img src={sphere} alt="Sun" className="relative z-10 w-full h-auto" />
+
+
+                                    <div className="absolute inset-0 flex items-center justify-center z-30">
+                                        <div className="relative w-[320px] h-[320px] md:w-[400px] md:h-[400px]">
+                                            {planets.map((planet, i) => {
+                                                const total = planets.length;
+                                                const angle = (360 / total) * i;
+
+                                                return (
+                                                    <div
+                                                        key={i}
+                                                        className="absolute left-1/2 top-1/2 w-0 h-0"
+                                                        style={{
+                                                            animation: `orbit ${animationDuration}s linear infinite`,
+                                                            animationDelay: `-${(i * animationDuration) / total}s`,
+                                                            transformOrigin: "center center",
+                                                        }}
+                                                    >
+
+                                                        <div
+                                                            className="absolute flex items-center justify-center"
+                                                            style={{
+                                                                top: "-190px",
+                                                                left: "0",
+                                                                transform: `translateX(-95%) rotate(-${angle}deg)`,
+                                                            }}
+                                                        >
+                                                            <div
+                                                                className="w-20 h-20 flex items-center justify-center"
+                                                                style={{
+                                                                    animation: `counterOrbit ${animationDuration}s linear infinite reverse`,
+                                                                }}
+                                                            >
+                                                                <img
+                                                                    src={planet.img}
+                                                                    alt=""
+                                                                    className="w-20 h-20 object-contain"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                    <img src={laptop} alt="Laptop" className="absolute left-[-6rem] top-1/2 -translate-y-1/2 z-30 w-80 lg:w-[500px] xl:w-[600px] max-w-full" />
-                                    <div className="absolute inset-0 rounded-full bg-white/20 blur-3xl animate-[spin_12s_linear_infinite]" />
+
+
+
+                                    <img
+                                        src={laptop}
+                                        alt="Laptop"
+                                        className="absolute left-[-6rem] top-1/2 -translate-y-1/2 z-40 w-80 lg:w-[500px] xl:w-[600px] max-w-full"
+                                    />
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -75,50 +137,93 @@ const AuthLayout = () => {
                     </div>
                 </div>
             ) : (
-                // Tablet/Mobile Layout (Flex-Col)
+
                 <div className="flex flex-col w-full h-full z-40">
                     <div
-                        className="
-      relative w-full 
-      bg-[#344E41] flex 
-      h-[22vh]       /* default mobile height */
-      sm:h-[20vh]    /* slightly smaller on 640–767px */
-      md:h-[15vh]    /* for iPad Mini/Air (768–820px) */
-      lg:h-[25vh]    /* desktop range, unused here but safe */
-    "
+                        className="relative w-full bg-[#344E41] flex transition-all duration-300"
+                        style={{
+                            height:
+                                width > 830
+                                    ? "25vh"
+                                    : width > 730
+                                        ? "15vh"
+                                        : width > 600
+                                            ? "22vh"
+                                            : "22vh",
+                        }}
                     >
                         <div className="flex-1 flex justify-start items-center px-2 relative">
                             <div className="absolute w-[250px] h-[250px] top-[20%] pointer-events-none">
+                                {/* Central Sphere */}
                                 <img src={sphere} alt="Background" className="relative z-10 w-full h-auto" />
-                                <div
-                                    className="absolute inset-0 z-20 w-full h-full rounded-full overflow-hidden flex items-center justify-center"
-                                    style={{
-                                        clipPath: "circle(50% at 50%)",
-                                    }}
-                                >
-                                    <img
-                                        src={keywordBg}
-                                        alt="Keywords"
-                                        className="max-w-[75%] max-h-[85%] object-contain animate-[spin_12s_linear_infinite]"
-                                    />
+
+                                {/* Orbiting Logos */}
+                                <div className="absolute inset-0 flex items-center justify-center z-30">
+
+                                    <div className="relative w-[250px] h-[250px]" style={{ transform: "translate(4px, -4px)" }}>
+                                        {planets.map((planet, i) => {
+                                            const total = planets.length;
+                                            const angle = (360 / total) * i;
+                                            const animationDuration = 15;
+
+                                            return (
+                                                <div
+                                                    key={i}
+                                                    className="absolute left-1/2 top-1/2 w-0 h-0"
+                                                    style={{
+                                                        animation: `orbit ${animationDuration}s linear infinite`,
+                                                        animationDelay: `-${(i * animationDuration) / total}s`,
+                                                        transformOrigin: "center center",
+                                                    }}
+                                                >
+                                                    <div
+                                                        className="absolute flex items-center justify-center"
+                                                        style={{
+                                                            top: "-100px",
+                                                            left: "0",
+                                                            transform: `translateX(-95%) rotate(-${angle}deg)`,
+                                                        }}
+                                                    >
+                                                        <div
+                                                            className="w-12 h-12 flex items-center justify-center"
+                                                            style={{
+                                                                animation: `counterOrbit ${animationDuration}s linear infinite reverse`,
+                                                            }}
+                                                        >
+                                                            <img
+                                                                src={planet.img}
+                                                                alt=""
+                                                                className="w-12 h-12 object-contain"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
+
+
                                 <img
                                     src={laptop}
                                     alt="Laptop"
-                                    className="absolute left-[-1rem] top-1/2 -translate-y-1/2 z-30 w-[150px] max-w-full"
+                                    className="absolute left-[-1rem] top-1/2 -translate-y-1/2 z-30 w-[190px] max-w-full"
                                 />
+
                                 <div className="absolute inset-0 rounded-full bg-white/20 blur-3xl animate-[spin_12s_linear_infinite]" />
                             </div>
                         </div>
+
+
                         <div className="flex-1 flex flex-col justify-center items-start px-2">
                             <div className="absolute top-2 right-2 flex items-center gap-2">
-                                <img src={logo} alt="Logo" className="h-12 w-auto" />
+                                <img src={logo} alt="Logo" className="h-16 w-auto" />
                             </div>
-                            <div className="mt-16 mx-1 text-left">
-                                <h2 className="text-[18px] font-bold text-white text-center [text-shadow:0px_4px_4px_#00000040]">
+                            <div className="mt-16 -translate-x-28 text-left">
+                                <h2 className="text-[16px] font-bold text-white text-center [text-shadow:0px_4px_4px_#00000040]">
                                     Your Smart Farming Assistant
                                 </h2>
-                                <p className="text-[12px] font-medium text-white text-center [text-shadow:0px_4px_4px_#00000040] max-w-[90%]">
+                                <p className="text-[10px] font-medium text-white text-center [text-shadow:0px_4px_4px_#00000040] max-w-[90%]">
                                     Powered by satellite insights, CropGen helps you detect, decide, and grow better—field by field.
                                 </p>
                             </div>

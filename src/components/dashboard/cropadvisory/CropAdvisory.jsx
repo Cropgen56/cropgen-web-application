@@ -163,11 +163,11 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
     }
 
     return (
-      <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-white border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto scrollbar-hide">
-        <h3 className="text-sm lg:text-base font-bold text-gray-900 mb-1 md:mb-0.5">
+      <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-[#344E41]/90 border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto scrollbar-hide">
+        <h3 className="text-sm lg:text-base font-bold text-white mb-1 md:mb-0.5">
           {category}
         </h3>
-        <div className="text-xs lg:text-sm text-gray-700 font-medium leading-tight">
+        <div className="text-xs lg:text-sm text-gray-300 font-medium leading-tight">
           {content}
         </div>
       </div>
@@ -175,7 +175,7 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
   });
 
   return (
-    <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
+    <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-900">Crop Advisory</h2>
 

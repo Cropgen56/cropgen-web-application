@@ -8,7 +8,6 @@ import {
 import SatelliteIndexList from "../satellitedata/SatelliteIndexList";
 import { fetchSatelliteDates } from "../../../../redux/slices/satelliteSlice";
 
-const VISIBLE_DATES_COUNT = 6;
 const DATE_FORMAT_OPTIONS = { day: "numeric", month: "short", year: "numeric" };
 const DEBOUNCE_DELAY = 500;
 
@@ -48,6 +47,7 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   const [selectedDate, setSelectedDate] = useState("");
   const [visibleDates, setVisibleDates] = useState([]);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(6);
 
   const coordinates = useMemo(() => {
     const field = selectedFieldsDetials[0]?.field;
@@ -76,6 +76,18 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     return () => debouncedFetch.cancel();
   }, [coordinates, debouncedFetch]);
 
+  useEffect(() => {
+
+    const handleResize = () => {
+      setVisibleCount(window.innerWidth < 1024 ? 5 : 6);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Update dates when satelliteDates change
   useEffect(() => {
     const items = satelliteDates?.items || [];
@@ -100,11 +112,11 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     ).sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort descending (latest first)
 
     setDates(uniqueDates);
-    setVisibleDates(uniqueDates.slice(0, VISIBLE_DATES_COUNT)); // Show latest dates first
+    setVisibleDates(uniqueDates.slice(0, visibleCount));
 
     if (!selectedDate && uniqueDates.length)
       setSelectedDate(toISODateString(items[0].date));
-  }, [satelliteDates]);
+  }, [satelliteDates, visibleCount]);
 
   const handleArrowClick = useCallback(
     (direction) => {
@@ -114,24 +126,24 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
       );
       if (
         direction === "next" &&
-        currentStart + VISIBLE_DATES_COUNT < dates.length
+        currentStart + visibleCount < dates.length
       ) {
         setVisibleDates(
           dates.slice(
-            currentStart + VISIBLE_DATES_COUNT,
-            currentStart + VISIBLE_DATES_COUNT * 2
+            currentStart + visibleCount,
+            currentStart + visibleCount * 2
           )
         );
       } else if (direction === "prev" && currentStart > 0) {
         setVisibleDates(
           dates.slice(
-            Math.max(0, currentStart - VISIBLE_DATES_COUNT),
+            Math.max(0, currentStart - visibleCount),
             currentStart
           )
         );
       }
     },
-    [dates, visibleDates]
+    [dates, visibleDates, visibleCount]
   );
 
   const handleDateClick = useCallback(
@@ -186,35 +198,34 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
 
         <div className="flex gap-2 overflow-x-auto w-full justify-between py-[5px] scrollbar-hide scroll-smooth">
           {loading.satelliteDates
-            ? Array.from({ length: VISIBLE_DATES_COUNT }).map((_, idx) => (
-                <div
-                  key={idx}
-                  className="h-[30px] min-w-[90px] rounded-xl bg-[#344e41]/50 animate-pulse"
-                />
-              ))
+            ? Array.from({ length: visibleCount }).map((_, idx) => (
+              <div
+                key={idx}
+                className="h-[30px] min-w-[90px] rounded-xl bg-[#344e41]/50 animate-pulse"
+              />
+            ))
             : visibleDates.map((dateItem) => (
-                <div
-                  key={dateItem.date}
-                  className={`flex flex-col items-center text-white cursor-pointer rounded px-4 py-2.5 min-w-[90px] ${
-                    formatDate(dateItem.date) === formatDate(selectedDate)
-                      ? "bg-[#344e41]"
-                      : "bg-transparent"
+              <div
+                key={dateItem.date}
+                className={`flex flex-col items-center text-white cursor-pointer rounded px-4 py-2.5 min-w-[90px] ${formatDate(dateItem.date) === formatDate(selectedDate)
+                    ? "bg-[#344e41]"
+                    : "bg-transparent"
                   }`}
-                  onClick={() => handleDateClick(dateItem.date)}
-                  role="option"
-                  aria-selected={
-                    formatDate(dateItem.date) === formatDate(selectedDate)
-                  }
-                  tabIndex={0}
-                >
-                  <div className="font-semibold text-sm text-center whitespace-nowrap">
-                    {dateItem.date}
-                  </div>
-                  <div className="text-xs text-center whitespace-nowrap">
-                    {dateItem.value.toFixed(2)}% Cloud
-                  </div>
+                onClick={() => handleDateClick(dateItem.date)}
+                role="option"
+                aria-selected={
+                  formatDate(dateItem.date) === formatDate(selectedDate)
+                }
+                tabIndex={0}
+              >
+                <div className="font-semibold text-xs  text-center whitespace-nowrap">
+                  {dateItem.date}
                 </div>
-              ))}
+                <div className="text-xs text-center whitespace-nowrap">
+                  {dateItem.value.toFixed(2)}% Cloud
+                </div>
+              </div>
+            ))}
         </div>
 
         <button
@@ -222,8 +233,8 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
           disabled={
             !dates.length ||
             dates.findIndex((d) => d.date === visibleDates[0]?.date) +
-              VISIBLE_DATES_COUNT >=
-              dates.length
+            visibleCount >=
+            dates.length
           }
         >
           <RightArrow />

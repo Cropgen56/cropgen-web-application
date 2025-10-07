@@ -125,3 +125,65 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes orbitAnimation {
+  from {
+    transform: rotate(0deg);
+    --orbit-rotation: 0deg; /* Set the variable */
+  }
+  to {
+    transform: rotate(360deg);
+    --orbit-rotation: 360deg; /* Set the variable */
+  }
+}
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes counterOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes counterOrbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
