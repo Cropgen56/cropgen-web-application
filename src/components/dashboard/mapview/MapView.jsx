@@ -154,10 +154,10 @@ const FarmMap = ({
 
   return (
     <div
-      className={`flex flex-col items-center w-full relative ${
-        fields.length === 0 ? "h-full" : "md:h-[500px] lg:h-[95%]"
-      } relative`}
-    >
+  className={`flex flex-col items-center w-full relative ${
+    fields.length === 0 ? "h-full" : "h-[400px] md:h-[500px] lg:h-[95%]"
+  }`}
+>
       <MapContainer
         center={
           centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter

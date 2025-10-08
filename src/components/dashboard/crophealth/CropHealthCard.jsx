@@ -68,50 +68,50 @@ const CropHealth = ({ selectedFieldsDetials }) => {
             <div className="grid grid-cols-2 gap-x-20 gap-y-5 text-sm">
               {/* Crop Name */}
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] lg:text-[18px]  md:text-[15px] text-[#344E41]">
+                <span className="font-semibold  lg:text-[18px]  md:text-[15px] text-[#344E41]">
                   Crop Name:
                 </span>
-                <span className="font-medium text-[18px] text-black lg:text-[18px] md:text-[14px]">
+                <span className="font-medium  text-black lg:text-[18px] md:text-[14px]">
                   {cropInfo?.cropName || cropName || "N/A"}
                 </span>
               </div>
 
               {/* Crop Age */}
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] lg:text-[18px]  md:text-[15px] text-[#344E41]">
+                <span className="font-semibold  lg:text-[18px]  md:text-[15px] text-[#344E41]">
                   Crop Age:
                 </span>
-                <span className="font-medium text-[18px] text-black lg:text-[18px] md:text-[14px]">
+                <span className="font-medium  text-black lg:text-[18px] md:text-[14px]">
                   {daysFromSowing} days
                 </span>
               </div>
 
               {/* Total Area */}
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] lg:text-[18px]  md:text-[15px] text-[#344E41]">
+                <span className="font-semibold  lg:text-[18px]  md:text-[15px] text-[#344E41]">
                   Total Area:
                 </span>
-                <span className="font-medium text-[18px] text-black lg:text-[18px] md:text-[14px]">
+                <span className="font-medium  text-black lg:text-[18px] md:text-[14px]">
                   {totalArea.toFixed(1) || "0.0"} Ha
                 </span>
               </div>
 
               {/* Standard Yield */}
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] lg:text-[18px]  md:text-[15px] text-[#344E41]">
+                <span className="font-semibold  lg:text-[18px]  md:text-[15px] text-[#344E41]">
                   Standard Yield:
                 </span>
-                <span className="font-medium text-[18px] text-black lg:text-[18px] md:text-[14px]">
+                <span className="font-medium  text-black lg:text-[18px] md:text-[14px]">
                   {cropYield?.data?.standard_yield || "N/A"}
                 </span>
               </div>
 
               {/* AI Yield */}
               <div className="flex gap-2">
-                <span className="font-semibold text-[18px] lg:text-[18px]  md:text-[15px] text-[#344E41]">
+                <span className="font-semibold  lg:text-[18px]  md:text-[15px] text-[#344E41]">
                   AI Yield:
                 </span>
-                <span className="font-medium text-[18px] text-black lg:text-[18px] md:text-[12px]">
+                <span className="font-medium  text-black lg:text-[18px] md:text-[12px]">
                   {cropYield?.data?.ai_predicted_yield ||
                     cropYield?.data?.message ||
                     "N/A"}

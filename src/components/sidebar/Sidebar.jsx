@@ -14,7 +14,6 @@ import {
   Operation,
   SmartAdvisory,
   Weather,
-  // PersonaliseCropShedule,
   Setting,
   Logout,
   Hammer,
@@ -36,16 +35,12 @@ const NAV_ITEMS = [
   { path: "/smart-advisory", label: "Smart Advisory", Icon: SmartAdvisory },
   { path: "/soil-report", label: "Soil Report", Icon: SoilReportIcon },
   { path: "/farm-report", label: "Farm Report", Icon: FarmReport },
-  // {
-  //   path: "/personalise-crop-shedule",
-  //   label: "Zoning",
-  //   Icon: PersonaliseCropShedule,
-  // },
   { path: "/setting", label: "Setting", Icon: Setting },
 ];
 
 const Sidebar = ({ onToggleCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -57,37 +52,26 @@ const Sidebar = ({ onToggleCollapse }) => {
     dispatch(decodeToken());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (window.innerWidth < 850) {
-      setIsCollapsed(true);
-      onToggleCollapse(true);
-    }
-  }, []);
-
   const isInitialized = useRef(false);
 
   useEffect(() => {
     const BREAKPOINT = 850;
 
     const updateSidebar = () => {
-      const isMobile = window.innerWidth < BREAKPOINT;
+      const isTabletOrMobile = window.innerWidth < BREAKPOINT;
 
-      // Only set initial state once
+
       if (!isInitialized.current) {
-        setIsCollapsed(isMobile);
-        onToggleCollapse(isMobile);
+        setIsCollapsed(isTabletOrMobile);
+        onToggleCollapse(isTabletOrMobile);
         isInitialized.current = true;
         return;
       }
-      if (!isMobile) {
-        setIsCollapsed(false);
-        onToggleCollapse(false);
-      }
-
+      setIsCollapsed(isTabletOrMobile);
+      onToggleCollapse(isTabletOrMobile);
     };
 
     updateSidebar();
-
 
     let resizeTimer;
     const onResize = () => {
@@ -102,21 +86,23 @@ const Sidebar = ({ onToggleCollapse }) => {
     };
   }, [onToggleCollapse]);
 
+  const handleCollapseToggle = () => {
+    if (window.innerWidth < 850) {
+      setShowOverlay(!showOverlay);
+    } else {
 
-  const handleCollapseToggle = (collapse) => {
-    const newCollapsedState = collapse ?? !isCollapsed;
-    setIsCollapsed(newCollapsedState);
-    onToggleCollapse(newCollapsedState);
+      const newCollapsedState = !isCollapsed;
+      setIsCollapsed(newCollapsedState);
+      onToggleCollapse(newCollapsedState);
+    }
   };
 
   const handleNavigation = (path) => {
     navigate(path);
 
     if (window.innerWidth < 850) {
-      setIsCollapsed(true);
-      onToggleCollapse(true);
+      setShowOverlay(false);
     }
-
   };
 
   const handleLogout = async () => {
@@ -128,12 +114,11 @@ const Sidebar = ({ onToggleCollapse }) => {
     }
   };
 
-  // calculate dynamic spacing for collapsed mode
   const collapsedNavItems = [
     <li
       key="collapse-toggle"
       className="collapse-button"
-      onClick={() => handleCollapseToggle(false)}
+      onClick={handleCollapseToggle}
     >
       <Hammer />
     </li>,
@@ -153,6 +138,95 @@ const Sidebar = ({ onToggleCollapse }) => {
 
   const spacing = Math.floor(100 / collapsedNavItems.length); // % per icon
 
+  // Render full sidebar content
+  const renderFullSidebar = () => (
+    <>
+      <div
+        className="title-container flex items-center justify-center"
+        onClick={() => handleNavigation("/")}
+      >
+        <img src={img1} alt="CropGen Logo" className="w-[170px]" />
+      </div>
+
+      <Card
+        style={{ width: "13rem" }}
+        onClick={() => handleNavigation("/setting")}
+        className="profile-card"
+      >
+        <img src={profile} className="profile-image" alt="User profile" />
+        <Card.Body className="text-center">
+          <Card.Title className="profile-user-name">
+            {user?.firstName} {user?.lastName}
+          </Card.Title>
+          <Card.Text className="profile-user-email">
+            {user?.email}
+          </Card.Text>
+        </Card.Body>
+      </Card>
+
+      <nav className="sidebar-nav">
+        <ul>
+          {NAV_ITEMS.map(({ path, label, Icon }) => (
+            <li
+              key={path}
+              onClick={() => handleNavigation(path)}
+              className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${location.pathname === path
+                ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
+                : ""
+                }`}
+            >
+              <Icon />
+              {label}
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div
+        className="offcanvas-footer cursor-pointer mt-5"
+        onClick={handleLogout}
+      >
+        <p className="footer-text flex items-center gap-2">
+          <Logout />
+          <span>Logout</span>
+        </p>
+      </div>
+    </>
+  );
+
+  const renderCollapsedNav = () => (
+    <nav className="sidebar-nav">
+      <ul className="collapsed-nav-list">
+        {collapsedNavItems.map((item, index) => (
+          <div key={index} style={{ height: `${spacing}vh` }}>
+            {item}
+          </div>
+        ))}
+      </ul>
+    </nav>
+  );
+
+  if (window.innerWidth < 850) {
+    return (
+      <div className="sidebar tablet-mobile bg-[#344e41]" >
+        <div className="collapsed-sidebar">
+          {renderCollapsedNav()}
+        </div>
+
+        <Offcanvas
+          show={showOverlay}
+          onHide={() => setShowOverlay(false)}
+          scroll={false}
+          backdrop={true}
+          className="offcanvas overlay-sidebar"
+        >
+          <Offcanvas.Body className="p-0 m-0">
+            {renderFullSidebar()}
+          </Offcanvas.Body>
+        </Offcanvas>
+      </div>
+    );
+  }
   return (
     <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
       <Offcanvas
@@ -162,68 +236,7 @@ const Sidebar = ({ onToggleCollapse }) => {
         className={`offcanvas ${isCollapsed ? "collapsed" : ""}`}
       >
         <Offcanvas.Body className="p-0 m-0">
-          {!isCollapsed && (
-            <div
-              className="title-container flex items-center justify-center"
-              onClick={() => handleNavigation("/")}
-            >
-              <img src={img1} alt="CropGen Logo" className="w-[170px]" />
-            </div>
-          )}
-
-          {!isCollapsed && (
-            <Card
-              style={{ width: "13rem" }}
-              onClick={() => handleNavigation("/setting")}
-              className="profile-card"
-            >
-              <img src={profile} className="profile-image" alt="User profile" />
-              <Card.Body className="text-center">
-                <Card.Title className="profile-user-name">
-                  {user?.firstName} {user?.lastName}
-                </Card.Title>
-                <Card.Text className="profile-user-email">
-                  {user?.email}
-                </Card.Text>
-              </Card.Body>
-            </Card>
-          )}
-
-          <nav className="sidebar-nav">
-            <ul className={!isCollapsed ? "" : "collapsed-nav-list"}>
-              {!isCollapsed
-                ? NAV_ITEMS.map(({ path, label, Icon }) => (
-                  <li
-                    key={path}
-                    onClick={() => handleNavigation(path)}
-                    className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${location.pathname === path
-                        ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
-                        : ""
-                      }`}
-                  >
-                    <Icon />
-                    {label}
-                  </li>
-                ))
-                : collapsedNavItems.map((item, index) => (
-                  <div key={index} style={{ height: `${spacing}vh` }}>
-                    {item}
-                  </div>
-                ))}
-            </ul>
-          </nav>
-
-          {!isCollapsed && (
-            <div
-              className="offcanvas-footer cursor-pointer mt-5"
-              onClick={handleLogout}
-            >
-              <p className="footer-text flex items-center gap-2">
-                <Logout />
-                <span>Logout</span>
-              </p>
-            </div>
-          )}
+          {isCollapsed ? renderCollapsedNav() : renderFullSidebar()}
         </Offcanvas.Body>
       </Offcanvas>
     </div>

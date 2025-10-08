@@ -81,6 +81,7 @@ function ForeCast() {
               </div>
             </div>
           </div>
+          
           <div className="relative z-10 flex items-start w-full gap-6">
             <div className="flex flex-col flex-1 w-full">
 
