@@ -1,5 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { getUser, updateUser, authenticateUser, sendOtp, verifyOtp, completeUserProfile } from "../../api/authApi";
+import {
+  getUser,
+  updateUser,
+  authenticateUser,
+  sendOtp,
+  verifyOtp,
+  completeUserProfile,
+} from "../../api/authApi";
 import { decodeJWT } from "../../utility/decodetoken";
 
 // Async thunk for signin
@@ -47,7 +54,6 @@ export const sendotp = createAsyncThunk(
     try {
       const response = await sendOtp(otpdata);
       return response;
-
     } catch (error) {
       return rejectWithValue(error.response?.data || "OTP sending failed");
     }
@@ -60,25 +66,29 @@ export const verifyuserotp = createAsyncThunk(
     try {
       const response = await verifyOtp({ email, otp });
       return response;
-    }
-    catch (error) {
-      return rejectWithValue(error.response?.data || "otp verification failed")
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "otp verification failed");
     }
   }
-)
+);
 
 export const completeProfile = createAsyncThunk(
   "auth/completeProfile",
   async ({ token, terms, organizationCode }, { rejectWithValue }) => {
     try {
-      const response = await completeUserProfile({ token, terms, organizationCode });
+      const response = await completeUserProfile({
+        token,
+        terms,
+        organizationCode,
+      });
       return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data || { message: "Profile completion failed" });
+      return rejectWithValue(
+        error.response?.data || { message: "Profile completion failed" }
+      );
     }
   }
 );
-
 
 // Initial state
 const initialState = {
@@ -181,7 +191,6 @@ const authSlice = createSlice({
           localStorage.setItem("authToken", accessToken);
           state.token = accessToken;
         }
-
         state.user = user || null;
         state.role = role || null;
         state.onboardingRequired = onboardingRequired || false;

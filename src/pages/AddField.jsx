@@ -20,7 +20,7 @@ const AddField = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const userId = useSelector((state) => state?.auth?.user);
+  const userId = useSelector((state) => state?.auth?.user?.id);
 
   useEffect(() => {
     const handleResize = () => {

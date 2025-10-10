@@ -1,4 +1,3 @@
-// hooks/useIsTablet.js
 import { useEffect, useState } from "react";
 
 const useIsTablet = () => {
@@ -8,7 +7,6 @@ const useIsTablet = () => {
     const checkIsTablet = () => {
       const width = window.innerWidth;
       setIsTablet(width >= 768 && width <= 1366);
-
     };
 
     checkIsTablet();

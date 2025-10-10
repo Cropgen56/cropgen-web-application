@@ -2,10 +2,9 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
-import bgimage from "../../../assets/image/Group1.png"; // new background
-import tick from "../../../assets/image/Group 535.png"; // new tick image
+import bgimage from "../../../assets/image/Group1.png";
+import tick from "../../../assets/image/Group 535.png";
 import { resetPassword } from "../../../api/authApi";
-
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -20,7 +19,8 @@ const ResetPassword = () => {
     e.preventDefault();
     if (!password || !confirm) return message.error("All fields required");
     if (password !== confirm) return message.error("Passwords do not match");
-    if (password.length < 10) return message.error("Password must be at least 10 characters");
+    if (password.length < 10)
+      return message.error("Password must be at least 10 characters");
 
     try {
       const res = await resetPassword(token, password);
@@ -40,7 +40,11 @@ const ResetPassword = () => {
         <div className="border border-white/30 shadow-xl rounded-xl px-8 py-10 sm:p-12 lg:p-16 w-[90vw] max-w-lg backdrop-blur-md bg-white/40 h-[85vh] flex flex-col justify-center text-center">
           {/* Custom tick image */}
           <div className="flex justify-center mb-20">
-            <img src={tick} alt="success" className="w-30 h-30 object-contain" />
+            <img
+              src={tick}
+              alt="success"
+              className="w-30 h-30 object-contain"
+            />
           </div>
 
           <h2 className="text-2xl md:text-3xl font-bold text-[#344E41] mb-10">

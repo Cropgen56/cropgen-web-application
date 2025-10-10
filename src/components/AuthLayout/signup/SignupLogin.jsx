@@ -9,7 +9,7 @@ import SocialButtons from "../shared/socialbuttons/SocialButton";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 
-const Signup = () => {
+const SignupLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { token, onboardingRequired } = useSelector((state) => state.auth);
@@ -124,10 +124,12 @@ const Signup = () => {
   }, [formData.email]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-white p-2 lg:p-4 mt-10" >
+    <div className="w-full h-full flex items-center justify-center bg-white p-2 lg:p-4 mt-10">
       {/* Base styles are for tablet, lg: styles are for desktop */}
-      <div className="w-full max-w-lg lg:max-w-xl bg-white rounded-xl p-3 sm:p-4 md:p-6 lg:p-10 flex flex-col justify-center
-                      h-full max-h-[90vh] lg:h-[80vh] overflow-y-auto">
+      <div
+        className="w-full max-w-lg lg:max-w-xl bg-white rounded-xl p-3 sm:p-4 md:p-6 lg:p-10 flex flex-col justify-center
+                      h-full max-h-[90vh] lg:h-[80vh] overflow-y-auto"
+      >
         <div className="mb-4 lg:mb-8 text-center flex-shrink-0">
           <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-semibold text-black">
             Get started with CropGen
@@ -137,17 +139,20 @@ const Signup = () => {
           </p>
         </div>
 
-
         <div className="space-y-3 lg:space-y-4 flex-1 flex flex-col ">
           <div className="space-y-3 lg:space-y-4">
             <div>
-              <label className="text-xs lg:text-sm font-medium text-gray-800">Email</label>
+              <label className="text-xs lg:text-sm font-medium text-gray-800">
+                Email
+              </label>
               <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 mt-1 lg:mt-2 w-full">
                 <input
                   type="email"
                   placeholder="example@gmail.com*"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   className="w-full sm:flex-[0.8] rounded-md px-2 py-1.5 lg:px-3 lg:py-2 text-xs lg:text-sm bg-white border-1 border-gray-300
                              focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"
                 />
@@ -167,7 +172,9 @@ const Signup = () => {
             </div>
 
             <div className="relative">
-              <label className="text-xs lg:text-sm font-medium text-gray-800">Enter OTP</label>
+              <label className="text-xs lg:text-sm font-medium text-gray-800">
+                Enter OTP
+              </label>
               <div className="flex flex-col sm:flex-row gap-2 lg:gap-3 mt-1 lg:mt-2 w-full">
                 <div className="grid grid-cols-6 gap-1 lg:gap-2 w-full sm:flex-[0.8]">
                   {otpInputs.map((digit, idx) => (
@@ -195,7 +202,11 @@ const Signup = () => {
               </div>
               {otpVerified && (
                 <div className="flex items-center gap-1 lg:gap-2 mt-1 lg:mt-2 text-green-600 text-xs lg:text-sm">
-                  <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    className="w-3 h-3 lg:w-4 lg:h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path
                       fillRule="evenodd"
                       d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -216,12 +227,17 @@ const Signup = () => {
                 placeholder="Enter Code Eg: CropGen01234"
                 value={formData.organizationCode || ""}
                 onChange={handleOrgCodeChange}
-                className={`mt-1 w-full rounded-md px-2 py-1.5 lg:px-3 lg:py-2 text-xs lg:text-sm bg-white border-1 ${orgCodeError ? "border-red-500" : "border-gray-300"
-                  } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
+                className={`mt-1 w-full rounded-md px-2 py-1.5 lg:px-3 lg:py-2 text-xs lg:text-sm bg-white border-1 ${
+                  orgCodeError ? "border-red-500" : "border-gray-300"
+                } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
               />
               {orgCodeError && (
                 <div className="flex items-center gap-1 lg:gap-2 mt-1 text-red-600 text-xs lg:text-sm">
-                  <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    className="w-3 h-3 lg:w-4 lg:h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path
                       fillRule="evenodd"
                       d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
@@ -240,7 +256,9 @@ const Signup = () => {
                 <input
                   type="checkbox"
                   checked={formData.terms}
-                  onChange={(e) => setFormData({ ...formData, terms: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, terms: e.target.checked })
+                  }
                   className="mt-0.5 lg:mt-1 w-3 h-3 lg:w-4 lg:h-4 text-emerald-600 border-gray-300 rounded"
                 />
                 <label className="text-[10px] lg:text-xs text-gray-700">
@@ -284,4 +302,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default SignupLogin;

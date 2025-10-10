@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import Signup from "../components/AuthLayout/signup/Signup";
+import SignupLogin from "../components/AuthLayout/signup/SignupLogin";
 import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice";
 import { useDispatch } from "react-redux";
 import laptop from "../assets/image/login/laptop-overlay.png";
 import logo from "../assets/image/login/logo.png";
 import sphere from "../assets/image/login/Desktop-background.svg";
-import keywordBg from "../assets/image/login/keyword-bg.svg";
 import img1 from "../assets/logo/Group 503.svg";
 import img2 from "../assets/logo/Group 504.svg";
 import img3 from "../assets/logo/Group 505.svg";
@@ -130,7 +129,7 @@ const AuthLayout = () => {
             </div>
           </div>
           <div className="w-1/2 flex justify-center items-center h-full ">
-            <Signup />
+            <SignupLogin />
           </div>
         </div>
       ) : (
@@ -233,7 +232,7 @@ const AuthLayout = () => {
             </div>
           </div>
           <div className="h-[65vh] bg-white flex-grow flex overflow-hidden">
-            <Signup />
+            <SignupLogin />
           </div>
         </div>
       )}
