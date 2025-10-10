@@ -5,6 +5,7 @@ import farmSlice from "./slices/farmSlice";
 import satelliteSlice from "./slices/satelliteSlice";
 import operationSlice from "./slices/operationSlice";
 import cropReducer from "./slices/cropSlice";
+import subscriptionSlice from "./slices/subscriptionSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,8 @@ export const store = configureStore({
     satellite: satelliteSlice,
     operation: operationSlice,
     crops: cropReducer,
+    subscription: subscriptionSlice,
+
   },
 });
 

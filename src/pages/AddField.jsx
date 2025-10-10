@@ -1,4 +1,3 @@
-// AddField.jsx
 import React, { useState, useEffect } from "react";
 import AddFieldMap from "../components/addfield/AddFieldMap";
 import AddFieldSidebar from "../components/addfield/AddFieldSidebar";
@@ -8,14 +7,16 @@ import { useNavigate } from "react-router-dom";
 import * as turf from "@turf/turf";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
+import PricingOverlay from "../components/pricing/Pricing";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
   const [isTabletView, setIsTabletView] = useState(false);
-  const [showOverlay, ] = useState(false);
-  const [ , setPendingRedirect] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [pendingRedirect, setPendingRedirect] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [fieldArea, setFieldArea] = useState(0);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -35,8 +36,21 @@ const AddField = () => {
   const toggleAddMarkers = () => setIsAddingMarkers((prev) => !prev);
   const clearMarkers = () => setMarkers([]);
 
-  // Sidebar toggle from child
   const toggleSidebar = (visible) => setIsSidebarVisible(visible);
+
+  const calculateArea = (coords) => {
+    if (coords.length < 3) return 0; 
+    
+    const coordinates = coords.map((point) => [point.lng, point.lat]);
+    coordinates.push(coordinates[0]);
+    const polygon = turf.polygon([coordinates]);
+    const area = turf.area(polygon);
+    return area / 4046.86; 
+  };
+
+  const acresToHectares = (acres) => {
+    return acres * 0.404686;
+  };
 
   const saveFarm = ({
     cropName,
@@ -51,13 +65,10 @@ const AddField = () => {
       return;
     }
 
-    const calculateArea = (coords) => {
-      const coordinates = coords.map((point) => [point.lng, point.lat]);
-      coordinates.push(coordinates[0]);
-      const polygon = turf.polygon([coordinates]);
-      const area = turf.area(polygon);
-      return area / 4046.86;
-    };
+    const areaInAcres = calculateArea(markers);
+    const areaInHectares = acresToHectares(areaInAcres);
+
+    setFieldArea(areaInHectares);
 
     dispatch(
       addFarmField({
@@ -68,30 +79,35 @@ const AddField = () => {
         sowingDate,
         typeOfIrrigation,
         farmName,
-        acre: calculateArea(markers),
+        acre: areaInAcres,
         typeOfFarming,
       })
     ).then((result) => {
       if (result?.payload?.success) {
         message.success("Field added successfully!");
-        navigate("/cropgen-analytics");
-        // setShowOverlay(true);
+        setShowOverlay(true);
         setPendingRedirect(true);
       }
     });
   };
 
-  // const handleClosePricing = () => {
-  //   setShowOverlay(false);
-  //   if (pendingRedirect) {
-  //     navigate("/cropgen-analytics");
-  //   }
-  // };
+  const handleClosePricing = () => {
+    setShowOverlay(false);
+    if (pendingRedirect) {
+      navigate("/cropgen-analytics");
+    }
+  };
+
+  const getCurrentArea = () => {
+    if (markers.length < 3) return 0;
+    const areaInAcres = calculateArea(markers);
+    return acresToHectares(areaInAcres);
+  };
 
   return (
     <div className="relative w-full h-screen">
-      {/* Pricing Overlay */}
-      {/* <AnimatePresence>
+
+      <AnimatePresence>
         {showOverlay && (
           <motion.div
             key="pricing-overlay"
@@ -101,10 +117,13 @@ const AddField = () => {
             transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
             className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8 no-scrollbar"
           >
-            <PricingSimple onClose={handleClosePricing} />
+            <PricingOverlay 
+              onClose={handleClosePricing} 
+              userArea={fieldArea} 
+            />
           </motion.div>
         )}
-      </AnimatePresence> */}
+      </AnimatePresence>
 
       {isTabletView ? (
         // Tablet Layout
@@ -162,6 +181,7 @@ const AddField = () => {
                   saveFarm={saveFarm}
                   markers={markers}
                   isTabletView={true}
+                  currentArea={getCurrentArea()}
                 />
               </motion.div>
             )}
@@ -170,7 +190,11 @@ const AddField = () => {
       ) : (
         // Desktop Layout
         <div className="w-full h-screen flex">
-          <AddFieldSidebar saveFarm={saveFarm} markers={markers} />
+          <AddFieldSidebar 
+            saveFarm={saveFarm} 
+            markers={markers} 
+            currentArea={getCurrentArea()}
+          />
           <AddFieldMap
             markers={markers}
             setMarkers={setMarkers}
