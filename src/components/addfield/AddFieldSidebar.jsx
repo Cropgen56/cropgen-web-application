@@ -21,12 +21,9 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   const dispatch = useDispatch();
   const { crops } = useSelector((state) => state.crops);
 
-  console.log("Crops from Redux:", crops);
-
   useEffect(() => {
     dispatch(fetchCrops());
   }, [dispatch]);
-
 
   const handleAddField = () => {
     const today = new Date();
@@ -86,7 +83,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
-                    options={crops.map((crop) => crop.cropName)} 
+                  options={crops.map((crop) => crop.cropName)}
                 />
                 {/* VARIETY */}
                 <FormInput
@@ -158,7 +155,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
-                    options={crops.map((crop) => crop.cropName)} 
+                  options={crops.map((crop) => crop.cropName)}
                 />
                 <FormInput
                   label="Variety"
@@ -204,7 +201,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   );
 };
 
-// 🔁 Reusable form input
+// Reusable form input
 const FormInput = ({
   label,
   value,
@@ -246,6 +243,5 @@ const FormSelect = ({ label, value, onChange, options }) => (
 );
 
 // Full crop list used for desktop view
-
 
 export default AddFieldSidebar;

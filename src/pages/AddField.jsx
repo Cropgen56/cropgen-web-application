@@ -20,7 +20,7 @@ const AddField = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const userId = useSelector((state) => state?.auth?.user?.id);
+  const userId = useSelector((state) => state?.auth?.user);
 
   useEffect(() => {
     const handleResize = () => {
@@ -39,13 +39,13 @@ const AddField = () => {
   const toggleSidebar = (visible) => setIsSidebarVisible(visible);
 
   const calculateArea = (coords) => {
-    if (coords.length < 3) return 0; 
-    
+    if (coords.length < 3) return 0;
+
     const coordinates = coords.map((point) => [point.lng, point.lat]);
     coordinates.push(coordinates[0]);
     const polygon = turf.polygon([coordinates]);
     const area = turf.area(polygon);
-    return area / 4046.86; 
+    return area / 4046.86;
   };
 
   const acresToHectares = (acres) => {
@@ -106,7 +106,6 @@ const AddField = () => {
 
   return (
     <div className="relative w-full h-screen">
-
       <AnimatePresence>
         {showOverlay && (
           <motion.div
@@ -117,10 +116,7 @@ const AddField = () => {
             transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
             className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8 no-scrollbar"
           >
-            <PricingOverlay 
-              onClose={handleClosePricing} 
-              userArea={fieldArea} 
-            />
+            <PricingOverlay onClose={handleClosePricing} userArea={fieldArea} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -190,9 +186,9 @@ const AddField = () => {
       ) : (
         // Desktop Layout
         <div className="w-full h-screen flex">
-          <AddFieldSidebar 
-            saveFarm={saveFarm} 
-            markers={markers} 
+          <AddFieldSidebar
+            saveFarm={saveFarm}
+            markers={markers}
             currentArea={getCurrentArea()}
           />
           <AddFieldMap

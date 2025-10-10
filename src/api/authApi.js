@@ -2,9 +2,11 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-
 export const authenticateUser = async (userData) => {
-  const response = await axios.post(`${API_URL}/api/auth/authenticate`, userData);
+  const response = await axios.post(
+    `${API_URL}/api/auth/authenticate`,
+    userData
+  );
 
   if (response?.data?.token && response?.data?.user) {
     return {
@@ -41,10 +43,11 @@ export const updateUser = async ({ id, token, updateData }) => {
   return response.data;
 };
 
-
 // Forgot password (send reset email)
 export const forgotPassword = async (email) => {
-  const response = await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
+  const response = await axios.post(`${API_URL}/api/auth/forgot-password`, {
+    email,
+  });
   return response.data;
 };
 
@@ -58,24 +61,25 @@ export const resetPassword = async (token, newPassword) => {
 };
 
 export const sendOtp = async (otpData) => {
-  const response = await axios.post(
-    "https://server.cropgenapp.com/v1/api/auth/otp",
-    otpData
-  );
+  const response = await axios.post(`${API_URL}/api/auth/otp`, otpData);
   return response.data;
 };
 
 export const verifyOtp = async ({ email, otp }) => {
-  const response = await axios.post(
-    "https://server.cropgenapp.com/v1/api/auth/verify",
-    { email, otp }
-  );
+  const response = await axios.post(`${API_URL}/api/auth/verify`, {
+    email,
+    otp,
+  });
   return response.data;
 };
 
-export const completeUserProfile = async ({ token, terms, organizationCode }) => {
+export const completeUserProfile = async ({
+  token,
+  terms,
+  organizationCode,
+}) => {
   const response = await axios.post(
-    "https://server.cropgenapp.com/v1/api/auth/complete-profile",
+    `${API_URL}/api/auth/complete-profile`,
     { terms, organizationCode },
     {
       headers: {
