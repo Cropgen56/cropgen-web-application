@@ -19,7 +19,7 @@ import {
   Hammer,
 } from "../../assets/Icons";
 import "./Sidebar.css";
-import { decodeToken, loadLocalStorage } from "../../redux/slices/authSlice";
+import { decodeToken } from "../../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const NAV_ITEMS = [
@@ -31,7 +31,11 @@ const NAV_ITEMS = [
   { path: "/addfield", label: "Add Field", Icon: AddFieldIcon },
   { path: "/weather", label: "Weather", Icon: Weather },
   { path: "/operation", label: "Operation", Icon: Operation },
-  { path: "/disease-detection", label: "Disease Detection", Icon: DieaseDetaction },
+  {
+    path: "/disease-detection",
+    label: "Disease Detection",
+    Icon: DieaseDetaction,
+  },
   { path: "/smart-advisory", label: "Smart Advisory", Icon: SmartAdvisory },
   { path: "/soil-report", label: "Soil Report", Icon: SoilReportIcon },
   { path: "/farm-report", label: "Farm Report", Icon: FarmReport },
@@ -48,7 +52,6 @@ const Sidebar = ({ onToggleCollapse }) => {
   const user = useSelector((state) => state?.auth?.user);
 
   useEffect(() => {
-    dispatch(loadLocalStorage());
     dispatch(decodeToken());
   }, [dispatch]);
 
@@ -59,7 +62,6 @@ const Sidebar = ({ onToggleCollapse }) => {
 
     const updateSidebar = () => {
       const isTabletOrMobile = window.innerWidth < BREAKPOINT;
-
 
       if (!isInitialized.current) {
         setIsCollapsed(isTabletOrMobile);
@@ -90,7 +92,6 @@ const Sidebar = ({ onToggleCollapse }) => {
     if (window.innerWidth < 850) {
       setShowOverlay(!showOverlay);
     } else {
-
       const newCollapsedState = !isCollapsed;
       setIsCollapsed(newCollapsedState);
       onToggleCollapse(newCollapsedState);
@@ -136,7 +137,7 @@ const Sidebar = ({ onToggleCollapse }) => {
     </li>,
   ];
 
-  const spacing = Math.floor(100 / collapsedNavItems.length); // % per icon
+  const spacing = Math.floor(100 / collapsedNavItems.length);
 
   // Render full sidebar content
   const renderFullSidebar = () => (
@@ -158,9 +159,7 @@ const Sidebar = ({ onToggleCollapse }) => {
           <Card.Title className="profile-user-name">
             {user?.firstName} {user?.lastName}
           </Card.Title>
-          <Card.Text className="profile-user-email">
-            {user?.email}
-          </Card.Text>
+          <Card.Text className="profile-user-email">{user?.email}</Card.Text>
         </Card.Body>
       </Card>
 
@@ -170,10 +169,11 @@ const Sidebar = ({ onToggleCollapse }) => {
             <li
               key={path}
               onClick={() => handleNavigation(path)}
-              className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${location.pathname === path
-                ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
-                : ""
-                }`}
+              className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${
+                location.pathname === path
+                  ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
+                  : ""
+              }`}
             >
               <Icon />
               {label}
@@ -208,10 +208,8 @@ const Sidebar = ({ onToggleCollapse }) => {
 
   if (window.innerWidth < 850) {
     return (
-      <div className="sidebar tablet-mobile bg-[#344e41]" >
-        <div className="collapsed-sidebar">
-          {renderCollapsedNav()}
-        </div>
+      <div className="sidebar tablet-mobile bg-[#344e41]">
+        <div className="collapsed-sidebar">{renderCollapsedNav()}</div>
 
         <Offcanvas
           show={showOverlay}

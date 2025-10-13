@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../components/sidebar/Sidebar";
 import { useDispatch } from "react-redux";
-import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice";
+import { decodeToken } from "../redux/slices/authSlice";
 
 const MainLayout = () => {
   // State to track if the sidebar is collapsed
@@ -16,7 +16,6 @@ const MainLayout = () => {
 
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(loadLocalStorage());
     dispatch(decodeToken());
   }, [dispatch]);
 

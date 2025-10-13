@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SignupLogin from "../components/AuthLayout/signup/SignupLogin";
-import { loadLocalStorage, decodeToken } from "../redux/slices/authSlice";
+import { decodeToken } from "../redux/slices/authSlice";
 import { useDispatch } from "react-redux";
 import laptop from "../assets/image/login/laptop-overlay.png";
 import logo from "../assets/image/login/logo.png";
@@ -32,7 +32,6 @@ const AuthLayout = () => {
   ];
 
   useEffect(() => {
-    dispatch(loadLocalStorage());
     dispatch(decodeToken());
   }, [dispatch]);
 

@@ -1,22 +1,18 @@
 import axios from "axios";
+import api from "./index.js";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-export const authenticateUser = async (userData) => {
-  const response = await axios.post(
-    `${API_URL}/api/auth/authenticate`,
-    userData
-  );
-
-  if (response?.data?.token && response?.data?.user) {
-    return {
-      token: response.data.token,
-      user: response.data.user,
-      message: response.data.message || "Authenticated successfully",
-    };
+// refresh token
+export const refreshToken = async () => {
+  try {
+    const response = await api.post("/auth/refresh", {});
+    console.log("Refresh response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error refreshing token:", error);
+    throw error.response?.data?.message || "Token refresh failed";
   }
-
-  throw new Error("Authentication failed.");
 };
 
 // get user API
