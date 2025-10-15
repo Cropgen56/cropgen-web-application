@@ -9,25 +9,55 @@ import {
 } from "../../api/authApi";
 import { decodeJWT } from "../../utility/decodetoken";
 
-// Async thunk for refreshing access token
+// Add a refresh lock utility
+const refreshLock = {
+  isLocked: false,
+  queue: [],
+  acquire() {
+    if (this.isLocked) {
+      return new Promise((resolve, reject) => {
+        this.queue.push({ resolve, reject });
+      });
+    }
+    this.isLocked = true;
+    return Promise.resolve();
+  },
+  release(error = null, token = null) {
+    this.isLocked = false;
+    this.queue.forEach(({ resolve, reject }) => {
+      if (error) reject(error);
+      else resolve(token);
+    });
+    this.queue = [];
+  },
+};
+
 export const refreshAccessToken = createAsyncThunk(
   "auth/refreshAccessToken",
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, dispatch }) => {
     try {
+      await refreshLock.acquire();
       const response = await refreshToken();
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Token refresh failed");
+      if (!response.accessToken) {
+        throw new Error("No access token in response");
       }
-      return data;
+      dispatch(decodeToken());
+      refreshLock.release(null, response.accessToken);
+      return response;
     } catch (error) {
+      refreshLock.release(error);
       return rejectWithValue(error.message || "Token refresh failed");
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { auth } = getState();
+      return !auth.refreshPending && !auth.token;
+    },
   }
 );
 
-// Async thunk for getting user data
 export const getUserData = createAsyncThunk(
   "auth/getUser",
   async (token, { rejectWithValue }) => {
@@ -42,7 +72,6 @@ export const getUserData = createAsyncThunk(
   }
 );
 
-// Async thunk for updating user data
 export const updateUserData = createAsyncThunk(
   "auth/updateUser",
   async ({ token, id, updateData }, { rejectWithValue }) => {
@@ -55,7 +84,6 @@ export const updateUserData = createAsyncThunk(
   }
 );
 
-// Async thunk for sending OTP
 export const sendotp = createAsyncThunk(
   "auth/sendOtp",
   async (otpdata, { rejectWithValue }) => {
@@ -68,7 +96,6 @@ export const sendotp = createAsyncThunk(
   }
 );
 
-// Async thunk for verifying OTP
 export const verifyuserotp = createAsyncThunk(
   "auth/verifyotp",
   async ({ email, otp }, { rejectWithValue }) => {
@@ -81,7 +108,6 @@ export const verifyuserotp = createAsyncThunk(
   }
 );
 
-// Async thunk for completing user profile
 export const completeProfile = createAsyncThunk(
   "auth/completeProfile",
   async (
@@ -107,7 +133,6 @@ export const completeProfile = createAsyncThunk(
   }
 );
 
-// Initial state
 const initialState = {
   user: null,
   token: null,
@@ -117,6 +142,7 @@ const initialState = {
   error: null,
   onboardingRequired: false,
   isAuthenticated: false,
+  refreshPending: false,
 };
 
 const authSlice = createSlice({
@@ -132,33 +158,46 @@ const authSlice = createSlice({
       state.error = null;
       state.onboardingRequired = false;
       state.isAuthenticated = false;
+      state.refreshPending = false;
     },
     decodeToken: (state) => {
       if (state.token) {
-        const userData = decodeJWT(state.token);
-        state.user = {
-          id: userData.id,
-          email: userData.email || userData.sub,
-          role: userData.role,
-          organizationCode: userData.organizationCode,
-        };
-        state.role = userData.role;
-        state.onboardingRequired = userData.onboardingRequired || false;
-        state.isAuthenticated = true;
+        try {
+          const userData = decodeJWT(state.token);
+          state.user = {
+            id: userData.id,
+            email: userData.email || userData.sub,
+            role: userData.role,
+            organizationCode: userData.organizationCode,
+          };
+          state.role = userData.role;
+          state.onboardingRequired = userData.onboardingRequired || false;
+          state.isAuthenticated = true;
+        } catch (error) {
+          state.isAuthenticated = false;
+          state.user = null;
+          state.role = null;
+          state.onboardingRequired = false;
+          state.error = "Invalid token";
+        }
       }
     },
     resetAuthState: () => initialState,
+    clearError: (state) => {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Refresh Access Token
       .addCase(refreshAccessToken.pending, (state) => {
         state.status = "loading";
+        state.refreshPending = true;
         state.error = null;
       })
       .addCase(refreshAccessToken.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.token = action.payload.accessToken || null;
+        state.refreshPending = false;
+        state.token = action.payload.accessToken;
         state.user = action.payload.user || null;
         state.role = action.payload.role || null;
         state.isAuthenticated = !!action.payload.accessToken;
@@ -167,6 +206,7 @@ const authSlice = createSlice({
       })
       .addCase(refreshAccessToken.rejected, (state, action) => {
         state.status = "failed";
+        state.refreshPending = false;
         state.error = action.payload;
         state.isAuthenticated = false;
         state.token = null;
@@ -174,7 +214,6 @@ const authSlice = createSlice({
         state.role = null;
         state.onboardingRequired = false;
       })
-      // Get User Data
       .addCase(getUserData.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -188,7 +227,6 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-      // Update User Data
       .addCase(updateUserData.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -202,7 +240,6 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-      // Send OTP
       .addCase(sendotp.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -216,7 +253,6 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-      // Verify OTP
       .addCase(verifyuserotp.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -224,7 +260,7 @@ const authSlice = createSlice({
       .addCase(verifyuserotp.fulfilled, (state, action) => {
         state.status = "succeeded";
         const { accessToken, user, role, onboardingRequired } = action.payload;
-        state.token = accessToken || null;
+        state.token = accessToken;
         state.user = user || null;
         state.role = role || null;
         state.isAuthenticated = !!accessToken;
@@ -235,7 +271,6 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-      // Complete Profile
       .addCase(completeProfile.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -253,10 +288,19 @@ const authSlice = createSlice({
       .addCase(completeProfile.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
-      });
+      })
+      .addMatcher(
+        (action) =>
+          action.type.endsWith("/fulfilled") ||
+          action.type.endsWith("/rejected"),
+        (state) => {
+          state.status = "idle";
+        }
+      );
   },
 });
 
-export const { logout, decodeToken, resetAuthState } = authSlice.actions;
+export const { logout, decodeToken, resetAuthState, clearError } =
+  authSlice.actions;
 
 export default authSlice.reducer;

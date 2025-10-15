@@ -1,34 +1,66 @@
 import axios from "axios";
-import store from "../redux/store";
 import { refreshAccessToken, logout } from "../redux/slices/authSlice";
 
-// Create an Axios instance
 const api = axios.create({
-  baseURL: "http://localhost:7070/v1/api",
+  baseURL: process.env.REACT_APP_API_URL || "http://localhost:7070/v1/api",
   withCredentials: true,
+  timeout: 30000,
 });
 
-// Add response interceptor
+let store;
+
+export const setStore = (storeInstance) => {
+  store = storeInstance;
+};
+
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+const onRefreshed = (token) => {
+  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (callback) => {
+  refreshSubscribers.push(callback);
+};
+
 api.interceptors.response.use(
-  (response) => response, // Return successful responses unchanged
+  (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          addRefreshSubscriber((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            resolve(api(originalRequest));
+          });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
       try {
-        const result = await store.dispatch(refreshAccessToken()).unwrap(); // Dispatch refreshAccessToken thunk
-        if (result.success) {
-          // Update Authorization header with new access token
-          error.config.headers.Authorization = `Bearer ${result.accessToken}`;
-          return api(error.config); // Retry the original request
-        } else {
-          store.dispatch(logout());
-          return Promise.reject(error);
+        const result = await store.dispatch(refreshAccessToken()).unwrap();
+        if (result?.accessToken) {
+          api.defaults.headers.Authorization = `Bearer ${result.accessToken}`;
+          onRefreshed(result.accessToken);
+          originalRequest.headers.Authorization = `Bearer ${result.accessToken}`;
+          return api(originalRequest);
         }
-      } catch (refreshError) {
-        store.dispatch(logout()); // Log out on refresh error
-        return Promise.reject(error);
+        throw new Error("No access token in refresh response");
+      } catch (err) {
+        store.dispatch(logout());
+        return Promise.reject(err);
+      } finally {
+        isRefreshing = false;
       }
     }
-    return Promise.reject(error); // Pass through other errors
+
+    return Promise.reject(error);
   }
 );
 

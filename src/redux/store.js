@@ -7,6 +7,7 @@ import operationSlice from "./slices/operationSlice";
 import cropReducer from "./slices/cropSlice";
 import subscriptionSlice from "./slices/subscriptionSlice";
 
+// Configure the Redux store
 export const store = configureStore({
   reducer: {
     weather: weatherSlice,
@@ -16,8 +17,15 @@ export const store = configureStore({
     operation: operationSlice,
     crops: cropReducer,
     subscription: subscriptionSlice,
-
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ["auth/setCredentials", "auth/logout"],
+        ignoredPaths: ["auth.token", "auth.refreshToken"],
+      },
+    }),
+  devTools: process.env.NODE_ENV !== "production",
 });
 
 export default store;
