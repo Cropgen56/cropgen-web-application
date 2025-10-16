@@ -21,6 +21,24 @@ export const refreshToken = async () => {
   }
 };
 
+// logout user
+export const logoutUserApi = async () => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/auth/logout`,
+      {},
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Refresh token error:", error);
+    throw error.response?.data?.message || "Token refresh failed";
+  }
+};
+
 // Get user API
 export const getUser = async (token) => {
   const response = await axios.get(`${API_URL}/api/auth/user`, {
@@ -94,6 +112,7 @@ export const completeUserProfile = async ({
     { terms, organizationCode },
     {
       headers: {
+        withCredentials: true,
         Authorization: `Bearer ${token}`,
       },
     }

@@ -6,6 +6,7 @@ import {
   verifyOtp,
   completeUserProfile,
   refreshToken,
+  logoutUserApi,
 } from "../../api/authApi";
 import { decodeJWT } from "../../utility/decodetoken";
 
@@ -133,6 +134,18 @@ export const completeProfile = createAsyncThunk(
   }
 );
 
+export const logoutUser = createAsyncThunk(
+  "auth/verifyotp",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await logoutUserApi();
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "OTP verification failed");
+    }
+  }
+);
+
 const initialState = {
   user: null,
   token: null,
@@ -181,6 +194,16 @@ const authSlice = createSlice({
           state.error = "Invalid token";
         }
       }
+    },
+    setGoogleLoginData: (state, action) => {
+      const { accessToken, user, role, onboardingRequired } = action.payload;
+      state.token = accessToken;
+      state.user = user;
+      state.role = role;
+      state.onboardingRequired = onboardingRequired;
+      state.isAuthenticated = !!accessToken;
+      state.status = "succeeded";
+      state.error = null;
     },
     resetAuthState: () => initialState,
     clearError: (state) => {
@@ -300,7 +323,12 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, decodeToken, resetAuthState, clearError } =
-  authSlice.actions;
+export const {
+  logout,
+  decodeToken,
+  resetAuthState,
+  setGoogleLoginData,
+  clearError,
+} = authSlice.actions;
 
 export default authSlice.reducer;

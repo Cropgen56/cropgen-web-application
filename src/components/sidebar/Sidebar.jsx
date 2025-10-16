@@ -19,7 +19,7 @@ import {
   Hammer,
 } from "../../assets/Icons";
 import "./Sidebar.css";
-import { decodeToken } from "../../redux/slices/authSlice";
+import { decodeToken, logoutUser } from "../../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const NAV_ITEMS = [
@@ -107,6 +107,7 @@ const Sidebar = ({ onToggleCollapse }) => {
   };
 
   const handleLogout = async () => {
+    dispatch(logoutUser());
     const result = await logout();
     if (result.success) {
       alert("Logout successful");
