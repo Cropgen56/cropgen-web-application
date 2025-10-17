@@ -30,8 +30,6 @@ const SignupLogin = () => {
   const [otpInputs, setOtpInputs] = useState(Array(6).fill(""));
   const inputRefs = useRef([]);
 
-  const { isAuthenticated } = useSelector((state) => state.auth);
-
   const handleOtpChange = (value, index) => {
     if (/^\d?$/.test(value)) {
       const newOtp = [...otpInputs];
@@ -95,7 +93,7 @@ const SignupLogin = () => {
 
     dispatch(
       completeProfile({
-        token: token || localStorage.getItem("authToken"),
+        token,
         terms: true,
         organizationCode: formData.organizationCode || null,
       })

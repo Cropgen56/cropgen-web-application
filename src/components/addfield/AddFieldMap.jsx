@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import {
   MapContainer,
@@ -35,7 +34,7 @@ const AddFieldMap = ({
   clearMarkers,
   onToggleSidebar,
 }) => {
-  const [ , setLocation] = useState(null);
+  const [, setLocation] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState({});
   const [selectedIcon, setSelectedIcon] = useState("");
   const [loading, setLoading] = useState(true);
@@ -43,7 +42,7 @@ const AddFieldMap = ({
   const [showUploadOverlay, setShowUploadOverlay] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [geojsonLayers, setGeojsonLayers] = useState([]);
-  const [ , setIsFullMap] = useState(false);
+  const [, setIsFullMap] = useState(false);
   const mapRef = useRef(null);
 
   // Component to access and store map instance
@@ -91,8 +90,8 @@ const AddFieldMap = ({
     }
   }, [isTabletView, showUploadOverlay, onToggleSidebar]);
 
-  const [ , setCity] = useState("");
-  const [ , setState] = useState("");
+  const [, setCity] = useState("");
+  const [, setState] = useState("");
 
   const plusCursorBase64 =
     "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAARVBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////8+tjvlAAAAHXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHxxS/qf0AAAAqUlEQVQ4y8WSSQ7DIAxFH1oQUb7/f9ERnMbdKYvDoYc2V0F+5koZP+waXQzXcFqIjg4IDR4DofEZ4BLRZbkF6CYHhXkg2w2U5CEo0BNZ0vpslsrK5HAbJXyugEEYZPvboR1xyHcRpsZhYrEdd84l1AFLShTI6wqC1fZTigHkCgnAiRH9sK91cLRE0q3H1/gInV7axjjXcxE8xeJ3X/O4q5Y+JyxbcAAAAASUVORK5CYII=";
@@ -251,13 +250,7 @@ const AddFieldMap = ({
               zoom={17}
               zoomControl={true}
               className={`w-full m-0 p-0 relative 
-  ${
-    isTabletView
-      ? showUploadOverlay
-        ? "h-screen" // Full height when overlay open
-        : "h-[60vh]" // Normal tablet height
-      : "h-screen"
-  } 
+  ${isTabletView ? (showUploadOverlay ? "h-screen" : "h-[60vh]") : "h-screen"} 
   pointer-events-auto z-0`}
             >
               <MapController />

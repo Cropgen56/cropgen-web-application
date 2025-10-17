@@ -1,4 +1,3 @@
-// src/components/addfield/FileUploadOverlay.js
 import React, { useState } from "react";
 import shp from "shpjs";
 import * as toGeoJSON from "@tmcw/togeojson";
@@ -29,7 +28,11 @@ const FileUploadOverlay = ({
       out.push(result);
       return out;
     }
-    if (Array.isArray(result) && result.length && result[0].type === "Feature") {
+    if (
+      Array.isArray(result) &&
+      result.length &&
+      result[0].type === "Feature"
+    ) {
       out.push({ type: "FeatureCollection", features: result });
       return out;
     }
@@ -39,7 +42,11 @@ const FileUploadOverlay = ({
         if (!val) continue;
         if (val.type === "FeatureCollection" && Array.isArray(val.features)) {
           out.push(val);
-        } else if (Array.isArray(val) && val.length && val[0].type === "Feature") {
+        } else if (
+          Array.isArray(val) &&
+          val.length &&
+          val[0].type === "Feature"
+        ) {
           out.push({ type: "FeatureCollection", features: val });
         } else if (val && Array.isArray(val.features)) {
           out.push(val);
@@ -49,24 +56,40 @@ const FileUploadOverlay = ({
     return out;
   };
 
-  const extractPolygonsAndBounds = (geojson, allMarkersRef, combinedBoundsRef) => {
+  const extractPolygonsAndBounds = (
+    geojson,
+    allMarkersRef,
+    combinedBoundsRef
+  ) => {
     if (!geojson) return;
-    if (geojson.type === "FeatureCollection" && Array.isArray(geojson.features)) {
+    if (
+      geojson.type === "FeatureCollection" &&
+      Array.isArray(geojson.features)
+    ) {
       geojson.features.forEach((f) => {
         if (!f.geometry) return;
         const gType = f.geometry.type;
         if (gType === "Polygon") {
-          const coords = f.geometry.coordinates[0].map(([lng, lat]) => ({ lat, lng }));
+          const coords = f.geometry.coordinates[0].map(([lng, lat]) => ({
+            lat,
+            lng,
+          }));
           allMarkersRef.push(...coords);
-          const featureBounds = L.latLngBounds(coords.map((c) => [c.lat, c.lng]));
-          if (!combinedBoundsRef.current) combinedBoundsRef.current = featureBounds;
+          const featureBounds = L.latLngBounds(
+            coords.map((c) => [c.lat, c.lng])
+          );
+          if (!combinedBoundsRef.current)
+            combinedBoundsRef.current = featureBounds;
           else combinedBoundsRef.current.extend(featureBounds);
         } else if (gType === "MultiPolygon") {
           f.geometry.coordinates.forEach((poly) => {
             const coords = poly[0].map(([lng, lat]) => ({ lat, lng }));
             allMarkersRef.push(...coords);
-            const featureBounds = L.latLngBounds(coords.map((c) => [c.lat, c.lng]));
-            if (!combinedBoundsRef.current) combinedBoundsRef.current = featureBounds;
+            const featureBounds = L.latLngBounds(
+              coords.map((c) => [c.lat, c.lng])
+            );
+            if (!combinedBoundsRef.current)
+              combinedBoundsRef.current = featureBounds;
             else combinedBoundsRef.current.extend(featureBounds);
           });
         }
@@ -89,7 +112,8 @@ const FileUploadOverlay = ({
     const allMarkers = [];
     const combinedBoundsRef = { current: null };
 
-    const shpLib = typeof shp === "function" ? shp : shp && shp.default ? shp.default : null;
+    const shpLib =
+      typeof shp === "function" ? shp : shp && shp.default ? shp.default : null;
     if (!shpLib) {
       console.error("shpjs not available or import failed", shp);
       setUploadError("Internal error: shapefile parser not loaded.");
@@ -105,7 +129,11 @@ const FileUploadOverlay = ({
           const text = await file.text();
           geojsonFromFile = JSON.parse(text);
           parsedGeojsons.push(geojsonFromFile);
-          extractPolygonsAndBounds(geojsonFromFile, allMarkers, combinedBoundsRef);
+          extractPolygonsAndBounds(
+            geojsonFromFile,
+            allMarkers,
+            combinedBoundsRef
+          );
         } else if (name.endsWith(".zip")) {
           try {
             const arrayBuffer = await file.arrayBuffer();
@@ -133,14 +161,22 @@ const FileUploadOverlay = ({
           const kmlDom = parser.parseFromString(text, "text/xml");
           geojsonFromFile = toGeoJSON.kml(kmlDom);
           parsedGeojsons.push(geojsonFromFile);
-          extractPolygonsAndBounds(geojsonFromFile, allMarkers, combinedBoundsRef);
+          extractPolygonsAndBounds(
+            geojsonFromFile,
+            allMarkers,
+            combinedBoundsRef
+          );
         } else if (name.endsWith(".gpx")) {
           const text = await file.text();
           const parser = new DOMParser();
           const gpxDom = parser.parseFromString(text, "text/xml");
           geojsonFromFile = toGeoJSON.gpx(gpxDom);
           parsedGeojsons.push(geojsonFromFile);
-          extractPolygonsAndBounds(geojsonFromFile, allMarkers, combinedBoundsRef);
+          extractPolygonsAndBounds(
+            geojsonFromFile,
+            allMarkers,
+            combinedBoundsRef
+          );
         } else {
           setUploadError(`Unsupported file type: ${file.name}`);
           continue;
@@ -164,7 +200,11 @@ const FileUploadOverlay = ({
         const bounds = L.latLngBounds(allMarkers.map((c) => [c.lat, c.lng]));
         if (bounds.isValid()) {
           setTimeout(() => {
-            window.mapRef.current.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.5 });
+            window.mapRef.current.fitBounds(bounds, {
+              padding: [50, 50],
+              animate: true,
+              duration: 1.5,
+            });
           }, 100);
         }
       }
@@ -172,7 +212,6 @@ const FileUploadOverlay = ({
 
     return parsedGeojsons.length > 0;
   };
-
 
   // const handleAddField = () => {
   //   if (!selectedFiles || selectedFiles.length === 0) {
@@ -215,7 +254,9 @@ const FileUploadOverlay = ({
             Define Your farm's boundaries to get started with CropGen.
           </p>
           {uploadError && (
-            <p className="text-red-400 text-xs sm:text-sm mb-2 text-center">{uploadError}</p>
+            <p className="text-red-400 text-xs sm:text-sm mb-2 text-center">
+              {uploadError}
+            </p>
           )}
         </div>
 
@@ -224,10 +265,23 @@ const FileUploadOverlay = ({
             {!uploading && !uploadSuccess && (
               <>
                 <label className="flex flex-col items-center justify-center w-full h-44 sm:h-52 lg:h-56 border-2 border-dashed border-white/40 rounded-lg cursor-pointer bg-white/10 hover:bg-white/20 transition p-4">
-                  <svg className="w-10 h-10 mb-4 text-white/80" fill="none" viewBox="0 0 20 16" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                  <svg
+                    className="w-10 h-10 mb-4 text-white/80"
+                    fill="none"
+                    viewBox="0 0 20 16"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                    />
                   </svg>
-                  <p className="text-base font-semibold mb-1">Drag and drop Your File here</p>
+                  <p className="text-base font-semibold mb-1">
+                    Drag and drop Your File here
+                  </p>
 
                   <input
                     type="file"
@@ -241,7 +295,9 @@ const FileUploadOverlay = ({
                       setUploading(false);
                       setUploadSuccess(Boolean(ok));
                       if (!ok) {
-                        message.error("Failed to parse files. Check console / error message.");
+                        message.error(
+                          "Failed to parse files. Check console / error message."
+                        );
                       }
                     }}
                   />
@@ -273,11 +329,24 @@ const FileUploadOverlay = ({
             {uploadSuccess && (
               <div className="flex flex-col items-center justify-center mt-6 h-44 sm:h-52 lg:h-56">
                 <div className="text-green-400 mb-2 animate-bounce">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-12 h-12"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <p className="text-white font-semibold text-center mb-2">Your field has been marked on the map!</p>
+                <p className="text-white font-semibold text-center mb-2">
+                  Your field has been marked on the map!
+                </p>
                 <button
                   onClick={() => {
                     setShowUploadOverlay(false);
@@ -316,9 +385,20 @@ const FileUploadOverlay = ({
             }}
             className="w-full bg-white text-[#344E41] py-2 sm:py-3 rounded-lg hover:bg-gray-100 transition text-sm sm:text-base font-semibold flex items-center justify-center gap-2"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19.5l-4 1 1-4L16.5 3.5z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19.5l-4 1 1-4L16.5 3.5z"
+              />
             </svg>
             Draw Manually
           </button>

@@ -1,10 +1,20 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  createUserSubscription,
+  verifyUserSubscriptionPayment,
+} from "../../redux/slices/subscriptionSlice";
+import { toast } from "react-toastify";
 
 export default function PlanCard({ plan }) {
   const [flipped, setFlipped] = useState(false);
   const isRecommended = !!plan.recommended;
+  const dispatch = useDispatch();
+  const { token, user } = useSelector((state) => state.auth);
+  const userArea = useSelector((state) => state.user?.area) || 1;
+  const { loading } = useSelector((state) => state.subscription);
 
   const frontCount = Math.min(5, Math.ceil(plan.features.length / 2) + 1);
   const frontFeatures = plan.features.slice(0, frontCount);
@@ -12,6 +22,103 @@ export default function PlanCard({ plan }) {
     ...plan.features.slice(frontCount),
     ...(plan.missing || []),
   ];
+
+  const handleSubscribe = async (e) => {
+    e.stopPropagation();
+    try {
+      if (!token) {
+        toast.error("Please log in to subscribe.");
+        return;
+      }
+
+      if (!window.Razorpay) {
+        toast.error("Razorpay SDK not loaded. Please try again.");
+        return;
+      }
+
+      console.log("Plan:", plan);
+      const subscriptionData = {
+        planId: plan?._id,
+        hectares: userArea,
+        currency: plan.currency || "INR",
+        billingCycle: plan.isTrial ? "trial" : plan.billing || "monthly",
+      };
+      console.log("Subscription data:", subscriptionData);
+
+      const response = await dispatch(
+        createUserSubscription(subscriptionData)
+      ).unwrap();
+      console.log("Create subscription response:", response);
+
+      if (response.success) {
+        if (plan.isTrial && response.data.amountMinor === 0) {
+          toast.success("Trial subscription activated successfully!");
+          return;
+        }
+
+        const options = {
+          key: response.data.key,
+          amount: response.data.amountMinor,
+          currency: response.data.currency,
+          name: "CropGen",
+          description: `Subscription for ${plan.name}`,
+          order_id: response.data.orderId,
+          handler: async (paymentResponse) => {
+            console.log("Payment response:", paymentResponse);
+            try {
+              const paymentData = {
+                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                razorpay_order_id: paymentResponse.razorpay_order_id,
+                razorpay_signature: paymentResponse.razorpay_signature,
+              };
+
+              const verifyResponse = await dispatch(
+                verifyUserSubscriptionPayment({
+                  subscriptionId: response.data.subscriptionId,
+                  paymentData,
+                })
+              ).unwrap();
+              console.log("Verify payment response:", verifyResponse);
+
+              if (verifyResponse.success) {
+                toast.success("Subscription activated successfully!");
+              } else {
+                toast.error("Payment verification failed.");
+              }
+            } catch (error) {
+              console.error("Error verifying payment:", error);
+              toast.error("Error verifying payment: " + error.message);
+            }
+          },
+          prefill: {
+            name: user?.name || "User Name",
+            email: user?.email || "user@example.com",
+            contact: user?.contact || "9999999999",
+          },
+          notes: {
+            subscriptionId: response.data.subscriptionId,
+          },
+          theme: {
+            color: "#344E41",
+          },
+        };
+
+        console.log("Razorpay options:", options);
+        const razorpay = new window.Razorpay(options);
+        razorpay.open();
+
+        razorpay.on("payment.failed", (error) => {
+          console.error("Payment failed:", error);
+          toast.error("Payment failed: " + error.error.description);
+        });
+      } else {
+        toast.error(response.message || "Failed to create subscription");
+      }
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      toast.error("Error creating subscription: " + error.message);
+    }
+  };
 
   return (
     <div
@@ -47,6 +154,9 @@ export default function PlanCard({ plan }) {
           <p className="text-xs mb-2">{plan.tagline}</p>
           <div className="flex items-baseline gap-5 mt-2">
             <p className="text-[20px] font-bold">{plan.price || ""}</p>
+            {plan.priceBreakdown && (
+              <p className="text-xs text-gray-400">{plan.priceBreakdown}</p>
+            )}
           </div>
 
           <hr className="border-t border-gray-800 mb-3" />
@@ -78,13 +188,13 @@ export default function PlanCard({ plan }) {
               View All Features
             </button>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                alert(`Selected ${plan.name} - Total: ${plan.price}`);
-              }}
-              className="flex-1 py-2 rounded-2xl font-bold text-xs bg-white text-[#344E41] hover:bg-gray-900 border-[1px] border-[#344E41] "
+              onClick={handleSubscribe}
+              disabled={loading}
+              className={`flex-1 py-2 rounded-2xl font-bold text-xs bg-white text-[#344E41] hover:bg-gray-900 border-[1px] border-[#344E41] ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Subscribe
+              {loading ? "Processing..." : "Subscribe"}
             </button>
           </div>
         </div>
