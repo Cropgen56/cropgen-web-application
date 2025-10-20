@@ -221,7 +221,7 @@ const FormInput = ({
   </div>
 );
 
-// 🔁 Reusable form select
+// Reusable form select
 const FormSelect = ({ label, value, onChange, options }) => (
   <div className="flex flex-col gap-1">
     <label className="font-semibold text-sm">{label}</label>

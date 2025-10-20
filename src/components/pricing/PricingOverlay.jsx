@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSubscriptions } from "../../redux/slices/subscriptionSlice.js";
-import PlanCard from "./PlanCard";
+import PlanCard from "./PlanCard.jsx";
 
 const USD_TO_INR = 83;
 const DEFAULT_AREA = 5;
@@ -181,9 +181,13 @@ function transformApiData(apiData, billing, currency, userArea) {
     .filter((plan) => plan.active !== false);
 }
 
-export default function PricingOverlay({ onClose, userArea }) {
+export default function PricingOverlay({ onClose, userArea, selectedField }) {
   const dispatch = useDispatch();
+  const { subscriptions, loading, error } = useSelector(
+    (state) => state.subscription
+  );
 
+  // Move all Hooks to the top level
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -194,22 +198,15 @@ export default function PricingOverlay({ onClose, userArea }) {
     };
   }, []);
 
-  const { subscriptions, loading, error } = useSelector(
-    (state) => state.subscription
-  );
-
-  const fieldArea = userArea || DEFAULT_AREA;
-
-  const [billing, setBilling] = useState("monthly");
-  const [currency, setCurrency] = useState("INR");
-  const [groupIndex, setGroupIndex] = useState(0);
-  const [cardsPerGroup, setCardsPerGroup] = useState(3);
-
   useEffect(() => {
     dispatch(fetchSubscriptions());
   }, [dispatch]);
 
   const containerRef = useRef(null);
+  const [billing, setBilling] = useState("monthly");
+  const [currency, setCurrency] = useState("INR");
+  const [groupIndex, setGroupIndex] = useState(0);
+  const [cardsPerGroup, setCardsPerGroup] = useState(3);
   const [scale, setScale] = useState(1);
 
   useLayoutEffect(() => {
@@ -240,8 +237,8 @@ export default function PricingOverlay({ onClose, userArea }) {
   }, []);
 
   const adjusted = useMemo(
-    () => transformApiData(subscriptions, billing, currency, fieldArea),
-    [subscriptions, billing, currency, fieldArea]
+    () => transformApiData(subscriptions, billing, currency, userArea),
+    [subscriptions, billing, currency, userArea]
   );
 
   const groups = useMemo(() => {
@@ -254,6 +251,7 @@ export default function PricingOverlay({ onClose, userArea }) {
 
   const visibleGroup = groups[groupIndex] || groups[0] || [];
 
+  // Move rendering logic after all Hooks
   if (loading) {
     return (
       <div
@@ -347,10 +345,23 @@ export default function PricingOverlay({ onClose, userArea }) {
               Your Farm Area:
             </span>
             <span className="text-[#E1FFF0] font-bold text-sm">
-              {fieldArea.toFixed(2)} hectares
+              {userArea.toFixed(2)} hectares
             </span>
           </div>
         </div>
+
+        {selectedField && (
+          <div className="flex justify-center mb-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2">
+              <p className="text-white text-sm font-semibold">
+                Selected Field: {selectedField.name}
+              </p>
+              <p className="text-white text-sm">
+                Crop: {selectedField.cropName || "N/A"}
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="w-full flex flex-col md:flex-row items-center justify-between mb-4 px-1 sm:px-12 gap-3 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -435,8 +446,8 @@ export default function PricingOverlay({ onClose, userArea }) {
                   setGroupIndex((s) => (s - 1 + groups.length) % groups.length)
                 }
                 className="absolute left-0 md:left-2 sm:left-6 top-1/2 -translate-y-1/2 
-                                    flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 
-                                    text-white rounded-full transition z-50"
+                            flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 
+                            text-white rounded-full transition z-50"
               >
                 <ChevronLeft size={36} strokeWidth={3} />
               </button>
@@ -455,7 +466,7 @@ export default function PricingOverlay({ onClose, userArea }) {
                   key={p._id || i}
                   className="w-[90%] sm:w-[280px] md:w-[300px] lg:w-[320px] flex-shrink-0"
                 >
-                  <PlanCard plan={p} />
+                  <PlanCard plan={p} selectedField={selectedField} />
                 </div>
               ))}
             </motion.div>
@@ -464,8 +475,8 @@ export default function PricingOverlay({ onClose, userArea }) {
               <button
                 onClick={() => setGroupIndex((s) => (s + 1) % groups.length)}
                 className="absolute right-0 md:right-2 sm:right-6 top-1/2 -translate-y-1/2 
-                                    flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 
-                                    text-white rounded-full transition z-50"
+                            flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 
+                            text-white rounded-full transition z-50"
               >
                 <ChevronRight size={36} strokeWidth={3} />
               </button>

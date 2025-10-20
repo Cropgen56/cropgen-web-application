@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import * as turf from "@turf/turf";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
-import PricingOverlay from "../components/pricing/Pricing";
+import PricingOverlay from "../components/pricing/PricingOverlay";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
@@ -17,6 +17,9 @@ const AddField = () => {
   const [pendingRedirect, setPendingRedirect] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [fieldArea, setFieldArea] = useState(0);
+
+  // Add state to store the newly created field data
+  const [selectedField, setSelectedField] = useState(null);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -52,7 +55,7 @@ const AddField = () => {
     return acres * 0.404686;
   };
 
-  const saveFarm = ({
+  const saveFarm = async ({
     cropName,
     variety,
     sowingDate,
@@ -70,29 +73,51 @@ const AddField = () => {
 
     setFieldArea(areaInHectares);
 
-    dispatch(
-      addFarmField({
-        latlng: markers,
-        userId,
-        cropName,
-        variety,
-        sowingDate,
-        typeOfIrrigation,
-        farmName,
-        acre: areaInAcres,
-        typeOfFarming,
-      })
-    ).then((result) => {
-      if (result?.payload?.success) {
+    try {
+      const result = await dispatch(
+        addFarmField({
+          latlng: markers,
+          userId,
+          cropName,
+          variety,
+          sowingDate,
+          typeOfIrrigation,
+          farmName,
+          acre: areaInAcres,
+          typeOfFarming,
+          // Include areaInHectares for subscription pricing
+          areaInHectares,
+        })
+      ).unwrap(); // Use unwrap to get the actual payload
+
+      if (result?.success) {
         message.success("Field added successfully!");
+
+        console.log(result);
+        // Store the field data for pricing overlay
+        const fieldData = {
+          id: result?.farmField?._id,
+          name: farmName,
+          areaInHectares,
+          cropName,
+          // Add any other field data you need for subscription
+        };
+
+        setSelectedField(fieldData);
         setShowOverlay(true);
         setPendingRedirect(true);
+      } else {
+        message.error("Failed to add field. Please try again.");
       }
-    });
+    } catch (error) {
+      console.error("Error adding field:", error);
+      message.error("Failed to add field. Please try again.");
+    }
   };
 
   const handleClosePricing = () => {
     setShowOverlay(false);
+    setSelectedField(null); // Clear selected field
     if (pendingRedirect) {
       navigate("/cropgen-analytics");
     }
@@ -116,7 +141,11 @@ const AddField = () => {
             transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
             className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8 no-scrollbar"
           >
-            <PricingOverlay onClose={handleClosePricing} userArea={fieldArea} />
+            <PricingOverlay
+              onClose={handleClosePricing}
+              userArea={fieldArea}
+              selectedField={selectedField} // Pass selected field data
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -8,7 +8,7 @@ import {
 } from "../../redux/slices/subscriptionSlice";
 import { toast } from "react-toastify";
 
-export default function PlanCard({ plan }) {
+export default function PlanCard({ plan, selectedField }) {
   const [flipped, setFlipped] = useState(false);
   const isRecommended = !!plan.recommended;
   const dispatch = useDispatch();
@@ -36,12 +36,13 @@ export default function PlanCard({ plan }) {
         return;
       }
 
-      console.log("Plan:", plan);
+      console.log("Plan:", selectedField);
       const subscriptionData = {
         planId: plan?._id,
         hectares: userArea,
         currency: plan.currency || "INR",
         billingCycle: plan.isTrial ? "trial" : plan.billing || "monthly",
+        fieldId: selectedField?.id,
       };
       console.log("Subscription data:", subscriptionData);
 
