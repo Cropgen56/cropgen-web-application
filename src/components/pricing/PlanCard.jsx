@@ -36,7 +36,6 @@ export default function PlanCard({ plan, selectedField }) {
         return;
       }
 
-      console.log("Plan:", selectedField);
       const subscriptionData = {
         planId: plan?._id,
         hectares: userArea,
@@ -44,80 +43,108 @@ export default function PlanCard({ plan, selectedField }) {
         billingCycle: plan.isTrial ? "trial" : plan.billing || "monthly",
         fieldId: selectedField?.id,
       };
-      console.log("Subscription data:", subscriptionData);
 
       const response = await dispatch(
         createUserSubscription(subscriptionData)
       ).unwrap();
       console.log("Create subscription response:", response);
 
-      if (response.success) {
-        if (plan.isTrial && response.data.amountMinor === 0) {
-          toast.success("Trial subscription activated successfully!");
-          return;
-        }
-
-        const options = {
-          key: response.data.key,
-          amount: response.data.amountMinor,
-          currency: response.data.currency,
-          name: "CropGen",
-          description: `Subscription for ${plan.name}`,
-          order_id: response.data.orderId,
-          handler: async (paymentResponse) => {
-            console.log("Payment response:", paymentResponse);
-            try {
-              const paymentData = {
-                razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                razorpay_order_id: paymentResponse.razorpay_order_id,
-                razorpay_signature: paymentResponse.razorpay_signature,
-              };
-
-              const verifyResponse = await dispatch(
-                verifyUserSubscriptionPayment({
-                  subscriptionId: response.data.subscriptionId,
-                  paymentData,
-                })
-              ).unwrap();
-              console.log("Verify payment response:", verifyResponse);
-
-              if (verifyResponse.success) {
-                toast.success("Subscription activated successfully!");
-              } else {
-                toast.error("Payment verification failed.");
-              }
-            } catch (error) {
-              console.error("Error verifying payment:", error);
-              toast.error("Error verifying payment: " + error.message);
-            }
-          },
-          prefill: {
-            name: user?.name || "User Name",
-            email: user?.email || "user@example.com",
-            contact: user?.contact || "9999999999",
-          },
-          notes: {
-            subscriptionId: response.data.subscriptionId,
-          },
-          theme: {
-            color: "#344E41",
-          },
-        };
-
-        console.log("Razorpay options:", options);
-        const razorpay = new window.Razorpay(options);
-        razorpay.open();
-
-        razorpay.on("payment.failed", (error) => {
-          console.error("Payment failed:", error);
-          toast.error("Payment failed: " + error.error.description);
-        });
-      } else {
+      if (!response.success) {
         toast.error(response.message || "Failed to create subscription");
+        return;
       }
+
+      // If trial with zero amount, activate locally without invoking Checkout
+      if (plan.isTrial && response.data.amountMinor === 0) {
+        toast.success("Trial subscription activated successfully!");
+        return;
+      }
+
+      // --- Minimal / safe Razorpay options for subscription flow ---
+      // Key points:
+      // 1. DO NOT pass `amount` together with `subscription_id`.
+      // 2. Keep theme minimal and remove local http:// assets (use HTTPS CDN if needed).
+      // 3. Remove advanced `display` / `method` / `modal` structures while debugging.
+      const options = {
+        key: response.data.key, // rzp_test_...
+        subscription_id: response.data.razorpaySubscriptionId, // required for subscription checkout
+        name: "CropGen",
+        description: `Subscription for ${plan.name} - ${userArea} hectares`,
+        // image: 'https://yourcdn.example.com/logo.png', // use HTTPS if you want a logo
+        handler: async (paymentResponse) => {
+          console.log("Payment response:", paymentResponse);
+          try {
+            const paymentData = {
+              razorpay_payment_id: paymentResponse.razorpay_payment_id,
+              razorpay_subscription_id:
+                paymentResponse.razorpay_subscription_id,
+              razorpay_signature: paymentResponse.razorpay_signature,
+            };
+
+            const verifyUrl = `/api/subscriptions/${response.data.subscriptionRecordId}/verify`;
+
+            const verifyResponse = await dispatch(
+              verifyUserSubscriptionPayment({
+                url: verifyUrl,
+                paymentData,
+              })
+            ).unwrap();
+            console.log("Verify payment response:", verifyResponse);
+
+            if (verifyResponse.success) {
+              toast.success("Subscription activated successfully!");
+              // prefer state update instead of full reload where possible
+              window.location.reload();
+            } else {
+              toast.error(
+                "Payment verification failed: " +
+                  (verifyResponse.message || "Unknown error")
+              );
+            }
+          } catch (error) {
+            console.error("Error verifying payment:", error);
+            toast.error("Error verifying payment: " + (error.message || error));
+          }
+        },
+        prefill: {
+          name: user?.name || "User Name",
+          email: user?.email || "user@example.com",
+          contact: user?.contact || "9999999999",
+        },
+        notes: {
+          subscriptionId: response.data.subscriptionRecordId,
+        },
+        // Keep theme minimal to avoid styling/SVG issues in the Checkout iframe
+        theme: {
+          color: "#344E41",
+        },
+        locale: "en",
+        // Accessibility is fine to keep, but avoid complex nested 'display' config here
+        accessibility: {
+          aria_label: `Checkout for ${plan.name} subscription`,
+          keyboard: true,
+        },
+      };
+
+      console.log("Razorpay options:", options);
+
+      const razorpay = new window.Razorpay(options);
+
+      // Listen to failure event to surface errors to user
+      razorpay.on("payment.failed", (error) => {
+        console.error("Payment failed:", error);
+        const msg =
+          error?.error?.description ||
+          error?.description ||
+          "Payment failed. Check console/network for details.";
+        toast.error("Payment failed: " + msg);
+      });
+
+      // Open the checkout
+      razorpay.open();
     } catch (error) {
       console.error("Error creating subscription:", error);
-      toast.error("Error creating subscription: " + error.message);
+      toast.error("Error creating subscription: " + (error.message || error));
     }
   };
 
