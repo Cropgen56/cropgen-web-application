@@ -1,11 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { formatDateToISO } from "../../utility/formatDate";
+import { formatDateToISO, getOneYearBefore } from "../../utility/formatDate";
 import axios from "axios";
 import { get, set } from "idb-keyval";
 import {
   getTodayAndFifteenDaysAgo,
   getSixMonthsBeforeDate,
 } from "../../utility/formatDate";
+
+// Helper function to compare arrays (assuming it's not already defined elsewhere)
+function arraysEqual(a, b) {
+  return a.length === b.length && a.every((val, index) => val === b[index]);
+}
 
 // 4 days in milliseconds
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
@@ -418,13 +423,27 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
         return [lng, lat];
       });
 
+      // Ensure the polygon is closed by appending the first coordinate at the end if it's not already the same
+      if (
+        coordinates.length > 0 &&
+        !arraysEqual(coordinates[0], coordinates[coordinates.length - 1])
+      ) {
+        coordinates.push(coordinates[0]);
+      }
+
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/index-timeseries-summary`,
+        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/timeseries/vegetation/vegetation`,
         {
+          geometry: {
+            type: "Polygon",
+            coordinates: [coordinates],
+          },
           start_date: startDate,
           end_date: endDate,
-          geometry: coordinates,
           index: index,
+          provider: "both",
+          satellite: "s2",
+          max_items: 200,
         }
       );
 
@@ -460,13 +479,27 @@ export const fetchWaterIndexData = createAsyncThunk(
         return [lng, lat];
       });
 
+      // Ensure the polygon is closed by appending the first coordinate at the end if it's not already the same
+      if (
+        coordinates.length > 0 &&
+        !arraysEqual(coordinates[0], coordinates[coordinates.length - 1])
+      ) {
+        coordinates.push(coordinates[0]);
+      }
+
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/get-moisture-index-graph`,
+        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/timeseries/water/water`,
         {
-          coordinates: [coordinates],
+          geometry: {
+            type: "Polygon",
+            coordinates: [coordinates],
+          },
           start_date: startDate,
           end_date: endDate,
           index: index,
+          provider: "both",
+          satellite: "s2",
+          max_items: 200,
         }
       );
 
