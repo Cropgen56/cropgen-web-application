@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { ArrowLeft, ChevronDown } from "lucide-react";
 import { message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
 import { fetchCrops } from "../../redux/slices/cropSlice";
 
 const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
@@ -79,11 +78,12 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   placeholder="Enter farm name"
                 />
                 {/* CROP NAME */}
-                <FormSelect
+                <CustomDropdown
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
                   options={crops.map((crop) => crop.cropName)}
+                  placeholder="Select Crop Name"
                 />
                 {/* VARIETY */}
                 <FormInput
@@ -100,18 +100,20 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   onChange={setSowingDate}
                 />
                 {/* TYPE OF IRRIGATION */}
-                <FormSelect
+                <CustomDropdown
                   label="Type Of Irrigation"
                   value={typeOfIrrigation}
                   onChange={setTypeOfIrrigation}
                   options={["open-irrigation", "drip-irrigation", "sprinkler"]}
+                  placeholder="Select Irrigation Type"
                 />
                 {/* TYPE OF FARMING */}
-                <FormSelect
+                <CustomDropdown
                   label="Type Of Farming"
                   value={typeOfFarming}
                   onChange={setTypeOfFarming}
                   options={["Organic", "Inorganic", "Integrated"]}
+                  placeholder="Select Farming Type"
                 />
               </div>
 
@@ -151,11 +153,12 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   onChange={setFarmName}
                   placeholder="Enter farm name"
                 />
-                <FormSelect
+                <CustomDropdown
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
                   options={crops.map((crop) => crop.cropName)}
+                  placeholder="Select Crop Name"
                 />
                 <FormInput
                   label="Variety"
@@ -170,25 +173,26 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   onChange={setSowingDate}
                   className="date-white text-white bg-[#344E41]"
                 />
-
-                <FormSelect
+                <CustomDropdown
                   label="Type Of Irrigation"
                   value={typeOfIrrigation}
                   onChange={setTypeOfIrrigation}
                   options={["open-irrigation", "drip-irrigation", "sprinkler"]}
+                  placeholder="Select Irrigation Type"
                 />
-                <FormSelect
+                <CustomDropdown
                   label="Type Of Farming"
                   value={typeOfFarming}
                   onChange={setTypeOfFarming}
                   options={["Organic", "Inorganic", "Integrated"]}
+                  placeholder="Select Farming Type"
                 />
               </div>
             </form>
 
             <footer className="flex justify-center">
               <button
-                className="border-none outline-none rounded-md bg-[#344e41] text-white font-semibold w-3/4 h-9 transition-all duration-400 ease-in-out"
+                className="border-none outline-none rounded-md bg-[#344e41] text-white font-semibold w-3/4 h-9 transition-all duration-400 ease-in-out hover:bg-[#2b3e33]"
                 onClick={handleAddField}
               >
                 Add Field
@@ -216,32 +220,95 @@ const FormInput = ({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="border border-[#344e41] w-full outline-none rounded px-3 py-2 bg-[#344E41] text-gray-300 placeholder-gray-300"
+      className="border border-[#344e41] w-full outline-none rounded px-3 py-2 bg-[#344E41] text-white placeholder-gray-300 focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50"
     />
   </div>
 );
 
-// Reusable form select
-const FormSelect = ({ label, value, onChange, options }) => (
-  <div className="flex flex-col gap-1">
-    <label className="font-semibold text-sm">{label}</label>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="border border-[#344e41] w-full outline-none rounded px-3 py-2 bg-[#344E41] text-gray-300"
-    >
-      <option value="" disabled>
-        Select {label}
-      </option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-  </div>
-);
+// Custom Dropdown Component
+const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-// Full crop list used for desktop view
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSelect = (option) => {
+    onChange(option);
+    setIsOpen(false);
+  };
+
+  const formatOptionDisplay = (option) => {
+    // Format the display text (e.g., "open-irrigation" -> "Open Irrigation")
+    return option
+      .split("-")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+  return (
+    <div className="flex flex-col gap-1" ref={dropdownRef}>
+      <label className="font-semibold text-sm">{label}</label>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={`
+            w-full px-3 py-2 bg-[#344E41] text-white rounded
+            border border-[#344e41] outline-none
+            flex items-center justify-between
+            hover:bg-[#2b3e33] transition-all duration-200
+            focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
+            ${!value ? 'text-gray-300' : 'text-white'}
+          `}
+        >
+          <span className="truncate">
+            {value ? formatOptionDisplay(value) : placeholder}
+          </span>
+          <ChevronDown
+            size={20}
+            className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+              }`}
+          />
+        </button>
+
+        {/* Dropdown Menu */}
+        {isOpen && (
+          <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-lg max-h-60 overflow-auto">
+            {options.length > 0 ? (
+              options.map((option, index) => (
+                <div
+                  key={option}
+                  onClick={() => handleSelect(option)}
+                  className={`
+                    px-3 py-2 cursor-pointer text-white
+                    hover:bg-[#2b3e33] transition-colors duration-150
+                    ${value === option ? "bg-[#2b3e33]" : ""}
+                    ${index !== options.length - 1 ? "border-b border-[#2b3e33]" : ""}
+                  `}
+                >
+                  {formatOptionDisplay(option)}
+                </div>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-gray-300">No options available</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default AddFieldSidebar;

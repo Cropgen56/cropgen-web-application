@@ -31,6 +31,47 @@ const AuthLayout = () => {
     { img: img7, label: "Field Analytics" },
   ];
 
+  const getResponsiveSizes = () => {
+    if (width > 800) {
+      return {
+        sphereSize: 250,
+        orbitRadius: 100,
+        planetSize: 12,
+        laptopWidth: 190,
+      };
+    } else if (width > 700) {
+      return {
+        sphereSize: 220,
+        orbitRadius: 85,
+        planetSize: 11,
+        laptopWidth: 170,
+      };
+    } else if (width > 600) {
+      return {
+        sphereSize: 200,
+        orbitRadius: 75,
+        planetSize: 10,
+        laptopWidth: 150,
+      };
+    } else if (width > 500) {
+      return {
+        sphereSize: 180,
+        orbitRadius: 65,
+        planetSize: 9,
+        laptopWidth: 130,
+      };
+    } else {
+      return {
+        sphereSize: 150,
+        orbitRadius: 55,
+        planetSize: 8,
+        laptopWidth: 110,
+      };
+    }
+  };
+
+  const responsiveSizes = getResponsiveSizes();
+
   useEffect(() => {
     dispatch(decodeToken());
   }, [dispatch]);
@@ -85,9 +126,8 @@ const AuthLayout = () => {
                             className="absolute left-1/2 top-1/2 w-0 h-0"
                             style={{
                               animation: `orbit ${animationDuration}s linear infinite`,
-                              animationDelay: `-${
-                                (i * animationDuration) / total
-                              }s`,
+                              animationDelay: `-${(i * animationDuration) / total
+                                }s`,
                               transformOrigin: "center center",
                             }}
                           >
@@ -140,26 +180,34 @@ const AuthLayout = () => {
                 width > 830
                   ? "25vh"
                   : width > 730
-                  ? "15vh"
-                  : width > 600
-                  ? "22vh"
-                  : "22vh",
+                    ? "15vh"
+                    : width > 600
+                      ? "22vh"
+                      : "22vh",
             }}
           >
             <div className="flex-1 flex justify-start items-center px-2 relative">
-              <div className="absolute w-[250px] h-[250px] top-[20%] pointer-events-none">
-                {/* Central Sphere */}
+              <div
+                className="absolute top-[20%] pointer-events-none"
+                style={{
+                  width: `${responsiveSizes.sphereSize}px`,
+                  height: `${responsiveSizes.sphereSize}px`
+                }}
+              >
                 <img
                   src={sphere}
                   alt="Background"
                   className="relative z-10 w-full h-auto"
                 />
 
-                {/* Orbiting Logos */}
                 <div className="absolute inset-0 flex items-center justify-center z-30">
                   <div
-                    className="relative w-[250px] h-[250px]"
-                    style={{ transform: "translate(4px, -4px)" }}
+                    className="relative"
+                    style={{
+                      width: `${responsiveSizes.sphereSize}px`,
+                      height: `${responsiveSizes.sphereSize}px`,
+                      transform: "translate(4px, -4px)"
+                    }}
                   >
                     {planets.map((planet, i) => {
                       const total = planets.length;
@@ -172,30 +220,35 @@ const AuthLayout = () => {
                           className="absolute left-1/2 top-1/2 w-0 h-0"
                           style={{
                             animation: `orbit ${animationDuration}s linear infinite`,
-                            animationDelay: `-${
-                              (i * animationDuration) / total
-                            }s`,
+                            animationDelay: `-${(i * animationDuration) / total
+                              }s`,
                             transformOrigin: "center center",
                           }}
                         >
                           <div
                             className="absolute flex items-center justify-center"
                             style={{
-                              top: "-100px",
+                              top: `-${responsiveSizes.orbitRadius}px`,
                               left: "0",
                               transform: `translateX(-95%) rotate(-${angle}deg)`,
                             }}
                           >
                             <div
-                              className="w-12 h-12 flex items-center justify-center"
+                              className="flex items-center justify-center"
                               style={{
+                                width: `${responsiveSizes.planetSize * 4}px`,
+                                height: `${responsiveSizes.planetSize * 4}px`,
                                 animation: `counterOrbit ${animationDuration}s linear infinite reverse`,
                               }}
                             >
                               <img
                                 src={planet.img}
                                 alt=""
-                                className="w-12 h-12 object-contain"
+                                className="object-contain"
+                                style={{
+                                  width: `${responsiveSizes.planetSize * 4}px`,
+                                  height: `${responsiveSizes.planetSize * 4}px`,
+                                }}
                               />
                             </div>
                           </div>
@@ -208,7 +261,11 @@ const AuthLayout = () => {
                 <img
                   src={laptop}
                   alt="Laptop"
-                  className="absolute left-[-1rem] top-1/2 -translate-y-1/2 z-30 w-[190px] max-w-full"
+                  className="absolute top-1/2 -translate-y-1/2 z-30 max-w-full"
+                  style={{
+                    width: `${responsiveSizes.laptopWidth}px`,
+                    left: `-${responsiveSizes.laptopWidth * 0.08}px`
+                  }}
                 />
 
                 <div className="absolute inset-0 rounded-full bg-white/20 blur-3xl animate-[spin_12s_linear_infinite]" />
