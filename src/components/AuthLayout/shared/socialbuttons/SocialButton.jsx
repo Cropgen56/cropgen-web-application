@@ -1,7 +1,7 @@
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import {
   setGoogleLoginData,
@@ -15,6 +15,7 @@ function SocialButtons() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const googleButtonRef = useRef(null);
 
   const handleGoogleLogin = async (response) => {
     try {
@@ -54,12 +55,21 @@ function SocialButtons() {
     }
   };
 
+  const handleCustomButtonClick = () => {
+    // Programmatically click the hidden Google button
+    const googleBtn = googleButtonRef.current?.querySelector('div[role="button"]');
+    if (googleBtn) {
+      googleBtn.click();
+    }
+  };
+
   return (
     <div className="flex flex-col justify-center items-center gap-3 w-full">
       <GoogleOAuthProvider clientId={clientId}>
-        <div className="relative w-[70%]">
-          {/* Styled Google button */}
+        <div className="w-[70%]">
+          {/* Custom styled button */}
           <button
+            onClick={handleCustomButtonClick}
             disabled={isLoading}
             className={`flex w-full items-center justify-center gap-2 px-6 py-3 rounded-full font-medium text-sm transition 
               ${isLoading
@@ -71,8 +81,8 @@ function SocialButtons() {
             {isLoading ? "Signing in..." : "Continue with Google"}
           </button>
 
-          {/* Invisible GoogleLogin component (handles real OAuth flow) */}
-          <div className="absolute inset-0 opacity-0">
+          {/* Hidden GoogleLogin component */}
+          <div ref={googleButtonRef} style={{ display: 'none' }}>
             <GoogleLogin
               onSuccess={handleGoogleLogin}
               onError={() => {
