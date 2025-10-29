@@ -4,7 +4,6 @@ import AppRoutes from "./routes/AppRoutes";
 // import { Toaster } from "react-hot-toast";
 
 const App = () => {
-
   useEffect(() => {
     const handleWheel = (e) => {
       // Block page zoom (Ctrl + scroll or pinch)

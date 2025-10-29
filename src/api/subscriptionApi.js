@@ -45,7 +45,7 @@ export const verifySubscriptionPayment = async (
 ) => {
   try {
     const response = await axios.post(
-      `${API_URL}/api/user-subscriptions/${subscriptionId}/verify`,
+      `${API_URL}/api/user-subscriptions/verify`,
       paymentData,
       {
         headers: {

@@ -81,11 +81,8 @@ export default function PlanCard({ plan, selectedField }) {
               razorpay_signature: paymentResponse.razorpay_signature,
             };
 
-            const verifyUrl = `/api/subscriptions/${response.data.subscriptionRecordId}/verify`;
-
             const verifyResponse = await dispatch(
               verifyUserSubscriptionPayment({
-                url: verifyUrl,
                 paymentData,
               })
             ).unwrap();
