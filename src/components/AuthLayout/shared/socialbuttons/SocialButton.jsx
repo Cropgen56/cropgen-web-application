@@ -72,7 +72,7 @@ function SocialButtons() {
           </button>
 
           {/* Invisible GoogleLogin component (handles real OAuth flow) */}
-          <div className="absolute inset-0 opacity-0">
+          <div className="absolute inset-0 opacity-0 pointer-events-auto cursor-pointer">
             <GoogleLogin
               onSuccess={handleGoogleLogin}
               onError={() => {
@@ -82,6 +82,8 @@ function SocialButtons() {
               }}
               disabled={isLoading}
               useOneTap={false}
+              width="100%" 
+              theme="filled_blue" 
             />
           </div>
         </div>
