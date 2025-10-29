@@ -7,6 +7,7 @@ import {
   setGoogleLoginData,
   decodeToken,
 } from "../../../../redux/slices/authSlice";
+import { FcGoogle } from "react-icons/fc";
 
 const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
@@ -38,13 +39,10 @@ function SocialButtons() {
           })
         );
         navigate("/cropgen-analytics");
-
-        // Decode the token to update user details
         dispatch(decodeToken());
       } else {
-        // Handle API error response
         alert(`Login Failed: ${res.data.message}`);
-        console.error("Login Failed: ", res.data.message);
+        console.error("Login Failed:", res.data.message);
       }
     } catch (error) {
       const errorMessage =
@@ -57,18 +55,38 @@ function SocialButtons() {
   };
 
   return (
-    <GoogleOAuthProvider clientId={clientId}>
-      <GoogleLogin
-        onSuccess={handleGoogleLogin}
-        onError={() => {
-          alert("Google Login Failed. Please try again.");
-          console.error("Google Login Failed");
-          setIsLoading(false);
-        }}
-        disabled={isLoading}
-        text="Sign in with Google"
-      />
-    </GoogleOAuthProvider>
+    <div className="flex flex-col justify-center items-center gap-3 w-full">
+      <GoogleOAuthProvider clientId={clientId}>
+        <div className="relative w-[70%]">
+          {/* Styled Google button */}
+          <button
+            disabled={isLoading}
+            className={`flex w-full items-center justify-center gap-2 px-6 py-3 rounded-full font-medium text-sm transition 
+              ${isLoading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#344E41] hover:bg-emerald-900 text-white"
+              }`}
+          >
+            <FcGoogle className="text-lg bg-white rounded-full p-0.5" />
+            {isLoading ? "Signing in..." : "Continue with Google"}
+          </button>
+
+          {/* Invisible GoogleLogin component (handles real OAuth flow) */}
+          <div className="absolute inset-0 opacity-0">
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => {
+                alert("Google Login Failed. Please try again.");
+                console.error("Google Login Failed");
+                setIsLoading(false);
+              }}
+              disabled={isLoading}
+              useOneTap={false}
+            />
+          </div>
+        </div>
+      </GoogleOAuthProvider>
+    </div>
   );
 }
 
