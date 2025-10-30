@@ -111,8 +111,8 @@ export const completeUserProfile = async ({
     `${API_URL}/api/auth/complete-profile`,
     { terms, organizationCode },
     {
+      withCredentials: true,
       headers: {
-        withCredentials: true,
         Authorization: `Bearer ${token}`,
       },
     }

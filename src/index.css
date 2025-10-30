@@ -1,27 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import Poppins font */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+/* Global styles */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+  font-family: "Poppins", source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
 
 /* Custom styles for Toastify */
-.Toastify__toast {
-  font-size: 0.9rem;
-}
-
+.Toastify__toast,
 .Toastify__toast-body {
   font-size: 0.9rem;
+  font-family: "Poppins", sans-serif;
 }
 
 /* Scrollbar hiding */
@@ -54,11 +57,12 @@ code {
 .ant-message-notice-content {
   background: #ffffff !important;
   color: #344e41 !important;
-  padding: 15px 25x !important;
+  padding: 15px 25px !important;
   border-radius: 10px !important;
-  min-width: 200px important;
+  min-width: 200px !important;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
   font-weight: 500 !important;
+  font-family: "Poppins", sans-serif !important;
   pointer-events: all !important;
 }
 
@@ -69,6 +73,7 @@ code {
   gap: 4px !important;
   font-size: 14px !important;
   font-weight: 600 !important;
+  font-family: "Poppins", sans-serif !important;
 }
 
 .ant-message-custom-content span {
@@ -76,33 +81,32 @@ code {
   line-height: 1.4 !important;
 }
 
-/* Icon inside the toast */
 .ant-message-custom-content span svg {
   width: 20px !important;
   height: 20px !important;
 }
 
-/* Success message color */
+/* Toast border colors */
 .ant-message-success .ant-message-notice-content {
   border-left: 5px solid #52c41a !important;
 }
 
-/* Error message color */
 .ant-message-error .ant-message-notice-content {
   border-left: 5px solid #ff4d4f !important;
 }
 
-/* Warning message color */
 .ant-message-warning .ant-message-notice-content {
   border-left: 5px solid #faad14 !important;
 }
 
+/* Modal centering fix */
 .ant-modal-centered .ant-modal {
   top: 50% !important;
   transform: translateY(-50%) !important;
   margin: 0;
 }
 
+/* 3D flip effects */
 .perspective {
   perspective: 1000px;
 }
@@ -115,16 +119,22 @@ code {
   transform: rotateY(180deg);
 }
 
-/* Tailwind-compatible custom CSS */
+/* Date picker icon fix */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1); /* makes it white */
+  filter: invert(1);
   cursor: pointer;
 }
 
+/* Animations */
 @keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
+
 @keyframes spin-slow {
   from {
     transform: rotate(0deg);
@@ -133,6 +143,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     transform: rotate(360deg);
   }
 }
+
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
 }
@@ -145,29 +156,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     transform: rotate(360deg);
   }
 }
-@keyframes orbitAnimation {
-  from {
-    transform: rotate(0deg);
-    --orbit-rotation: 0deg; /* Set the variable */
-  }
-  to {
-    transform: rotate(360deg);
-    --orbit-rotation: 360deg; /* Set the variable */
-  }
-}
-@keyframes orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes orbit {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 @keyframes counterOrbit {
   from {
@@ -176,14 +164,4 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   to {
     transform: rotate(360deg);
   }
-}
-
-@keyframes orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes counterOrbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }

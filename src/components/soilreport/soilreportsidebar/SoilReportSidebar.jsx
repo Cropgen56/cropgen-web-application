@@ -1,19 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Operation2 } from "../../../assets/Icons";
 import { CiSearch } from "react-icons/ci";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
+import { ChevronDown } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
 import { fetchSatelliteDates } from "../../../redux/slices/satelliteSlice";
 import PolygonPreview from "../../polygon/PolygonPreview";
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) => (
   <div
-    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
-      isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
-    }`}
+    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
+      }`}
     onClick={onClick}
   >
-    <PolygonPreview coordinates={coordinates}  isSelected={isSelected}/>
+    <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
     <div>
       <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
         {title}
@@ -26,6 +25,84 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) 
     </div>
   </div>
 );
+
+// Custom Dropdown Component
+const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSelect = (option) => {
+    onChange(option);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="flex flex-col gap-1" ref={dropdownRef}>
+      <label className="font-semibold text-[#344e41]">{label}</label>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={`
+            w-full px-3 py-2 bg-[#344E41] text-white rounded-md
+            border border-[#344e41] outline-none
+            flex items-center justify-between
+            hover:bg-[#2b3e33] transition-all duration-200
+            focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
+            ${!value ? 'text-gray-300' : 'text-white'}
+          `}
+        >
+          <span className="truncate">
+            {value || placeholder}
+          </span>
+          <ChevronDown
+            size={20}
+            className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+              }`}
+          />
+        </button>
+
+        {/* Dropdown Menu */}
+        {isOpen && (
+          <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded-md shadow-lg max-h-60 overflow-auto">
+            {options.length > 0 ? (
+              options.map((option, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleSelect(option)}
+                  className={`
+                    px-3 py-2 cursor-pointer text-white
+                    hover:bg-[#2b3e33] transition-colors duration-150
+                    ${value === option ? "bg-[#2b3e33]" : ""}
+                    ${index !== options.length - 1 ? "border-b border-[#2b3e33]/30" : ""}
+                  `}
+                >
+                  {option}
+                </div>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-gray-300">No options available</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const cropOptions = [
   "Barley",
@@ -178,10 +255,9 @@ const SoilReportSidebar = ({
             </div>
           </div>
           <h2 className="px-4 pt-2 text-[18px] font-bold text-[#344e41]">
-              All Farms
-            </h2>
+            All Farms
+          </h2>
           <div className="flex flex-col">
-            
             <div className="overflow-y-auto max-h-[225px] no-scrollbar">
               {(fields || []).map((fieldObj, index) => (
                 <FieldInfo
@@ -189,8 +265,8 @@ const SoilReportSidebar = ({
                   title={fieldObj.fieldName || `Field ${index + 1}`}
                   area={
                     fieldObj.acre !== undefined &&
-                    fieldObj.acre !== null &&
-                    fieldObj.acre !== ""
+                      fieldObj.acre !== null &&
+                      fieldObj.acre !== ""
                       ? Number(fieldObj.acre).toFixed(3)
                       : ""
                   }
@@ -205,7 +281,7 @@ const SoilReportSidebar = ({
                       : ""
                   }
                   isSelected={selectedOperationIndex === index}
-                   coordinates={fieldObj.field}
+                  coordinates={fieldObj.field}
                   onClick={() => {
                     setSelectedOperationIndex(index);
                     setSelectedOperation(fieldObj);
@@ -218,39 +294,24 @@ const SoilReportSidebar = ({
             </div>
 
             {selectedOperationIndex !== null && (
-              <div className="mt-3 p-3 flex flex-col gap-3 text-[#344e41] ">
-                <h4 className="font-bold text-[#344e41]">Crop Details </h4>
-                <label className="font-semibold"> Current Crop</label>
-                <select
-                  className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200"
-                  value={currentcrop}
-                  onChange={(e) => setcurrentcrop(e.target.value)}
-                >
-                  <option>Select Crop</option>
-                  {cropOptions.map((crop, index) => {
-                    return (
-                      <option key={index} value={crop}>
-                        {crop}
-                      </option>
-                    );
-                  })}
-                </select>
+              <div className="mt-3 p-3 flex flex-col gap-3 text-[#344e41]">
+                <h4 className="font-bold text-[#344e41]">Crop Details</h4>
 
-                <label className="font-semibold">Next Crop</label>
-                <select
-                  className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200"
+                <CustomDropdown
+                  label="Current Crop"
+                  value={currentcrop}
+                  onChange={setcurrentcrop}
+                  options={cropOptions}
+                  placeholder="Select Crop"
+                />
+
+                <CustomDropdown
+                  label="Next Crop"
                   value={nextcrop}
-                  onChange={(e) => setnextcrop(e.target.value)}
-                >
-                  <option>Select Crop</option>
-                  {cropOptions.map((crop, index) => {
-                    return (
-                      <option key={index} value={crop}>
-                        {crop}
-                      </option>
-                    );
-                  })}
-                </select>
+                  onChange={setnextcrop}
+                  options={cropOptions}
+                  placeholder="Select Crop"
+                />
 
                 {!reportGenerated ? (
                   <button
@@ -266,15 +327,15 @@ const SoilReportSidebar = ({
                       dispatch(fetchSatelliteDates(fields?.field));
                       setReportGenerated(true);
                     }}
-                    className="bg-[#344e41] rounded-md px-3 py-2 text-gray-200 mt-10"
+                    className="bg-[#344e41] hover:bg-[#2b3e33] transition-all duration-200 rounded-md px-3 py-2 text-gray-200 mt-10"
                   >
                     Generate Report
                   </button>
                 ) : (
-                  <div className=" w-full flex justify-center p-4 ">
+                  <div className="w-full flex justify-center p-4">
                     <button
                       onClick={downloadPDF}
-                      className="bg-[#344e41] rounded-md px-10 py-2 text-gray-200 mt-4"
+                      className="bg-[#344e41] hover:bg-[#2b3e33] transition-all duration-200 rounded-md px-10 py-2 text-gray-200 mt-4"
                     >
                       Download Report
                     </button>

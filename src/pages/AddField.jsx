@@ -92,8 +92,7 @@ const AddField = () => {
 
       if (result?.success) {
         message.success("Field added successfully!");
-
-        console.log(result);
+        navigate("/cropgen-analytics");
         // Store the field data for pricing overlay
         const fieldData = {
           id: result?.farmField?._id,
@@ -131,7 +130,7 @@ const AddField = () => {
 
   return (
     <div className="relative w-full h-screen">
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {showOverlay && (
           <motion.div
             key="pricing-overlay"
@@ -148,7 +147,7 @@ const AddField = () => {
             />
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
 
       {isTabletView ? (
         // Tablet Layout
