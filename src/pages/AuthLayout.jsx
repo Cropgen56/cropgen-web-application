@@ -41,10 +41,10 @@ const AuthLayout = () => {
       };
     } else if (width > 700) {
       return {
-        sphereSize: 220,
+        sphereSize: 240,
         orbitRadius: 85,
         planetSize: 11,
-        laptopWidth: 170,
+        laptopWidth: 180,
       };
     } else if (width > 600) {
       return {
@@ -96,10 +96,10 @@ const AuthLayout = () => {
         <div className="flex flex-row w-full h-full">
           <div className="w-1/2 relative h-full bg-[#344E41]">
             <div className="absolute top-4 left-4 lg:top-6 lg:left-6 flex items-center gap-2">
-              <img src={logo} alt="Logo" className="h-12 lg:h-20 w-auto" />
+              <img src={logo} alt="Logo" className="h-12 lg:h-16 w-auto" />
             </div>
             <div className="flex flex-col gap-4 justify-center items-center h-full w-full">
-              <div className="lg:mt-20 mt-32 mx-6 lg:mx-0 text-center">
+              <div className="lg:mt-24 mt-32 mx-6 lg:mx-0 text-center">
                 <h2 className="text-xl lg:text-3xl font-bold text-white [text-shadow:0px_4px_4px_#00000040]">
                   Your Smart Farming Assistant
                 </h2>
@@ -174,21 +174,21 @@ const AuthLayout = () => {
       ) : (
         <div className="flex flex-col w-full h-full z-40">
           <div
-            className="relative w-full bg-[#344E41] flex transition-all duration-300"
+            className="relative w-full bg-[#344E41] flex transition-all duration-300 ease-in-out"
             style={{
               height:
                 width > 830
                   ? "25vh"
                   : width > 730
-                    ? "15vh"
+                    ? "30vh"
                     : width > 600
                       ? "22vh"
                       : "22vh",
             }}
           >
-            <div className="flex-1 flex justify-start items-center px-2 relative">
+            <div className="flex-[0.4] flex justify-start items-center px-2 relative">
               <div
-                className="absolute top-[20%] pointer-events-none"
+                className="absolute top-[44%] pointer-events-none"
                 style={{
                   width: `${responsiveSizes.sphereSize}px`,
                   height: `${responsiveSizes.sphereSize}px`
@@ -272,15 +272,15 @@ const AuthLayout = () => {
               </div>
             </div>
 
-            <div className="flex-1 flex flex-col justify-center items-start px-2">
-              <div className="absolute top-2 right-2 flex items-center gap-2">
-                <img src={logo} alt="Logo" className="h-16 w-auto" />
+            <div className="flex-[0.6] flex flex-col justify-center items-end text-right pr-4 sm:pr-0 sm:items-center sm:text-center px-2">
+              <div className="absolute top-1 sm:top-2 right-2 flex items-center gap-2">
+                <img src={logo} alt="Logo" className="h-12 sm:h-16 w-auto" />
               </div>
-              <div className="mt-16 -translate-x-28 text-left">
-                <h2 className="text-[16px] font-bold text-white text-center [text-shadow:0px_4px_4px_#00000040]">
+              <div className="mt-12 sm:mt-16 ml-2 sm:mx-8 transition-all duration-300 ease-in-out">
+                <h2 className="text-base sm:text-3xl font-bold text-white text-center [text-shadow:0px_4px_4px_#00000040]">
                   Your Smart Farming Assistant
                 </h2>
-                <p className="text-[10px] font-medium text-white text-center [text-shadow:0px_4px_4px_#00000040] max-w-[90%]">
+                <p className="text-[8px] sm:text-base font-medium text-white text-center [text-shadow:0px_4px_4px_#00000040] max-w-[90%]">
                   Powered by satellite insights, CropGen helps you detect,
                   decide, and grow better—field by field.
                 </p>

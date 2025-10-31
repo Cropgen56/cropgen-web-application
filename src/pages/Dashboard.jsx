@@ -79,6 +79,7 @@ const Dashboard = () => {
 
   const [prevFieldsLength, setPrevFieldsLength] = useState(0);
   const [, setShowWelcome] = useState(false);
+  const [showSelectFarmModal, setShowSelectFarmModal] = useState(false);
   const navigate = useNavigate();
 
   // const listVariants = {
@@ -106,6 +107,14 @@ const Dashboard = () => {
       setShowAddFieldInfo(true);
     }
   }, [fields]);
+
+  useEffect(() => {
+    if (fields.length > 0 && !selectedField) {
+      setShowSelectFarmModal(true);
+    } else {
+      setShowSelectFarmModal(false);
+    }
+  }, [fields, selectedField]);
 
   // Memoized computed values
   const selectedFieldDetails = useMemo(() => {
@@ -288,7 +297,6 @@ const Dashboard = () => {
         </>
       )}
 
-      {/* Welcome Overlay */}
       {/* Welcome Overlay */}
       <AnimatePresence mode="wait">
         {delayPassed && fields.length === 0 && !showAddFieldInfo && (
@@ -621,6 +629,45 @@ const Dashboard = () => {
                 </motion.div>
               ))}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* show select farm modal if no field is selected */}
+      <AnimatePresence>
+        {showSelectFarmModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white/90 p-6 rounded-2xl shadow-2xl text-center max-w-sm w-[90%] border border-green-200 relative overflow-hidden"
+              initial={{ scale: 0.7, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.7, opacity: 0, y: 40 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <motion.div
+                initial={{ rotate: -5, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 80 }}
+              >
+                <h2 className="text-2xl font-extrabold text-green-700 mb-3 tracking-wide">
+                  Select a Farm
+                </h2>
+                <p className="text-gray-600 mb-6 text-base leading-relaxed">
+                  Please select a farm first to continue using the dashboard.
+                </p>
+              </motion.div>
+              <button
+                onClick={() => setShowSelectFarmModal(false)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all duration-500 ease-in-out cursor-pointer"
+              >
+                Go to Dashboard
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

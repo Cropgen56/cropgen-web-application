@@ -67,12 +67,12 @@ function SocialButtons() {
   return (
     <div className="flex flex-col justify-center items-center gap-3 w-full">
       <GoogleOAuthProvider clientId={clientId}>
-        <div className="w-[70%]">
+        <div className="w-[95%] sm:w-[70%]">
           {/* Custom styled button */}
           <button
             onClick={handleCustomButtonClick}
             disabled={isLoading}
-            className={`flex w-full items-center justify-center gap-2 px-6 py-3 rounded-full font-medium text-sm transition 
+            className={`flex w-full items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-full font-medium text-sm transition-all duration-500 ease-in-out whitespace-nowrap
               ${
                 isLoading
                   ? "bg-gray-400 cursor-not-allowed"

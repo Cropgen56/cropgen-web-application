@@ -123,35 +123,35 @@ const SignupLogin = () => {
   const translateY = `${-(step - 1) * 100}%`;
 
   return (
-    <div className="w-full h-full flex lg:items-center justify-center bg-white p-2 sm:mt-16 sm:p-4 lg:p-8 ">
-      <div className="w-full max-w-lg lg:max-w-xl bg-white rounded-xl flex flex-col justify-start overflow-hidden relative">
-        <div className="flex flex-col items-center text-center pb-4">
+    <div className="w-full h-full flex lg:items-center justify-center bg-white p-2 mt-16 sm:p-4 lg:p-8 ">
+      <div className="w-full max-w-lg lg:max-w-xl bg-white rounded-xl flex flex-col gap-2.5 sm:gap-4 justify-start overflow-hidden relative">
+        <div className="flex flex-col items-center text-center">
           <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-semibold text-black">
             Get started with CropGen
           </h2>
-          <p className="text-xs sm:text-sm lg:text-base text-gray-500 mt-1 font-medium">
+          <p className="text-xs sm:text-sm lg:text-base text-gray-500 sm:mt-1 font-medium">
             Enter your personal data to create your account
           </p>
         </div>
 
-        <div className="relative w-full h-[420px] sm:h-[400px] md:h-[380px] lg:h-[420px] overflow-hidden mt-2">
+        <div className="relative w-full h-[320px] sm:h-[400px] md:h-[380px] lg:h-[420px] overflow-hidden">
           <div
             className="absolute left-0 top-0 w-full h-full transition-transform duration-500 ease-in-out"
             style={{ transform: `translateY(${translateY})` }}
           >
-            <section className="w-full h-full flex flex-col justify-start p-4">
+            <section className="w-full h-full flex flex-col justify-start gap-4 px-4">
               <div className="w-full">
                 <SocialButtons />
               </div>
 
-              <div className="flex items-center gap-2 mt-4 w-[70%] mx-auto">
-                <hr className="flex-1 border-2 border-green-900" />
+              <div className="flex items-center gap-2 w-[95%] sm:w-[70%] mx-auto">
+                <hr className="flex-1 border-2 border-green-900 my-1 sm:my-4" />
                 <span className="text-xs text-green-900/80 font-semibold">OR</span>
-                <hr className="flex-1  border-2 border-green-900" />
+                <hr className="flex-1  border-2 border-green-900 my-1 sm:my-4" />
               </div>
 
 
-              <div className="mt-4 flex flex-col w-full  justify-center items-center">
+              <div className="flex flex-col gap-2 w-full justify-center items-center">
                 <input
                   type="email"
                   placeholder="Email Address"
@@ -159,37 +159,37 @@ const SignupLogin = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="w-[70%] mt-1 lg:mt-2 rounded-full px-2 lg:py-3 md:py-2  text-center font-semibold text-green-900 lg:text-sm bg-white border-2 border-green-900/60 focus:outline-none "
+                  className="w-[95%] sm:w-[70%] sm:mt-1 lg:mt-2 rounded-full px-2 lg:py-3 py-2  text-center font-semibold text-green-900 lg:text-sm bg-white border-2 border-green-900/60 focus:outline-none "
                 />
 
                 <button
                   onClick={handleSendOtp}
                   disabled={sendingOtp}
-                  className="w-[70%] mt-3 lg:mt-4 bg-[#344E41] text-white py-3 lg:py-2 rounded-full font-medium hover:bg-emerald-900 transition text-xs lg:text-base"
+                  className="w-[95%] sm:w-[70%] sm:mt-3 lg:mt-4 bg-[#344E41] text-white py-3 lg:py-2 rounded-full font-medium hover:bg-emerald-900 transition-all duration-500 ease-in-out text-sm lg:text-base"
                 >
                   {sendingOtp ? "Sending OTP..." : "Continue"}
                 </button>
               </div>
-              <div className="pt-3 mt-20 text-center text-sm text-green-900/70 font-semibold ">
+              <div className="pt-3 sm:mt-12 md:mt-16 text-center text-sm text-green-900/70 font-semibold ">
                 We will send a 6-digit OTP to your email.
               </div>
             </section>
 
-            <section className="w-full h-full flex flex-col justify-start p-4 mt-2">
+            <section className="w-full h-full flex flex-col justify-start p-4">
 
-              <div className="flex flex-col items-center ">
-                <img src={tick} alt="Success" className="w-16 h-16 animate-bounce" />
-                <h3 className="text-lg font-semibold text-green-700 mt-3">
+              <div className="flex flex-col gap-2 items-center ">
+                <img src={tick} alt="Success" className="w-12 h-12 sm:w-16 sm:h-16 animate-bounce" />
+                <h3 className="text-lg font-semibold text-green-700">
                   OTP Sent Successfully!
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500">
                   Please check your email to verify.
                 </p>
               </div>
 
               <div className="relative">
 
-                <div className="flex flex-col gap-2 justify-center lg:gap-3 mt-1 lg:mt-2 w-full mt-5">
+                <div className="flex flex-col gap-2 justify-center lg:gap-3 sm:mt-3 lg:mt-2 w-full">
                   <div className="flex justify-center">
                     <div className="grid grid-cols-6 gap-1 lg:gap-2 w-[70%]  sm:flex-[0.8]">
                       {otpInputs.map((digit, idx) => (
@@ -236,12 +236,12 @@ const SignupLogin = () => {
                 )}
               </div>
 
-              <div className="pt-4 text-xs text-gray-500 text-center mt-2">
+              <div className="pt-2 sm:pt-4 text-xs text-gray-500 text-center mt-2">
                 Didn't receive OTP? Try again or change email.
               </div>
             </section>
-            <section className="w-full h-full p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col justify-start mt-5">
-              <div className="mb-3">
+            <section className="w-full h-full p-3 sm:p-4 md:p-6 lg:p-8 flex flex-col gap-3 justify-start">
+              <div>
                 <label className="text-xs lg:text-sm font-medium text-gray-800 text-center">
                   Organization Code (Optional)
                 </label>
@@ -272,7 +272,7 @@ const SignupLogin = () => {
               </div>
 
               {onboardingRequired && (
-                <div className="flex items-start gap-2 mt-2">
+                <div className="flex items-start gap-2">
                   <input
                     type="checkbox"
                     checked={formData.terms}
@@ -296,7 +296,7 @@ const SignupLogin = () => {
                 </div>
               )}
 
-              <div className="flex justify-center">
+              <div className="flex gap-3 justify-center">
                 <button
                   type="button"
                   onClick={() => {
@@ -304,19 +304,19 @@ const SignupLogin = () => {
                     else handleVerifyOtp();
                   }}
                   disabled={completingProfile}
-                  className="w-[70%] bg-[#344E41] text-white py-1.5 lg:py-2 rounded-full  font-medium hover:bg-emerald-900 transition text-xs lg:text-base mt-6"
+                  className="w-[95%] sm:w-[70%] bg-[#344E41] text-white py-2.5 sm:py-3 rounded-full  font-medium hover:bg-emerald-900 transition-all duration-500 ease-in-out text-sm lg:text-base "
                 >
                   {completingProfile ? "Processing..." : "Login / Sign Up"}
                 </button>
               </div>
 
-              <div className="flex items-center gap-2 mt-4 w-[70%] mx-auto">
+              <div className="flex items-center gap-2 w-[95%] sm:w-[70%] mx-auto">
                 <hr className="flex-1 border-2 border-green-900" />
                 <span className="text-xs text-green-900/80 font-semibold">OR</span>
                 <hr className="flex-1  border-2 border-green-900" />
               </div>
 
-              <div className="mt-3">
+              <div>
                 <SocialButtons />
               </div>
             </section>
