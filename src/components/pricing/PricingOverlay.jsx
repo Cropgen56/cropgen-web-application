@@ -8,7 +8,12 @@ import React, {
 import { motion } from "framer-motion";
 import { Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchSubscriptions } from "../../redux/slices/subscriptionSlice.js";
+import {
+  fetchSubscriptions,
+  createUserSubscription,
+  verifyUserSubscriptionPayment,
+} from "../../redux/slices/subscriptionSlice.js";
+import { toast } from "react-toastify";
 import PlanCard from "./PlanCard.jsx";
 
 const USD_TO_INR = 83;
@@ -45,7 +50,6 @@ function transformApiData(apiData, billing, currency, userArea) {
     .map((plan) => {
       const pricingByCurrencyAndCycle = {};
 
-      // Pick highest amount per currency-billingCycle
       plan.pricing?.forEach((price) => {
         const key = `${price.currency}_${price.billingCycle}`;
         if (
@@ -81,7 +85,6 @@ function transformApiData(apiData, billing, currency, userArea) {
           if (currencyMatch) {
             pricePerHectare = currencyMatch.amountMinor / 100;
 
-            // Handle monthly/yearly conversion
             if (
               billing === "yearly" &&
               currencyMatch.billingCycle === "monthly"
@@ -101,14 +104,12 @@ function transformApiData(apiData, billing, currency, userArea) {
             if (anyPrice) {
               pricePerHectare = anyPrice.amountMinor / 100;
 
-              // Currency conversion fallback
               if (anyPrice.currency === "INR" && currency === "USD") {
                 pricePerHectare = pricePerHectare / USD_TO_INR;
               } else if (anyPrice.currency === "USD" && currency === "INR") {
                 pricePerHectare = pricePerHectare * USD_TO_INR;
               }
 
-              // Handle monthly/yearly conversion
               if (billing === "yearly" && anyPrice.billingCycle === "monthly") {
                 pricePerHectare = pricePerHectare * 12 * 0.8;
               } else if (
@@ -148,16 +149,12 @@ function transformApiData(apiData, billing, currency, userArea) {
         }
       }
 
-      // Features
       const enabledFeatures = [];
       const disabledFeatures = [];
       Object.entries(plan.features || {}).forEach(([key, value]) => {
         const displayName = FEATURE_DISPLAY_NAMES[key] || key;
-        if (value) {
-          enabledFeatures.push(displayName);
-        } else {
-          disabledFeatures.push(displayName);
-        }
+        if (value) enabledFeatures.push(displayName);
+        else disabledFeatures.push(displayName);
       });
 
       return {
@@ -183,57 +180,66 @@ function transformApiData(apiData, billing, currency, userArea) {
 
 export default function PricingOverlay({ onClose, userArea, selectedField }) {
   const dispatch = useDispatch();
-  const { subscriptions, loading, error } = useSelector(
+  const {
+    subscriptions,
+    loading: subLoading,
+    error,
+  } = useSelector((state) => state.subscription);
+  const { token, user } = useSelector((state) => state.auth);
+  const { loading: checkoutLoading } = useSelector(
     (state) => state.subscription
   );
 
-  // Move all Hooks to the top level
+  const [billing, setBilling] = useState("monthly");
+  const [currency, setCurrency] = useState("INR");
+  const [groupIndex, setGroupIndex] = useState(0);
+  const [cardsPerGroup, setCardsPerGroup] = useState(3);
+  const [scale, setScale] = useState(1);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState(null);
+
+  const containerRef = useRef(null);
+
+  // Load Razorpay SDK once
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
+    if (!window.Razorpay) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      document.body.appendChild(script);
+      return () => document.body.removeChild(script);
+    }
   }, []);
 
   useEffect(() => {
     dispatch(fetchSubscriptions());
   }, [dispatch]);
 
-  const containerRef = useRef(null);
-  const [billing, setBilling] = useState("monthly");
-  const [currency, setCurrency] = useState("INR");
-  const [groupIndex, setGroupIndex] = useState(0);
-  const [cardsPerGroup, setCardsPerGroup] = useState(3);
-  const [scale, setScale] = useState(1);
-
   useLayoutEffect(() => {
-    function recomputeScale() {
+    const recompute = () => {
       const el = containerRef.current;
       if (!el) return;
-      const naturalW = el.scrollWidth || el.offsetWidth || 1;
-      const naturalH = el.scrollHeight || el.offsetHeight || 1;
-      const availW = window.innerWidth - 24;
-      const availH = window.innerHeight - 24;
-      const s = Math.min(availW / naturalW, availH / naturalH, 1);
-      setScale(Number.isFinite(s) && s > 0 ? s : 1);
-    }
-    recomputeScale();
-    window.addEventListener("resize", recomputeScale);
-    return () => window.removeEventListener("resize", recomputeScale);
+      const s = Math.min(
+        (window.innerWidth - 48) / (el.scrollWidth || 1),
+        (window.innerHeight - 48) / (el.scrollHeight || 1),
+        1
+      );
+      setScale(s > 0 ? s : 1);
+    };
+    recompute();
+    window.addEventListener("resize", recompute);
+    return () => window.removeEventListener("resize", recompute);
   }, [cardsPerGroup, groupIndex]);
 
   useEffect(() => {
-    function handleResize() {
+    const handle = () => {
       if (window.innerWidth < 768) setCardsPerGroup(1);
       else if (window.innerWidth < 1024) setCardsPerGroup(2);
       else setCardsPerGroup(3);
-    }
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    };
+    handle();
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
   }, []);
 
   const adjusted = useMemo(
@@ -249,20 +255,101 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
     return g;
   }, [adjusted, cardsPerGroup]);
 
-  const visibleGroup = groups[groupIndex] || groups[0] || [];
+  const visibleGroup = groups[groupIndex] || [];
 
-  // Move rendering logic after all Hooks
-  if (loading) {
+  // === HANDLE SUBSCRIBE ===
+  const handleSubscribeClick = async ({ plan }) => {
+    if (!token) {
+      toast.error("Please log in to subscribe.");
+      return;
+    }
+
+    try {
+      const payload = {
+        planId: plan._id,
+        fieldId: selectedField?.id,
+        hectares: userArea,
+        billingCycle: plan.isTrial ? "trial" : billing,
+        currency,
+      };
+
+      const res = await dispatch(createUserSubscription(payload)).unwrap();
+
+      if (!res.success) throw new Error(res.message);
+
+      if (plan.isTrial) {
+        toast.success("Trial activated!");
+        onClose?.();
+        return;
+      }
+
+      setCheckoutPlan({ plan, razorpayData: res.data });
+      setShowCheckout(true);
+    } catch (err) {
+      toast.error(err.message || "Failed to start subscription");
+    }
+  };
+
+  // === OPEN RAZORPAY ===
+  useEffect(() => {
+    if (!showCheckout || !checkoutPlan || !window.Razorpay) return;
+
+    const { razorpayData, plan } = checkoutPlan;
+
+    const options = {
+      key: razorpayData.key,
+      subscription_id: razorpayData.razorpaySubscriptionId,
+      name: "CropGen",
+      description: `${plan.name} – ${userArea} ha`,
+      prefill: {
+        name: user?.name || "",
+        email: user?.email || "",
+        contact: user?.contact || "",
+      },
+      notes: { subscriptionId: razorpayData.subscriptionRecordId },
+      theme: { color: "#344E41" },
+      handler: async (response) => {
+        try {
+          const verifyRes = await dispatch(
+            verifyUserSubscriptionPayment({
+              paymentData: {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_subscription_id: response.razorpay_subscription_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+            })
+          ).unwrap();
+
+          if (verifyRes.success) {
+            toast.success("Subscription activated!");
+            setTimeout(() => window.location.reload(), 1500);
+          }
+        } catch (e) {
+          toast.error("Verification failed");
+        }
+      },
+      modal: {
+        ondismiss: () => {
+          setShowCheckout(false);
+          setCheckoutPlan(null);
+        },
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.on("payment.failed", () => toast.error("Payment failed"));
+    rzp.open();
+
+    return () => rzp.close?.();
+  }, [showCheckout, checkoutPlan, dispatch, user, userArea]);
+
+  // === RENDER ===
+  if (subLoading) {
     return (
-      <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center"
-        style={{ background: "rgba(52,78,65,0.5)" }}
-      >
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#344E41]/50">
         <div className="bg-white rounded-lg p-8 flex flex-col items-center">
           <Loader2 className="animate-spin h-12 w-12 text-[#344E41]" />
-          <p className="mt-4 text-lg font-semibold">
-            Loading subscription plans...
-          </p>
+          <p className="mt-4 text-lg font-semibold">Loading plans...</p>
         </div>
       </div>
     );
@@ -270,249 +357,165 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
 
   if (error) {
     return (
-      <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center"
-        style={{ background: "rgba(52,78,65,0.5)" }}
-      >
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#344E41]/50">
         <div className="bg-white rounded-lg p-8 max-w-md">
-          <h3 className="text-xl font-bold text-red-600 mb-2">
-            Error Loading Plans
-          </h3>
+          <h3 className="text-xl font-bold text-red-600 mb-2">Error</h3>
           <p className="text-gray-600">
-            {error.message || "Failed to load subscription plans"}
+            {error.message || "Failed to load plans"}
           </p>
           <button
             onClick={() => dispatch(fetchSubscriptions())}
-            className="mt-4 px-4 py-2 bg-[#344E41] text-white rounded-lg hover:bg-[#2a3d34]"
+            className="mt-4 px-4 py-2 bg-[#344E41] text-white rounded-lg"
           >
             Retry
           </button>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="mt-4 ml-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-            >
-              Close
-            </button>
-          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4"
-      style={{ background: "rgba(52,78,65,0.5)" }}
-    >
-      <motion.div
-        key="cards"
-        ref={containerRef}
-        initial={{ opacity: 0, y: 80 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 60 }}
-        transition={{ duration: 0.55 }}
-        className="relative w-full max-w-7xl rounded-xl p-4 sm:p-6"
-        style={{
-          backdropFilter: "blur(4px)",
-          transformOrigin: "center",
-          scale,
-        }}
-      >
-        {onClose && (
-          <button
-            className="absolute top-2 sm:top-4 right-2 sm:right-4 text-white z-40"
-            onClick={onClose}
+    <>
+      {/* PRICING OVERLAY */}
+      {!showCheckout && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#344E41]/50">
+          <motion.div
+            ref={containerRef}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: scale }}
+            className="relative w-full max-w-7xl bg-white/10 backdrop-blur-sm rounded-xl p-6"
           >
-            <X size={24} className="sm:w-7 sm:h-7" />
-          </button>
-        )}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-white"
+            >
+              <X size={28} />
+            </button>
 
-        <h2 className="text-[clamp(20px,5vw,42px)] font-extrabold text-center mb-2 sm:mb-3 text-white">
-          Choose the{" "}
-          <span className="bg-gradient-to-r from-[#5A7C6B] to-[#E1FFF0] bg-clip-text text-transparent">
-            Right Plan
-          </span>{" "}
-          for Your Farm
-        </h2>
-        <p className="text-[clamp(12px,3vw,18px)] font-semibold text-center text-white mb-4">
-          Affordable plans designed to grow with your farming needs.
-        </p>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-3 text-white">
+              Choose the <span className="text-[#E1FFF0]">Right Plan</span>
+            </h2>
 
-        <div className="flex justify-center mb-4">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 flex items-center gap-2">
-            <span className="text-white text-sm font-semibold">
-              Your Farm Area:
-            </span>
-            <span className="text-[#E1FFF0] font-bold text-sm">
-              {userArea.toFixed(2)} hectares
-            </span>
-          </div>
+            <div className="flex justify-center gap-6 mb-6">
+              {/* Billing Toggle */}
+              <div className="flex items-center gap-3">
+                <span
+                  className={`font-bold text-sm cursor-pointer ${
+                    billing === "monthly" ? "text-white" : "text-gray-300"
+                  }`}
+                  onClick={() => setBilling("monthly")}
+                >
+                  Monthly
+                </span>
+                <div
+                  onClick={() =>
+                    setBilling((b) => (b === "monthly" ? "yearly" : "monthly"))
+                  }
+                  className="relative flex items-center bg-gray-200 rounded-full w-14 h-7 cursor-pointer"
+                >
+                  <div
+                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${
+                      billing === "monthly"
+                        ? "left-1 bg-[#344E41]"
+                        : "left-7 bg-[#344E41]"
+                    }`}
+                  />
+                </div>
+                <span
+                  className={`font-bold text-sm cursor-pointer ${
+                    billing === "yearly" ? "text-white" : "text-gray-300"
+                  }`}
+                  onClick={() => setBilling("yearly")}
+                >
+                  Yearly
+                </span>
+                <span className="ml-2 text-xs bg-[#E1FFF0] text-[#344E41] px-2 py-0.5 rounded-full">
+                  Save 20%
+                </span>
+              </div>
+
+              {/* Currency Toggle */}
+              <div className="flex items-center gap-3">
+                <span
+                  className={`font-bold text-sm cursor-pointer ${
+                    currency === "USD" ? "text-white" : "text-gray-300"
+                  }`}
+                  onClick={() => setCurrency("USD")}
+                >
+                  Plan in $
+                </span>
+                <div
+                  onClick={() =>
+                    setCurrency((c) => (c === "USD" ? "INR" : "USD"))
+                  }
+                  className="relative flex items-center bg-gray-200 rounded-full w-14 h-7 cursor-pointer"
+                >
+                  <div
+                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${
+                      currency === "USD"
+                        ? "left-1 bg-[#344E41]"
+                        : "left-7 bg-[#344E41]"
+                    }`}
+                  />
+                </div>
+                <span
+                  className={`font-bold text-sm cursor-pointer ${
+                    currency === "INR" ? "text-white" : "text-gray-300"
+                  }`}
+                  onClick={() => setCurrency("INR")}
+                >
+                  Plan in ₹
+                </span>
+              </div>
+            </div>
+
+            {/* Cards */}
+            <div className="flex justify-center gap-6">
+              {visibleGroup.map((p) => (
+                <PlanCard
+                  key={p._id}
+                  plan={p}
+                  selectedField={selectedField}
+                  onSubscribeClick={handleSubscribeClick}
+                />
+              ))}
+            </div>
+
+            {groups.length > 1 && (
+              <>
+                <button
+                  onClick={() =>
+                    setGroupIndex(
+                      (i) => (i - 1 + groups.length) % groups.length
+                    )
+                  }
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white"
+                >
+                  <ChevronLeft size={36} />
+                </button>
+                <button
+                  onClick={() => setGroupIndex((i) => (i + 1) % groups.length)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white"
+                >
+                  <ChevronRight size={36} />
+                </button>
+              </>
+            )}
+          </motion.div>
         </div>
+      )}
 
-        {selectedField && (
-          <div className="flex justify-center mb-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 flex flex-col gap-2">
-              <p className="text-white text-sm font-semibold">
-                Selected Field: {selectedField.name}
-              </p>
-              <p className="text-white text-sm">
-                Crop: {selectedField.cropName || "N/A"}
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="w-full flex flex-col md:flex-row items-center justify-between mb-4 px-1 sm:px-12 gap-3 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span
-              className={`font-bold text-[clamp(12px,2.5vw,16px)] cursor-pointer ${
-                billing === "monthly" ? "text-white" : "text-gray-300"
-              }`}
-              onClick={() => setBilling("monthly")}
-            >
-              Monthly
-            </span>
-            <div
-              onClick={() =>
-                setBilling((b) => (b === "monthly" ? "yearly" : "monthly"))
-              }
-              className="relative flex items-center bg-gray-200 rounded-full w-12 sm:w-14 h-6 sm:h-7 cursor-pointer"
-            >
-              <div
-                className={`absolute top-0.5 w-5 sm:w-6 h-5 sm:h-6 rounded-full transition-all ${
-                  billing === "monthly"
-                    ? "left-1 bg-[#344E41]"
-                    : "left-6 sm:left-7 bg-[#344E41]"
-                }`}
-              />
-            </div>
-            <span
-              className={`font-bold text-[clamp(12px,2.5vw,16px)] cursor-pointer ${
-                billing === "yearly" ? "text-white" : "text-gray-300"
-              }`}
-              onClick={() => setBilling("yearly")}
-            >
-              Yearly
-            </span>
-            <span className="ml-2 text-[10px] sm:text-xs bg-gradient-to-r from-[#5A7C6B] to-[#E1FFF0] text-[#344E41] px-2 py-0.5 rounded-full">
-              Save 20%
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <span
-              className={`font-bold text-[clamp(12px,2.5vw,16px)] cursor-pointer ${
-                currency === "USD" ? "text-white" : "text-gray-300"
-              }`}
-              onClick={() => setCurrency("USD")}
-            >
-              Plan in $
-            </span>
-            <div
-              onClick={() => setCurrency((c) => (c === "USD" ? "INR" : "USD"))}
-              className="relative flex items-center bg-gray-200 rounded-full w-12 sm:w-14 h-6 sm:h-7 cursor-pointer"
-            >
-              <div
-                className={`absolute top-0.5 w-5 sm:w-6 h-5 sm:h-6 rounded-full transition-all ${
-                  currency === "USD"
-                    ? "left-1 bg-[#344E41]"
-                    : "left-6 sm:left-7 bg-[#344E41]"
-                }`}
-              />
-            </div>
-            <span
-              className={`font-bold text-[clamp(12px,2.5vw,16px)] cursor-pointer ${
-                currency === "INR" ? "text-white" : "text-gray-300"
-              }`}
-              onClick={() => setCurrency("INR")}
-            >
-              Plan in ₹
-            </span>
-          </div>
-        </div>
-
-        {adjusted.length === 0 ? (
-          <div className="text-center text-white py-12">
-            <p className="text-xl">
-              No subscription plans available at the moment.
+      {/* RAZORPAY LOADER */}
+      {showCheckout && (
+        <div className="fixed inset-0 z-[99999] bg-black/30 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-8 shadow-2xl text-center">
+            <div className="h-16 w-16 mx-auto animate-spin rounded-full border-4 border-gray-300 border-t-[#344E41]" />
+            <p className="mt-4 text-lg font-semibold">
+              Opening secure checkout...
             </p>
           </div>
-        ) : (
-          <div className="relative w-full flex items-stretch justify-center gap-3 sm:gap-6">
-            {groups.length > 1 && (
-              <button
-                onClick={() =>
-                  setGroupIndex((s) => (s - 1 + groups.length) % groups.length)
-                }
-                className="absolute left-0 md:left-2 sm:left-6 top-1/2 -translate-y-1/2 
-                            flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 
-                            text-white rounded-full transition z-50"
-              >
-                <ChevronLeft size={36} strokeWidth={3} />
-              </button>
-            )}
-
-            <motion.div
-              key={groupIndex}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.45 }}
-              className="flex justify-center gap-4 sm:gap-6"
-            >
-              {visibleGroup.map((p, i) => (
-                <div
-                  key={p._id || i}
-                  className="w-[90%] sm:w-[280px] md:w-[300px] lg:w-[320px] flex-shrink-0"
-                >
-                  <PlanCard plan={p} selectedField={selectedField} />
-                </div>
-              ))}
-            </motion.div>
-
-            {groups.length > 1 && (
-              <button
-                onClick={() => setGroupIndex((s) => (s + 1) % groups.length)}
-                className="absolute right-0 md:right-2 sm:right-6 top-1/2 -translate-y-1/2 
-                            flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 
-                            text-white rounded-full transition z-50"
-              >
-                <ChevronRight size={36} strokeWidth={3} />
-              </button>
-            )}
-          </div>
-        )}
-
-        <div className="mt-6 sm:mt-8 text-center text-white font-bold text-[10px] sm:text-xs md:text-sm space-y-3">
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-            <a
-              className="text-white hover:text-gray-300 transition-colors"
-              href="https://www.cropgenapp.com/terms-conditions"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Terms and Conditions
-            </a>
-            <a
-              className="text-white hover:text-gray-300 transition-colors"
-              href="https://www.cropgenapp.com/privacy-policy"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Privacy Policy
-            </a>
-          </div>
-
-          <p>
-            Prices are exclusive of GST and other applicable taxes in your
-            region.
-            <br />
-            If you require an invoice to process your CropGen subscription,
-            please contact our support team.
-          </p>
         </div>
-      </motion.div>
-    </div>
+      )}
+    </>
   );
 }
