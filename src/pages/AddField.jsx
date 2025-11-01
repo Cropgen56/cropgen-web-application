@@ -92,18 +92,17 @@ const AddField = () => {
 
       if (result?.success) {
         message.success("Field added successfully!");
-        navigate("/cropgen-analytics");
+        setShowOverlay(true);
+        // navigate("/cropgen-analytics");
         // Store the field data for pricing overlay
         const fieldData = {
           id: result?.farmField?._id,
           name: farmName,
           areaInHectares,
           cropName,
-          // Add any other field data you need for subscription
         };
 
         setSelectedField(fieldData);
-        setShowOverlay(true);
         setPendingRedirect(true);
       } else {
         message.error("Failed to add field. Please try again.");
@@ -130,7 +129,7 @@ const AddField = () => {
 
   return (
     <div className="relative w-full h-screen">
-      {/* <AnimatePresence>
+      <AnimatePresence>
         {showOverlay && (
           <motion.div
             key="pricing-overlay"
@@ -143,11 +142,11 @@ const AddField = () => {
             <PricingOverlay
               onClose={handleClosePricing}
               userArea={fieldArea}
-              selectedField={selectedField} // Pass selected field data
+              selectedField={selectedField}
             />
           </motion.div>
         )}
-      </AnimatePresence> */}
+      </AnimatePresence>
 
       {isTabletView ? (
         // Tablet Layout

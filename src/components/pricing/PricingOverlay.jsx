@@ -8,6 +8,7 @@ import React, {
 import { motion } from "framer-motion";
 import { Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   fetchSubscriptions,
   createUserSubscription,
@@ -180,6 +181,8 @@ function transformApiData(apiData, billing, currency, userArea) {
 
 export default function PricingOverlay({ onClose, userArea, selectedField }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const {
     subscriptions,
     loading: subLoading,
@@ -323,6 +326,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
           if (verifyRes.success) {
             toast.success("Subscription activated!");
             setTimeout(() => window.location.reload(), 1500);
+            navigate("/cropgen-analytics");
           }
         } catch (e) {
           toast.error("Verification failed");
