@@ -123,7 +123,7 @@ const SignupLogin = () => {
   const translateY = `${-(step - 1) * 100}%`;
 
   return (
-    <div className="w-full h-full flex lg:items-center justify-center bg-white p-2 mt-16 sm:p-4 lg:p-8 ">
+    <div className="w-full h-full flex items-start sm:items-center justify-center mt-10 sm:mt-0 bg-white p-2  sm:p-4 lg:p-8 ">
       <div className="w-full max-w-lg lg:max-w-xl bg-white rounded-xl flex flex-col gap-2.5 sm:gap-4 justify-start overflow-hidden relative">
         <div className="flex flex-col items-center text-center">
           <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-semibold text-black">
@@ -170,7 +170,7 @@ const SignupLogin = () => {
                   {sendingOtp ? "Sending OTP..." : "Continue"}
                 </button>
               </div>
-              <div className="pt-3 sm:mt-12 md:mt-16 text-center text-sm text-green-900/70 font-semibold ">
+              <div className="pt-3 sm:mt-12 text-center text-sm text-green-900/70 font-semibold ">
                 We will send a 6-digit OTP to your email.
               </div>
             </section>

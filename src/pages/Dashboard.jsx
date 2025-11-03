@@ -16,7 +16,7 @@ import tut from "../assets/image/login/video.mp4";
 import forcast from "../assets/image/login/doughnut.png";
 import ndvi from "../assets/image/login/index-image.png";
 import report from "../assets/image/login/report-cards.png";
-import { PlusIcon, X } from "lucide-react"; 
+import { PlusIcon, X } from "lucide-react";
 import {
   fetchAOIs,
   createAOI,
@@ -632,50 +632,52 @@ const Dashboard = () => {
         )}
       </AnimatePresence> */}
 
-      {delayPassed && fields.length === 0 && showVideoOverlay && (
-        <motion.div
-          key="welcome-video"
-          className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-[9999] text-white p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          {" "}
-          <button
-            onClick={() => setShowVideoOverlay(false)}
-            className="absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-all duration-300"
+      <AnimatePresence mode="wait">
+        {delayPassed && fields.length === 0 && showVideoOverlay && (
+          <motion.div
+            key="welcome-video"
+            className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-[9999] text-white p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
           >
             {" "}
-            <X />{" "}
-          </button>{" "}
-          <div className="relative W-[90%] lg:w-[80%] aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            {" "}
-            <iframe
-              className="w-full h-full rounded-2xl"
-              src="https://www.youtube.com/embed/U_sVgXnqYPk?autoplay=1&mute=1&loop=1&playlist=U_sVgXnqYPk"
-              title="CropGen Tutorial"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            ></iframe>{" "}
-          </div>{" "}
-          <div className="flex flex-row items-center justify-center gap-4 mt-6">
-            {" "}
             <button
-              onClick={() => {
-                setShowAddFieldInfo(true);
-                setShowVideoOverlay(false);
-                navigate("/addfield");
-              }}
-              className="flex items-center gap-1 px-4 py-3 bg-green-600 hover:bg-green-700 rounded-xl text-white font-semibold text-base shadow-lg transition-all duration-500 ease-in-out cursor-pointer"
+              onClick={() => setShowVideoOverlay(false)}
+              className="absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-all duration-300"
             >
               {" "}
-              <PlusIcon className="w-5 h-5 mr-2" /> Add Your First Field{" "}
+              <X />{" "}
             </button>{" "}
-          </div>{" "}
-        </motion.div>
-      )}
+            <div className="relative W-[90%] lg:w-[80%] aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+              {" "}
+              <iframe
+                className="w-full h-full rounded-2xl"
+                src="https://www.youtube.com/embed/U_sVgXnqYPk?autoplay=1&mute=1&loop=1&playlist=U_sVgXnqYPk"
+                title="CropGen Tutorial"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              ></iframe>{" "}
+            </div>{" "}
+            <div className="flex flex-row items-center justify-center gap-4 mt-6">
+              {" "}
+              <button
+                onClick={() => {
+                  setShowAddFieldInfo(true);
+                  setShowVideoOverlay(false);
+                  navigate("/addfield");
+                }}
+                className="flex items-center gap-1 px-4 py-3 bg-green-600 hover:bg-green-700 rounded-xl text-white font-semibold text-base shadow-lg transition-all duration-500 ease-in-out cursor-pointer"
+              >
+                {" "}
+                <PlusIcon className="w-5 h-5 mr-2" /> Add Your First Field{" "}
+              </button>{" "}
+            </div>{" "}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* show select farm modal if no field is selected */}
       <AnimatePresence>

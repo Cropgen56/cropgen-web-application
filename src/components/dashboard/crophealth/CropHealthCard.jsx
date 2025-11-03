@@ -56,11 +56,11 @@ const CropHealth = ({ selectedFieldsDetials }) => {
 
         <div className="relative z-10 flex  gap-16 mt-10 w-full">
           {/* Crop Image Container */}
-          <div className="flex flex-col items-center bg-gray-100 rounded-xl w-[160px] h-[160px] overflow-hidden flex-shrink-0 mx-auto md:mx-0 shadow-sm border border-gray-200">
+          <div className="flex flex-col items-center bg-white rounded-xl w-[160px] h-[160px] overflow-hidden flex-shrink-0 mx-auto md:mx-0 shadow-sm border border-gray-200">
             <img
               src={cropInfo?.cropImage || "https://via.placeholder.com/160"}
               alt={cropInfo?.cropName || "crop"}
-              className="w-full h-full p-2 object-cover"
+              className="w-full h-full p-2 object-contain"
             />
           </div>
 

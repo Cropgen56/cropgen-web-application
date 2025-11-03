@@ -107,7 +107,7 @@ const AuthLayout = () => {
                   Powered by satellite insights, CropGen helps you detect,
                   decide, and grow better—field by field.
                 </p>
-                <div className="relative mt-2 w-80 lg:w-[28rem] mx-auto">
+                <div className="relative mt-8 w-80 lg:w-[28rem] mx-auto">
                   <img
                     src={sphere}
                     alt="Sun"
@@ -182,8 +182,8 @@ const AuthLayout = () => {
                   : width > 730
                     ? "30vh"
                     : width > 600
-                      ? "22vh"
-                      : "22vh",
+                      ? "25vh"
+                      : "25vh",
             }}
           >
             <div className="flex-[0.4] flex justify-start items-center px-2 relative">
@@ -274,7 +274,7 @@ const AuthLayout = () => {
 
             <div className="flex-[0.6] flex flex-col justify-center items-end text-right pr-4 sm:pr-0 sm:items-center sm:text-center px-2">
               <div className="absolute top-1 sm:top-2 right-2 flex items-center gap-2">
-                <img src={logo} alt="Logo" className="h-12 sm:h-16 w-auto" />
+                <img src={logo} alt="Logo" className="h-12 lg:h-16 w-auto" />
               </div>
               <div className="mt-12 sm:mt-16 ml-2 sm:mx-8 transition-all duration-300 ease-in-out">
                 <h2 className="text-base sm:text-3xl font-bold text-white text-center [text-shadow:0px_4px_4px_#00000040]">
