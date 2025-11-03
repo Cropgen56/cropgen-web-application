@@ -159,7 +159,7 @@ const SignupLogin = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="w-[95%] sm:w-[70%] sm:mt-1 lg:mt-2 rounded-full px-2 lg:py-3 py-2  text-center font-semibold text-green-900 lg:text-sm bg-white border-2 border-green-900/60 focus:outline-none "
+                  className="w-[95%] sm:w-[70%] sm:mt-1 lg:mt-2 rounded-full px-2 lg:py-3 py-2  text-center font-semibold text-green-900 text-xs sm:text-sm bg-white border-2 border-green-900/60 focus:outline-none "
                 />
 
                 <button
