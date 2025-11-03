@@ -324,9 +324,9 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
           ).unwrap();
 
           if (verifyRes.success) {
-            toast.success("Subscription activated!");
             setTimeout(() => window.location.reload(), 1500);
             navigate("/cropgen-analytics");
+            toast.success("Subscription activated!");
           }
         } catch (e) {
           toast.error("Verification failed");
