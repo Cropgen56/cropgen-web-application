@@ -18,6 +18,9 @@ import {
 } from "../../../../utility/formatDate";
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
+import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper"; // Updated import
+import { activateMembership } from "../../../../redux/slices/membershipSlice";
+import { message } from "antd";
 
 const NdviGraph = ({ selectedFieldsDetials }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
@@ -26,6 +29,9 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
     loading,
   } = useSelector((state) => state.satellite) || {};
 
+  // Add membership selectors
+  const { isMember, hasSkippedMembership } = useSelector(state => state.membership);
+
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDVI");
 
@@ -33,6 +39,12 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
+
+  // Handle subscription
+  const handleSubscribe = useCallback(() => {
+    dispatch(activateMembership());
+    message.success("Premium membership activated successfully!");
+  }, [dispatch]);
 
   useEffect(() => {
     if (!field || !sowingDate) return;
@@ -196,75 +208,82 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
             </div>
           </div>
 
-          <div
-            ref={scrollRef}
-            className="lg:w-3/4 overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 flex-grow" >
-            {isLoading ? (
-              <div className="text-center text-green-600" style={{ minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <LoadingSpinner size={48} color="#22c55e" />
-                <strong>Loading Vegetation Index...</strong>
+          <div className="lg:w-3/4 flex-grow">
+            <IndexPremiumWrapper
+              isLocked={hasSkippedMembership && !isMember}
+              onSubscribe={handleSubscribe}
+            >
+              <div
+                ref={scrollRef}
+                className="overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]" >
+                {isLoading ? (
+                  <div className="text-center text-green-600" style={{ minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <LoadingSpinner size={48} color="#22c55e" />
+                    <strong>Loading Vegetation Index...</strong>
+                  </div>
+                ) : !hasData ? (
+                  <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                        No Data Available
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        We couldn't find any data for the selected field and time range. Please verify the field selection or adjust the date range to ensure data availability.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <ResponsiveContainer width={chartConfig.width} height={180}>
+                      <LineChart
+                        data={chartData}
+                        margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
+                      >
+                        <CartesianGrid stroke="rgba(0,0,0,0.1)" />
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 12, fill: '#333' }}
+                          interval={chartConfig.interval}
+                          type="category"
+                        />
+                        <YAxis
+                          domain={yAxisConfig.domain}
+                          tick={{ fontSize: 12, fill: '#333' }}
+                          ticks={yAxisConfig.ticks}
+                          tickFormatter={tickFormatter}
+                          type="number"
+                        />
+                        <Tooltip
+                          formatter={tooltipFormatter}
+                          labelFormatter={labelFormatter}
+                          contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px' }}
+                        />
+                        <Legend
+                          layout="horizontal"
+                          verticalAlign="top"
+                          align="start"
+                          wrapperStyle={{
+                            paddingBottom: "8px",
+                            paddingLeft: "40px",
+                            fontWeight: "bold",
+                            color: "#333"
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey={index}
+                          stroke="#22c55e"
+                          strokeWidth={3}
+                          dot={{ r: 3, fill: '#22c55e' }}
+                          activeDot={{ r: 5, fill: '#16a34a' }}
+                          connectNulls={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
-            ) : !hasData ? (
-              <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                    No Data Available
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    We couldn't find any data for the selected field and time range. Please verify the field selection or adjust the date range to ensure data availability.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="w-full">
-                <ResponsiveContainer width={chartConfig.width} height={180}>
-                  <LineChart
-                    data={chartData}
-                    margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
-                  >
-                    <CartesianGrid stroke="rgba(0,0,0,0.1)" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 12, fill: '#333' }}
-                      interval={chartConfig.interval}
-                      type="category"
-                    />
-                    <YAxis
-                      domain={yAxisConfig.domain}
-                      tick={{ fontSize: 12, fill: '#333' }}
-                      ticks={yAxisConfig.ticks}
-                      tickFormatter={tickFormatter}
-                      type="number"
-                    />
-                    <Tooltip
-                      formatter={tooltipFormatter}
-                      labelFormatter={labelFormatter}
-                      contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px' }}
-                    />
-                    <Legend
-                      layout="horizontal"
-                      verticalAlign="top"
-                      align="start"
-                      wrapperStyle={{
-                        paddingBottom: "8px",
-                        paddingLeft: "40px",
-                        fontWeight: "bold",
-                        color: "#333"
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey={index}
-                      stroke="#22c55e"
-                      strokeWidth={3}
-                      dot={{ r: 3, fill: '#22c55e' }}
-                      activeDot={{ r: 5, fill: '#16a34a' }}
-                      connectNulls={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            </IndexPremiumWrapper>
           </div>
         </div>
       </div>

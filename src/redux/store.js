@@ -6,6 +6,7 @@ import satelliteSlice from "./slices/satelliteSlice";
 import operationSlice from "./slices/operationSlice";
 import cropReducer from "./slices/cropSlice";
 import subscriptionSlice from "./slices/subscriptionSlice";
+import membershipReducer from './slices/membershipSlice';
 
 // Configure the Redux store
 export const store = configureStore({
@@ -17,6 +18,7 @@ export const store = configureStore({
     operation: operationSlice,
     crops: cropReducer,
     subscription: subscriptionSlice,
+    membership: membershipReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

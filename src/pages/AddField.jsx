@@ -8,6 +8,7 @@ import * as turf from "@turf/turf";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import PricingOverlay from "../components/pricing/PricingOverlay";
+import { setNewFieldAdded, showMembershipModal } from "../redux/slices/membershipSlice";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
@@ -55,64 +56,55 @@ const AddField = () => {
     return acres * 0.404686;
   };
 
-  const saveFarm = async ({
-    cropName,
-    variety,
-    sowingDate,
-    typeOfIrrigation,
-    farmName,
-    typeOfFarming,
-  }) => {
-    if (markers.length === 0) {
-      message.error("No markers added. Please add some markers first.");
-      return;
-    }
+ const saveFarm = async ({
+  cropName,
+  variety,
+  sowingDate,
+  typeOfIrrigation,
+  farmName,
+  typeOfFarming,
+}) => {
+  if (markers.length === 0) {
+    message.error("No markers added. Please add some markers first.");
+    return;
+  }
 
-    const areaInAcres = calculateArea(markers);
-    const areaInHectares = acresToHectares(areaInAcres);
+  const areaInAcres = calculateArea(markers);
+  const areaInHectares = acresToHectares(areaInAcres);
+  setFieldArea(areaInHectares);
 
-    setFieldArea(areaInHectares);
+  try {
+    const result = await dispatch(
+      addFarmField({
+        latlng: markers,
+        userId,
+        cropName,
+        variety,
+        sowingDate,
+        typeOfIrrigation,
+        farmName,
+        acre: areaInAcres,
+        typeOfFarming,
+        areaInHectares,
+      })
+    ).unwrap();
 
-    try {
-      const result = await dispatch(
-        addFarmField({
-          latlng: markers,
-          userId,
-          cropName,
-          variety,
-          sowingDate,
-          typeOfIrrigation,
-          farmName,
-          acre: areaInAcres,
-          typeOfFarming,
-          // Include areaInHectares for subscription pricing
-          areaInHectares,
-        })
-      ).unwrap(); // Use unwrap to get the actual payload
-
-      if (result?.success) {
-        message.success("Field added successfully!");
-        navigate("/cropgen-analytics");
-        // Store the field data for pricing overlay
-        const fieldData = {
-          id: result?.farmField?._id,
-          name: farmName,
-          areaInHectares,
-          cropName,
-          // Add any other field data you need for subscription
-        };
-
-        setSelectedField(fieldData);
-        setShowOverlay(true);
-        setPendingRedirect(true);
-      } else {
-        message.error("Failed to add field. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error adding field:", error);
+    if (result?.success) {
+      message.success("Field added successfully!");
+      
+      // Set the new field flag but DON'T show modal here
+      dispatch(setNewFieldAdded(true));
+      
+      // Navigate to dashboard - modal will show there
+      navigate("/cropgen-analytics");
+    } else {
       message.error("Failed to add field. Please try again.");
     }
-  };
+  } catch (error) {
+    console.error("Error adding field:", error);
+    message.error("Failed to add field. Please try again.");
+  }
+};
 
   const handleClosePricing = () => {
     setShowOverlay(false);

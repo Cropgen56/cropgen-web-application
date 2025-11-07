@@ -24,6 +24,9 @@ import {
 } from "../../../../utility/formatDate";
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
+import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper";
+import { activateMembership } from "../../../../redux/slices/membershipSlice";
+import { message } from "antd";
 
 
 const WATER_COLOR_MAIN = "#38bdf8";
@@ -34,6 +37,9 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   const { waterIndexData = null, loading } =
     useSelector((state) => state.satellite) || {};
 
+  // Add membership selectors
+  const { isMember, hasSkippedMembership } = useSelector(state => state.membership);
+
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDMI");
 
@@ -41,6 +47,12 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
+
+  // Handle subscription
+  const handleSubscribe = useCallback(() => {
+    dispatch(activateMembership());
+    message.success("Premium membership activated successfully!");
+  }, [dispatch]);
 
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
@@ -244,91 +256,98 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
           </div>
 
 
-          <div
-            ref={scrollRef}
-            className="w-full lg:w-3/4 overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 flex-grow"
-          >
-            {isLoading ? (
+          <div className="lg:w-3/4 flex-grow">
+            <IndexPremiumWrapper
+              isLocked={hasSkippedMembership && !isMember}
+              onSubscribe={handleSubscribe}
+            >
               <div
-                className="text-center text-gray-900"
-                style={{
-                  minHeight: "180px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                }}
+                ref={scrollRef}
+                className="w-full overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
               >
-                <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />
-                <strong>Loading Water Index...</strong>
-              </div>
-            ) : !hasData ? (
-              <div className="bg-gray-100 rounded-lg p-4 mx-auto mt-2 max-w-md">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    No Data Available
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    We couldn't find any data for the selected field and time
-                    range. Please verify the field selection or adjust the date
-                    range to ensure data availability.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="w-full">
-                <ResponsiveContainer width={chartConfig.width} height={180}>
-                  <LineChart
-                    data={chartData}
-                    margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
+                {isLoading ? (
+                  <div
+                    className="text-center text-gray-900"
+                    style={{
+                      minHeight: "180px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                    }}
                   >
-                    <CartesianGrid stroke="rgba(0, 0, 0, 0.1)" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 12, fill: "#333" }}
-                      interval={chartConfig.interval}
-                      type="category"
-                    />
-                    <YAxis
-                      domain={yAxisConfig.domain}
-                      tick={{ fontSize: 12, fill: "#333" }}
-                      ticks={yAxisConfig.ticks}
-                      tickFormatter={tickFormatter}
-                      type="number"
-                    />
-                    <Tooltip
-                      formatter={tooltipFormatter}
-                      labelFormatter={labelFormatter}
-                      contentStyle={{
-                        backgroundColor: "#fff",
-                        border: "none",
-                        borderRadius: "8px",
-                        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-                      }}
-                    />
-                    <Legend
-                      layout="horizontal"
-                      verticalAlign="top"
-                      align="start"
-                      wrapperStyle={{
-                        paddingBottom: "8px",
-                        paddingLeft: "40px",
-                        fontWeight: "bold",
-                        color: "#333",
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey={index}
-                      stroke={WATER_COLOR_MAIN}
-                      strokeWidth={3}
-                      dot={{ r: 3, fill: WATER_COLOR_MAIN }}
-                      activeDot={{ r: 5, fill: WATER_COLOR_LIGHT }}
-                      connectNulls={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                    <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />
+                    <strong>Loading Water Index...</strong>
+                  </div>
+                ) : !hasData ? (
+                  <div className="bg-gray-100 rounded-lg p-4 mx-auto mt-2 max-w-md">
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        No Data Available
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        We couldn't find any data for the selected field and time
+                        range. Please verify the field selection or adjust the date
+                        range to ensure data availability.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full">
+                    <ResponsiveContainer width={chartConfig.width} height={180}>
+                      <LineChart
+                        data={chartData}
+                        margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
+                      >
+                        <CartesianGrid stroke="rgba(0, 0, 0, 0.1)" />
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 12, fill: "#333" }}
+                          interval={chartConfig.interval}
+                          type="category"
+                        />
+                        <YAxis
+                          domain={yAxisConfig.domain}
+                          tick={{ fontSize: 12, fill: "#333" }}
+                          ticks={yAxisConfig.ticks}
+                          tickFormatter={tickFormatter}
+                          type="number"
+                        />
+                        <Tooltip
+                          formatter={tooltipFormatter}
+                          labelFormatter={labelFormatter}
+                          contentStyle={{
+                            backgroundColor: "#fff",
+                            border: "none",
+                            borderRadius: "8px",
+                            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                          }}
+                        />
+                        <Legend
+                          layout="horizontal"
+                          verticalAlign="top"
+                          align="start"
+                          wrapperStyle={{
+                            paddingBottom: "8px",
+                            paddingLeft: "40px",
+                            fontWeight: "bold",
+                            color: "#333",
+                          }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey={index}
+                          stroke={WATER_COLOR_MAIN}
+                          strokeWidth={3}
+                          dot={{ r: 3, fill: WATER_COLOR_MAIN }}
+                          activeDot={{ r: 5, fill: WATER_COLOR_LIGHT }}
+                          connectNulls={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
-            )}
+            </IndexPremiumWrapper>
           </div>
         </div>
       </div>
