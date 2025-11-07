@@ -8,6 +8,10 @@ import * as turf from "@turf/turf";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import PricingOverlay from "../components/pricing/PricingOverlay";
+import {
+  setNewFieldAdded,
+  showMembershipModal,
+} from "../redux/slices/membershipSlice";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
@@ -70,7 +74,6 @@ const AddField = () => {
 
     const areaInAcres = calculateArea(markers);
     const areaInHectares = acresToHectares(areaInAcres);
-
     setFieldArea(areaInHectares);
 
     try {
@@ -85,10 +88,9 @@ const AddField = () => {
           farmName,
           acre: areaInAcres,
           typeOfFarming,
-          // Include areaInHectares for subscription pricing
           areaInHectares,
         })
-      ).unwrap(); // Use unwrap to get the actual payload
+      ).unwrap();
 
       if (result?.success) {
         message.success("Field added successfully!");

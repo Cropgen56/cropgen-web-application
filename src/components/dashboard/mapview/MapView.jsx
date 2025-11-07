@@ -82,6 +82,19 @@ const FarmMap = ({
   const [image, setImage] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
 
+  // Sort fields in descending order (latest first)
+  const sortedFields = useMemo(() => {
+    return [...fields].sort((a, b) => {
+      if (a.createdAt && b.createdAt) {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      if (a._id && b._id) {
+        return b._id.localeCompare(a._id);
+      }
+      return fields.indexOf(b) - fields.indexOf(a);
+    });
+  }, [fields]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest(".legend-dropdown-wrapper")) setShowLegend(false);
@@ -154,10 +167,10 @@ const FarmMap = ({
 
   return (
     <div
-  className={`flex flex-col items-center w-full relative ${
-    fields.length === 0 ? "h-full" : "h-[400px] md:h-[500px] lg:h-[95%]"
-  }`}
->
+      className={`flex flex-col items-center w-full relative ${
+        fields.length === 0 ? "h-full" : "h-[400px] md:h-[500px] lg:h-[95%]"
+      }`}
+    >
       <MapContainer
         center={
           centroid.lat != null ? [centroid.lat, centroid.lng] : defaultCenter
@@ -255,7 +268,7 @@ const FarmMap = ({
                      text-white z-50 border border-green-900 
                      max-h-[300px] overflow-y-auto no-scrollbar"
                 >
-                  {fields.map((field) => (
+                  {sortedFields.map((field) => (
                     <Listbox.Option
                       key={field._id}
                       value={field._id}

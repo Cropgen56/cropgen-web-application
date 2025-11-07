@@ -24,6 +24,18 @@ import {
 } from "../redux/slices/weatherSlice";
 import EvapotranspirationDashboard from "../components/dashboard/satellite-index/ETChart";
 import { useNavigate } from "react-router-dom";
+import { message } from "antd";
+import SubscriptionModal from "../components/subscription/SubscriptionModal";
+import PremiumContentWrapper from "../components/subscription/PremiumContentWrapper";
+import {
+  skipMembership,
+  activateMembership,
+  hideMembershipModal,
+  resetMembershipState,
+  displayMembershipModal,
+  setNewFieldAdded
+} from "../redux/slices/membershipSlice";
+
 // Constants
 const SELECTED_FIELD_KEY = "selectedFieldId";
 
@@ -54,6 +66,14 @@ const Dashboard = () => {
 
   const forecastData = useSelector((state) => state.weather.forecastData) || [];
   const userId = user?.id;
+
+  // Add membership selectors
+  const {
+    isMember,
+    showMembershipModal,
+    hasSkippedMembership,
+    newFieldAdded
+  } = useSelector(state => state.membership);
 
   const [delayPassed, setDelayPassed] = useState(false);
 
@@ -92,6 +112,35 @@ const Dashboard = () => {
   //     transition: { delay: i * 1, duration: 0.6, ease: "easeOut" }, // 1s gap
   //   }),
   // };
+
+  // Handle membership actions
+  const handleSubscribe = () => {
+    dispatch(activateMembership());
+    // Add your subscription/payment logic here
+    message.success("Premium membership activated successfully!");
+  };
+
+  const handleSkipMembership = () => {
+    dispatch(skipMembership());
+    message.info("You can activate premium anytime from the locked content sections");
+  };
+
+  const handleCloseMembershipModal = () => {
+    dispatch(hideMembershipModal());
+  };
+
+  // Show modal when new field is added - FIXED VERSION
+  useEffect(() => {
+    if (newFieldAdded && fields.length > 0 && !isMember && !hasSkippedMembership) {
+      // Show modal after a slight delay to ensure component is mounted
+      const timer = setTimeout(() => {
+        dispatch(displayMembershipModal());  // Changed from showMembershipModal()
+        dispatch(setNewFieldAdded(false)); // Reset the flag after showing modal
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [newFieldAdded, fields.length, isMember, hasSkippedMembership, dispatch]);
 
   useEffect(() => {
     if (
@@ -146,28 +195,35 @@ const Dashboard = () => {
   }, [dispatch, userId]);
 
   // Optimized field selection logic
+  // In Dashboard.js
+  useEffect(() => {
+    // Always fetch fresh data when component mounts
+    const fetchLatestFields = async () => {
+      if (userId) {
+        await dispatch(getFarmFields(userId));
+        dispatch(fetchAOIs());
+      }
+    };
+
+    fetchLatestFields();
+  }, [userId, dispatch]);
+
+  // Modify the field selection effect to handle async field loading
   useEffect(() => {
     if (fields.length === 0) return;
 
-    const isNewFieldAdded =
-      fields.length > prevFieldsLength && prevFieldsLength > 0;
-    const isInitialLoad = !selectedField && prevFieldsLength === 0;
+    const latestField = fields[fields.length - 1]?._id;
 
-    // Always select the latest field when a new one is added
-    if (isNewFieldAdded) {
-      const latestField = fields[fields.length - 1]?._id;
-      if (latestField) {
-        handleFieldSelection(latestField);
-      }
-    } else if (isInitialLoad) {
-      const latestField = fields[fields.length - 1]?._id;
-      if (latestField) {
-        handleFieldSelection(latestField);
-      }
+    if (!selectedField && latestField) {
+      handleFieldSelection(latestField);
+    }
+
+    if (fields.length > prevFieldsLength && latestField) {
+      handleFieldSelection(latestField);
     }
 
     setPrevFieldsLength(fields.length);
-  }, [fields, prevFieldsLength, selectedField, handleFieldSelection]);
+  }, [fields, selectedField, prevFieldsLength, handleFieldSelection]);
 
   // Prepare payload whenever a new field is selected
   const payload = useMemo(() => {
@@ -259,6 +315,14 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard min-h-screen w-full overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden float-end p-1.5 lg:p-3">
+      {/* Membership Modal */}
+      <SubscriptionModal
+        isOpen={showMembershipModal}
+        onClose={handleCloseMembershipModal}
+        onSubscribe={handleSubscribe}
+        onSkip={handleSkipMembership}
+      />
+
       {/* Main content */}
       <MapView
         markers={markers}
@@ -281,29 +345,48 @@ const Dashboard = () => {
             }
             fields={fields}
           />
+
           <ForeCast forecastData={forecastData} />
-          <NdviGraph
-            selectedFieldsDetials={
-              selectedFieldDetails ? [selectedFieldDetails] : []
-            }
-          />
-          <WaterIndex
-            selectedFieldsDetials={
-              selectedFieldDetails ? [selectedFieldDetails] : []
-            }
-          />
-          <EvapotranspirationDashboard forecast={forecast} units={units} />
+
+          {/* Wrap premium components */}
+    
+            <NdviGraph
+              selectedFieldsDetials={
+                selectedFieldDetails ? [selectedFieldDetails] : []
+              }
+            />
+ 
+
+         
+            <WaterIndex
+              selectedFieldsDetials={
+                selectedFieldDetails ? [selectedFieldDetails] : []
+              }
+            />
+
+          <PremiumContentWrapper
+            isLocked={hasSkippedMembership && !isMember}
+            onSubscribe={handleSubscribe}
+            title="Water Index Monitoring"
+          >
+            <EvapotranspirationDashboard forecast={forecast} units={units} />
+          </PremiumContentWrapper>
+
+
           <Insights />
           <CropAdvisory
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
           />
-          <PlantGrowthActivity
-            selectedFieldsDetials={
-              selectedFieldDetails ? [selectedFieldDetails] : []
-            }
-          />
+
+        
+            <PlantGrowthActivity
+              selectedFieldsDetials={
+                selectedFieldDetails ? [selectedFieldDetails] : []
+              }
+            />
+  
         </>
       )}
 
