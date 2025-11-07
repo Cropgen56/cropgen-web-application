@@ -57,7 +57,8 @@ function SocialButtons() {
 
   const handleCustomButtonClick = () => {
     // Programmatically click the hidden Google button
-    const googleBtn = googleButtonRef.current?.querySelector('div[role="button"]');
+    const googleBtn =
+      googleButtonRef.current?.querySelector('div[role="button"]');
     if (googleBtn) {
       googleBtn.click();
     }
@@ -66,15 +67,16 @@ function SocialButtons() {
   return (
     <div className="flex flex-col justify-center items-center gap-3 w-full">
       <GoogleOAuthProvider clientId={clientId}>
-        <div className="w-[70%]">
+        <div className="w-[95%] sm:w-[70%]">
           {/* Custom styled button */}
           <button
             onClick={handleCustomButtonClick}
             disabled={isLoading}
-            className={`flex w-full items-center justify-center gap-2 px-6 py-3 rounded-full font-medium text-sm transition 
-              ${isLoading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-[#344E41] hover:bg-emerald-900 text-white"
+            className={`flex w-full items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-full font-medium text-sm transition-all duration-500 ease-in-out whitespace-nowrap
+              ${
+                isLoading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#344E41] hover:bg-emerald-900 text-white"
               }`}
           >
             <FcGoogle className="text-lg bg-white rounded-full p-0.5" />
@@ -82,7 +84,7 @@ function SocialButtons() {
           </button>
 
           {/* Hidden GoogleLogin component */}
-          <div ref={googleButtonRef} style={{ display: 'none' }}>
+          <div ref={googleButtonRef} style={{ display: "none" }}>
             <GoogleLogin
               onSuccess={handleGoogleLogin}
               onError={() => {
@@ -92,6 +94,8 @@ function SocialButtons() {
               }}
               disabled={isLoading}
               useOneTap={false}
+              width="100%"
+              theme="filled_blue"
             />
           </div>
         </div>

@@ -26,7 +26,8 @@ const AppRoutes = () => {
           path="/"
           element={
             <ProtectedRoute>
-              <MainLayout />
+              {" "}
+              <MainLayout />{" "}
             </ProtectedRoute>
           }
         >
@@ -41,7 +42,7 @@ const AppRoutes = () => {
           <Route path="/soil-report" element={<SoilReport />} />
           <Route path="/farm-report" element={<FarmReport />} />
           <Route
-            path="/Personalise-crop-shedule"
+            path="/Personalise-crop-schedule"
             element={<PersonaliseCropSchedule />}
           />
           <Route path="/setting" element={<Setting />} />

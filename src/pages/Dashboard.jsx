@@ -16,6 +16,7 @@ import tut from "../assets/image/login/video.mp4";
 import forcast from "../assets/image/login/doughnut.png";
 import ndvi from "../assets/image/login/index-image.png";
 import report from "../assets/image/login/report-cards.png";
+import { PlusIcon, X } from "lucide-react";
 import {
   fetchAOIs,
   createAOI,
@@ -69,6 +70,7 @@ const Dashboard = () => {
   const WELCOME_OVERLAY_KEY = "hasSeenWelcome"; // localStorage key
   const SESSION_SKIP_KEY = "skipPreviewThisSession"; // sessionStorage
   const [showAddFieldInfo, setShowAddFieldInfo] = useState(false);
+  const [showVideoOverlay, setShowVideoOverlay] = useState(true);
 
   // State management
   const [markers, setMarkers] = useState([]);
@@ -79,6 +81,7 @@ const Dashboard = () => {
 
   const [prevFieldsLength, setPrevFieldsLength] = useState(0);
   const [, setShowWelcome] = useState(false);
+  const [showSelectFarmModal, setShowSelectFarmModal] = useState(false);
   const navigate = useNavigate();
 
   // const listVariants = {
@@ -106,6 +109,22 @@ const Dashboard = () => {
       setShowAddFieldInfo(true);
     }
   }, [fields]);
+
+  useEffect(() => {
+    if (fields.length > 0 && !selectedField) {
+      setShowSelectFarmModal(true);
+    } else {
+      setShowSelectFarmModal(false);
+    }
+  }, [fields, selectedField]);
+
+  useEffect(() => {
+    // If stored selectedField doesn't exist in current fields, clear it
+    if (selectedField && !fields.find((f) => f._id === selectedField)) {
+      localStorage.removeItem(SELECTED_FIELD_KEY);
+      setSelectedField("");
+    }
+  }, [fields, selectedField]);
 
   // Memoized computed values
   const selectedFieldDetails = useMemo(() => {
@@ -289,8 +308,7 @@ const Dashboard = () => {
       )}
 
       {/* Welcome Overlay */}
-      {/* Welcome Overlay */}
-      <AnimatePresence mode="wait">
+      {/* <AnimatePresence mode="wait">
         {delayPassed && fields.length === 0 && !showAddFieldInfo && (
           <motion.div
             key="welcome"
@@ -301,7 +319,6 @@ const Dashboard = () => {
             exit={{ opacity: 0, y: -50 }}
             transition={{ duration: 0.5 }}
           >
-            {/* LEFT SIDE */}
             <div className="flex flex-col justify-between h-full max-w-lg w-full lg:w-auto text-center lg:text-left ml-5">
               <div className="mt-10 lg:mt-[30%]" />
               <div>
@@ -330,7 +347,6 @@ const Dashboard = () => {
                 </motion.h2>
               </div>
 
-              {/* Bottom Section */}
               <div className="flex flex-col items-center lg:items-start">
                 <motion.h4
                   className=" text-left text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed mb-10 sm:mb-8"
@@ -391,7 +407,6 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* RIGHT SIDE Animations */}
             <motion.div
               className="relative w-full lg:w-1/2 flex items-center h-full justify-center mt-8 lg:mt-0"
               initial={{ opacity: 0, y: -80 }}
@@ -447,7 +462,6 @@ const Dashboard = () => {
             exit={{ opacity: 0, y: "-100%" }}
             transition={{ duration: 0.7, ease: "easeInOut" }}
           >
-            {/* Skip Preview Button */}
             <motion.button
               onClick={() => {
                 localStorage.setItem("skipAddFieldPreview", "true");
@@ -478,7 +492,6 @@ const Dashboard = () => {
               Skip Preview
             </motion.button>
 
-            {/* Heading */}
             <motion.h2
               className="text-2xl sm:text-3xl md:text-4xl font-bold 
                  bg-gradient-to-r from-[#5a7c6b] via-[#4caf50] to-[#a8e6a1] 
@@ -490,7 +503,6 @@ const Dashboard = () => {
               How to Add a Field?
             </motion.h2>
 
-            {/* Video Player */}
             <motion.div
               className="w-full flex justify-center mb-6 mt-4"
               initial={{ scale: 0.8, opacity: 0 }}
@@ -507,7 +519,6 @@ const Dashboard = () => {
               />
             </motion.div>
 
-            {/* Instructions */}
             <motion.h3
               className="text-left text-2xl sm:text-3xl md:text-4xl font-bold 
                  bg-gradient-to-r from-[#5a7c6b] via-[#4caf50] to-[#a8e6a1] 
@@ -533,7 +544,6 @@ const Dashboard = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.5, delay: 1 + i * 0.4 }}
                 >
-                  {/* Arrow */}
                   <motion.svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -556,7 +566,6 @@ const Dashboard = () => {
                     />
                   </motion.svg>
 
-                  {/* Text + Button only for last step */}
                   {i === arr.length - 1 ? (
                     <div className="flex justify-between items-start w-full ">
                       <p
@@ -577,13 +586,11 @@ const Dashboard = () => {
                       >
                         <motion.button
                           onClick={() => {
-                            // Play exit animation
                             setShowAddFieldInfo(false);
 
-                            // Delay navigation until animation finishes
                             setTimeout(() => {
                               navigate("/addfield");
-                            }, 900); // match your transition={{ duration: 0.7 }}
+                            }, 900);
                           }}
                           className="px-4 sm:px-5 md:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 rounded-xl 
              text-sm sm:text-base md:text-lg text-white font-semibold shadow-lg"
@@ -621,6 +628,92 @@ const Dashboard = () => {
                 </motion.div>
               ))}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence> */}
+
+      <AnimatePresence mode="wait">
+        {delayPassed && fields.length === 0 && showVideoOverlay && (
+          <motion.div
+            key="welcome-video"
+            className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-[9999] text-white p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            {" "}
+            <button
+              onClick={() => setShowVideoOverlay(false)}
+              className="absolute top-5 right-5 text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition-all duration-300"
+            >
+              {" "}
+              <X />{" "}
+            </button>{" "}
+            <div className="relative W-[90%] lg:w-[80%] aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+              {" "}
+              <iframe
+                className="w-full h-full rounded-2xl"
+                src="https://www.youtube.com/embed/U_sVgXnqYPk?autoplay=1&mute=1&loop=1&playlist=U_sVgXnqYPk"
+                title="CropGen Tutorial"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              ></iframe>{" "}
+            </div>{" "}
+            <div className="flex flex-row items-center justify-center gap-4 mt-6">
+              {" "}
+              <button
+                onClick={() => {
+                  setShowAddFieldInfo(true);
+                  setShowVideoOverlay(false);
+                  navigate("/addfield");
+                }}
+                className="flex items-center gap-1 px-4 py-3 bg-green-600 hover:bg-green-700 rounded-xl text-white font-semibold text-base shadow-lg transition-all duration-500 ease-in-out cursor-pointer"
+              >
+                {" "}
+                <PlusIcon className="w-5 h-5 mr-2" /> Add Your First Field{" "}
+              </button>{" "}
+            </div>{" "}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* show select farm modal if no field is selected */}
+      <AnimatePresence>
+        {showSelectFarmModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white/90 p-6 rounded-2xl shadow-2xl text-center max-w-sm w-[90%] border border-green-200 relative overflow-hidden"
+              initial={{ scale: 0.7, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.7, opacity: 0, y: 40 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <motion.div
+                initial={{ rotate: -5, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 80 }}
+              >
+                <h2 className="text-2xl font-extrabold text-green-700 mb-3 tracking-wide">
+                  Select a Farm
+                </h2>
+                <p className="text-gray-600 mb-6 text-base leading-relaxed">
+                  Please select a farm first to continue using the dashboard.
+                </p>
+              </motion.div>
+              <button
+                onClick={() => setShowSelectFarmModal(false)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all duration-500 ease-in-out cursor-pointer"
+              >
+                Go to Dashboard
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

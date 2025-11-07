@@ -163,7 +163,7 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
     }
 
     return (
-      <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-[#344E41]/90 border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto scrollbar-hide">
+      <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-[#344E41]/90 border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto no-scrollbar">
         <h3 className="text-sm lg:text-base font-bold text-white mb-1 md:mb-0.5">
           {category}
         </h3>
@@ -183,7 +183,7 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
           value={selectedDay}
           onChange={(e) => setSelectedDay(e.target.value)}
           aria-label="Select advisory day"
-          className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 "
         >
           {advisoryData.length > 0 ? (
             advisoryData.map((item) => (
