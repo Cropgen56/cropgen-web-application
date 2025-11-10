@@ -26,12 +26,10 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) 
   </div>
 );
 
-// Custom Dropdown Component
 const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -76,7 +74,6 @@ const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
           />
         </button>
 
-        {/* Dropdown Menu */}
         {isOpen && (
           <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded-md shadow-lg max-h-60 overflow-auto">
             {options.length > 0 ? (
@@ -189,14 +186,16 @@ const cropOptions = [
 const SoilReportSidebar = ({
   selectedOperation,
   setSelectedOperation,
+  setSelectedField,
   setReportData,
   downloadPDF,
 }) => {
-  const [selectedOperationIndex, setSelectedOperationIndex] = useState(null);
+  const [selectedFieldId, setSelectedFieldId] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [currentcrop, setcurrentcrop] = useState("");
   const [nextcrop, setnextcrop] = useState("");
   const [reportGenerated, setReportGenerated] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const dispatch = useDispatch();
 
   const toggleSidebarVisibility = () => {
@@ -204,6 +203,20 @@ const SoilReportSidebar = ({
   };
 
   const fields = useSelector((state) => state.farmfield.fields);
+
+  const sortedAndFilteredFields = (fields || [])
+    .filter((field) =>
+      field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.created_at || a.date || 0);
+      const dateB = new Date(b.createdAt || b.created_at || b.date || 0);
+      return dateB - dateA;
+    });
+
+  const selectedFieldObj = sortedAndFilteredFields.find(
+    field => field._id === selectedFieldId
+  );
 
   return (
     <>
@@ -249,6 +262,8 @@ const SoilReportSidebar = ({
               <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg" />
               <input
                 type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 text-gray-100 text-sm outline-none bg-[#344e41] focus:border-none"
                 placeholder="Search"
               />
@@ -259,15 +274,15 @@ const SoilReportSidebar = ({
           </h2>
           <div className="flex flex-col">
             <div className="overflow-y-auto max-h-[225px] no-scrollbar">
-              {(fields || []).map((fieldObj, index) => (
+              {sortedAndFilteredFields.map((fieldObj) => (
                 <FieldInfo
-                  key={fieldObj._id || index}
-                  title={fieldObj.fieldName || `Field ${index + 1}`}
+                  key={fieldObj._id}
+                  title={fieldObj.fieldName || `Field`}
                   area={
                     fieldObj.acre !== undefined &&
                       fieldObj.acre !== null &&
                       fieldObj.acre !== ""
-                      ? Number(fieldObj.acre).toFixed(3)
+                      ? `${Number(fieldObj.acre).toFixed(3)} acres`
                       : ""
                   }
                   lat={
@@ -280,11 +295,14 @@ const SoilReportSidebar = ({
                       ? Number(fieldObj.field[0].lng).toFixed(3)
                       : ""
                   }
-                  isSelected={selectedOperationIndex === index}
+                  isSelected={selectedFieldId === fieldObj._id}
                   coordinates={fieldObj.field}
                   onClick={() => {
-                    setSelectedOperationIndex(index);
+                    setSelectedFieldId(fieldObj._id);
                     setSelectedOperation(fieldObj);
+                    if (setSelectedField) {
+                      setSelectedField(fieldObj);
+                    }
                     setcurrentcrop("");
                     setnextcrop("");
                     setReportGenerated(false);
@@ -293,7 +311,7 @@ const SoilReportSidebar = ({
               ))}
             </div>
 
-            {selectedOperationIndex !== null && (
+            {selectedFieldId !== null && selectedFieldObj && (
               <div className="mt-3 p-3 flex flex-col gap-3 text-[#344e41]">
                 <h4 className="font-bold text-[#344e41]">Crop Details</h4>
 
@@ -317,14 +335,14 @@ const SoilReportSidebar = ({
                   <button
                     onClick={() => {
                       setReportData({
-                        field: fields[selectedOperationIndex]?.farmName || "",
+                        field: selectedFieldObj?.farmName || "",
                         current: currentcrop,
                         nextcrop: nextcrop,
-                        lat: fields[selectedOperationIndex]?.field?.[0]?.lat,
-                        lng: fields[selectedOperationIndex]?.field?.[0]?.lng,
-                        geometry: fields?.field,
+                        lat: selectedFieldObj?.field?.[0]?.lat,
+                        lng: selectedFieldObj?.field?.[0]?.lng,
+                        geometry: selectedFieldObj?.field,
                       });
-                      dispatch(fetchSatelliteDates(fields?.field));
+                      dispatch(fetchSatelliteDates(selectedFieldObj?.field));
                       setReportGenerated(true);
                     }}
                     className="bg-[#344e41] hover:bg-[#2b3e33] transition-all duration-200 rounded-md px-3 py-2 text-gray-200 mt-10"

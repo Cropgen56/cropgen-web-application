@@ -6,12 +6,11 @@ import PolygonPreview from "../../polygon/PolygonPreview";
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) => (
   <div
-    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
-      isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
-    }`}
+    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
+      }`}
     onClick={onClick}
   >
-    <PolygonPreview coordinates={coordinates}  isSelected={isSelected}/>
+    <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
     <div>
       <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
         {title}
@@ -25,7 +24,7 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) 
   </div>
 );
 
-const SmartAdvisorySidebar = ({ setReportData, setIsSidebarVisible }) => {
+const SmartAdvisorySidebar = ({ setReportData, setSelectedField, setIsSidebarVisible }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -51,13 +50,18 @@ const SmartAdvisorySidebar = ({ setReportData, setIsSidebarVisible }) => {
     return `${hectares}h`;
   };
 
-  const filteredFields = fields?.filter((field) =>
-    field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFields = fields
+    ?.filter((field) =>
+      field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    ?.sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.created_at || a.date || 0);
+      const dateB = new Date(b.createdAt || b.created_at || b.date || 0);
+      return dateB - dateA;
+    });
 
   return (
     <div className="min-w-[250px] bg-white shadow-md flex flex-col h-full">
-      {/* Header */}
       <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -82,7 +86,6 @@ const SmartAdvisorySidebar = ({ setReportData, setIsSidebarVisible }) => {
           </svg>
         </div>
 
-        {/* Search */}
         <div className="relative flex items-center mx-auto w-full">
           <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg" />
           <input
@@ -95,12 +98,12 @@ const SmartAdvisorySidebar = ({ setReportData, setIsSidebarVisible }) => {
         </div>
       </div>
 
-      {/* Fields List */}
       <div className="overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
         <h2 className="font-bold text-[#344e41] text-[18px] p-2">All Farms</h2>
         {filteredFields?.length > 0 ? (
           filteredFields.map((field, index) => {
             const { lat, lon } = calculateCentroid(field.field);
+            const originalIndex = fields.findIndex(f => f._id === field._id);
             return (
               <FieldInfo
                 key={field._id}
@@ -108,17 +111,18 @@ const SmartAdvisorySidebar = ({ setReportData, setIsSidebarVisible }) => {
                 area={formatArea(field.acre)}
                 lat={lat}
                 lon={lon}
-                isSelected={selectedIndex === index}
-                   coordinates={field.field}
+                isSelected={selectedIndex === originalIndex}
+                coordinates={field.field}
                 onClick={() => {
-                  setSelectedIndex(index);
+                  setSelectedIndex(originalIndex);
+                  setSelectedField(field);
                   setReportData({
                     field: field.farmName || "",
                     lat: field.field?.[0]?.lat,
                     lng: field.field?.[0]?.lng,
                     geometry: field?.field,
                   });
-                  setIsSidebarVisible(false)
+                  setIsSidebarVisible(false);
                 }}
               />
             );
