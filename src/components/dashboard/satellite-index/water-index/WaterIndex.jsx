@@ -25,20 +25,14 @@ import {
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
 import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper";
-import { activateMembership } from "../../../../redux/slices/membershipSlice";
-import { message } from "antd";
-
 
 const WATER_COLOR_MAIN = "#38bdf8";
 const WATER_COLOR_LIGHT = "#7dd3fc";
 
-const WaterIndex = ({ selectedFieldsDetials }) => {
+const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { waterIndexData = null, loading } =
     useSelector((state) => state.satellite) || {};
-
-  // Add membership selectors
-  const { isMember, hasSkippedMembership } = useSelector(state => state.membership);
 
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDMI");
@@ -47,12 +41,6 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
-
-  // Handle subscription
-  const handleSubscribe = useCallback(() => {
-    dispatch(activateMembership());
-    message.success("Premium membership activated successfully!");
-  }, [dispatch]);
 
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
@@ -135,7 +123,6 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
   const labelFormatter = useCallback((label) => `Date: ${label}`, []);
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
-
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -216,14 +203,11 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
           </select>
         </div>
 
-
         <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">
           Water Index
         </h2>
 
-
         <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
-
           <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
             <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
               <h2 className="text-xl font-bold text-sky-700">
@@ -255,11 +239,10 @@ const WaterIndex = ({ selectedFieldsDetials }) => {
             </div>
           </div>
 
-
           <div className="lg:w-3/4 flex-grow">
             <IndexPremiumWrapper
-              isLocked={hasSkippedMembership && !isMember}
-              onSubscribe={handleSubscribe}
+              isLocked={isLocked}
+              onSubscribe={onSubscribe}
             >
               <div
                 ref={scrollRef}

@@ -18,19 +18,14 @@ import {
 } from "../../../../utility/formatDate";
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
-import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper"; // Updated import
-import { activateMembership } from "../../../../redux/slices/membershipSlice";
-import { message } from "antd";
+import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper";
 
-const NdviGraph = ({ selectedFieldsDetials }) => {
+const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const {
     indexTimeSeriesSummary = null,
     loading,
   } = useSelector((state) => state.satellite) || {};
-
-  // Add membership selectors
-  const { isMember, hasSkippedMembership } = useSelector(state => state.membership);
 
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDVI");
@@ -39,12 +34,6 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
-
-  // Handle subscription
-  const handleSubscribe = useCallback(() => {
-    dispatch(activateMembership());
-    message.success("Premium membership activated successfully!");
-  }, [dispatch]);
 
   useEffect(() => {
     if (!field || !sowingDate) return;
@@ -210,8 +199,8 @@ const NdviGraph = ({ selectedFieldsDetials }) => {
 
           <div className="lg:w-3/4 flex-grow">
             <IndexPremiumWrapper
-              isLocked={hasSkippedMembership && !isMember}
-              onSubscribe={handleSubscribe}
+              isLocked={isLocked}
+              onSubscribe={onSubscribe}
             >
               <div
                 ref={scrollRef}

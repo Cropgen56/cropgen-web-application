@@ -7,26 +7,15 @@ import SoilHealthChart from "./SoilHealthChart.jsx";
 import { fetchSoilData } from "../../../redux/slices/satelliteSlice.js";
 import CropHealthStatusBar from "./CropHealthStatusBar.jsx";
 import { fetchCrops } from "../../../redux/slices/cropSlice.js";
-import IndexPremiumWrapper from "../../subscription/Indexpremiumwrapper";
-import { activateMembership } from "../../../redux/slices/membershipSlice";
 import { message } from "antd";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
 
-const CropHealth = ({ selectedFieldsDetials }) => {
+const CropHealth = ({ selectedFieldsDetials, fields, isLocked, onSubscribe }) => {
   const cropDetials = selectedFieldsDetials?.[0];
   const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
   const dispatch = useDispatch();
   const { crops } = useSelector((state) => state.crops);
   const { cropYield } = useSelector((state) => state.satellite);
-
-  // Add membership selectors
-  const { isMember, hasSkippedMembership } = useSelector(state => state.membership);
-
-  // Handle subscription
-  const handleSubscribe = useCallback(() => {
-    dispatch(activateMembership());
-    message.success("Premium membership activated successfully!");
-  }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchCrops());
@@ -134,35 +123,28 @@ const CropHealth = ({ selectedFieldsDetials }) => {
           </div>
         </div>
 
-
         <CropHealthStatusBar selectedFieldsDetials={selectedFieldsDetials} />
       </div>
 
       <PremiumContentWrapper
-        isLocked={hasSkippedMembership && !isMember}
-        onSubscribe={handleSubscribe}
+        isLocked={isLocked}
+        onSubscribe={onSubscribe}
+        title="Advanced Soil Analytics"
       >
         <div className="flex flex-col lg:flex-row items-center justify-between mt-6 px-2 md:px-4 gap-6 lg:gap-12 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-
           <div className="w-full lg:w-1/2">
-
             <h2 className="text-left text-[1.3rem] font-semibold text-[#344E41] mb-2 ml-10">
               Soil Analysis (Based on BBCH Growth Stage)
             </h2>
-
             <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />
-
           </div>
 
           <div className="w-full lg:w-1/2 flex flex-col justify-start">
             <h2 className="text-left text-[1.3rem] font-semibold text-[#344E41] ml-10">
               Soil Health
             </h2>
-
             <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} />
-
           </div>
-
         </div>
       </PremiumContentWrapper>
     </Card>

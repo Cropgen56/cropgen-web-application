@@ -15,9 +15,6 @@ import { getTheCropGrowthStage } from "../../../redux/slices/satelliteSlice";
 import { calculateAiYield } from "../../../redux/slices/satelliteSlice";
 import PlantGrowthSkeleton from "../../Skeleton/PlantGrowthSkeleton";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
-import { activateMembership } from "../../../redux/slices/membershipSlice";
-import { message } from "antd";
-
 
 const GRASS_COLOR_MAIN = "#86D72F"; 
 
@@ -109,7 +106,6 @@ const formatDayToWeekDay = (day) => {
   return `Week ${week}, Day ${dayOfWeek}`;
 };
 
-
 const isValidDate = (dateInput) => {
   if (!dateInput) return false;
   const regexDash = /^\d{4}-\d{2}-\d{2}$/;
@@ -124,7 +120,6 @@ const isValidDate = (dateInput) => {
   const date = new Date(dateInput);
   return !isNaN(date.getTime());
 };
-
 
 const generateCurveData = (interval, cropName) => {
   const totalWeeks =
@@ -146,7 +141,7 @@ const generateCurveData = (interval, cropName) => {
   }));
 };
 
-const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
+const PlantGrowthActivity = memo(({ selectedFieldsDetials = [], isLocked, onSubscribe }) => {
   const dispatch = useDispatch();
   const {
     cropName,
@@ -159,17 +154,8 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
   );
   const isLoading = loading?.cropGrowthStage || false;
 
-
-  const { isMember, hasSkippedMembership } = useSelector(state => state.membership);
-
-
-  const handleSubscribe = useCallback(() => {
-    dispatch(activateMembership());
-    message.success("Premium membership activated successfully!");
-  }, [dispatch]);
-
   // Use "Weeks" as the default interval if data suggests a long growth cycle
-  const [interval, setInterval] = React.useState("Weeks");
+  const [interval, setInterval] = useState("Weeks");
   const [tooltipPos, setTooltipPos] = useState(null);
 
   // Memoize daysSinceSowing, currentWeek, date validity, and suggestion
@@ -275,6 +261,10 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
     return { label, height };
   }, [interval, daysSinceSowing, currentWeek, data]);
 
+  const handleIntervalChange = useCallback((e) => {
+    setInterval(e.target.value);
+  }, []);
+
   if (!isSowingDateValid) {
     return (
       <div className="w-full flex justify-center mt-6">
@@ -305,7 +295,7 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
             </div>
             <select
               value={interval}
-              onChange={(e) => setInterval(e.target.value)}
+              onChange={handleIntervalChange}
               className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer"
             >
               <option value="Days" className="text-gray-800">
@@ -316,13 +306,15 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
               </option>
             </select>
           </div>
-          {isLoading ? (
-            <PlantGrowthSkeleton />
-          ) : (
-            <PremiumContentWrapper
-              isLocked={hasSkippedMembership && !isMember}
-              onSubscribe={handleSubscribe}
-            >
+          
+          <PremiumContentWrapper
+            isLocked={isLocked}
+            onSubscribe={onSubscribe}
+            title="Plant Growth Analysis"
+          >
+            {isLoading ? (
+              <PlantGrowthSkeleton />
+            ) : (
               <div className="w-full h-[300px] bg-gray-100 rounded-2xl">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
@@ -431,12 +423,14 @@ const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
                   </div>
                 )}
               </div>
-            </PremiumContentWrapper>
-          )}
+            )}
+          </PremiumContentWrapper>
         </div>
       </div>
     </div>
   );
 });
+
+PlantGrowthActivity.displayName = 'PlantGrowthActivity';
 
 export default PlantGrowthActivity;
