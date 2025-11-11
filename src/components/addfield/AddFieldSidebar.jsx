@@ -82,7 +82,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
-                  options={crops.map((crop) => crop.cropName)}
+                  options={crops.map((crop) => crop.cropName).sort((a, b) => a.localeCompare(b))}
                   placeholder="Select Crop Name"
                 />
                 {/* VARIETY */}
@@ -157,7 +157,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
-                  options={crops.map((crop) => crop.cropName)}
+                  options={crops.map((crop) => crop.cropName).sort((a, b) => a.localeCompare(b))}
                   placeholder="Select Crop Name"
                 />
                 <FormInput

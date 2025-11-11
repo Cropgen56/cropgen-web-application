@@ -26,7 +26,7 @@ import {
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectCurrentFieldHasSubscription
+  selectHasWeatherHistory
 } from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -46,7 +46,7 @@ const Weather = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state?.auth?.user);
   const authToken = useSelector((state) => state?.auth?.token);
-  
+
   const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
   const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
 
@@ -58,9 +58,9 @@ const Weather = () => {
 
   const loading = useSelector((state) => state?.weather?.loading);
 
-  // Add membership selectors
+  // Add membership selectors - Updated with feature check
   const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const currentFieldHasSubscription = useSelector(selectCurrentFieldHasSubscription);
+  const hasWeatherHistory = useSelector(selectHasWeatherHistory);
   const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
 
   const [isSidebarVisible] = useState(true);
@@ -253,7 +253,7 @@ const Weather = () => {
             <WeatherSkeleton />
           ) : (
             <PremiumPageWrapper
-              isLocked={!currentFieldHasSubscription}
+              isLocked={!hasWeatherHistory}
               onSubscribe={handleSubscribe}
               title="Weather Analytics"
             >

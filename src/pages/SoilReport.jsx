@@ -22,7 +22,7 @@ import {
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectCurrentFieldHasSubscription
+  selectHasSoilFertility // Updated import
 } from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -36,7 +36,7 @@ const SoilReport = () => {
   const fields = useSelector((state) => state?.farmfield?.fields);
   
   const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const currentFieldHasSubscription = useSelector(selectCurrentFieldHasSubscription);
+  const hasSoilFertility = useSelector(selectHasSoilFertility); // Updated selector
   const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
   
   const [selectedOperation, setSelectedOperation] = useState(null);
@@ -129,7 +129,7 @@ const SoilReport = () => {
   }, [selectedField, authToken, dispatch]);
 
   const downloadPDF = async () => {
-    if (!currentFieldHasSubscription) {
+    if (!hasSoilFertility) { // Updated to use feature-specific check
       message.warning("Please subscribe to download soil reports");
       handleSubscribe();
       return;
@@ -245,7 +245,7 @@ const SoilReport = () => {
             </div>
           ) : (
             <PremiumPageWrapper
-              isLocked={!currentFieldHasSubscription}
+              isLocked={!hasSoilFertility} // Updated to use feature-specific check
               onSubscribe={handleSubscribe}
               title="Soil Report"
             >

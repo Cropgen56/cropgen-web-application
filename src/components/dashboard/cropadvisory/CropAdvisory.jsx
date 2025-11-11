@@ -11,6 +11,8 @@ import {
   fetchSoilMoisture,
 } from "../../../redux/slices/satelliteSlice";
 import CropAdvisorySkeleton from "../../Skeleton/CropAdvisorySkeleton";
+import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
+import IndexPremiumWrapper from "../../subscription/Indexpremiumwrapper";
 
 // Define categories outside the component
 const categories = [
@@ -20,7 +22,7 @@ const categories = [
   "Monitoring",
 ];
 
-const CropAdvisory = ({ selectedFieldsDetials }) => {
+const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   const dispatch = useDispatch();
   const [selectedDay, setSelectedDay] = useState("Day 1");
   const { advisory, cropGrowthStage } = useSelector((state) => state.satellite);
@@ -199,23 +201,28 @@ const CropAdvisory = ({ selectedFieldsDetials }) => {
         </select>
       </div>
 
-      {advisoryData.length > 0 ? (
-        <div
-          ref={scrollRef}
-          className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
-        >
-          {categories.map((category) => (
-            <AdvisoryCard
-              key={category}
-              category={category}
-              activityText={currentDayData[category]}
-            />
-          ))}
-        </div>
-      ) : (
-        <CropAdvisorySkeleton />
-        
-      )}
+      <IndexPremiumWrapper
+        isLocked={isLocked}
+        onSubscribe={onSubscribe}
+        title="Crop Advisory"
+      >
+        {advisoryData.length > 0 ? (
+          <div
+            ref={scrollRef}
+            className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
+          >
+            {categories.map((category) => (
+              <AdvisoryCard
+                key={category}
+                category={category}
+                activityText={currentDayData[category]}
+              />
+            ))}
+          </div>
+        ) : (
+          <CropAdvisorySkeleton />
+        )}
+      </IndexPremiumWrapper>
     </div>
   );
 };

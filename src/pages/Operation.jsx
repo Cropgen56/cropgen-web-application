@@ -16,7 +16,7 @@ import {
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectCurrentFieldHasSubscription
+  selectHasOperationsManagement // Updated import
 } from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -30,9 +30,9 @@ const Operation = () => {
 
   const userId = user?.id;
 
-  // Add membership selectors
+  // Add membership selectors - Updated to use feature-specific selector
   const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const currentFieldHasSubscription = useSelector(selectCurrentFieldHasSubscription);
+  const hasOperationsManagement = useSelector(selectHasOperationsManagement); // Updated
   const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
 
   // Initialize selectedField as null until fields are fetched
@@ -198,7 +198,7 @@ const Operation = () => {
         />
         <div className="bg-[#5a7c6b]">
           <PremiumPageWrapper
-            isLocked={!currentFieldHasSubscription}
+            isLocked={!hasOperationsManagement} // Updated to use feature-specific check
             onSubscribe={handleSubscribe}
             title="Farm Operations Management"
           >
