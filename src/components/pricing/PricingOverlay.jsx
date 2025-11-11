@@ -194,7 +194,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   );
 
   const [billing, setBilling] = useState("monthly");
-  const [currency, setCurrency] = useState("INR");
+  const [currency, setCurrency] = useState("USD");
   const [groupIndex, setGroupIndex] = useState(0);
   const [cardsPerGroup, setCardsPerGroup] = useState(3);
   const [scale, setScale] = useState(1);
