@@ -13,6 +13,7 @@ import {
   fetchSubscriptions,
   createUserSubscription,
   verifyUserSubscriptionPayment,
+  setPaymentSuccess,
 } from "../../redux/slices/subscriptionSlice.js";
 import { toast } from "react-toastify";
 import PlanCard from "./PlanCard.jsx";
@@ -174,12 +175,18 @@ function transformApiData(apiData, billing, currency, userArea) {
         maxUsers: plan.maxUsers,
         isTrial,
         areaInHectares,
+        trialDays: plan.trialDays,
       };
     })
     .filter((plan) => plan.active !== false);
 }
 
-export default function PricingOverlay({ onClose, userArea, selectedField }) {
+export default function PricingOverlay({
+  onClose,
+  userArea,
+  selectedField,
+  onPaymentSuccess
+}) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -189,9 +196,6 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
     error,
   } = useSelector((state) => state.subscription);
   const { token, user } = useSelector((state) => state.auth);
-  const { loading: checkoutLoading } = useSelector(
-    (state) => state.subscription
-  );
 
   const [billing, setBilling] = useState("monthly");
   const [currency, setCurrency] = useState("USD");
@@ -200,6 +204,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   const [scale, setScale] = useState(1);
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState(null);
+  const [subscriptionRecordId, setSubscriptionRecordId] = useState(null);
 
   const containerRef = useRef(null);
 
@@ -260,7 +265,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
 
   const visibleGroup = groups[groupIndex] || [];
 
-  // === HANDLE SUBSCRIBE ===
+  // Handle Subscribe
   const handleSubscribeClick = async ({ plan }) => {
     if (!token) {
       toast.error("Please log in to subscribe.");
@@ -281,11 +286,30 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
       if (!res.success) throw new Error(res.message);
 
       if (plan.isTrial) {
+        // Handle trial success
+        const successData = {
+          fieldName: selectedField?.name,
+          planName: plan.name,
+          features: plan.features || [],
+          daysLeft: plan.trialDays,
+          isTrial: true,
+        };
+
+        // Use callback if provided
+        if (onPaymentSuccess) {
+          onPaymentSuccess(successData);
+        }
+
+        // Also dispatch to Redux
+        dispatch(setPaymentSuccess(successData));
+
         toast.success("Trial activated!");
         onClose?.();
         return;
       }
 
+      // Store subscription record ID for verification
+      setSubscriptionRecordId(res.data.subscriptionRecordId);
       setCheckoutPlan({ plan, razorpayData: res.data });
       setShowCheckout(true);
     } catch (err) {
@@ -293,7 +317,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
     }
   };
 
-  // === OPEN RAZORPAY ===
+  // Open Razorpay
   useEffect(() => {
     if (!showCheckout || !checkoutPlan || !window.Razorpay) return;
 
@@ -309,12 +333,15 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
         email: user?.email || "",
         contact: user?.contact || "",
       },
-      notes: { subscriptionId: razorpayData.subscriptionRecordId },
+      notes: {
+        subscriptionId: subscriptionRecordId || razorpayData.subscriptionRecordId
+      },
       theme: { color: "#344E41" },
       handler: async (response) => {
         try {
           const verifyRes = await dispatch(
             verifyUserSubscriptionPayment({
+              subscriptionId: subscriptionRecordId || razorpayData.subscriptionRecordId,
               paymentData: {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_subscription_id: response.razorpay_subscription_id,
@@ -324,30 +351,70 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
           ).unwrap();
 
           if (verifyRes.success) {
-            setTimeout(() => window.location.reload(), 1500);
-            navigate("/cropgen-analytics");
-            toast.success("Subscription activated!");
+            // Prepare success data
+            const successData = {
+              fieldName: selectedField?.name,
+              planName: plan.name,
+              features: plan.features || [],
+              daysLeft: plan.trialDays || 30, // Default to 30 days if not trial
+              transactionId: response.razorpay_payment_id,
+              subscriptionId: response.razorpay_subscription_id,
+              isTrial: plan.isTrial,
+            };
+
+            // Call the success callback if provided
+            if (onPaymentSuccess) {
+              onPaymentSuccess(successData);
+              onClose?.();
+            } else {
+              // Fallback: Store in sessionStorage for page reload scenario
+              sessionStorage.setItem('paymentSuccess', JSON.stringify(successData));
+
+              // Also dispatch to Redux
+              dispatch(setPaymentSuccess(successData));
+
+              // Close the overlay
+              onClose?.();
+            }
+
+            toast.success("Subscription activated successfully!");
+
+            // Optional: Navigate to analytics after a short delay
+            setTimeout(() => {
+              navigate("/cropgen-analytics");
+            }, 2000);
           }
         } catch (e) {
-          toast.error("Verification failed");
+          console.error("Payment verification failed:", e);
+          toast.error("Payment verification failed. Please contact support.");
+        } finally {
+          setShowCheckout(false);
+          setCheckoutPlan(null);
+          setSubscriptionRecordId(null);
         }
       },
       modal: {
         ondismiss: () => {
           setShowCheckout(false);
           setCheckoutPlan(null);
+          setSubscriptionRecordId(null);
         },
       },
     };
 
     const rzp = new window.Razorpay(options);
-    rzp.on("payment.failed", () => toast.error("Payment failed"));
+    rzp.on("payment.failed", (response) => {
+      console.error("Payment failed:", response.error);
+      toast.error("Payment failed. Please try again.");
+      setShowCheckout(false);
+      setCheckoutPlan(null);
+      setSubscriptionRecordId(null);
+    });
     rzp.open();
 
-    return () => rzp.close?.();
-  }, [showCheckout, checkoutPlan, dispatch, user, userArea]);
+  }, [showCheckout, checkoutPlan, dispatch, user, userArea, onPaymentSuccess, selectedField, onClose, navigate, subscriptionRecordId]);
 
-  // === RENDER ===
+  // Render
   if (subLoading) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#344E41]/50">
@@ -365,11 +432,11 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
         <div className="bg-white rounded-lg p-8 max-w-md">
           <h3 className="text-xl font-bold text-red-600 mb-2">Error</h3>
           <p className="text-gray-600">
-            {error.message || "Failed to load plans"}
+            {error.message || error || "Failed to load plans"}
           </p>
           <button
             onClick={() => dispatch(fetchSubscriptions())}
-            className="mt-4 px-4 py-2 bg-[#344E41] text-white rounded-lg"
+            className="mt-4 px-4 py-2 bg-[#344E41] text-white rounded-lg hover:bg-[#2a3e33] transition-colors"
           >
             Retry
           </button>
@@ -380,7 +447,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
 
   return (
     <>
-      {/* PRICING OVERLAY */}
+      {/* Pricing Overlay */}
       {!showCheckout && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#344E41]/50">
           <motion.div
@@ -391,7 +458,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-white"
+              className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full p-2 transition-colors"
             >
               <X size={28} />
             </button>
@@ -400,13 +467,12 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
               Choose the <span className="text-[#E1FFF0]">Right Plan</span>
             </h2>
 
-            <div className="flex justify-center gap-6 mb-6">
+            <div className="flex justify-center gap-6 mb-6 flex-wrap">
               {/* Billing Toggle */}
               <div className="flex items-center gap-3">
                 <span
-                  className={`font-bold text-sm cursor-pointer ${
-                    billing === "monthly" ? "text-white" : "text-gray-300"
-                  }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${billing === "monthly" ? "text-white" : "text-gray-300"
+                    }`}
                   onClick={() => setBilling("monthly")}
                 >
                   Monthly
@@ -418,22 +484,20 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
                   className="relative flex items-center bg-gray-200 rounded-full w-14 h-7 cursor-pointer"
                 >
                   <div
-                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${
-                      billing === "monthly"
-                        ? "left-1 bg-[#344E41]"
-                        : "left-7 bg-[#344E41]"
-                    }`}
+                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${billing === "monthly"
+                      ? "left-1 bg-[#344E41]"
+                      : "left-7 bg-[#344E41]"
+                      }`}
                   />
                 </div>
                 <span
-                  className={`font-bold text-sm cursor-pointer ${
-                    billing === "yearly" ? "text-white" : "text-gray-300"
-                  }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${billing === "yearly" ? "text-white" : "text-gray-300"
+                    }`}
                   onClick={() => setBilling("yearly")}
                 >
                   Yearly
                 </span>
-                <span className="ml-2 text-xs bg-[#E1FFF0] text-[#344E41] px-2 py-0.5 rounded-full">
+                <span className="ml-2 text-xs bg-[#E1FFF0] text-[#344E41] px-2 py-0.5 rounded-full font-semibold">
                   Save 20%
                 </span>
               </div>
@@ -441,9 +505,8 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
               {/* Currency Toggle */}
               <div className="flex items-center gap-3">
                 <span
-                  className={`font-bold text-sm cursor-pointer ${
-                    currency === "USD" ? "text-white" : "text-gray-300"
-                  }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${currency === "USD" ? "text-white" : "text-gray-300"
+                    }`}
                   onClick={() => setCurrency("USD")}
                 >
                   Plan in $
@@ -455,17 +518,15 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
                   className="relative flex items-center bg-gray-200 rounded-full w-14 h-7 cursor-pointer"
                 >
                   <div
-                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${
-                      currency === "USD"
-                        ? "left-1 bg-[#344E41]"
-                        : "left-7 bg-[#344E41]"
-                    }`}
+                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${currency === "USD"
+                      ? "left-1 bg-[#344E41]"
+                      : "left-7 bg-[#344E41]"
+                      }`}
                   />
                 </div>
                 <span
-                  className={`font-bold text-sm cursor-pointer ${
-                    currency === "INR" ? "text-white" : "text-gray-300"
-                  }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${currency === "INR" ? "text-white" : "text-gray-300"
+                    }`}
                   onClick={() => setCurrency("INR")}
                 >
                   Plan in ₹
@@ -493,13 +554,13 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
                       (i) => (i - 1 + groups.length) % groups.length
                     )
                   }
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full p-2 transition-colors"
                 >
                   <ChevronLeft size={36} />
                 </button>
                 <button
                   onClick={() => setGroupIndex((i) => (i + 1) % groups.length)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full p-2 transition-colors"
                 >
                   <ChevronRight size={36} />
                 </button>
@@ -509,7 +570,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
         </div>
       )}
 
-      {/* RAZORPAY LOADER */}
+      {/* Razorpay Loader */}
       {showCheckout && (
         <div className="fixed inset-0 z-[99999] bg-black/30 flex items-center justify-center">
           <div className="bg-white rounded-xl p-8 shadow-2xl text-center">

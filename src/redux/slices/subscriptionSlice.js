@@ -1,4 +1,4 @@
-// subscriptionSlice.js
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   createSubscription,
@@ -67,8 +67,24 @@ const subscriptionSlice = createSlice({
     subscriptions: [],
     loading: false,
     error: null,
+    // Add payment success state
+    paymentSuccess: null,
+    showPaymentSuccessModal: false,
   },
-  reducers: {},
+  reducers: {
+    // Add payment success actions
+    setPaymentSuccess: (state, action) => {
+      state.paymentSuccess = action.payload;
+      state.showPaymentSuccessModal = true;
+    },
+    clearPaymentSuccess: (state) => {
+      state.paymentSuccess = null;
+      state.showPaymentSuccessModal = false;
+    },
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchSubscriptions.pending, (state) => {
@@ -100,6 +116,18 @@ const subscriptionSlice = createSlice({
       })
       .addCase(verifyUserSubscriptionPayment.fulfilled, (state, action) => {
         state.loading = false;
+        // Optionally set payment success here if the API returns the necessary data
+        if (action.payload?.success) {
+          const data = action.payload.data || {};
+          state.paymentSuccess = {
+            fieldName: data.fieldName,
+            planName: data.planName,
+            features: data.features || [],
+            daysLeft: data.daysLeft,
+            transactionId: data.transactionId,
+          };
+          state.showPaymentSuccessModal = true;
+        }
       })
       .addCase(verifyUserSubscriptionPayment.rejected, (state, action) => {
         state.loading = false;
@@ -107,5 +135,12 @@ const subscriptionSlice = createSlice({
       });
   },
 });
+
+// Export actions
+export const { setPaymentSuccess, clearPaymentSuccess, clearError } = subscriptionSlice.actions;
+
+// Export selectors
+export const selectPaymentSuccess = (state) => state.subscription?.paymentSuccess;
+export const selectShowPaymentSuccessModal = (state) => state.subscription?.showPaymentSuccessModal;
 
 export default subscriptionSlice.reducer;
