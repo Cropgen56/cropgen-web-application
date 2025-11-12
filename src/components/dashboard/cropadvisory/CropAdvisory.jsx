@@ -22,46 +22,129 @@ const categories = [
   "Monitoring",
 ];
 
+// Memoized AdvisoryCard (moved outside to avoid re-creation)
+const AdvisoryCard = React.memo(({ category, activityText }) => {
+  let content;
+  if (!activityText) {
+    content = <p>No data available</p>;
+  } else if (category === "Disease/Pest Control") {
+    const lines = activityText.split("\n");
+    if (lines.length >= 2) {
+      const diseaseLine = lines[0].replace("Disease Pest - ", "");
+      const sprayLine = lines[1].replace("Spray - ", "");
+      content = (
+        <div>
+          <p>
+            <strong>Disease/Pest:</strong> {diseaseLine}
+          </p>
+          <p>
+            <strong>Spray:</strong> {sprayLine}
+          </p>
+        </div>
+      );
+    } else {
+      content = <p>{activityText}</p>;
+    }
+  } else {
+    content = <p>{activityText}</p>;
+  }
+
+  return (
+    <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-[#344E41]/90 border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto no-scrollbar">
+      <h3 className="text-sm lg:text-base font-bold text-white mb-1 md:mb-0.5">
+        {category}
+      </h3>
+      <div className="text-xs lg:text-sm text-gray-300 font-medium leading-tight">
+        {content}
+      </div>
+    </div>
+  );
+});
+AdvisoryCard.displayName = "AdvisoryCard";
+
 const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   const dispatch = useDispatch();
   const [selectedDay, setSelectedDay] = useState("Day 1");
-  const { advisory, cropGrowthStage } = useSelector((state) => state.satellite);
-  const { forecastData } = useSelector((state) => state.weather);
+  const { advisory, cropGrowthStage } = useSelector(
+    (state) => state.satellite || {}
+  );
+  const { forecastData } = useSelector((state) => state.weather || {});
 
   const scrollRef = useRef(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-  const farmDetails = selectedFieldsDetials[0];
+  const farmDetails = selectedFieldsDetials?.[0] || null;
+  const farmId = farmDetails?._id ?? farmDetails?.id ?? null;
 
-  // Fetch soil moisture when selectedFieldsDetials changes
+  // Keep last processed farmId to avoid duplicate fetches (in case farmDetails object changes reference)
+  const lastSoilFetchRef = useRef(null);
+
+  // Fetch soil moisture only when farmId meaningfully changes
   useEffect(() => {
-    if (farmDetails) {
-      dispatch(fetchSoilMoisture(farmDetails));
-    }
-  }, [dispatch, farmDetails, selectedFieldsDetials]);
+    if (!farmId) return;
+    if (lastSoilFetchRef.current === farmId) return;
+    lastSoilFetchRef.current = farmId;
 
-  // Generate advisory with debouncing
+    dispatch(fetchSoilMoisture(farmDetails));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, farmId]); // farmDetails intentionally omitted to avoid object ref churn
+
+  // Generate advisory: only when meaningful inputs change (bbch, forecast timestamp, farmId)
+  const lastAdvisoryKeyRef = useRef(null);
+  const advisoryTimerRef = useRef(null);
+
   useEffect(() => {
-    if (cropGrowthStage && forecastData && selectedFieldsDetials?.length) {
-      const timer = setTimeout(() => {
-        dispatch(
-          genrateAdvisory({
-            farmDetails: selectedFieldsDetials[0],
-            currenWeather: forecastData?.current,
-            bbchData: cropGrowthStage?.finalStage,
-          })
-        );
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [dispatch, cropGrowthStage, forecastData, selectedFieldsDetials]);
+    const bbch = cropGrowthStage?.finalStage?.bbch ?? null;
+    const forecastTs = forecastData?.current?.dt ?? forecastData?.dt ?? null;
+    const advisoryKey = `${farmId || "nofarm"}::${bbch ?? "nobbch"}::${
+      forecastTs ?? "nofc"
+    }`;
 
-  // Handle dragging for scrollable area
-  const handleDragEvents = useCallback(() => {
+    // if missing required inputs, skip
+    if (!farmId || !bbch || !forecastData || !selectedFieldsDetials?.length)
+      return;
+
+    if (lastAdvisoryKeyRef.current === advisoryKey) return;
+
+    // debounce tiny interval to avoid rapid repeated dispatches
+    if (advisoryTimerRef.current) clearTimeout(advisoryTimerRef.current);
+    advisoryTimerRef.current = setTimeout(() => {
+      // store before dispatch to avoid duplicate calls during dispatch-triggered renders
+      lastAdvisoryKeyRef.current = advisoryKey;
+
+      dispatch(
+        genrateAdvisory({
+          farmDetails: selectedFieldsDetials[0],
+          currenWeather: forecastData?.current,
+          bbchData: cropGrowthStage?.finalStage,
+        })
+      ).catch(() => {
+        // if dispatch fails, clear key so it can retry next time
+        lastAdvisoryKeyRef.current = null;
+      });
+    }, 200);
+
+    return () => {
+      if (advisoryTimerRef.current) {
+        clearTimeout(advisoryTimerRef.current);
+        advisoryTimerRef.current = null;
+      }
+    };
+  }, [
+    dispatch,
+    cropGrowthStage?.finalStage?.bbch,
+    forecastData?.current?.dt,
+    farmId,
+    selectedFieldsDetials,
+    forecastData,
+  ]);
+
+  // Drag handlers: attach once and cleanup properly
+  const attachDragHandlers = useCallback(() => {
     const slider = scrollRef.current;
-    if (!slider) return;
+    if (!slider) return () => {};
 
     const handleMouseDown = (e) => {
       isDragging.current = true;
@@ -99,28 +182,30 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   }, []);
 
   useEffect(() => {
-    return handleDragEvents();
-  }, [handleDragEvents]);
+    const cleanup = attachDragHandlers();
+    return () => cleanup && cleanup();
+  }, [attachDragHandlers]);
 
   // Memoize advisoryData to handle array format and map keys to categories
   const advisoryData = useMemo(() => {
-    return Array.isArray(advisory)
-      ? advisory.map((item) => ({
-          day: item.day,
-          activities: {
-            "Disease/Pest Control": `Disease Pest - ${item.disease_pest.replace(
-              /[[```]/g,
-              ""
-            )}\nSpray - ${item.spray.replace(/[[```]/g, "")}`,
-            Fertigation: item.fertigation,
-            Watering: item.water,
-            Monitoring: item.monitoring,
-          },
-        }))
-      : [];
+    if (!Array.isArray(advisory)) return [];
+    return advisory.map((item) => ({
+      day: item.day,
+      activities: {
+        "Disease/Pest Control": `Disease Pest - ${String(
+          item.disease_pest ?? ""
+        ).replace(/[[```]/g, "")}\nSpray - ${String(item.spray ?? "").replace(
+          /[[```]/g,
+          ""
+        )}`,
+        Fertigation: item.fertigation ?? "",
+        Watering: item.water ?? "",
+        Monitoring: item.monitoring ?? "",
+      },
+    }));
   }, [advisory]);
 
-  // Set selectedDay to first available day if invalid
+  // Ensure selectedDay exists in advisoryData (pick first available if not)
   useEffect(() => {
     if (
       advisoryData.length > 0 &&
@@ -130,51 +215,12 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     }
   }, [advisoryData, selectedDay]);
 
-  // Memoize currentDayData
+  // Memoized currentDayData
   const currentDayData = useMemo(() => {
     return (
       advisoryData.find((item) => item.day === selectedDay)?.activities || {}
     );
   }, [advisoryData, selectedDay]);
-
-  // Memoized AdvisoryCard component
-  const AdvisoryCard = React.memo(({ category, activityText }) => {
-    let content;
-    if (!activityText) {
-      content = <p>No data available</p>;
-    } else if (category === "Disease/Pest Control") {
-      const lines = activityText.split("\n");
-      if (lines.length >= 2) {
-        const diseaseLine = lines[0].replace("Disease Pest - ", "");
-        const sprayLine = lines[1].replace("Spray - ", "");
-        content = (
-          <div>
-            <p>
-              <strong>Disease/Pest:</strong> {diseaseLine}
-            </p>
-            <p>
-              <strong>Spray:</strong> {sprayLine}
-            </p>
-          </div>
-        );
-      } else {
-        content = <p>{activityText}</p>;
-      }
-    } else {
-      content = <p>{activityText}</p>;
-    }
-
-    return (
-      <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-[#344E41]/90 border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto no-scrollbar">
-        <h3 className="text-sm lg:text-base font-bold text-white mb-1 md:mb-0.5">
-          {category}
-        </h3>
-        <div className="text-xs lg:text-sm text-gray-300 font-medium leading-tight">
-          {content}
-        </div>
-      </div>
-    );
-  });
 
   return (
     <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">

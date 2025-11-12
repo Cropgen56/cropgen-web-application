@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { getFarmFields } from "../redux/slices/farmSlice";
@@ -43,7 +49,7 @@ import {
   setPaymentSuccess,
   clearPaymentSuccess,
   selectPaymentSuccess,
-  selectShowPaymentSuccessModal
+  selectShowPaymentSuccessModal,
 } from "../redux/slices/subscriptionSlice";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 
@@ -86,16 +92,24 @@ const Dashboard = () => {
   const userId = user?.id;
 
   // Add membership selectors
-  const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const newFieldAdded = useSelector(state => state.membership.newFieldAdded);
-  const currentFieldHasSubscription = useSelector(selectCurrentFieldHasSubscription);
-  const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
+  const showMembershipModal = useSelector(
+    (state) => state.membership.showMembershipModal
+  );
+  const newFieldAdded = useSelector((state) => state.membership.newFieldAdded);
+  const currentFieldHasSubscription = useSelector(
+    selectCurrentFieldHasSubscription
+  );
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions
+  );
   const currentFieldSubscription = useSelector(selectCurrentFieldSubscription);
   const currentFieldFeatures = useSelector(selectCurrentFieldFeatures);
 
   // Payment success selectors from Redux
   const paymentSuccess = useSelector(selectPaymentSuccess);
-  const showPaymentSuccessModalRedux = useSelector(selectShowPaymentSuccessModal);
+  const showPaymentSuccessModalRedux = useSelector(
+    selectShowPaymentSuccessModal
+  );
 
   // Feature-specific selectors for each component
   const hasSatelliteMonitoring = useSelector(selectHasSatelliteMonitoring);
@@ -142,15 +156,19 @@ const Dashboard = () => {
       dispatch(setCurrentField(selectedField));
 
       const fieldSub = fieldSubscriptions[selectedField];
-      const shouldCheck = !fieldSub ||
+      const shouldCheck =
+        !fieldSub ||
         (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) > SUBSCRIPTION_CHECK_INTERVAL);
+          new Date() - new Date(fieldSub.lastChecked) >
+            SUBSCRIPTION_CHECK_INTERVAL);
 
       if (shouldCheck) {
-        dispatch(checkFieldSubscriptionStatus({
-          fieldId: selectedField,
-          authToken
-        }));
+        dispatch(
+          checkFieldSubscriptionStatus({
+            fieldId: selectedField,
+            authToken,
+          })
+        );
       }
     }
   }, [selectedField, authToken, dispatch, fieldSubscriptions]);
@@ -160,10 +178,12 @@ const Dashboard = () => {
     if (!selectedField || !authToken) return;
 
     const interval = setInterval(() => {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField,
+          authToken,
+        })
+      );
     }, SUBSCRIPTION_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
@@ -180,7 +200,8 @@ const Dashboard = () => {
 
   const handleSubscribe = useCallback(() => {
     if (selectedFieldDetails) {
-      const areaInHectares = selectedFieldDetails?.areaInHectares ||
+      const areaInHectares =
+        selectedFieldDetails?.areaInHectares ||
         selectedFieldDetails?.acre * 0.404686 ||
         5;
       const fieldData = {
@@ -200,7 +221,9 @@ const Dashboard = () => {
 
   const handleSkipMembership = useCallback(() => {
     dispatch(hideMembershipModal());
-    message.info("You can activate premium anytime from the locked content sections");
+    message.info(
+      "You can activate premium anytime from the locked content sections"
+    );
   }, [dispatch]);
 
   const handleCloseMembershipModal = useCallback(() => {
@@ -208,25 +231,32 @@ const Dashboard = () => {
   }, [dispatch]);
 
   // Handle payment success from pricing overlay - FIXED: Only use Redux
-  const handlePaymentSuccess = useCallback((successData) => {
-    // Close pricing overlay
-    setShowPricingOverlay(false);
-    setPricingFieldData(null);
+  const handlePaymentSuccess = useCallback(
+    (successData) => {
+      // Close pricing overlay
+      setShowPricingOverlay(false);
+      setPricingFieldData(null);
 
-    // Only dispatch to Redux (single source of truth)
-    dispatch(setPaymentSuccess({
-      ...successData,
-      fieldName: successData.fieldName || selectedFieldDetails?.farmName,
-    }));
+      // Only dispatch to Redux (single source of truth)
+      dispatch(
+        setPaymentSuccess({
+          ...successData,
+          fieldName: successData.fieldName || selectedFieldDetails?.farmName,
+        })
+      );
 
-    // Refresh subscription status
-    if (selectedField && authToken) {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField,
-        authToken
-      }));
-    }
-  }, [selectedField, authToken, dispatch, selectedFieldDetails]);
+      // Refresh subscription status
+      if (selectedField && authToken) {
+        dispatch(
+          checkFieldSubscriptionStatus({
+            fieldId: selectedField,
+            authToken,
+          })
+        );
+      }
+    },
+    [selectedField, authToken, dispatch, selectedFieldDetails]
+  );
 
   // Handle closing Redux payment success modal
   const handleCloseReduxPaymentSuccess = useCallback(() => {
@@ -358,9 +388,10 @@ const Dashboard = () => {
 
     const forecastKey = `${matchingAOI.id}_${Date.now()}`;
 
-    const recentFetch = Array.from(forecastFetchRef.current).find(key =>
-      key.startsWith(matchingAOI.id) &&
-      (Date.now() - parseInt(key.split('_')[1])) < 300000
+    const recentFetch = Array.from(forecastFetchRef.current).find(
+      (key) =>
+        key.startsWith(matchingAOI.id) &&
+        Date.now() - parseInt(key.split("_")[1]) < 300000
     );
 
     if (recentFetch) {
@@ -368,9 +399,9 @@ const Dashboard = () => {
     }
 
     forecastFetchRef.current = new Set(
-      Array.from(forecastFetchRef.current).filter(key => {
-        const timestamp = parseInt(key.split('_')[1]);
-        return (Date.now() - timestamp) < 300000;
+      Array.from(forecastFetchRef.current).filter((key) => {
+        const timestamp = parseInt(key.split("_")[1]);
+        return Date.now() - timestamp < 300000;
       })
     );
 
@@ -386,13 +417,6 @@ const Dashboard = () => {
       isInitialMount.current = true;
     };
   }, []);
-
-  useEffect(() => {
-    if (currentFieldSubscription) {
-      console.log('Current field subscription:', currentFieldSubscription);
-      console.log('Current field features:', currentFieldFeatures);
-    }
-  }, [currentFieldSubscription, currentFieldFeatures]);
 
   return (
     <div className="dashboard min-h-screen w-full overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden float-end p-1.5 lg:p-3">

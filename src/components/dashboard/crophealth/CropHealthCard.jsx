@@ -10,7 +10,12 @@ import { fetchCrops } from "../../../redux/slices/cropSlice.js";
 import { message } from "antd";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
 
-const CropHealth = ({ selectedFieldsDetials, fields, isLocked, onSubscribe }) => {
+const CropHealth = ({
+  selectedFieldsDetials,
+  fields,
+  isLocked,
+  onSubscribe,
+}) => {
   const cropDetials = selectedFieldsDetials?.[0];
   const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
   const dispatch = useDispatch();

@@ -123,7 +123,6 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
     };
   }, [sowingDate, newNpkData]);
 
-
   useEffect(() => {
     if (
       !cropName ||
@@ -163,7 +162,6 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
     farmDetails?.field,
   ]);
 
-
   if (!isSowingDateValid) {
     return (
       <div className="w-full px-2 sm:px-4 md:scale-[0.95] md:pl-1">
@@ -177,9 +175,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
   }
 
   if (npkLoading) {
-    return (
-      <NpkChartSkeleton />
-    );
+    return <NpkChartSkeleton />;
   }
 
   const isFinalHarvest = false;
