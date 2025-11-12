@@ -5,11 +5,11 @@ import FarmSetting from "../components/setting/farmsetting/FarmSetting";
 
 const Setting = () => {
   const [selectedOption, setSelectedOption] = useState("personalInfo");
-  const [showSidebar, setShowSidebar] = useState(true); // NEW
+  const [showSidebar, setShowSidebar] = useState(true);
 
   const handleOptionClick = (option) => {
     setSelectedOption(option);
-    setShowSidebar(false); // Hide sidebar when any option is clicked
+    setShowSidebar(false);
   };
 
   return (
@@ -35,4 +35,3 @@ const Setting = () => {
 };
 
 export default Setting;
-

@@ -5,27 +5,26 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import PolygonPreview from "../../polygon/PolygonPreview";
 import FarmSkeletonLoader from "../../Skeleton/FarmSkeletonLoader";
-import { 
-  checkFieldSubscriptionStatus, 
-  selectFieldSubscriptionStatus 
+import {
+  checkFieldSubscriptionStatus,
+  selectFieldSubscriptionStatus,
 } from "../../../redux/slices/membershipSlice";
 
 const FarmCard = ({ farm, onClick, isSubscribed }) => (
-  <div 
-    onClick={() => onClick(farm)} 
+  <div
+    onClick={() => onClick(farm)}
     className="relative flex flex-col rounded-lg shadow-sm border-1 border-[#075A53] text-center transition-shadow duration-400 ease-in-out hover:shadow-md overflow-hidden cursor-pointer"
   >
     {/* Subscription Status Badge */}
-    <div 
+    <div
       className={`absolute top-2 right-2 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold shadow-lg ${
-        isSubscribed 
-          ? 'bg-gradient-to-r from-green-500 to-green-600 text-white border border-green-400' 
-          : 'bg-gradient-to-r from-red-500 to-red-600 text-white border border-red-400'
+        isSubscribed
+          ? "bg-gradient-to-r from-green-500 to-green-600 text-white border border-green-400"
+          : "bg-gradient-to-r from-red-500 to-red-600 text-white border border-red-400"
       }`}
     >
       {isSubscribed ? (
         <>
-
           <span>Subscribed</span>
         </>
       ) : (
@@ -72,8 +71,8 @@ const FarmCard = ({ farm, onClick, isSubscribed }) => (
 );
 
 const AddNewFarmCard = ({ onClick }) => (
-  <div 
-    className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg shadow-sm border-1 border-[#075A53] text-center cursor-pointer transition-shadow hover:shadow-md hover:bg-emerald-50" 
+  <div
+    className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg shadow-sm border-1 border-[#075A53] text-center cursor-pointer transition-shadow hover:shadow-md hover:bg-emerald-50"
     onClick={onClick}
   >
     <Plus strokeWidth={1} className="w-24 h-24 text-[#FCC21B]" />
@@ -85,20 +84,22 @@ const AllFarms = ({ onAddFarmClick }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { 
-    fields: farms, 
-    status, 
-    error 
+  const {
+    fields: farms,
+    status,
+    error,
   } = useSelector((state) => state.farmfield || { fields: [] });
 
   const user = useSelector((state) => state.auth.user);
   const userId = user?._id || user?.id;
-  
+
   // Get auth token for membership check
   const authToken = useSelector((state) => state.auth.token);
 
   // Get all field subscriptions from store
-  const fieldSubscriptions = useSelector((state) => state.membership.fieldSubscriptions || {});
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions || {}
+  );
 
   // Get membership loading state
   const membershipLoading = useSelector((state) => state.membership.loading);
@@ -112,12 +113,14 @@ const AllFarms = ({ onAddFarmClick }) => {
   // Check subscription status for each farm
   useEffect(() => {
     if (farms.length > 0 && authToken) {
-      farms.forEach(farm => {
+      farms.forEach((farm) => {
         if (farm._id) {
-          dispatch(checkFieldSubscriptionStatus({ 
-            fieldId: farm._id, 
-            authToken 
-          }));
+          dispatch(
+            checkFieldSubscriptionStatus({
+              fieldId: farm._id,
+              authToken,
+            })
+          );
         }
       });
     }
@@ -125,13 +128,17 @@ const AllFarms = ({ onAddFarmClick }) => {
 
   if (status === "loading") return <FarmSkeletonLoader />;
 
-  if (!userId) 
-    return <p className="p-4 text-gray-500">Please log in to view your farms.</p>;
+  if (!userId)
+    return (
+      <p className="p-4 text-gray-500">Please log in to view your farms.</p>
+    );
 
-  if (status === "failed") 
+  if (status === "failed")
     return (
       <p className="p-4 text-red-600">
-        {typeof error === "string" ? error : error?.message || "Something went wrong"}
+        {typeof error === "string"
+          ? error
+          : error?.message || "Something went wrong"}
       </p>
     );
 
@@ -142,12 +149,13 @@ const AllFarms = ({ onAddFarmClick }) => {
           {farms.length > 0 ? (
             farms.map((farm, index) => {
               // Get subscription status for this farm from the already fetched subscriptions
-              const isSubscribed = fieldSubscriptions[farm._id]?.hasActiveSubscription || false;
-              
+              const isSubscribed =
+                fieldSubscriptions[farm._id]?.hasActiveSubscription || false;
+
               return (
-                <FarmCard 
-                  key={farm._id || index} 
-                  farm={farm} 
+                <FarmCard
+                  key={farm._id || index}
+                  farm={farm}
                   onClick={onAddFarmClick}
                   isSubscribed={isSubscribed}
                 />
