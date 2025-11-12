@@ -11,7 +11,7 @@ export const checkFieldSubscriptionStatus = createAsyncThunk(
 );
 
 const initialState = {
-  fieldSubscriptions: {}, 
+  fieldSubscriptions: {},
   currentFieldId: null,
   currentFieldSubscription: null, 
   showMembershipModal: false,

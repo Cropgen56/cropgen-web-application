@@ -282,21 +282,6 @@ const Dashboard = () => {
     }
   }, [dispatch, userId]);
 
-  // Removed duplicate useEffect that was causing multiple fetchAOIs calls
-  // The following useEffect has been commented out to prevent duplicate calls
-  /*
-  useEffect(() => {
-    const fetchLatestFields = async () => {
-      if (userId) {
-        await dispatch(getFarmFields(userId));
-        dispatch(fetchAOIs());
-      }
-    };
-
-    fetchLatestFields();
-  }, [userId, dispatch]);
-  */
-
   useEffect(() => {
     if (fields.length === 0) return;
 
