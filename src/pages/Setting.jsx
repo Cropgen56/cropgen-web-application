@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import SettingSidebar from "../components/setting/settingsidebar/SettingSidebar";
 import PersonalInfo from "../components/setting/personalinfo/PersonalInfo";
 import FarmSetting from "../components/setting/farmsetting/FarmSetting";
+import Pricing from "../components/setting/pricing/Pricing";
 
 const Setting = () => {
   const [selectedOption, setSelectedOption] = useState("personalInfo");
@@ -28,6 +29,9 @@ const Setting = () => {
         )}
         {selectedOption === "farmSettings" && (
           <FarmSetting setShowSidebar={setShowSidebar} />
+        )}
+        {selectedOption === "pricing" && (
+          <Pricing setShowSidebar={setShowSidebar} />
         )}
       </div>
     </div>

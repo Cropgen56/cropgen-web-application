@@ -6,6 +6,7 @@ import { getUserData, updateUserData } from "../../../redux/slices/authSlice";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { message } from "antd";
 import PersonalInfoSkeleton from "../../Skeleton/PersonalInfoSkeleton";
+import { ArrowLeft } from "lucide-react";
 
 const PersonalInfo = ({ setShowSidebar }) => {
   const dispatch = useDispatch();
@@ -113,11 +114,9 @@ const PersonalInfo = ({ setShowSidebar }) => {
         <h5 className="font-bold">Personal Info</h5>
         <button
           onClick={() => setShowSidebar(true)}
-          className="flex items-center gap-1 text-sm text-[#344E41] hover:text-[#1d3039]"
+          className="flex items-center gap-1 text-sm text-[#344E41] hover:text-[#1d3039] transition-all duration-300 ease-in-out cursor-pointer"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+          <ArrowLeft size={18} />
           Back to Settings
         </button>
       </div>
