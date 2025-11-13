@@ -30,7 +30,7 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
           {farm.fieldName}
         </span>
         <span className="block text-xs font-medium text-[#848484] mt-0.5">
-          {Number(farm.acre || 0).toFixed(2)} hec
+          {Number(farm.acre || 0).toFixed(2)} ha
         </span>
       </div>
 
@@ -72,7 +72,7 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
 
     <div className="flex justify-between items-center bg-white border-t border-[#075A53] p-3">
       <span className="text-base text-[#9A9898] font-semibold">
-          Id: Crop-{String(index + 1).padStart(3, "0")}
+        Id: Crop-{String(index + 1).padStart(3, "0")}
       </span>
 
       <img
@@ -185,7 +185,7 @@ const AllFarms = ({ onAddFarmClick }) => {
               ? "All Farms"
               : tab === "subscribed"
               ? "Subscribed"
-              : "UnSubscribed"}
+              : "Unsubscribed"}
           </button>
         ))}
       </div>
@@ -204,7 +204,7 @@ const AllFarms = ({ onAddFarmClick }) => {
                   farm={farm}
                   onClick={onAddFarmClick}
                   isSubscribed={isSubscribed}
-                  index={index} 
+                  index={index}
                 />
               );
             })
