@@ -25,11 +25,12 @@ import {
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
 import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper";
+import { selectHasWaterIndices } from "../../../../redux/slices/membershipSlice";
 
 const WATER_COLOR_MAIN = "#38bdf8";
 const WATER_COLOR_LIGHT = "#7dd3fc";
 
-const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
+const WaterIndex = ({ selectedFieldsDetials, onSubscribe }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { waterIndexData = null, loading } =
     useSelector((state) => state.satellite) || {};
@@ -37,11 +38,15 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDMI");
 
+  // Get feature flag
+  const hasWaterIndices = useSelector(selectHasWaterIndices);
+
   const scrollRef = useRef(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
+  // Fetch parameters
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
     return {
@@ -52,11 +57,13 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     };
   }, [field, sowingDate, index]);
 
+  // Fetch water index data
   useEffect(() => {
     if (!fetchParams) return;
     dispatch(fetchWaterIndexData(fetchParams));
   }, [dispatch, fetchParams]);
 
+  // Process chart data
   const chartData = useMemo(() => {
     let timeseries =
       waterIndexData?.data?.timeseries ||
@@ -73,8 +80,10 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     }));
   }, [waterIndexData, index]);
 
+  // Calculate summary statistics
   const summaryData = useMemo(() => {
-    const summary = waterIndexData?.data?.summary ||
+    const summary =
+      waterIndexData?.data?.summary ||
       waterIndexData?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
     const timestamp = waterIndexData?.timestamp || null;
 
@@ -82,6 +91,7 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     return { min, mean, max, timestamp };
   }, [waterIndexData]);
 
+  // Y-axis configuration
   const yAxisConfig = useMemo(() => {
     const { min, mean, max } = summaryData;
     const domain = [
@@ -96,6 +106,7 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     return { domain, ticks };
   }, [summaryData]);
 
+  // Chart configuration
   const chartConfig = useMemo(() => {
     const length = chartData.length;
     return {
@@ -104,6 +115,7 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     };
   }, [chartData.length]);
 
+  // Tick formatter for Y-axis
   const tickFormatter = useCallback(
     (value) => {
       const { min, mean, max } = summaryData;
@@ -115,14 +127,19 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     [summaryData]
   );
 
+  // Tooltip formatter
   const tooltipFormatter = useCallback(
     (value) => [value.toFixed(3), index],
     [index]
   );
 
+  // Label formatter
   const labelFormatter = useCallback((label) => `Date: ${label}`, []);
+
+  // Index change handler
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
+  // Drag scroll handlers
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -131,14 +148,23 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
       isDragging.current = true;
       startX.current = e.pageX - el.offsetLeft;
       scrollLeft.current = el.scrollLeft;
+      el.style.cursor = "grabbing";
     };
 
     const handleMouseLeave = () => {
-      isDragging.current = false;
+      if (isDragging.current) {
+        isDragging.current = false;
+        el.style.cursor = "grab";
+      }
     };
+
     const handleMouseUp = () => {
-      isDragging.current = false;
+      if (isDragging.current) {
+        isDragging.current = false;
+        el.style.cursor = "grab";
+      }
     };
+
     const handleMouseMove = (e) => {
       if (!isDragging.current) return;
       e.preventDefault();
@@ -163,6 +189,7 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   const isLoading = loading?.waterIndexData || false;
   const hasData = chartData.length > 0;
 
+  // Index descriptions
   const indexDescriptions = {
     NDMI: "NDMI values can be used to monitor vegetation water content and drought conditions over time.",
     NDWI: "NDWI values help assess water presence in vegetation and detect surface water or irrigation zones.",
@@ -203,16 +230,16 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
           </select>
         </div>
 
+        {/* Title */}
         <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">
           Water Index
         </h2>
 
         <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
+          {/* Summary Card */}
           <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
             <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
-              <h2 className="text-xl font-bold text-sky-700">
-                {index}
-              </h2>
+              <h2 className="text-xl font-bold text-sky-700">{index}</h2>
               <button className="bg-sky-50 text-sky-700 px-3 py-1 text-sm font-semibold rounded mt-1 border border-sky-200 hover:bg-sky-100 transition-all">
                 +0.15
               </button>
@@ -239,10 +266,12 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
             </div>
           </div>
 
+          {/* Chart Container */}
           <div className="lg:w-3/4 flex-grow">
             <IndexPremiumWrapper
-              isLocked={isLocked}
+              isLocked={!hasWaterIndices}
               onSubscribe={onSubscribe}
+              title="Water Index"
             >
               <div
                 ref={scrollRef}
@@ -256,6 +285,7 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
+                      alignItems: "center",
                     }}
                   >
                     <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />

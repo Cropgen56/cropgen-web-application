@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
@@ -22,7 +22,7 @@ import {
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectHasSoilFertility // Updated import
+  selectHasSoilReportGeneration, // Correct import
 } from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -30,22 +30,26 @@ const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 const SoilReport = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const user = useSelector((state) => state?.auth?.user);
   const authToken = useSelector((state) => state?.auth?.token);
   const fields = useSelector((state) => state?.farmfield?.fields);
-  
-  const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const hasSoilFertility = useSelector(selectHasSoilFertility); // Updated selector
-  const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
-  
+
+  const showMembershipModal = useSelector(
+    (state) => state.membership.showMembershipModal
+  );
+  const hasSoilReportGeneration = useSelector(selectHasSoilReportGeneration);
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions
+  );
+
   const [selectedOperation, setSelectedOperation] = useState(null);
   const [reportdata, setReportData] = useState(null);
   const [isdownloading, setIsDownloading] = useState(false);
   const [selectedField, setSelectedField] = useState(null);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
-  
+
   const reportRef = useRef();
   const restRef = useRef();
   const userId = user?.id;
@@ -61,15 +65,19 @@ const SoilReport = () => {
       dispatch(setCurrentField(selectedField._id));
 
       const fieldSub = fieldSubscriptions[selectedField._id];
-      const shouldCheck = !fieldSub ||
+      const shouldCheck =
+        !fieldSub ||
         (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) > SUBSCRIPTION_CHECK_INTERVAL);
+          new Date() - new Date(fieldSub.lastChecked) >
+          SUBSCRIPTION_CHECK_INTERVAL);
 
       if (shouldCheck) {
-        dispatch(checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken
-        }));
+        dispatch(
+          checkFieldSubscriptionStatus({
+            fieldId: selectedField._id,
+            authToken,
+          })
+        );
       }
     }
   }, [selectedField, authToken, dispatch, fieldSubscriptions]);
@@ -78,10 +86,12 @@ const SoilReport = () => {
     if (!selectedField || !authToken) return;
 
     const interval = setInterval(() => {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField._id,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField._id,
+          authToken,
+        })
+      );
     }, SUBSCRIPTION_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
@@ -89,7 +99,8 @@ const SoilReport = () => {
 
   const handleSubscribe = useCallback(() => {
     if (selectedField) {
-      const areaInHectares = selectedField?.areaInHectares ||
+      const areaInHectares =
+        selectedField?.areaInHectares ||
         selectedField?.acre * 0.404686 ||
         5;
       const fieldData = {
@@ -109,7 +120,9 @@ const SoilReport = () => {
 
   const handleSkipMembership = useCallback(() => {
     dispatch(hideMembershipModal());
-    message.info("You can activate premium anytime from the locked content sections");
+    message.info(
+      "You can activate premium anytime from the locked content sections"
+    );
   }, [dispatch]);
 
   const handleCloseMembershipModal = useCallback(() => {
@@ -121,15 +134,17 @@ const SoilReport = () => {
     setPricingFieldData(null);
 
     if (selectedField && authToken) {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField._id,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField._id,
+          authToken,
+        })
+      );
     }
   }, [selectedField, authToken, dispatch]);
 
   const downloadPDF = async () => {
-    if (!hasSoilFertility) { // Updated to use feature-specific check
+    if (!hasSoilReportGeneration) {
       message.warning("Please subscribe to download soil reports");
       handleSubscribe();
       return;
@@ -237,7 +252,11 @@ const SoilReport = () => {
           {!reportdata ? (
             <div className="flex items-center justify-center h-full w-full">
               <div className="flex flex-col items-center text-center opacity-60">
-                <img src={img1} alt="placeholder" className="w-[300px] h-[300px] mb-6 opacity-70" />
+                <img
+                  src={img1}
+                  alt="placeholder"
+                  className="w-[300px] h-[300px] mb-6 opacity-70"
+                />
                 <p className="text-2xl font-semibold text-white">
                   Select Field to Generate Soil Report
                 </p>
@@ -245,9 +264,9 @@ const SoilReport = () => {
             </div>
           ) : (
             <PremiumPageWrapper
-              isLocked={!hasSoilFertility} // Updated to use feature-specific check
+              isLocked={!hasSoilReportGeneration}
               onSubscribe={handleSubscribe}
-              title="Soil Report"
+              title="Soil Report Generation"
             >
               <MapContainer
                 center={[reportdata.lat, reportdata.lng]}
@@ -293,16 +312,9 @@ const SoilReport = () => {
                 </div>
 
                 <div
-                  className={`mt-5 p-4 rounded-lg shadow-md ${
-                    isdownloading ? "text-black" : "text-green-100"
-                  }`}
+                  className={`mt-5 p-4 rounded-lg shadow-md ${isdownloading ? "text-black" : "text-green-100"
+                    }`}
                 >
-                  <p className="text-xs">
-                    * This is a satellite-based generated soil report, not a
-                    physical or lab-tested report. The results are indicative and
-                    may not represent exact ground conditions. Please use it for
-                    advisory purposes only.
-                  </p>
                 </div>
               </div>
             </PremiumPageWrapper>

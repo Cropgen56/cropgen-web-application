@@ -27,7 +27,6 @@ import EvapotranspirationDashboard from "../components/dashboard/satellite-index
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
-import PremiumContentWrapper from "../components/subscription/PremiumContentWrapper";
 import PaymentSuccessModal from "../components/subscription/PaymentSuccessModal";
 import {
   checkFieldSubscriptionStatus,
@@ -36,14 +35,8 @@ import {
   hideMembershipModal,
   setNewFieldAdded,
   selectCurrentFieldHasSubscription,
-  selectCurrentFieldFeatures,
-  selectCurrentFieldSubscription,
-  selectHasSatelliteMonitoring,
-  selectHasGrowthStageTracking,
-  selectHasWeatherForecast,
-  selectHasAdvisory,
-  selectHasInsights,
-  selectHasSoilMoistureTemp,
+  selectIsCheckingSubscription,
+  optimisticSubscriptionUpdate,
 } from "../redux/slices/membershipSlice";
 import {
   setPaymentSuccess,
@@ -52,13 +45,11 @@ import {
   selectShowPaymentSuccessModal,
 } from "../redux/slices/subscriptionSlice";
 import PricingOverlay from "../components/pricing/PricingOverlay";
+import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
 
-/* -------------------------
-   Constants & Utilities
-   ------------------------- */
 const SELECTED_FIELD_KEY = "selectedFieldId";
-const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
-const FORECAST_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
+const FORECAST_CACHE_TTL = 5 * 60 * 1000;
 
 const formatCoordinates = (data) => {
   if (!Array.isArray(data) || data.length === 0) return [];
@@ -69,29 +60,21 @@ const formatCoordinates = (data) => {
   return coords;
 };
 
-/* -------------------------
-   Dashboard Component
-   ------------------------- */
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [showSelectFarmModal, setShowSelectFarmModal] = useState(false);
+  const [isRefreshingSubscription, setIsRefreshingSubscription] = useState(false);
 
-  /* -------------------------
-     Refs to avoid duplicate calls
-     ------------------------- */
-  const aoiCreationRef = useRef(new Set()); // tracks AOI names already being created
-  const forecastFetchRef = useRef(new Map()); // map<geometryId, timestamp>
+  const aoiCreationRef = useRef(new Set());
+  const forecastFetchRef = useRef(new Map());
   const subscriptionCheckRef = useRef({
     lastCheckedForField: null,
     intervalId: null,
   });
   const isMountedRef = useRef(false);
 
-  /* -------------------------
-     Selectors (memoized by React/Redux)
-     ------------------------- */
   const user = useSelector((s) => s?.auth?.user);
   const authToken = useSelector((s) => s?.auth?.token);
   const fieldsRaw = useSelector((s) => s?.farmfield?.fields);
@@ -103,7 +86,6 @@ const Dashboard = () => {
   const forecastData = useSelector((s) => s?.weather?.forecastData) || {};
   const userId = user?.id;
 
-  /* membership selectors */
   const showMembershipModal = useSelector(
     (s) => s.membership.showMembershipModal
   );
@@ -111,29 +93,13 @@ const Dashboard = () => {
   const currentFieldHasSubscription = useSelector(
     selectCurrentFieldHasSubscription
   );
-  const fieldSubscriptions = useSelector(
-    (s) => s.membership.fieldSubscriptions
-  );
-  const currentFieldSubscription = useSelector(selectCurrentFieldSubscription);
-  const currentFieldFeatures = useSelector(selectCurrentFieldFeatures);
+  const isCheckingSubscription = useSelector(selectIsCheckingSubscription);
 
-  /* payment success selectors */
   const paymentSuccess = useSelector(selectPaymentSuccess);
   const showPaymentSuccessModalRedux = useSelector(
     selectShowPaymentSuccessModal
   );
 
-  /* feature flags */
-  const hasSatelliteMonitoring = useSelector(selectHasSatelliteMonitoring);
-  const hasGrowthStageTracking = useSelector(selectHasGrowthStageTracking);
-  const hasWeatherForecast = useSelector(selectHasWeatherForecast);
-  const hasAdvisory = useSelector(selectHasAdvisory);
-  const hasInsights = useSelector(selectHasInsights);
-  const hasSoilMoistureTemp = useSelector(selectHasSoilMoistureTemp);
-
-  /* -------------------------
-     Local UI State
-     ------------------------- */
   const [delayPassed, setDelayPassed] = useState(false);
   const [showAddFieldInfo, setShowAddFieldInfo] = useState(false);
   const [showVideoOverlay, setShowVideoOverlay] = useState(true);
@@ -141,58 +107,35 @@ const Dashboard = () => {
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
 
-  // selectedField is stored as id string in localStorage; keep as primitive
   const [selectedField, setSelectedField] = useState(() => {
     return localStorage.getItem(SELECTED_FIELD_KEY) || "";
   });
 
   const [prevFieldsLength, setPrevFieldsLength] = useState(0);
 
-  // pricing overlay state
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
-  /* -------------------------
-     Derived / memoized values
-     ------------------------- */
   const selectedFieldDetails = useMemo(() => {
     return fields.find((f) => f?._id === selectedField) || null;
   }, [fields, selectedField]);
 
   const { forecast, units } = forecastData || {};
 
-  /* -------------------------
-     Minor UI delay to avoid flashes
-     ------------------------- */
   useEffect(() => {
     const t = setTimeout(() => setDelayPassed(true), 1000);
     return () => clearTimeout(t);
   }, []);
 
-  /* -------------------------
-     INITIAL LOAD: fetch farm fields + AOIs (only once per user)
-     - We fetch farm fields first, then AOIs if not already fetched for this user.
-     ------------------------- */
   useEffect(() => {
     if (!userId) return;
-
-    // fetch farm fields always when user changes
     dispatch(getFarmFields(userId));
-
-    // fetch AOIs once per user (track with ref)
-    // keep this a primitive-check (userId) to avoid extra calls
     if (!isMountedRef.current) {
-      // first mount
       dispatch(fetchAOIs());
       isMountedRef.current = true;
     }
   }, [dispatch, userId]);
 
-  /* -------------------------
-     Maintain selected field:
-     - If no selectedField and fields exist, pick latest field
-     - If selectedField no longer exists (deleted), clear selection
-     ------------------------- */
   useEffect(() => {
     if (!selectedField && fields.length > 0) {
       const latestField = fields[fields.length - 1]?._id;
@@ -202,30 +145,20 @@ const Dashboard = () => {
       }
     }
 
-    // ensure we don't hold an invalid selectedField
     if (selectedField && !fields.find((f) => f._id === selectedField)) {
       localStorage.removeItem(SELECTED_FIELD_KEY);
       setSelectedField("");
     }
 
-    // track fields length to detect newly added fields
     if (fields.length !== prevFieldsLength) setPrevFieldsLength(fields.length);
   }, [fields, selectedField, prevFieldsLength]);
 
-  /* -------------------------
-     When a field is selected: immediately set current field in membership slice
-     and run subscription status check right away (if token present).
-     This effect runs only when selectedField or authToken changes.
-     ------------------------- */
   useEffect(() => {
     if (!selectedField) return;
 
-    // set current field for membership slice (single source of truth)
     dispatch(setCurrentField(selectedField));
 
-    // If authToken present, check subscription status immediately (and update the "last checked" ref.)
     if (authToken) {
-      // Avoid duplicate immediate checks for the same field
       if (subscriptionCheckRef.current.lastCheckedForField !== selectedField) {
         subscriptionCheckRef.current.lastCheckedForField = selectedField;
         dispatch(
@@ -233,7 +166,6 @@ const Dashboard = () => {
         );
       }
 
-      // Ensure only one periodic interval exists
       if (!subscriptionCheckRef.current.intervalId) {
         const id = setInterval(() => {
           dispatch(
@@ -243,13 +175,8 @@ const Dashboard = () => {
         subscriptionCheckRef.current.intervalId = id;
       }
     }
-    // clean-up: if authToken becomes unavailable, clear interval
-    return () => {
-      // don't clear interval here — only when component unmounts to keep periodic checks alive
-    };
   }, [selectedField, authToken, dispatch]);
 
-  /* Clear periodic subscription interval when component unmounts */
   useEffect(() => {
     return () => {
       if (subscriptionCheckRef.current.intervalId) {
@@ -260,10 +187,6 @@ const Dashboard = () => {
     };
   }, []);
 
-  /* -------------------------
-     Auto-open membership modal when a new field is added and it doesn't have a subscription
-     (throttled small delay for UX)
-     ------------------------- */
   useEffect(() => {
     if (newFieldAdded && fields.length > 0 && !currentFieldHasSubscription) {
       const timer = setTimeout(() => {
@@ -274,29 +197,11 @@ const Dashboard = () => {
     }
   }, [newFieldAdded, fields.length, currentFieldHasSubscription, dispatch]);
 
-  /* -------------------------
-     Welcome / add-field guidance logic
-     ------------------------- */
-  useEffect(() => {
-    if (
-      fields.length === 0 &&
-      !localStorage.getItem("hasSeenWelcome") &&
-      !sessionStorage.getItem("skipPreviewThisSession")
-    ) {
-      // show welcome overlay (you used a state setter before but not used; keep minimal behavior)
-    }
-  }, [fields.length]);
-
   useEffect(() => {
     const skip = localStorage.getItem("skipAddFieldPreview");
     if (!skip && fields.length === 0) setShowAddFieldInfo(true);
   }, [fields.length]);
 
-  /* -------------------------
-     AOI creation for selected field:
-     - Create AOI only if not already present and not already requested.
-     - Uses simple name = field._id to prevent collisions.
-     ------------------------- */
   useEffect(() => {
     if (!selectedFieldDetails) return;
     if (
@@ -306,18 +211,14 @@ const Dashboard = () => {
       return;
 
     const aoiName = selectedFieldDetails._id;
-    // Already created or pending?
     if (aoiCreationRef.current.has(aoiName)) return;
 
-    // If AOI exists already in store, skip
     const exists = aois.find((a) => a.name === aoiName);
     if (exists) return;
 
-    // mark and dispatch createAOI
     aoiCreationRef.current.add(aoiName);
     const geometryCoords = formatCoordinates(selectedFieldDetails.field);
     if (geometryCoords.length === 0) {
-      // shouldn't happen, but guard
       return;
     }
     dispatch(
@@ -328,7 +229,6 @@ const Dashboard = () => {
     );
   }, [selectedFieldDetails, aois, dispatch]);
 
-  // show the select-farm modal when there are fields but no selectedField
   useEffect(() => {
     if (fields.length > 0 && !selectedField) {
       setShowSelectFarmModal(true);
@@ -337,11 +237,6 @@ const Dashboard = () => {
     }
   }, [fields, selectedField]);
 
-  /* -------------------------
-     Forecast fetching:
-     - Fetch forecast only when AOI exists for the selected field
-     - Cache recent fetch per AOI ID for FORECAST_CACHE_TTL to avoid repeated calls
-     ------------------------- */
   useEffect(() => {
     if (!selectedFieldDetails || aois.length === 0) return;
 
@@ -351,22 +246,30 @@ const Dashboard = () => {
     const geoId = matchingAOI.id;
     const lastTs = forecastFetchRef.current.get(geoId) || 0;
     const now = Date.now();
-    if (now - lastTs < FORECAST_CACHE_TTL) return; // recently fetched
+    if (now - lastTs < FORECAST_CACHE_TTL) return;
 
-    // update timestamp and dispatch fetch
     forecastFetchRef.current.set(geoId, now);
     dispatch(fetchForecastData({ geometry_id: geoId }));
   }, [selectedFieldDetails, aois, dispatch]);
 
-  /* -------------------------
-     Handlers (memoized)
-     ------------------------- */
+  // Monitor subscription checking state
+  useEffect(() => {
+    if (isCheckingSubscription) {
+      setIsRefreshingSubscription(true);
+    } else {
+      const timer = setTimeout(() => {
+        setIsRefreshingSubscription(false);
+      }, 200); // Reduced delay for faster response
+      return () => clearTimeout(timer);
+    }
+  }, [isCheckingSubscription]);
+
   const handleFieldSelection = useCallback((fieldId) => {
     setSelectedField(fieldId);
     try {
       localStorage.setItem(SELECTED_FIELD_KEY, fieldId);
     } catch (e) {
-      // ignore localStorage errors (e.g., private mode)
+      // ignore localStorage errors
     }
   }, []);
 
@@ -403,22 +306,47 @@ const Dashboard = () => {
   }, [dispatch]);
 
   const handlePaymentSuccess = useCallback(
-    (successData) => {
-      setShowPricingOverlay(false);
-      setPricingFieldData(null);
+    async (successData) => {
+      try {
+        setShowPricingOverlay(false);
+        setPricingFieldData(null);
 
-      dispatch(
-        setPaymentSuccess({
-          ...successData,
-          fieldName: successData.fieldName || selectedFieldDetails?.farmName,
-        })
-      );
+        // Optimistic update for immediate UI response
+        if (selectedField && successData.subscription) {
+          dispatch(
+            optimisticSubscriptionUpdate({
+              fieldId: selectedField,
+              subscription: successData.subscription,
+            })
+          );
+        }
 
-      // immediately refresh subscription status for selectedField (if available)
-      if (selectedField && authToken) {
         dispatch(
-          checkFieldSubscriptionStatus({ fieldId: selectedField, authToken })
+          setPaymentSuccess({
+            ...successData,
+            fieldName: successData.fieldName || selectedFieldDetails?.farmName,
+          })
         );
+
+        setIsRefreshingSubscription(true);
+
+        if (selectedField && authToken) {
+          // Wait for subscription check to complete
+          await dispatch(
+            checkFieldSubscriptionStatus({ fieldId: selectedField, authToken })
+          ).unwrap();
+
+          // Small delay for smooth transition
+          setTimeout(() => {
+            setIsRefreshingSubscription(false);
+          }, 300);
+        } else {
+          setIsRefreshingSubscription(false);
+        }
+      } catch (error) {
+        console.error("Error updating subscription:", error);
+        setIsRefreshingSubscription(false);
+        message.error("Failed to update subscription status. Please refresh the page.");
       }
     },
     [dispatch, selectedField, authToken, selectedFieldDetails]
@@ -428,12 +356,8 @@ const Dashboard = () => {
     dispatch(clearPaymentSuccess());
   }, [dispatch]);
 
-  /* -------------------------
-     Render
-     ------------------------- */
   return (
     <div className="dashboard min-h-screen w-full overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden float-end p-1.5 lg:p-3">
-      {/* Membership Modal */}
       <SubscriptionModal
         isOpen={showMembershipModal}
         onClose={handleCloseMembershipModal}
@@ -442,7 +366,37 @@ const Dashboard = () => {
         fieldName={selectedFieldDetails?.farmName}
       />
 
-      {/* Pricing Overlay */}
+      <AnimatePresence>
+        {showPricingOverlay && pricingFieldData && (
+          <motion.div
+            key="pricing-overlay"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8"
+          >
+            <PricingOverlay
+              onClose={() => {
+                setShowPricingOverlay(false);
+                setPricingFieldData(null);
+                if (selectedField && authToken) {
+                  dispatch(
+                    checkFieldSubscriptionStatus({
+                      fieldId: selectedField,
+                      authToken,
+                    })
+                  );
+                }
+              }}
+              onPaymentSuccess={handlePaymentSuccess}
+              userArea={pricingFieldData.areaInHectares}
+              selectedField={pricingFieldData}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {showSelectFarmModal && (
           <motion.div
@@ -481,7 +435,6 @@ const Dashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* Payment Success Modal (Redux) */}
       <PaymentSuccessModal
         isOpen={showPaymentSuccessModalRedux}
         onClose={handleCloseReduxPaymentSuccess}
@@ -492,7 +445,30 @@ const Dashboard = () => {
         transactionId={paymentSuccess?.transactionId}
       />
 
-      {/* Map & Controls */}
+      {/* Loading overlay with faster animation */}
+      <AnimatePresence>
+        {isRefreshingSubscription && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-[2px] flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className=" rounded-xl p-6 shadow-2xl flex flex-col items-center gap-3"
+            >
+              <LoadingSpinner/>
+              
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <MapView
         markers={markers}
         setMarkers={setMarkers}
@@ -506,31 +482,23 @@ const Dashboard = () => {
         fields={fields}
       />
 
-      {/* Dashboard widgets (render only if fields exist) */}
-      {fields.length > 0 && (
+      {/* Only render components when NOT refreshing subscription */}
+      {fields.length > 0 && !isRefreshingSubscription && (
         <>
           <CropHealth
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
             fields={fields}
-            isLocked={!hasSoilMoistureTemp}
             onSubscribe={handleSubscribe}
           />
 
-          <PremiumContentWrapper
-            isLocked={!hasWeatherForecast}
-            onSubscribe={handleSubscribe}
-            title="Weather Forecast"
-          >
-            <ForeCast forecastData={forecastData} />
-          </PremiumContentWrapper>
+          <ForeCast onSubscribe={handleSubscribe} />
 
           <NdviGraph
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
-            isLocked={!hasSatelliteMonitoring}
             onSubscribe={handleSubscribe}
           />
 
@@ -538,31 +506,21 @@ const Dashboard = () => {
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
-            isLocked={!hasSatelliteMonitoring}
             onSubscribe={handleSubscribe}
           />
 
-          <PremiumContentWrapper
-            isLocked={!hasSatelliteMonitoring}
+          <EvapotranspirationDashboard
+            forecast={forecast}
+            units={units}
             onSubscribe={handleSubscribe}
-            title="Evapotranspiration Monitoring"
-          >
-            <EvapotranspirationDashboard forecast={forecast} units={units} />
-          </PremiumContentWrapper>
+          />
 
-          <PremiumContentWrapper
-            isLocked={!hasInsights}
-            onSubscribe={handleSubscribe}
-            title="Farm Insights"
-          >
-            <Insights />
-          </PremiumContentWrapper>
+          <Insights onSubscribe={handleSubscribe} />
 
           <CropAdvisory
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
-            isLocked={!hasAdvisory}
             onSubscribe={handleSubscribe}
           />
 
@@ -570,13 +528,11 @@ const Dashboard = () => {
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
-            isLocked={!hasGrowthStageTracking}
             onSubscribe={handleSubscribe}
           />
         </>
       )}
 
-      {/* Welcome Video Overlay */}
       <AnimatePresence mode="wait">
         {delayPassed && fields.length === 0 && showVideoOverlay && (
           <motion.div
@@ -617,45 +573,6 @@ const Dashboard = () => {
                 <PlusIcon className="w-5 h-5 mr-2" /> Add Your First Field
               </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Select Farm Modal */}
-      <AnimatePresence>
-        {fields.length > 0 && !selectedField && (
-          <motion.div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white/90 p-6 rounded-2xl shadow-2xl text-center max-w-sm w-[90%] border border-green-200 relative overflow-hidden"
-              initial={{ scale: 0.7, opacity: 0, y: 40 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.7, opacity: 0, y: 40 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <motion.div
-                initial={{ rotate: -5, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 80 }}
-              >
-                <h2 className="text-2xl font-extrabold text-green-700 mb-3 tracking-wide">
-                  Select a Farm
-                </h2>
-                <p className="text-gray-600 mb-6 text-base leading-relaxed">
-                  Please select a farm first to continue using the dashboard.
-                </p>
-              </motion.div>
-              <button
-                onClick={() => setShowSelectFarmModal(false)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all duration-500 ease-in-out cursor-pointer"
-              >
-                Go to Dashboard
-              </button>
-            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

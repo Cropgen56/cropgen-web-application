@@ -15,7 +15,7 @@ import {
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectCurrentFieldHasSubscription
+  selectHasDiseaseDetectionAlerts,
 } from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -28,58 +28,62 @@ const DiseaseDetection = () => {
   const fields = useSelector((state) => state?.farmfield?.fields);
   const userId = user?.id;
 
-  // Add membership selectors
-  const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const currentFieldHasSubscription = useSelector(selectCurrentFieldHasSubscription);
-  const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
+  const showMembershipModal = useSelector(
+    (state) => state.membership.showMembershipModal
+  );
+  const hasDiseaseDetectionAlerts = useSelector(selectHasDiseaseDetectionAlerts);
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions
+  );
 
-  // State management
   const [selectedField, setSelectedField] = useState(null);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
-  // Fetch fields once when userId is available
   useEffect(() => {
     if (userId) {
       dispatch(getFarmFields(userId));
     }
   }, [dispatch, userId]);
 
-  // Set the default selectedField when fields are available
   useEffect(() => {
     if (fields?.length > 0 && !selectedField) {
       setSelectedField(fields[0]._id);
     }
   }, [fields, selectedField]);
 
-  // Check subscription status when field changes
   useEffect(() => {
     if (selectedField && authToken) {
       dispatch(setCurrentField(selectedField));
 
       const fieldSub = fieldSubscriptions[selectedField];
-      const shouldCheck = !fieldSub ||
+      const shouldCheck =
+        !fieldSub ||
         (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) > SUBSCRIPTION_CHECK_INTERVAL);
+          new Date() - new Date(fieldSub.lastChecked) >
+            SUBSCRIPTION_CHECK_INTERVAL);
 
       if (shouldCheck) {
-        dispatch(checkFieldSubscriptionStatus({
-          fieldId: selectedField,
-          authToken
-        }));
+        dispatch(
+          checkFieldSubscriptionStatus({
+            fieldId: selectedField,
+            authToken,
+          })
+        );
       }
     }
   }, [selectedField, authToken, dispatch, fieldSubscriptions]);
 
-  // Periodic subscription check
   useEffect(() => {
     if (!selectedField || !authToken) return;
 
     const interval = setInterval(() => {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField,
+          authToken,
+        })
+      );
     }, SUBSCRIPTION_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
@@ -91,7 +95,8 @@ const DiseaseDetection = () => {
 
   const handleSubscribe = useCallback(() => {
     if (selectedFieldDetails) {
-      const areaInHectares = selectedFieldDetails?.areaInHectares ||
+      const areaInHectares =
+        selectedFieldDetails?.areaInHectares ||
         selectedFieldDetails?.acre * 0.404686 ||
         5;
       const fieldData = {
@@ -111,7 +116,9 @@ const DiseaseDetection = () => {
 
   const handleSkipMembership = useCallback(() => {
     dispatch(hideMembershipModal());
-    message.info("You can activate premium anytime from the locked content sections");
+    message.info(
+      "You can activate premium anytime from the locked content sections"
+    );
   }, [dispatch]);
 
   const handleCloseMembershipModal = useCallback(() => {
@@ -123,10 +130,12 @@ const DiseaseDetection = () => {
     setPricingFieldData(null);
 
     if (selectedField && authToken) {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField,
+          authToken,
+        })
+      );
     }
   }, [selectedField, authToken, dispatch]);
 
@@ -153,7 +162,6 @@ const DiseaseDetection = () => {
 
   return (
     <>
-      {/* Membership Modal */}
       <SubscriptionModal
         isOpen={showMembershipModal}
         onClose={handleCloseMembershipModal}
@@ -162,7 +170,6 @@ const DiseaseDetection = () => {
         fieldName={selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName}
       />
 
-      {/* Pricing Overlay */}
       <AnimatePresence>
         {showPricingOverlay && pricingFieldData && (
           <motion.div
@@ -183,20 +190,17 @@ const DiseaseDetection = () => {
       </AnimatePresence>
 
       <div className="bg-[#5f7e6f] h-screen flex flex-col md:flex-row">
-        <Sidebardiseasedetection 
-            selectedField={selectedField}
-            setSelectedField={setSelectedField}
-            fields={fields}
-          />
+        <Sidebardiseasedetection
+          selectedField={selectedField}
+          setSelectedField={setSelectedField}
+          fields={fields}
+        />
         <PremiumPageWrapper
-          isLocked={!currentFieldHasSubscription}
+          isLocked={!hasDiseaseDetectionAlerts}
           onSubscribe={handleSubscribe}
-          title="Disease Detection & Analysis"
+          title="Disease Detection & Alerts"
         >
-          
-          <UploadCropImage 
-            selectedField={selectedField}
-          />
+          <UploadCropImage selectedField={selectedField} />
         </PremiumPageWrapper>
       </div>
     </>

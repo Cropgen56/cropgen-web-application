@@ -26,7 +26,7 @@ import {
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectHasWeatherHistory
+  selectHasWeatherAnalytics, // Updated import
 } from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -58,10 +58,14 @@ const Weather = () => {
 
   const loading = useSelector((state) => state?.weather?.loading);
 
-  // Add membership selectors - Updated with feature check
-  const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const hasWeatherHistory = useSelector(selectHasWeatherHistory);
-  const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
+  // Updated feature selector
+  const showMembershipModal = useSelector(
+    (state) => state.membership.showMembershipModal
+  );
+  const hasWeatherAnalytics = useSelector(selectHasWeatherAnalytics);
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions
+  );
 
   const [isSidebarVisible] = useState(true);
   const [selectedField, setSelectedField] = useState(null);
@@ -69,7 +73,6 @@ const Weather = () => {
   const [pricingFieldData, setPricingFieldData] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch AOIs and farm fields when userId changes
   useEffect(() => {
     if (user?.id) {
       dispatch(fetchAOIs());
@@ -83,34 +86,38 @@ const Weather = () => {
     }
   }, [fields, selectedField]);
 
-  // Check subscription status when field changes
   useEffect(() => {
     if (selectedField && authToken) {
       dispatch(setCurrentField(selectedField._id));
 
       const fieldSub = fieldSubscriptions[selectedField._id];
-      const shouldCheck = !fieldSub ||
+      const shouldCheck =
+        !fieldSub ||
         (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) > SUBSCRIPTION_CHECK_INTERVAL);
+          new Date() - new Date(fieldSub.lastChecked) >
+          SUBSCRIPTION_CHECK_INTERVAL);
 
       if (shouldCheck) {
-        dispatch(checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken
-        }));
+        dispatch(
+          checkFieldSubscriptionStatus({
+            fieldId: selectedField._id,
+            authToken,
+          })
+        );
       }
     }
   }, [selectedField, authToken, dispatch, fieldSubscriptions]);
 
-  // Periodic subscription check
   useEffect(() => {
     if (!selectedField || !authToken) return;
 
     const interval = setInterval(() => {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField._id,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField._id,
+          authToken,
+        })
+      );
     }, SUBSCRIPTION_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
@@ -118,7 +125,8 @@ const Weather = () => {
 
   const handleSubscribe = useCallback(() => {
     if (selectedField) {
-      const areaInHectares = selectedField?.areaInHectares ||
+      const areaInHectares =
+        selectedField?.areaInHectares ||
         selectedField?.acre * 0.404686 ||
         5;
       const fieldData = {
@@ -138,7 +146,9 @@ const Weather = () => {
 
   const handleSkipMembership = useCallback(() => {
     dispatch(hideMembershipModal());
-    message.info("You can activate premium anytime from the locked content sections");
+    message.info(
+      "You can activate premium anytime from the locked content sections"
+    );
   }, [dispatch]);
 
   const handleCloseMembershipModal = useCallback(() => {
@@ -150,10 +160,12 @@ const Weather = () => {
     setPricingFieldData(null);
 
     if (selectedField && authToken) {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField._id,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField._id,
+          authToken,
+        })
+      );
     }
   }, [selectedField, authToken, dispatch]);
 
@@ -187,7 +199,6 @@ const Weather = () => {
     }
   }, [dispatch, selectedField, aois]);
 
-  // If no fields exist → show message + button
   if (fields.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
@@ -211,7 +222,6 @@ const Weather = () => {
 
   return (
     <>
-      {/* Membership Modal */}
       <SubscriptionModal
         isOpen={showMembershipModal}
         onClose={handleCloseMembershipModal}
@@ -220,7 +230,6 @@ const Weather = () => {
         fieldName={selectedField?.fieldName || selectedField?.farmName}
       />
 
-      {/* Pricing Overlay */}
       <AnimatePresence>
         {showPricingOverlay && pricingFieldData && (
           <motion.div
@@ -253,7 +262,7 @@ const Weather = () => {
             <WeatherSkeleton />
           ) : (
             <PremiumPageWrapper
-              isLocked={!hasWeatherHistory}
+              isLocked={!hasWeatherAnalytics}
               onSubscribe={handleSubscribe}
               title="Weather Analytics"
             >

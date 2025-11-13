@@ -16,7 +16,7 @@ import {
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectHasOperationsManagement // Updated import
+  selectHasFarmOperationsManagement
 } from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -30,31 +30,27 @@ const Operation = () => {
 
   const userId = user?.id;
 
-  // Add membership selectors - Updated to use feature-specific selector
+  // Add membership selectors - Fixed selector name
   const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const hasOperationsManagement = useSelector(selectHasOperationsManagement); // Updated
+  const hasFarmOperationsManagement = useSelector(selectHasFarmOperationsManagement); // Fixed
   const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
 
-  // Initialize selectedField as null until fields are fetched
   const [selectedField, setSelectedField] = useState(null);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
-  // Fetch fields once when userId is available
   useEffect(() => {
     if (userId) {
       dispatch(getFarmFields(userId));
     }
   }, [dispatch, userId]);
 
-  // Set the default selectedField when fields are available
   useEffect(() => {
     if (fields?.length > 0 && !selectedField) {
       setSelectedField(fields[0]._id);
     }
   }, [fields, selectedField]);
 
-  // Check subscription status when field changes
   useEffect(() => {
     if (selectedField && authToken) {
       dispatch(setCurrentField(selectedField));
@@ -73,7 +69,6 @@ const Operation = () => {
     }
   }, [selectedField, authToken, dispatch, fieldSubscriptions]);
 
-  // Periodic subscription check
   useEffect(() => {
     if (!selectedField || !authToken) return;
 
@@ -87,7 +82,6 @@ const Operation = () => {
     return () => clearInterval(interval);
   }, [selectedField, authToken, dispatch]);
 
-  // Fetch operations when selectedField changes
   useEffect(() => {
     if (selectedField) {
       dispatch(getOperationsByFarmField({ farmId: selectedField }));
@@ -162,7 +156,6 @@ const Operation = () => {
 
   return (
     <>
-      {/* Membership Modal */}
       <SubscriptionModal
         isOpen={showMembershipModal}
         onClose={handleCloseMembershipModal}
@@ -171,7 +164,6 @@ const Operation = () => {
         fieldName={selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName}
       />
 
-      {/* Pricing Overlay */}
       <AnimatePresence>
         {showPricingOverlay && pricingFieldData && (
           <motion.div
@@ -198,7 +190,7 @@ const Operation = () => {
         />
         <div className="bg-[#5a7c6b]">
           <PremiumPageWrapper
-            isLocked={!hasOperationsManagement} // Updated to use feature-specific check
+            isLocked={!hasFarmOperationsManagement} // Fixed variable name
             onSubscribe={handleSubscribe}
             title="Farm Operations Management"
           >

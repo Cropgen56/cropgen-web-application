@@ -18,10 +18,10 @@ import {
 } from "recharts";
 import { useSelector, useDispatch } from "react-redux";
 import { formatToYYYYMMDD } from "../../../utility/convertYYYYMMDD";
-import { getTheCropGrowthStage } from "../../../redux/slices/satelliteSlice";
-import { calculateAiYield } from "../../../redux/slices/satelliteSlice";
+import { getTheCropGrowthStage, calculateAiYield } from "../../../redux/slices/satelliteSlice";
 import PlantGrowthSkeleton from "../../Skeleton/PlantGrowthSkeleton";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
+import { selectHasCropGrowthMonitoring } from "../../../redux/slices/membershipSlice";
 
 const GRASS_COLOR_MAIN = "#86D72F";
 
@@ -149,25 +149,25 @@ const generateCurveData = (interval, cropName) => {
 };
 
 const PlantGrowthActivity = memo(
-  ({ selectedFieldsDetials = [], isLocked, onSubscribe }) => {
+  ({ selectedFieldsDetials = [], onSubscribe }) => {
     const dispatch = useDispatch();
     const {
       cropName,
       sowingDate,
       _id: selectedFieldId,
     } = selectedFieldsDetials[0] || {};
+    
     const aois = useSelector((state) => state.weather?.aois || []);
     const { cropGrowthStage, loading } = useSelector(
       (state) => state.satellite || {}
     );
+    const hasCropGrowthMonitoring = useSelector(selectHasCropGrowthMonitoring);
     const isLoading = loading?.cropGrowthStage || false;
 
-    // Use "Weeks" as the default interval if data suggests a long growth cycle
     const [interval, setInterval] = useState("Weeks");
     const [tooltipPos, setTooltipPos] = useState(null);
     const lastYieldCalcRef = useRef({ bbch: null, fieldId: null });
 
-    // Memoize daysSinceSowing, currentWeek, date validity, and suggestion
     const {
       daysSinceSowing,
       currentWeek,
@@ -182,7 +182,7 @@ const PlantGrowthActivity = memo(
       if (isTodayValid) {
         formattedCurrentDate = formatToYYYYMMDD(today);
       } else {
-        formattedCurrentDate = "2025-08-25"; // Fallback
+        formattedCurrentDate = "2025-08-25";
       }
       const sowing = isSowingValid ? new Date(sowingDate) : null;
       const days = sowing
@@ -196,7 +196,6 @@ const PlantGrowthActivity = memo(
       const maxWeeks =
         CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other;
 
-      // Generate suggestion based on BBCH stage
       let suggestionText = "Awaiting growth stage data...";
       if (cropGrowthStage?.finalStage?.stage && cropGrowthStage?.keyActivity) {
         const stage = cropGrowthStage.finalStage.stage;
@@ -214,7 +213,6 @@ const PlantGrowthActivity = memo(
       };
     }, [sowingDate, cropName, cropGrowthStage]);
 
-    // Fetch crop growth stage
     useEffect(() => {
       if (
         !cropName ||
@@ -246,14 +244,12 @@ const PlantGrowthActivity = memo(
     ]);
 
     useEffect(() => {
-      // defensive checks
       const bbch = cropGrowthStage?.finalStage?.bbch;
       const field = selectedFieldsDetials?.[0];
       const fieldId = field?._id || field?.id || null;
 
       if (!bbch || !fieldId) return;
 
-      // If we've already processed this exact bbch for this field, skip.
       if (
         lastYieldCalcRef.current.bbch === bbch &&
         lastYieldCalcRef.current.fieldId === fieldId
@@ -261,30 +257,24 @@ const PlantGrowthActivity = memo(
         return;
       }
 
-      // Mark as processing immediately to avoid duplicate dispatches from quick re-renders.
       lastYieldCalcRef.current = { bbch, fieldId };
 
-      // Dispatch the calculation
       dispatch(
         calculateAiYield({
           cropDetials: field,
           cropGrowthStage: bbch,
         })
       ).catch((err) => {
-        // If the dispatch fails, clear the marker so it can retry next time.
         lastYieldCalcRef.current = { bbch: null, fieldId: null };
-        // Optionally log or toast error
         console.warn("calculateAiYield failed", err);
       });
     }, [cropGrowthStage?.finalStage?.bbch, selectedFieldsDetials, dispatch]);
 
-    // Memoize chart data
     const data = useMemo(
       () => generateCurveData(interval, cropName),
       [interval, cropName]
     );
 
-    // Memoize reference point data
     const referenceData = useMemo(() => {
       const label =
         interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
@@ -311,38 +301,38 @@ const PlantGrowthActivity = memo(
     }
 
     return (
-      <div className="w-full flex mt-6">
-        <div className="relative w-full rounded-2xl shadow-lg flex flex-col overflow-hidden p-3 md:p-5">
-          <div className="relative z-10 w-full bg-white backdrop-blur-sm rounded-xl p-3">
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex flex-col gap-0.5">
-                <h2 className="text-xl font-semibold text-[#344E41] m-0">
-                  Plant Growth Activity
-                </h2>
-                <div className="text-sm font-bold text-[#344E41] mt-3">
-                  {cropName || "Unknown Crop"}
+      <PremiumContentWrapper
+        isLocked={!hasCropGrowthMonitoring}
+        onSubscribe={onSubscribe}
+        title="Crop Growth Monitoring"
+      >
+        <div className="w-full flex mt-6">
+          <div className="relative w-full rounded-2xl shadow-lg flex flex-col overflow-hidden p-3 md:p-5">
+            <div className="relative z-10 w-full bg-white backdrop-blur-sm rounded-xl p-3">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex flex-col gap-0.5">
+                  <h2 className="text-xl font-semibold text-[#344E41] m-0">
+                    Plant Growth Activity
+                  </h2>
+                  <div className="text-sm font-bold text-[#344E41] mt-3">
+                    {cropName || "Unknown Crop"}
+                  </div>
+                  <div className="text-sm text-gray-700">{suggestion}</div>
                 </div>
-                <div className="text-sm text-gray-700">{suggestion}</div>
+                <select
+                  value={interval}
+                  onChange={handleIntervalChange}
+                  className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer"
+                >
+                  <option value="Days" className="text-gray-800">
+                    Days
+                  </option>
+                  <option value="Weeks" className="text-gray-800">
+                    Weeks
+                  </option>
+                </select>
               </div>
-              <select
-                value={interval}
-                onChange={handleIntervalChange}
-                className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer"
-              >
-                <option value="Days" className="text-gray-800">
-                  Days
-                </option>
-                <option value="Weeks" className="text-gray-800">
-                  Weeks
-                </option>
-              </select>
-            </div>
 
-            <PremiumContentWrapper
-              isLocked={isLocked}
-              onSubscribe={onSubscribe}
-              title="Plant Growth Analysis"
-            >
               {isLoading ? (
                 <PlantGrowthSkeleton />
               ) : (
@@ -455,10 +445,10 @@ const PlantGrowthActivity = memo(
                   )}
                 </div>
               )}
-            </PremiumContentWrapper>
+            </div>
           </div>
         </div>
-      </div>
+      </PremiumContentWrapper>
     );
   }
 );

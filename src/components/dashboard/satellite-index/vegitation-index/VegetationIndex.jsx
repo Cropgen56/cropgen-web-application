@@ -19,8 +19,9 @@ import {
 import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
 import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper";
+import { selectHasVegetationIndices } from "../../../../redux/slices/membershipSlice";
 
-const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
+const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const {
     indexTimeSeriesSummary = null,
@@ -30,11 +31,15 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDVI");
 
+  // Get feature flag
+  const hasVegetationIndices = useSelector(selectHasVegetationIndices);
+
   const scrollRef = useRef(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
+  // Fetch index data
   useEffect(() => {
     if (!field || !sowingDate) return;
 
@@ -47,6 +52,7 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     dispatch(fetchIndexTimeSeriesSummary(params));
   }, [dispatch, field, sowingDate, index]);
 
+  // Process chart data
   const chartData = useMemo(() => {
     let timeseries = indexTimeSeriesSummary?.data?.timeseries ||
       indexTimeSeriesSummary?.timeseries ||
@@ -63,6 +69,7 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     }));
   }, [indexTimeSeriesSummary, index]);
 
+  // Calculate summary statistics
   const summaryData = useMemo(() => {
     const summary = indexTimeSeriesSummary?.data?.summary ||
       indexTimeSeriesSummary?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
@@ -72,6 +79,7 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     return { min, mean, max, timestamp };
   }, [indexTimeSeriesSummary]);
 
+  // Y-axis configuration
   const yAxisConfig = useMemo(() => {
     const { min, mean, max } = summaryData;
     const domain = [
@@ -86,6 +94,7 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     return { domain, ticks };
   }, [summaryData]);
 
+  // Chart configuration
   const chartConfig = useMemo(() => {
     const length = chartData.length;
     return {
@@ -94,6 +103,7 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     };
   }, [chartData.length]);
 
+  // Tick formatter for Y-axis
   const tickFormatter = useCallback(
     value => {
       const { min, mean, max } = summaryData;
@@ -105,12 +115,16 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     [summaryData]
   );
 
+  // Tooltip formatter
   const tooltipFormatter = useCallback(
     value => [value.toFixed(3), index],
     [index]
   );
 
+  // Label formatter
   const labelFormatter = useCallback(label => `Date: ${label}`, []);
+
+  // Index change handler
   const handleIndexChange = useCallback(e => setIndex(e.target.value), []);
 
   // Drag scroll handlers
@@ -122,10 +136,22 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
       isDragging.current = true;
       startX.current = e.pageX - el.offsetLeft;
       scrollLeft.current = el.scrollLeft;
+      el.style.cursor = "grabbing";
     };
 
-    const handleMouseLeave = () => { isDragging.current = false; };
-    const handleMouseUp = () => { isDragging.current = false; };
+    const handleMouseLeave = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        el.style.cursor = "grab";
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isDragging.current) {
+        isDragging.current = false;
+        el.style.cursor = "grab";
+      }
+    };
 
     const handleMouseMove = (e) => {
       if (!isDragging.current) return;
@@ -154,7 +180,7 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   return (
     <div className="w-full flex justify-center mt-4">
       <div className="relative w-full bg-white rounded-2xl shadow-md text-black flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-3">
-
+        {/* Index Selector */}
         <div className="absolute top-3 right-3 z-50">
           <select
             value={index}
@@ -168,15 +194,16 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
           </select>
         </div>
 
-        <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">Vegetation Index</h2>
+        {/* Title */}
+        <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">
+          Vegetation Index
+        </h2>
 
         <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
-
+          {/* Summary Card */}
           <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
             <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
-              <h2 className="text-xl font-bold text-green-600">
-                {index}
-              </h2>
+              <h2 className="text-xl font-bold text-green-600">{index}</h2>
               <button className="bg-green-100 text-green-600 px-3 py-1 text-sm font-semibold rounded mt-1 border border-green-200 hover:bg-green-200 transition-all">
                 +0.15
               </button>
@@ -188,7 +215,10 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
               </p>
               <div className="border border-gray-200 bg-white/90 p-2 rounded text-black text-sm w-full">
                 <div className="flex items-start justify-between gap-2">
-                  <span className="flex-1 text-xs text-gray-500">{index} values help in mapping vegetation and detecting cover changes over time.</span>
+                  <span className="flex-1 text-xs text-gray-500">
+                    {index} values help in mapping vegetation and detecting cover
+                    changes over time.
+                  </span>
                   <span className="bg-white/90 rounded-full p-1 border border-gray-200">
                     <Info size={16} strokeWidth={1.5} color="#22c55e" />
                   </span>
@@ -197,16 +227,28 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
             </div>
           </div>
 
+          {/* Chart Container */}
           <div className="lg:w-3/4 flex-grow">
             <IndexPremiumWrapper
-              isLocked={isLocked}
+              isLocked={!hasVegetationIndices}
               onSubscribe={onSubscribe}
+              title="Vegetation Index"
             >
               <div
                 ref={scrollRef}
-                className="overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]" >
+                className="overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
+              >
                 {isLoading ? (
-                  <div className="text-center text-green-600" style={{ minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div
+                    className="text-center text-green-600"
+                    style={{
+                      minHeight: "180px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
                     <LoadingSpinner size={48} color="#22c55e" />
                     <strong>Loading Vegetation Index...</strong>
                   </div>
@@ -217,7 +259,9 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
                         No Data Available
                       </h3>
                       <p className="text-sm text-gray-500">
-                        We couldn't find any data for the selected field and time range. Please verify the field selection or adjust the date range to ensure data availability.
+                        We couldn't find any data for the selected field and time
+                        range. Please verify the field selection or adjust the date
+                        range to ensure data availability.
                       </p>
                     </div>
                   </div>
@@ -231,13 +275,13 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
                         <CartesianGrid stroke="rgba(0,0,0,0.1)" />
                         <XAxis
                           dataKey="date"
-                          tick={{ fontSize: 12, fill: '#333' }}
+                          tick={{ fontSize: 12, fill: "#333" }}
                           interval={chartConfig.interval}
                           type="category"
                         />
                         <YAxis
                           domain={yAxisConfig.domain}
-                          tick={{ fontSize: 12, fill: '#333' }}
+                          tick={{ fontSize: 12, fill: "#333" }}
                           ticks={yAxisConfig.ticks}
                           tickFormatter={tickFormatter}
                           type="number"
@@ -245,7 +289,12 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
                         <Tooltip
                           formatter={tooltipFormatter}
                           labelFormatter={labelFormatter}
-                          contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '8px' }}
+                          contentStyle={{
+                            backgroundColor: "#fff",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "8px",
+                            padding: "8px",
+                          }}
                         />
                         <Legend
                           layout="horizontal"
@@ -255,7 +304,7 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
                             paddingBottom: "8px",
                             paddingLeft: "40px",
                             fontWeight: "bold",
-                            color: "#333"
+                            color: "#333",
                           }}
                         />
                         <Line
@@ -263,8 +312,8 @@ const NdviGraph = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
                           dataKey={index}
                           stroke="#22c55e"
                           strokeWidth={3}
-                          dot={{ r: 3, fill: '#22c55e' }}
-                          activeDot={{ r: 5, fill: '#16a34a' }}
+                          dot={{ r: 3, fill: "#22c55e" }}
+                          activeDot={{ r: 5, fill: "#16a34a" }}
                           connectNulls={false}
                         />
                       </LineChart>

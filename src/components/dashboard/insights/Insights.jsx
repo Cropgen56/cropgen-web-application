@@ -1,6 +1,7 @@
 import React from "react";
 import { FcCheckmark } from "react-icons/fc";
 import { FaXmark } from "react-icons/fa6";
+import { useSelector } from "react-redux";
 import {
   Drop,
   SmallDrop,
@@ -8,8 +9,10 @@ import {
   DownArrow,
   UpArrow,
 } from "../../../assets/DashboardIcons";
+import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
+import { selectHasAgronomicInsights } from "../../../redux/slices/membershipSlice";
 
-const Insight = ({ icon, title, description, actions }) => {
+const Insight = ({ icon, title, description }) => {
   return (
     <div className="flex items-center gap-3 lg:gap-4 py-2 px-4 border-b border-gray-200 last:border-b-0">
       <div>{icon}</div>
@@ -31,7 +34,9 @@ const Insight = ({ icon, title, description, actions }) => {
   );
 };
 
-const Insights = () => {
+const Insights = ({ onSubscribe }) => {
+  const hasAgronomicInsights = useSelector(selectHasAgronomicInsights);
+
   const insights = [
     {
       icon: (
@@ -42,10 +47,6 @@ const Insights = () => {
       title: "Stress is building up!",
       description:
         "4 hours of -80 stress was measured. Rain is not forecasted for the next 3 days.",
-      actions: [
-        { label: "X", active: true },
-        { label: "X", active: false },
-      ],
     },
     {
       icon: (
@@ -58,10 +59,6 @@ const Insights = () => {
       ),
       title: "Shallow irrigation detected in the 7 days",
       description: "We detected an anomaly with stress and low temperature.",
-      actions: [
-        { label: "x", active: true },
-        { label: "X", active: false },
-      ],
     },
     {
       icon: (
@@ -71,48 +68,50 @@ const Insights = () => {
       ),
       title: "You should add 1mm to your irrigation",
       description: "We detected an anomaly with stress and low temperature.",
-      actions: [
-        { label: "X", active: true },
-        { label: "X", active: false },
-      ],
     },
   ];
 
   return (
-    <div className="w-full flex mt-8">
-      <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden p-4 md:p-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
-          <div className="flex items-center gap-1">
-            <div className="text-md lg:text-lg font-semibold text-gray-900">
-              Insights
-            </div>
-            <div className="flex flex-col items-center [&_svg]:fill-gray-500">
-              <UpArrow />
-              <DownArrow />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
+    <PremiumContentWrapper
+      isLocked={!hasAgronomicInsights}
+      onSubscribe={onSubscribe}
+      title="Agronomic Insights"
+    >
+      <div className="w-full flex mt-8">
+        <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
             <div className="flex items-center gap-1">
               <div className="text-md lg:text-lg font-semibold text-gray-900">
-                Action
+                Insights
               </div>
               <div className="flex flex-col items-center [&_svg]:fill-gray-500">
                 <UpArrow />
                 <DownArrow />
               </div>
             </div>
-            <div className="text-xs lg:text-sm text-gray-500 cursor-pointer hover:text-gray-900">
-              See all
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1">
+                <div className="text-md lg:text-lg font-semibold text-gray-900">
+                  Action
+                </div>
+                <div className="flex flex-col items-center [&_svg]:fill-gray-500">
+                  <UpArrow />
+                  <DownArrow />
+                </div>
+              </div>
+              <div className="text-xs lg:text-sm text-gray-500 cursor-pointer hover:text-gray-900">
+                See all
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex flex-col rounded-lg shadow-inner bg-white">
-          {insights.map((insight, index) => (
-            <Insight key={index} {...insight} />
-          ))}
+          <div className="flex flex-col rounded-lg shadow-inner bg-white">
+            {insights.map((insight, index) => (
+              <Insight key={index} {...insight} />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </PremiumContentWrapper>
   );
 };
 

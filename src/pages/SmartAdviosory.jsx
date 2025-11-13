@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,7 +26,7 @@ import {
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectCurrentFieldHasSubscription
+  selectHasSmartAdvisorySystem, // Updated import
 } from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -37,9 +37,13 @@ const SmartAdvisory = () => {
   const authToken = useSelector((state) => state?.auth?.token);
   const fields = useSelector((state) => state?.farmfield?.fields);
 
-  const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const currentFieldHasSubscription = useSelector(selectCurrentFieldHasSubscription);
-  const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
+  const showMembershipModal = useSelector(
+    (state) => state.membership.showMembershipModal
+  );
+  const hasSmartAdvisorySystem = useSelector(selectHasSmartAdvisorySystem);
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions
+  );
 
   const [reportdata, setReportData] = useState(null);
   const [selectedField, setSelectedField] = useState(null);
@@ -62,15 +66,19 @@ const SmartAdvisory = () => {
       dispatch(setCurrentField(selectedField._id));
 
       const fieldSub = fieldSubscriptions[selectedField._id];
-      const shouldCheck = !fieldSub ||
+      const shouldCheck =
+        !fieldSub ||
         (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) > SUBSCRIPTION_CHECK_INTERVAL);
+          new Date() - new Date(fieldSub.lastChecked) >
+          SUBSCRIPTION_CHECK_INTERVAL);
 
       if (shouldCheck) {
-        dispatch(checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken
-        }));
+        dispatch(
+          checkFieldSubscriptionStatus({
+            fieldId: selectedField._id,
+            authToken,
+          })
+        );
       }
     }
   }, [selectedField, authToken, dispatch, fieldSubscriptions]);
@@ -79,10 +87,12 @@ const SmartAdvisory = () => {
     if (!selectedField || !authToken) return;
 
     const interval = setInterval(() => {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField._id,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField._id,
+          authToken,
+        })
+      );
     }, SUBSCRIPTION_CHECK_INTERVAL);
 
     return () => clearInterval(interval);
@@ -90,7 +100,8 @@ const SmartAdvisory = () => {
 
   const handleSubscribe = useCallback(() => {
     if (selectedField) {
-      const areaInHectares = selectedField?.areaInHectares ||
+      const areaInHectares =
+        selectedField?.areaInHectares ||
         selectedField?.acre * 0.404686 ||
         5;
       const fieldData = {
@@ -110,7 +121,9 @@ const SmartAdvisory = () => {
 
   const handleSkipMembership = useCallback(() => {
     dispatch(hideMembershipModal());
-    message.info("You can activate premium anytime from the locked content sections");
+    message.info(
+      "You can activate premium anytime from the locked content sections"
+    );
   }, [dispatch]);
 
   const handleCloseMembershipModal = useCallback(() => {
@@ -122,10 +135,12 @@ const SmartAdvisory = () => {
     setPricingFieldData(null);
 
     if (selectedField && authToken) {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField._id,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField._id,
+          authToken,
+        })
+      );
     }
   }, [selectedField, authToken, dispatch]);
 
@@ -207,9 +222,9 @@ const SmartAdvisory = () => {
 
           {reportdata ? (
             <PremiumPageWrapper
-              isLocked={!currentFieldHasSubscription}
+              isLocked={!hasSmartAdvisorySystem}
               onSubscribe={handleSubscribe}
-              title="Smart Advisory"
+              title="Smart Advisory System"
             >
               {isTablet ? (
                 <div className="flex flex-col gap-4 w-full max-w-[1024px] mx-auto">

@@ -11,10 +11,9 @@ import {
   fetchSoilMoisture,
 } from "../../../redux/slices/satelliteSlice";
 import CropAdvisorySkeleton from "../../Skeleton/CropAdvisorySkeleton";
-import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
 import IndexPremiumWrapper from "../../subscription/Indexpremiumwrapper";
+import { selectHasWeeklyAdvisoryReports } from "../../../redux/slices/membershipSlice";
 
-// Define categories outside the component
 const categories = [
   "Disease/Pest Control",
   "Fertigation",
@@ -22,7 +21,6 @@ const categories = [
   "Monitoring",
 ];
 
-// Memoized AdvisoryCard (moved outside to avoid re-creation)
 const AdvisoryCard = React.memo(({ category, activityText }) => {
   let content;
   if (!activityText) {
@@ -62,13 +60,17 @@ const AdvisoryCard = React.memo(({ category, activityText }) => {
 });
 AdvisoryCard.displayName = "AdvisoryCard";
 
-const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
+const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
   const dispatch = useDispatch();
   const [selectedDay, setSelectedDay] = useState("Day 1");
+  
   const { advisory, cropGrowthStage } = useSelector(
     (state) => state.satellite || {}
   );
   const { forecastData } = useSelector((state) => state.weather || {});
+  
+  // Get feature flag
+  const hasWeeklyAdvisoryReports = useSelector(selectHasWeeklyAdvisoryReports);
 
   const scrollRef = useRef(null);
   const isDragging = useRef(false);
@@ -78,20 +80,16 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   const farmDetails = selectedFieldsDetials?.[0] || null;
   const farmId = farmDetails?._id ?? farmDetails?.id ?? null;
 
-  // Keep last processed farmId to avoid duplicate fetches (in case farmDetails object changes reference)
   const lastSoilFetchRef = useRef(null);
 
-  // Fetch soil moisture only when farmId meaningfully changes
   useEffect(() => {
     if (!farmId) return;
     if (lastSoilFetchRef.current === farmId) return;
     lastSoilFetchRef.current = farmId;
 
     dispatch(fetchSoilMoisture(farmDetails));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, farmId]); // farmDetails intentionally omitted to avoid object ref churn
+  }, [dispatch, farmId]);
 
-  // Generate advisory: only when meaningful inputs change (bbch, forecast timestamp, farmId)
   const lastAdvisoryKeyRef = useRef(null);
   const advisoryTimerRef = useRef(null);
 
@@ -102,16 +100,13 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
       forecastTs ?? "nofc"
     }`;
 
-    // if missing required inputs, skip
     if (!farmId || !bbch || !forecastData || !selectedFieldsDetials?.length)
       return;
 
     if (lastAdvisoryKeyRef.current === advisoryKey) return;
 
-    // debounce tiny interval to avoid rapid repeated dispatches
     if (advisoryTimerRef.current) clearTimeout(advisoryTimerRef.current);
     advisoryTimerRef.current = setTimeout(() => {
-      // store before dispatch to avoid duplicate calls during dispatch-triggered renders
       lastAdvisoryKeyRef.current = advisoryKey;
 
       dispatch(
@@ -121,7 +116,6 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
           bbchData: cropGrowthStage?.finalStage,
         })
       ).catch(() => {
-        // if dispatch fails, clear key so it can retry next time
         lastAdvisoryKeyRef.current = null;
       });
     }, 200);
@@ -141,7 +135,6 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     forecastData,
   ]);
 
-  // Drag handlers: attach once and cleanup properly
   const attachDragHandlers = useCallback(() => {
     const slider = scrollRef.current;
     if (!slider) return () => {};
@@ -186,7 +179,6 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     return () => cleanup && cleanup();
   }, [attachDragHandlers]);
 
-  // Memoize advisoryData to handle array format and map keys to categories
   const advisoryData = useMemo(() => {
     if (!Array.isArray(advisory)) return [];
     return advisory.map((item) => ({
@@ -205,7 +197,6 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     }));
   }, [advisory]);
 
-  // Ensure selectedDay exists in advisoryData (pick first available if not)
   useEffect(() => {
     if (
       advisoryData.length > 0 &&
@@ -215,7 +206,6 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
     }
   }, [advisoryData, selectedDay]);
 
-  // Memoized currentDayData
   const currentDayData = useMemo(() => {
     return (
       advisoryData.find((item) => item.day === selectedDay)?.activities || {}
@@ -231,7 +221,7 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
           value={selectedDay}
           onChange={(e) => setSelectedDay(e.target.value)}
           aria-label="Select advisory day"
-          className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 "
+          className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {advisoryData.length > 0 ? (
             advisoryData.map((item) => (
@@ -248,7 +238,7 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
       </div>
 
       <IndexPremiumWrapper
-        isLocked={isLocked}
+        isLocked={!hasWeeklyAdvisoryReports}
         onSubscribe={onSubscribe}
         title="Crop Advisory"
       >

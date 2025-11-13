@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Card from "react-bootstrap/Card";
 import * as turf from "@turf/turf";
@@ -7,20 +7,19 @@ import SoilHealthChart from "./SoilHealthChart.jsx";
 import { fetchSoilData } from "../../../redux/slices/satelliteSlice.js";
 import CropHealthStatusBar from "./CropHealthStatusBar.jsx";
 import { fetchCrops } from "../../../redux/slices/cropSlice.js";
-import { message } from "antd";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
+import { selectHasCropHealthAndYield } from "../../../redux/slices/membershipSlice.js";
 
-const CropHealth = ({
-  selectedFieldsDetials,
-  fields,
-  isLocked,
-  onSubscribe,
-}) => {
+const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
   const cropDetials = selectedFieldsDetials?.[0];
   const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
   const dispatch = useDispatch();
+  
   const { crops } = useSelector((state) => state.crops);
   const { cropYield } = useSelector((state) => state.satellite);
+  
+  // Get feature flag
+  const hasCropHealthAndYield = useSelector(selectHasCropHealthAndYield);
 
   useEffect(() => {
     dispatch(fetchCrops());
@@ -62,7 +61,6 @@ const CropHealth = ({
         </h2>
 
         <div className="relative z-10 flex gap-16 mt-10 w-full">
-          {/* Crop Image Container */}
           <div className="flex flex-col items-center bg-white rounded-xl w-[160px] h-[160px] overflow-hidden flex-shrink-0 mx-auto md:mx-0 shadow-sm border border-gray-200">
             <img
               src={cropInfo?.cropImage || "https://via.placeholder.com/160"}
@@ -73,7 +71,6 @@ const CropHealth = ({
 
           <div className="flex flex-col justify-between w-full gap-4">
             <div className="grid grid-cols-2 gap-x-20 gap-y-5 text-sm">
-              {/* Crop Name */}
               <div className="flex gap-2">
                 <span className="font-semibold lg:text-[18px] md:text-[15px] text-[#344E41]">
                   Crop Name:
@@ -83,7 +80,6 @@ const CropHealth = ({
                 </span>
               </div>
 
-              {/* Crop Age */}
               <div className="flex gap-2">
                 <span className="font-semibold lg:text-[18px] md:text-[15px] text-[#344E41]">
                   Crop Age:
@@ -93,7 +89,6 @@ const CropHealth = ({
                 </span>
               </div>
 
-              {/* Total Area */}
               <div className="flex gap-2">
                 <span className="font-semibold lg:text-[18px] md:text-[15px] text-[#344E41]">
                   Total Area:
@@ -103,7 +98,6 @@ const CropHealth = ({
                 </span>
               </div>
 
-              {/* Standard Yield */}
               <div className="flex gap-2">
                 <span className="font-semibold lg:text-[18px] md:text-[15px] text-[#344E41]">
                   Standard Yield:
@@ -113,7 +107,6 @@ const CropHealth = ({
                 </span>
               </div>
 
-              {/* AI Yield */}
               <div className="flex gap-2">
                 <span className="font-semibold lg:text-[18px] md:text-[15px] text-[#344E41]">
                   AI Yield:
@@ -132,7 +125,7 @@ const CropHealth = ({
       </div>
 
       <PremiumContentWrapper
-        isLocked={isLocked}
+        isLocked={!hasCropHealthAndYield}
         onSubscribe={onSubscribe}
         title="Advanced Soil Analytics"
       >

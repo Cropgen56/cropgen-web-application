@@ -17,6 +17,7 @@ const initialState = {
   showMembershipModal: false,
   newFieldAdded: false,
   loading: false,
+  isChecking: false, // NEW: Track subscription check status
   error: null,
 };
 
@@ -46,20 +47,31 @@ const membershipSlice = createSlice({
       state.fieldSubscriptions = {};
       state.currentFieldSubscription = null;
     },
+    // NEW: Optimistic update for immediate UI response
+    optimisticSubscriptionUpdate: (state, action) => {
+      const { fieldId, subscription } = action.payload;
+      if (state.fieldSubscriptions[fieldId]) {
+        state.fieldSubscriptions[fieldId].subscription = subscription;
+        state.fieldSubscriptions[fieldId].hasActiveSubscription = true;
+      }
+      if (fieldId === state.currentFieldId) {
+        state.currentFieldSubscription = subscription;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Check field subscription
       .addCase(checkFieldSubscriptionStatus.pending, (state) => {
         state.loading = true;
+        state.isChecking = true; // NEW
         state.error = null;
       })
       .addCase(checkFieldSubscriptionStatus.fulfilled, (state, action) => {
         state.loading = false;
+        state.isChecking = false; // NEW
         const { fieldId, success, hasActiveSubscription, subscription } =
           action.payload;
 
-        // Store complete subscription data for the field
         state.fieldSubscriptions[fieldId] = {
           success,
           hasActiveSubscription,
@@ -67,13 +79,13 @@ const membershipSlice = createSlice({
           lastChecked: new Date().toISOString(),
         };
 
-        // If this is the current field, update currentFieldSubscription
         if (fieldId === state.currentFieldId) {
           state.currentFieldSubscription = subscription || null;
         }
       })
       .addCase(checkFieldSubscriptionStatus.rejected, (state, action) => {
         state.loading = false;
+        state.isChecking = false; // NEW
         state.error = action.error.message;
       });
   },
@@ -86,6 +98,7 @@ export const {
   setNewFieldAdded,
   resetMembershipState,
   clearFieldSubscriptions,
+  optimisticSubscriptionUpdate, // NEW
 } = membershipSlice.actions;
 
 // Basic selectors
@@ -98,69 +111,59 @@ export const selectCurrentFieldHasSubscription = (state) =>
 export const selectCurrentFieldSubscription = (state) =>
   state.membership.currentFieldSubscription;
 
-// Feature-specific selectors
 export const selectCurrentFieldFeatures = (state) =>
   state.membership.currentFieldSubscription?.features || {};
 
-export const selectHasFeature = (state, featureName) =>
+// NEW: Selector for checking status
+export const selectIsCheckingSubscription = (state) =>
+  state.membership.isChecking;
+
+// Helper function to get feature value
+const selectHasFeature = (state, featureName) =>
   state.membership.currentFieldSubscription?.features?.[featureName] || false;
 
-// Component Feature Mapping Selectors
-export const selectHasWeatherHistory = (state) =>
-  selectHasFeature(state, "graphHistoricalData");
+// Feature Selectors
+export const selectHasSatelliteImagery = (state) =>
+  selectHasFeature(state, "satelliteImagery");
 
-export const selectHasSatelliteMonitoring = (state) =>
-  selectHasFeature(state, "satelliteCropMonitoring");
+export const selectHasCropHealthAndYield = (state) =>
+  selectHasFeature(state, "cropHealthAndYield");
 
-export const selectHasWeatherForecast = (state) =>
-  selectHasFeature(state, "weatherForecast");
+export const selectHasSoilAnalysisAndHealth = (state) =>
+  selectHasFeature(state, "soilAnalysisAndHealth");
 
-export const selectHasSoilMoistureTemp = (state) =>
-  selectHasFeature(state, "soilMoistureTemp");
+export const selectHasWeatherAnalytics = (state) =>
+  selectHasFeature(state, "weatherAnalytics");
 
-export const selectHasGrowthStageTracking = (state) =>
-  selectHasFeature(state, "growthStageTracking");
+export const selectHasVegetationIndices = (state) =>
+  selectHasFeature(state, "vegetationIndices");
 
-export const selectHasAdvisory = (state) => selectHasFeature(state, "advisory");
+export const selectHasWaterIndices = (state) =>
+  selectHasFeature(state, "waterIndices");
 
-export const selectHasInsights = (state) => selectHasFeature(state, "insights");
+export const selectHasEvapotranspirationMonitoring = (state) =>
+  selectHasFeature(state, "evapotranspirationMonitoring");
 
-export const selectHasSoilFertility = (state) =>
-  selectHasFeature(state, "soilFertilityAnalysis");
+export const selectHasAgronomicInsights = (state) =>
+  selectHasFeature(state, "agronomicInsights");
 
-export const selectHasOperationsManagement = (state) =>
-  selectHasFeature(state, "operationsManagement");
+export const selectHasWeeklyAdvisoryReports = (state) =>
+  selectHasFeature(state, "weeklyAdvisoryReports");
 
-// Other feature selectors
-export const selectHasIrrigationUpdates = (state) =>
-  selectHasFeature(state, "irrigationUpdates");
+export const selectHasCropGrowthMonitoring = (state) =>
+  selectHasFeature(state, "cropGrowthMonitoring");
 
-export const selectHasPestDiseaseAlerts = (state) =>
-  selectHasFeature(state, "pestDiseaseAlerts");
+export const selectHasFarmOperationsManagement = (state) =>
+  selectHasFeature(state, "farmOperationsManagement");
 
-export const selectHasYieldPrediction = (state) =>
-  selectHasFeature(state, "yieldPrediction");
+export const selectHasDiseaseDetectionAlerts = (state) =>
+  selectHasFeature(state, "diseaseDetectionAlerts");
 
-export const selectHasHarvestWindow = (state) =>
-  selectHasFeature(state, "harvestWindow");
+export const selectHasSmartAdvisorySystem = (state) =>
+  selectHasFeature(state, "smartAdvisorySystem");
 
-export const selectHasSocCarbon = (state) =>
-  selectHasFeature(state, "socCarbon");
-
-export const selectHasAdvisoryControl = (state) =>
-  selectHasFeature(state, "advisoryControl");
-
-export const selectHasAdvisoryDelivery = (state) =>
-  selectHasFeature(state, "advisoryDelivery");
-
-export const selectHasWeeklyReports = (state) =>
-  selectHasFeature(state, "weeklyReports");
-
-export const selectHasApiIntegration = (state) =>
-  selectHasFeature(state, "apiIntegration");
-
-export const selectHasEnterpriseSupport = (state) =>
-  selectHasFeature(state, "enterpriseSupport");
+export const selectHasSoilReportGeneration = (state) =>
+  selectHasFeature(state, "soilReportGeneration");
 
 // Subscription details selectors
 export const selectCurrentPlanName = (state) =>
@@ -174,5 +177,17 @@ export const selectSubscriptionDaysLeft = (state) =>
 
 export const selectIsTrialSubscription = (state) =>
   state.membership.currentFieldSubscription?.isTrial || false;
+
+export const selectSubscriptionHectares = (state) =>
+  state.membership.currentFieldSubscription?.hectares || null;
+
+export const selectSubscriptionCurrency = (state) =>
+  state.membership.currentFieldSubscription?.currency || null;
+
+export const selectSubscriptionBillingCycle = (state) =>
+  state.membership.currentFieldSubscription?.billingCycle || null;
+
+export const selectSubscriptionNextBillingAt = (state) =>
+  state.membership.currentFieldSubscription?.nextBillingAt || null;
 
 export default membershipSlice.reducer;
