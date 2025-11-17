@@ -72,7 +72,7 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
 
     <div className="flex justify-between items-center bg-white border-t border-[#075A53] p-3">
       <span className="text-base text-[#9A9898] font-semibold">
-          Id: Crop-{String(index + 1).padStart(3, "0")}
+        Id: Crop-{String(index + 1).padStart(3, "0")}
       </span>
 
       <img
@@ -168,6 +168,10 @@ const AllFarms = ({ onAddFarmClick }) => {
     return true;
   });
 
+  const sortedFarms = [...filteredFarms].sort((a, b) => {
+    return new Date(a.createdAt) - new Date(b.createdAt);
+  });
+
   return (
     <div className="flex flex-col flex-grow gap-4 py-2 h-[calc(100vh-100px)]">
       <div className="flex justify-start bg-[#E6F8EF] rounded-xl gap-2 py-2 px-3 w-fit">
@@ -193,8 +197,8 @@ const AllFarms = ({ onAddFarmClick }) => {
       <div className="overflow-y-auto flex-grow pr-1 mb-2 scroll-smooth no-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
           <AddNewFarmCard onClick={() => navigate("/addfield")} />
-          {filteredFarms.length > 0 ? (
-            filteredFarms.map((farm, index) => {
+          {sortedFarms.length > 0 ? (
+            sortedFarms.map((farm, index) => {
               const isSubscribed =
                 fieldSubscriptions[farm._id]?.hasActiveSubscription || false;
 
@@ -204,7 +208,7 @@ const AllFarms = ({ onAddFarmClick }) => {
                   farm={farm}
                   onClick={onAddFarmClick}
                   isSubscribed={isSubscribed}
-                  index={index} 
+                  index={index}
                 />
               );
             })

@@ -3,8 +3,17 @@ import { useSelector } from "react-redux";
 import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import PolygonPreview from "../../polygon/PolygonPreview";
+import { ArrowDownToLine, LoaderCircle } from "lucide-react";
 
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) => (
+const FieldInfo = ({
+  title,
+  area,
+  lat,
+  lon,
+  isSelected,
+  onClick,
+  coordinates,
+}) => (
   <div
     className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
       isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
@@ -13,7 +22,9 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) 
   >
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
     <div>
-      <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
+      <h4
+        className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}
+      >
         {title}
       </h4>
       <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
@@ -25,9 +36,16 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) 
   </div>
 );
 
-const FarmReportSidebar = ({ setSelectedField, selectedField }) => {
+const FarmReportSidebar = ({
+  setSelectedField,
+  selectedField,
+  downloadPDF,
+  currentFieldHasSubscription,
+}) => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const fields = useSelector((state) => state?.farmfield?.fields) || [];
 
   // Sort fields in descending order (latest first)
@@ -69,15 +87,23 @@ const FarmReportSidebar = ({ setSelectedField, selectedField }) => {
     field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleDownload = async () => {
+    setLoading(true);
+    await downloadPDF();
+    setLoading(false);
+  };
+
   if (!isSidebarVisible) return null;
 
   return (
-    <div className="sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">
+    <div className="relative sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-screen">
       <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Weather2 />
-            <h2 className="text-[18px] font-bold text-[#344e41]">Farm Report</h2>
+            <h2 className="text-[18px] font-bold text-[#344e41]">
+              Farm Report
+            </h2>
           </div>
           <svg
             width="30"
@@ -120,9 +146,7 @@ const FarmReportSidebar = ({ setSelectedField, selectedField }) => {
         </div>
       </div>
       <div className="overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
-        <h2 className="text-[18px] font-bold text-[#344e41] p-2">
-          All Farms
-        </h2>
+        <h2 className="text-[18px] font-bold text-[#344e41] p-2">All Farms</h2>
         {filteredFields.length > 0 ? (
           filteredFields.map((field) => {
             const { lat, lon } = calculateCentroid(field.field);
@@ -134,8 +158,8 @@ const FarmReportSidebar = ({ setSelectedField, selectedField }) => {
                 lat={lat}
                 lon={lon}
                 coordinates={field.field}
-                isSelected={field._id === selectedField?._id}
-                onClick={() => setSelectedField(field)}
+                isSelected={field._id === selectedField}
+                onClick={() => setSelectedField(field._id)}
               />
             );
           })
@@ -144,6 +168,23 @@ const FarmReportSidebar = ({ setSelectedField, selectedField }) => {
             No fields found
           </p>
         )}
+      </div>
+      <div className="mt-auto sticky bottom-0 bg-white p-3  z-10">
+        {/* {currentFieldHasSubscription ? ( */}
+          <button
+            onClick={handleDownload}
+            className="w-full flex items-center justify-center gap-2 bg-[#344e41] text-white py-2 rounded-md hover:bg-[#2d4036] transition-all duration-300"
+          >
+            {loading && <LoaderCircle className="animate-spin" size={18} />}
+            {loading ? (
+              "Downloading..."
+            ) : (
+              <>
+                <ArrowDownToLine size={18} /> Download Farm Report
+              </>
+            )}
+          </button>
+        {/* ) : null}  */}
       </div>
     </div>
   );

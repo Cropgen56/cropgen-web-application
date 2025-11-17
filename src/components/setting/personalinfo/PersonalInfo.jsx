@@ -10,7 +10,9 @@ import { ArrowLeft } from "lucide-react";
 
 const PersonalInfo = ({ setShowSidebar }) => {
   const dispatch = useDispatch();
-  const token = localStorage.getItem("authToken");
+  // const token = localStorage.getItem("auth_Token");
+  const token = useSelector((state) => state.auth.token);
+  const status = useSelector((state) => state.auth.status);
   const userId = useSelector((state) => state?.auth?.user?.id);
   const { userDetails, loading } = useSelector((state) => state.auth);
   const fields = useSelector((state) => state?.farmfield?.fields);
@@ -44,11 +46,11 @@ const PersonalInfo = ({ setShowSidebar }) => {
   }, [updateStatus]);
 
   // Fetch user data when token changes or on initial load
-  useEffect(() => {
-    if (token) {
-      dispatch(getUserData(token));
-    }
-  }, [token, dispatch, updateStatus]);
+useEffect(() => {
+  if (token && status === "idle" && !userDetails) {
+    dispatch(getUserData(token));
+  }
+}, [token, status, userDetails]);
 
   // Fetch farm fields when userId changes
   useEffect(() => {

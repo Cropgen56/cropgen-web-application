@@ -62,7 +62,12 @@ const AdvisoryCard = React.memo(({ category, activityText }) => {
 });
 AdvisoryCard.displayName = "AdvisoryCard";
 
-const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
+const CropAdvisory = ({
+  selectedFieldsDetials,
+  isLocked,
+  onSubscribe,
+  usePremiumWrapper = true,
+}) => {
   const dispatch = useDispatch();
   const [selectedDay, setSelectedDay] = useState("Day 1");
   const { advisory, cropGrowthStage } = useSelector(
@@ -223,7 +228,7 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   }, [advisoryData, selectedDay]);
 
   return (
-    <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
+    <div className="flex flex-col gap-4 mt-4 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-900">Crop Advisory</h2>
 
@@ -247,28 +252,49 @@ const CropAdvisory = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
         </select>
       </div>
 
-      <IndexPremiumWrapper
-        isLocked={isLocked}
-        onSubscribe={onSubscribe}
-        title="Crop Advisory"
-      >
-        {advisoryData.length > 0 ? (
-          <div
-            ref={scrollRef}
-            className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
-          >
-            {categories.map((category) => (
-              <AdvisoryCard
-                key={category}
-                category={category}
-                activityText={currentDayData[category]}
-              />
-            ))}
-          </div>
-        ) : (
-          <CropAdvisorySkeleton />
-        )}
-      </IndexPremiumWrapper>
+      {usePremiumWrapper ? (
+        <IndexPremiumWrapper
+          isLocked={isLocked}
+          onSubscribe={onSubscribe}
+          title="Crop Advisory"
+        >
+          {advisoryData.length > 0 ? (
+            <div
+              ref={scrollRef}
+              className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
+            >
+              {categories.map((category) => (
+                <AdvisoryCard
+                  key={category}
+                  category={category}
+                  activityText={currentDayData[category]}
+                />
+              ))}
+            </div>
+          ) : (
+            <CropAdvisorySkeleton />
+          )}
+        </IndexPremiumWrapper>
+      ) : (
+        <>
+          {advisoryData.length > 0 ? (
+            <div
+              ref={scrollRef}
+              className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
+            >
+              {categories.map((category) => (
+                <AdvisoryCard
+                  key={category}
+                  category={category}
+                  activityText={currentDayData[category]}
+                />
+              ))}
+            </div>
+          ) : (
+            <CropAdvisorySkeleton />
+          )}
+        </>
+      )}
     </div>
   );
 };

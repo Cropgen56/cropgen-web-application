@@ -129,11 +129,11 @@ const SoilReport = () => {
   }, [selectedField, authToken, dispatch]);
 
   const downloadPDF = async () => {
-    if (!hasSoilFertility) { // Updated to use feature-specific check
-      message.warning("Please subscribe to download soil reports");
-      handleSubscribe();
-      return;
-    }
+    // if (!hasSoilFertility) { // Updated to use feature-specific check
+    //   message.warning("Please subscribe to download soil reports");
+    //   handleSubscribe();
+    //   return;
+    // }
 
     const input1 = reportRef.current;
     const input2 = restRef.current;
@@ -244,10 +244,10 @@ const SoilReport = () => {
               </div>
             </div>
           ) : (
-            <PremiumPageWrapper
-              isLocked={!hasSoilFertility} // Updated to use feature-specific check
-              onSubscribe={handleSubscribe}
-              title="Soil Report"
+            <div
+              // isLocked={!hasSoilFertility} // Updated to use feature-specific check
+              // onSubscribe={handleSubscribe}
+              // title="Soil Report"
             >
               <MapContainer
                 center={[reportdata.lat, reportdata.lng]}
@@ -305,7 +305,7 @@ const SoilReport = () => {
                   </p>
                 </div>
               </div>
-            </PremiumPageWrapper>
+            </div>
           )}
         </div>
       </div>

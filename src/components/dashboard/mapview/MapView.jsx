@@ -74,10 +74,13 @@ const FarmMap = ({
   selectedField,
   setSelectedField,
   selectedFieldsDetials,
+  showFieldDropdown = true
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { indexData, loading } = useSelector((state) => state?.satellite);
+  console.log("indexData: ", indexData);
+
   const mapRef = useRef(null);
   const [image, setImage] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
@@ -252,7 +255,7 @@ const FarmMap = ({
       </MapContainer>
 
       <div className="absolute top-2 right-2 flex flex-row gap-3 items-end z-[1000]">
-        {fields?.length > 0 && (
+        {showFieldDropdown && fields?.length > 0 && (
           <div className="relative w-full min-w-[150px]">
             <Listbox
               value={selectedField}

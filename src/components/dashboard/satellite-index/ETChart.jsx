@@ -78,7 +78,7 @@ const EvapotranspirationChart = () => {
 
   return (
     <div className="w-full flex mt-4">
-      <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+      <div className="relative w-full bg-white rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
         {/* Header */}
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-gray-900 text-2xl font-bold">Evapotranspiration</h2>

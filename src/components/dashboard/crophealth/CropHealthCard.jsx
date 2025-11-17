@@ -15,6 +15,7 @@ const CropHealth = ({
   fields,
   isLocked,
   onSubscribe,
+  usePremiumWrapper = true,
 }) => {
   const cropDetials = selectedFieldsDetials?.[0];
   const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
@@ -55,7 +56,7 @@ const CropHealth = ({
   }, [cropDetials, dispatch]);
 
   return (
-    <Card body className="mt-2 mb-4 bg-white">
+    <div body className="mt-4 mb-4 ">
       <div className="relative flex flex-col gap-6 rounded-2xl p-4 overflow-hidden bg-white shadow-md border border-gray-200">
         <h2 className="absolute top-4 left-6 text-[24px] sm:text-xl font-bold text-[#344E41] z-20">
           Crop Health
@@ -131,12 +132,32 @@ const CropHealth = ({
         <CropHealthStatusBar selectedFieldsDetials={selectedFieldsDetials} />
       </div>
 
-      <PremiumContentWrapper
-        isLocked={isLocked}
-        onSubscribe={onSubscribe}
-        title="Advanced Soil Analytics"
-      >
-        <div className="flex flex-col lg:flex-row items-center justify-between mt-6 px-2 md:px-4 gap-6 lg:gap-12 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+      {usePremiumWrapper ? (
+        <PremiumContentWrapper
+          isLocked={isLocked}
+          onSubscribe={onSubscribe}
+          title="Advanced Soil Analytics"
+        >
+          <div className="flex flex-col lg:flex-row items-center justify-between mt-6 px-2 md:px-4 gap-6 lg:gap-12 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <div className="w-full lg:w-1/2">
+              <h2 className="text-left text-[1.3rem] font-semibold text-[#344E41] mb-2 ml-10">
+                Soil Analysis (Based on BBCH Growth Stage)
+              </h2>
+              <SoilAnalysisChart
+                selectedFieldsDetials={selectedFieldsDetials}
+              />
+            </div>
+
+            <div className="w-full lg:w-1/2 flex flex-col justify-start">
+              <h2 className="text-left text-[1.3rem] font-semibold text-[#344E41] ml-10">
+                Soil Health
+              </h2>
+              <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} />
+            </div>
+          </div>
+        </PremiumContentWrapper>
+      ) : (
+        <div className="flex flex-col lg:flex-row items-center justify-between mt-4 px-2 md:px-4 gap-6 lg:gap-12 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
           <div className="w-full lg:w-1/2">
             <h2 className="text-left text-[1.3rem] font-semibold text-[#344E41] mb-2 ml-10">
               Soil Analysis (Based on BBCH Growth Stage)
@@ -151,8 +172,8 @@ const CropHealth = ({
             <SoilHealthChart selectedFieldsDetials={selectedFieldsDetials} />
           </div>
         </div>
-      </PremiumContentWrapper>
-    </Card>
+      )}
+    </div>
   );
 };
 
