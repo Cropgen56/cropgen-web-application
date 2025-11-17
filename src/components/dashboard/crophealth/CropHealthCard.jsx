@@ -4,21 +4,19 @@ import Card from "react-bootstrap/Card";
 import * as turf from "@turf/turf";
 import SoilAnalysisChart from "./SoilAnalysisChart.jsx";
 import SoilHealthChart from "./SoilHealthChart.jsx";
-import { fetchSoilData } from "../../../redux/slices/satelliteSlice.js";
+// REMOVED: fetchSoilData import
 import CropHealthStatusBar from "./CropHealthStatusBar.jsx";
-import { fetchCrops } from "../../../redux/slices/cropSlice.js";
+import { fetchCrops, fetchCropHealthYield } from "../../../redux/slices/cropSlice.js";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
 import { selectHasCropHealthAndYield } from "../../../redux/slices/membershipSlice.js";
 
 const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
   const cropDetials = selectedFieldsDetials?.[0];
-  const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
+  const { sowingDate, field: corrdinatesPoint, cropName, bbch, bbchDescription } = cropDetials || {};
   const dispatch = useDispatch();
-  
-  const { crops } = useSelector((state) => state.crops);
+
+  const { crops, cropHealthYield, healthYieldLoading } = useSelector((state) => state.crops);
   const { cropYield } = useSelector((state) => state.satellite);
-  
-  // Get feature flag
   const hasCropHealthAndYield = useSelector(selectHasCropHealthAndYield);
 
   useEffect(() => {
@@ -49,9 +47,51 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
     return turf.area(polygon) / 10000;
   }, [corrdinatesPoint]);
 
+  const buildGeometry = useMemo(() => {
+    if (!corrdinatesPoint || corrdinatesPoint.length < 3) return null;
+    
+    const coordinates = corrdinatesPoint.map((p) => [p.lng, p.lat]);
+    coordinates.push(coordinates[0]); // Close the polygon
+    
+    return {
+      type: "Polygon",
+      coordinates: [coordinates]
+    };
+  }, [corrdinatesPoint]);
+
   useEffect(() => {
-    if (cropDetials) dispatch(fetchSoilData({ farmDetails: cropDetials }));
-  }, [cropDetials, dispatch]);
+    if (cropDetials && cropName && sowingDate && buildGeometry) {
+      const currentDate = new Date().toISOString().split('T')[0];
+      
+      const payload = {
+        cropName: cropName,
+        sowingDate: sowingDate,
+        currentDate: currentDate,
+        bbch: bbch?.toString() || "75", 
+        bbchDescription: bbchDescription || "Stem elongation", 
+        geometry: buildGeometry
+      };
+      
+      dispatch(fetchCropHealthYield(payload));
+    }
+  }, [cropDetials, cropName, sowingDate, buildGeometry, bbch, bbchDescription, dispatch]);
+
+  // REMOVED: fetchSoilData useEffect
+
+  // NEW: Get yield data from new API
+  const yieldData = useMemo(() => {
+    if (cropHealthYield?.success) {
+      return {
+        standardYield: `${cropHealthYield.standardYield?.value || 'N/A'} ${cropHealthYield.standardYield?.unit || ''}`,
+        aiYield: `${cropHealthYield.aiYield?.value || 'N/A'} ${cropHealthYield.aiYield?.unit || ''}`,
+        confidence: cropHealthYield.aiYield?.confidence ? `(${(cropHealthYield.aiYield.confidence * 100).toFixed(0)}% confidence)` : '',
+        cropHealth: cropHealthYield.cropHealth?.Crop_Health || 'N/A',
+        healthPercentage: cropHealthYield.cropHealth?.Health_Percentage || 0,
+        summary: cropHealthYield.summary || ''
+      };
+    }
+    return null;
+  }, [cropHealthYield]);
 
   return (
     <Card body className="mt-2 mb-4 bg-white">
@@ -98,12 +138,15 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
                 </span>
               </div>
 
+              {/* NEW: Use data from new API */}
               <div className="flex gap-2">
                 <span className="font-semibold lg:text-[18px] md:text-[15px] text-[#344E41]">
                   Standard Yield:
                 </span>
                 <span className="font-medium text-black lg:text-[18px] md:text-[14px]">
-                  {cropYield?.data?.standard_yield || "N/A"}
+                  {healthYieldLoading 
+                    ? "Loading..." 
+                    : yieldData?.standardYield || cropYield?.data?.standard_yield || "N/A"}
                 </span>
               </div>
 
@@ -112,9 +155,9 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
                   AI Yield:
                 </span>
                 <span className="font-medium text-black lg:text-[18px] md:text-[12px]">
-                  {cropYield?.data?.ai_predicted_yield ||
-                    cropYield?.data?.message ||
-                    "N/A"}
+                  {healthYieldLoading 
+                    ? "Loading..." 
+                    : yieldData?.aiYield || cropYield?.data?.ai_predicted_yield || cropYield?.data?.message || "N/A"}
                 </span>
               </div>
             </div>

@@ -148,6 +148,25 @@ const generateCurveData = (interval, cropName) => {
   }));
 };
 
+// Helper to parse keyActivity - handles both string and array
+const parseKeyActivities = (keyActivity) => {
+  if (Array.isArray(keyActivity)) {
+    return keyActivity;
+  }
+  if (typeof keyActivity === 'string') {
+    // Split by common delimiters if it's a comma or semicolon separated string
+    if (keyActivity.includes(';')) {
+      return keyActivity.split(';').map(s => s.trim()).filter(Boolean);
+    }
+    if (keyActivity.includes(',')) {
+      return keyActivity.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    // Return as single item array
+    return [keyActivity];
+  }
+  return ['No activities available'];
+};
+
 const PlantGrowthActivity = memo(
   ({ selectedFieldsDetials = [], onSubscribe }) => {
     const dispatch = useDispatch();
@@ -174,34 +193,45 @@ const PlantGrowthActivity = memo(
       isSowingDateValid,
       currentDate,
       suggestion,
+      gddValue,
     } = useMemo(() => {
       const isSowingValid = isValidDate(sowingDate);
       const today = new Date();
       const isTodayValid = isValidDate(today);
       let formattedCurrentDate = "";
+      
       if (isTodayValid) {
         formattedCurrentDate = formatToYYYYMMDD(today);
       } else {
         formattedCurrentDate = "2025-08-25";
       }
+
       const sowing = isSowingValid ? new Date(sowingDate) : null;
-      const days = sowing
-        ? Math.max(
-            1,
-            Math.floor(
-              (today.getTime() - sowing.getTime()) / (1000 * 60 * 60 * 24)
-            ) + 1
-          )
-        : 1;
+      
+      // Use API response days if available, otherwise calculate
+      const days = cropGrowthStage?.days || 
+        (sowing
+          ? Math.max(
+              1,
+              Math.floor(
+                (today.getTime() - sowing.getTime()) / (1000 * 60 * 60 * 24)
+              ) + 1
+            )
+          : 1);
+
       const maxWeeks =
         CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other;
+
+      // Get GDD value from API response
+      const gdd = cropGrowthStage?.gdd || null;
 
       let suggestionText = "Awaiting growth stage data...";
       if (cropGrowthStage?.finalStage?.stage && cropGrowthStage?.keyActivity) {
         const stage = cropGrowthStage.finalStage.stage;
-        suggestionText = `Based on BBCH stage ${stage}.`;
+        const bbch = cropGrowthStage.finalStage.bbch;
+        suggestionText = `BBCH ${bbch} - ${stage}${gdd ? ` (GDD: ${gdd})` : ''}`;
       } else if (cropGrowthStage?.finalStage?.stage) {
-        suggestionText = `Based on BBCH stage ${cropGrowthStage.finalStage.stage}, monitor crop development.`;
+        suggestionText = `Current stage: ${cropGrowthStage.finalStage.stage}`;
       }
 
       return {
@@ -210,6 +240,7 @@ const PlantGrowthActivity = memo(
         isSowingDateValid: isSowingValid,
         currentDate: formattedCurrentDate,
         suggestion: suggestionText,
+        gddValue: gdd,
       };
     }, [sowingDate, cropName, cropGrowthStage]);
 
@@ -232,6 +263,7 @@ const PlantGrowthActivity = memo(
         currentDate,
         geometryId: aoi.id,
       };
+      
       dispatch(getTheCropGrowthStage(payload));
     }, [
       cropName,
@@ -286,6 +318,11 @@ const PlantGrowthActivity = memo(
       setInterval(e.target.value);
     }, []);
 
+    const keyActivities = useMemo(() => 
+      parseKeyActivities(cropGrowthStage?.keyActivity),
+      [cropGrowthStage?.keyActivity]
+    );
+
     if (!isSowingDateValid) {
       return (
         <div className="w-full flex justify-center mt-6">
@@ -315,9 +352,14 @@ const PlantGrowthActivity = memo(
                     Plant Growth Activity
                   </h2>
                   <div className="text-sm font-bold text-[#344E41] mt-3">
-                    {cropName || "Unknown Crop"}
+                    {cropGrowthStage?.crop || cropName || "Unknown Crop"}
                   </div>
                   <div className="text-sm text-gray-700">{suggestion}</div>
+                  {daysSinceSowing && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      Days since sowing: {daysSinceSowing}
+                    </div>
+                  )}
                 </div>
                 <select
                   value={interval}
@@ -412,7 +454,7 @@ const PlantGrowthActivity = memo(
                       />
                     </AreaChart>
                   </ResponsiveContainer>
-                  {tooltipPos && (
+                  {tooltipPos && cropGrowthStage?.finalStage && (
                     <div
                       className="absolute z-50 bg-[#344E41] text-white text-xs p-2 rounded shadow-xl max-w-[280px]"
                       style={{
@@ -421,20 +463,18 @@ const PlantGrowthActivity = memo(
                       }}
                     >
                       <p className="font-bold sm:text-base">
-                        {cropGrowthStage?.finalStage?.stage || "Unknown Stage"}
+                        BBCH {cropGrowthStage.finalStage.bbch}: {cropGrowthStage.finalStage.stage}
                       </p>
+                      {gddValue && (
+                        <p className="text-xs text-gray-300 mb-1">
+                          Growing Degree Days: {gddValue}
+                        </p>
+                      )}
                       <p className="font-semibold mb-1">Key Activities:</p>
                       <ul className="list-disc list-inside space-y-1 max-h-[140px] overflow-auto">
-                        {Array.isArray(cropGrowthStage?.keyActivity) ? (
-                          cropGrowthStage.keyActivity.map((act, idx) => (
-                            <li key={idx}>{act}</li>
-                          ))
-                        ) : (
-                          <li>
-                            {cropGrowthStage?.keyActivity ||
-                              "No activities available"}
-                          </li>
-                        )}
+                        {keyActivities.map((act, idx) => (
+                          <li key={idx}>{act}</li>
+                        ))}
                       </ul>
                       <p className="italic mt-1 text-gray-400">
                         {interval === "Days"

@@ -1,23 +1,24 @@
 import React from "react";
 import ReactEcharts from "echarts-for-react";
 
-const Humidity = ({ forecastData }) => {
-  if (!forecastData) return <div>Loading...</div>;
+const Humidity = ({ forecastData, historicalData, dateRange }) => {
+  // Use historical data if available, otherwise use forecast
+  const dataSource = historicalData || forecastData?.forecast || {};
+  const current = forecastData?.current || {};
+  const isHistorical = !!historicalData;
 
-  const forecast = forecastData.forecast || {};
-  const current = forecastData.current || {};
+  if (!forecastData && !historicalData) return <div>Loading...</div>;
 
-  // Extract times and format as "DD MMM"
-  const dates = (forecast.time || []).map(dateStr => {
+  const dates = (dataSource.time || []).map(dateStr => {
     const d = new Date(dateStr);
     return `${d.getDate()} ${d.toLocaleString("default", { month: "short" })}`;
   });
 
-  // Use relative humidity for humidity data (array)
-  const humidityData = forecast.relative_humidity || [];
+  const humidityData = dataSource.relative_humidity || [];
 
-  // Current humidity from current data (or fallback)
-  const currentHumidity = current.relative_humidity ?? "-";
+  const currentHumidity = isHistorical
+    ? (humidityData.length > 0 ? humidityData[humidityData.length - 1] : "-")
+    : (current.relative_humidity ?? "-");
 
   const options = {
     grid: {
@@ -31,11 +32,11 @@ const Humidity = ({ forecastData }) => {
       type: "category",
       boundaryGap: false,
       data: dates,
-
       axisLine: { show: true },
       axisLabel: {
-        color: "#000", interval: 0,    // show all 16 labels
-        rotate: 0,      // rotate to 15 or 30 if needed
+        color: "#000",
+        interval: 0,
+        rotate: 0,
         fontSize: 11,
         margin: 10,
       },
@@ -80,13 +81,18 @@ const Humidity = ({ forecastData }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md mt-3 mx-2 mb-2">
-      <div className="p-4 ">
+      <div className="p-4">
         <h2 className="flex justify-start items-center text-[20px] font-bold text-[#344E41] mb-3">
-          <span className="text-[20px] font-bold">Humidity %</span>
+          <span className="text-[20px] font-bold">
+            Humidity % {isHistorical && <span className="text-sm text-gray-500">(Historical)</span>}
+          </span>
         </h2>
         <div className="mb-3 text-[#344E41]">
-          <p>Current Humidity</p>
+          <p>{isHistorical ? "Avg Humidity" : "Current Humidity"}</p>
           <h2 className="text-[30px] font-bold">{currentHumidity}%</h2>
+          {isHistorical && dateRange && (
+            <p className="text-sm text-gray-500">{dateRange.startDate} to {dateRange.endDate}</p>
+          )}
         </div>
         <div className="w-full">
           <ReactEcharts option={options} className="w-full h-[200px]" />

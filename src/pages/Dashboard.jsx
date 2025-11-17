@@ -66,8 +66,10 @@ const Dashboard = () => {
 
   const [showSelectFarmModal, setShowSelectFarmModal] = useState(false);
   const [isRefreshingSubscription, setIsRefreshingSubscription] = useState(false);
+  const [aoisInitialized, setAoisInitialized] = useState(false);
 
   const aoiCreationRef = useRef(new Set());
+  const attemptedAOIsRef = useRef(new Set());
   const forecastFetchRef = useRef(new Map());
   const subscriptionCheckRef = useRef({
     lastCheckedForField: null,
@@ -129,29 +131,92 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!userId) return;
+    
     dispatch(getFarmFields(userId));
+    
     if (!isMountedRef.current) {
-      dispatch(fetchAOIs());
+      dispatch(fetchAOIs())
+        .unwrap()
+        .then(() => {
+          setAoisInitialized(true);
+        })
+        .catch(() => {
+          setAoisInitialized(true);
+        });
       isMountedRef.current = true;
     }
   }, [dispatch, userId]);
 
   useEffect(() => {
-    if (!selectedField && fields.length > 0) {
-      const latestField = fields[fields.length - 1]?._id;
-      if (latestField) {
-        setSelectedField(latestField);
-        localStorage.setItem(SELECTED_FIELD_KEY, latestField);
+    if (!Array.isArray(fields) || fields.length === 0) {
+      setPrevFieldsLength(0);
+      return;
+    }
+
+    const findNewest = (arr) => {
+      return arr.slice().sort((a, b) => {
+        const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        if (tb !== ta) return tb - ta;
+        if (a._id && b._id) return b._id.localeCompare(a._id);
+        return 0;
+      })[0];
+    };
+
+    const newestField = findNewest(fields);
+
+    if (!selectedField && newestField) {
+      setSelectedField(newestField._id);
+      try {
+        localStorage.setItem(SELECTED_FIELD_KEY, newestField._id);
+      } catch (e) {}
+    } else {
+      if (fields.length > prevFieldsLength && newestField) {
+        setSelectedField(newestField._id);
+        try {
+          localStorage.setItem(SELECTED_FIELD_KEY, newestField._id);
+        } catch (e) {}
       }
     }
 
-    if (selectedField && !fields.find((f) => f._id === selectedField)) {
-      localStorage.removeItem(SELECTED_FIELD_KEY);
-      setSelectedField("");
-    }
-
-    if (fields.length !== prevFieldsLength) setPrevFieldsLength(fields.length);
+    setPrevFieldsLength(fields.length);
   }, [fields, selectedField, prevFieldsLength]);
+
+  const aoiNeedsCreation = useMemo(() => {
+    if (!aoisInitialized || !selectedFieldDetails?._id) return null;
+    
+    const aoiName = selectedFieldDetails._id;
+    const exists = aois.some((a) => a.name === aoiName);
+    const attempted = attemptedAOIsRef.current.has(aoiName);
+    const creating = aoiCreationRef.current.has(aoiName);
+    
+    return !exists && !attempted && !creating ? aoiName : null;
+  }, [aoisInitialized, selectedFieldDetails, aois]);
+
+  useEffect(() => {
+    if (!aoiNeedsCreation || !selectedFieldDetails) return;
+
+    const geometryCoords = formatCoordinates(selectedFieldDetails.field);
+    if (geometryCoords.length === 0) return;
+
+    aoiCreationRef.current.add(aoiNeedsCreation);
+    attemptedAOIsRef.current.add(aoiNeedsCreation);
+
+    dispatch(
+      createAOI({
+        name: aoiNeedsCreation,
+        geometry: { type: "Polygon", coordinates: [geometryCoords] },
+      })
+    )
+      .unwrap()
+      .then(() => {})
+      .catch(() => {
+        attemptedAOIsRef.current.delete(aoiNeedsCreation);
+      })
+      .finally(() => {
+        setTimeout(() => aoiCreationRef.current.delete(aoiNeedsCreation), 1000);
+      });
+  }, [aoiNeedsCreation, dispatch, selectedFieldDetails]);
 
   useEffect(() => {
     if (!selectedField) return;
@@ -203,33 +268,6 @@ const Dashboard = () => {
   }, [fields.length]);
 
   useEffect(() => {
-    if (!selectedFieldDetails) return;
-    if (
-      !Array.isArray(selectedFieldDetails.field) ||
-      selectedFieldDetails.field.length === 0
-    )
-      return;
-
-    const aoiName = selectedFieldDetails._id;
-    if (aoiCreationRef.current.has(aoiName)) return;
-
-    const exists = aois.find((a) => a.name === aoiName);
-    if (exists) return;
-
-    aoiCreationRef.current.add(aoiName);
-    const geometryCoords = formatCoordinates(selectedFieldDetails.field);
-    if (geometryCoords.length === 0) {
-      return;
-    }
-    dispatch(
-      createAOI({
-        name: aoiName,
-        geometry: { type: "Polygon", coordinates: [geometryCoords] },
-      })
-    );
-  }, [selectedFieldDetails, aois, dispatch]);
-
-  useEffect(() => {
     if (fields.length > 0 && !selectedField) {
       setShowSelectFarmModal(true);
     } else {
@@ -252,14 +290,13 @@ const Dashboard = () => {
     dispatch(fetchForecastData({ geometry_id: geoId }));
   }, [selectedFieldDetails, aois, dispatch]);
 
-  // Monitor subscription checking state
   useEffect(() => {
     if (isCheckingSubscription) {
       setIsRefreshingSubscription(true);
     } else {
       const timer = setTimeout(() => {
         setIsRefreshingSubscription(false);
-      }, 200); // Reduced delay for faster response
+      }, 200);
       return () => clearTimeout(timer);
     }
   }, [isCheckingSubscription]);
@@ -268,9 +305,7 @@ const Dashboard = () => {
     setSelectedField(fieldId);
     try {
       localStorage.setItem(SELECTED_FIELD_KEY, fieldId);
-    } catch (e) {
-      // ignore localStorage errors
-    }
+    } catch (e) {}
   }, []);
 
   const handleSubscribe = useCallback(() => {
@@ -311,7 +346,6 @@ const Dashboard = () => {
         setShowPricingOverlay(false);
         setPricingFieldData(null);
 
-        // Optimistic update for immediate UI response
         if (selectedField && successData.subscription) {
           dispatch(
             optimisticSubscriptionUpdate({
@@ -331,12 +365,10 @@ const Dashboard = () => {
         setIsRefreshingSubscription(true);
 
         if (selectedField && authToken) {
-          // Wait for subscription check to complete
           await dispatch(
             checkFieldSubscriptionStatus({ fieldId: selectedField, authToken })
           ).unwrap();
 
-          // Small delay for smooth transition
           setTimeout(() => {
             setIsRefreshingSubscription(false);
           }, 300);
@@ -344,7 +376,6 @@ const Dashboard = () => {
           setIsRefreshingSubscription(false);
         }
       } catch (error) {
-        console.error("Error updating subscription:", error);
         setIsRefreshingSubscription(false);
         message.error("Failed to update subscription status. Please refresh the page.");
       }
@@ -445,7 +476,6 @@ const Dashboard = () => {
         transactionId={paymentSuccess?.transactionId}
       />
 
-      {/* Loading overlay with faster animation */}
       <AnimatePresence>
         {isRefreshingSubscription && (
           <motion.div
@@ -460,10 +490,9 @@ const Dashboard = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className=" rounded-xl p-6 shadow-2xl flex flex-col items-center gap-3"
+              className="rounded-xl p-6 shadow-2xl flex flex-col items-center gap-3"
             >
-              <LoadingSpinner/>
-              
+              <LoadingSpinner />
             </motion.div>
           </motion.div>
         )}
@@ -482,7 +511,6 @@ const Dashboard = () => {
         fields={fields}
       />
 
-      {/* Only render components when NOT refreshing subscription */}
       {fields.length > 0 && !isRefreshingSubscription && (
         <>
           <CropHealth

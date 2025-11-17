@@ -569,7 +569,6 @@ export const getTheCropGrowthStage = createAsyncThunk(
       if (cached && now - cached.timestamp < CACHE_TTL_24_HOURS) {
         return cached.data;
       }
-
       const response = await axios.post(
         "https://server.cropgenapp.com/v2/api/bbch-stage",
         payload
@@ -780,14 +779,14 @@ const satelliteSlice = createSlice({
       })
       .addCase(getTheCropGrowthStage.fulfilled, (state, action) => {
         state.loading.cropGrowthStage = false;
-
-        state.cropGrowthStage = action.payload;
+        state.cropGrowthStage = action.payload; // This stores the full response
       })
       .addCase(getTheCropGrowthStage.rejected, (state, action) => {
         state.loading.cropGrowthStage = false;
 
         state.error = action.payload;
       })
+
       // fetch the crop npk data
       .addCase(getNpkData.pending, (state) => {
         state.loading.newNpkData = true;

@@ -65,21 +65,6 @@ const NutrientBar = React.memo(
   }
 );
 
-// Utility function to convert field coordinates to GeoJSON format
-const convertFieldToCoordinates = (field) => {
-  if (!Array.isArray(field) || field.length === 0) return [];
-
-  const coordinates = field.map(({ lng, lat }) => [lng, lat]);
-  if (
-    coordinates.length > 0 &&
-    (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
-      coordinates[0][1] !== coordinates[coordinates.length - 1][1])
-  ) {
-    coordinates.push(coordinates[0]);
-  }
-  return [coordinates];
-};
-
 // Constant for nutrient data configuration
 const NUTRIENT_CONFIG = [
   { symbol: "N", label: "Nitrogen", key: "N" },
@@ -89,78 +74,96 @@ const NUTRIENT_CONFIG = [
 
 const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
   const dispatch = useDispatch();
-  const farmDetails = selectedFieldsDetials[0] || {};
-  const { cropName, sowingDate, _id: selectedFieldId } = farmDetails;
 
-  const aois = useSelector((state) => state.weather?.aois || []);
-  const newNpkData = useSelector((state) => state.satellite?.newNpkData || {});
-  const npkLoading = useSelector(
-    (state) => state.satellite?.loading?.newNpkData || false
-  );
+  const farmDetails = selectedFieldsDetials[0] || {};
+  const { cropName, variety, sowingDate, _id: selectedFieldId, field } = farmDetails;
+
+  // Get NPK data and loading state from Redux
+  const { newNpkData, loading } = useSelector((state) => state.satellite);
+  const npkLoading = loading?.newNpkData || false;
+
+  // Calculate days since sowing
+  const daysSinceSowing = useMemo(() => {
+    const isSowingValid = isValidDate(sowingDate);
+    if (!isSowingValid) return 1;
+
+    const today = new Date();
+    const sowing = new Date(sowingDate);
+    return Math.max(
+      1,
+      Math.floor((today.getTime() - sowing.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    );
+  }, [sowingDate]);
 
   // Memoize nutrient data and date validation
-  const { nutrientData, isSowingDateValid, endDate } = useMemo(() => {
+  const { nutrientData, isSowingDateValid, endDate, startDate } = useMemo(() => {
     const isSowingValid = isValidDate(sowingDate);
-    const today = new Date(); // Dynamic current date
+    const today = new Date();
     const isTodayValid = isValidDate(today);
     let formattedEndDate = "";
+    let formattedStartDate = "";
+
     if (isTodayValid) {
       formattedEndDate = formatToYYYYMMDD(today);
     } else {
-      // Fallback (unlikely with new Date())
-      formattedEndDate = "2025-08-25";
+      formattedEndDate = new Date().toISOString().split('T')[0];
     }
+
+    if (isSowingValid) {
+      formattedStartDate = formatToYYYYMMDD(sowingDate);
+    } else {
+      formattedStartDate = formattedEndDate;
+    }
+
     const nutrientData = NUTRIENT_CONFIG.map(({ symbol, label, key }) => ({
       symbol,
       label,
       current: newNpkData?.data?.estimated_uptake?.[key] ?? 0,
       required: newNpkData?.data?.stage_target?.[key] ?? 0,
     }));
+
     return {
       nutrientData,
       isSowingDateValid: isSowingValid,
       endDate: formattedEndDate,
+      startDate: formattedStartDate,
     };
   }, [sowingDate, newNpkData]);
 
   useEffect(() => {
-    if (
-      !cropName ||
-      !sowingDate ||
-      !isSowingDateValid ||
-      !selectedFieldId ||
-      !aois.length
-    )
-      return;
+    // Fetch NPK data when component mounts or dependencies change
+    if (field && field.length > 0 && cropName && selectedFieldId && isSowingDateValid) {
+      // Transform field coordinates to geometryCoords format
+      const geometryCoords = [
+        field.map(({ lat, lng }) => {
+          if (typeof lat !== "number" || typeof lng !== "number") {
+            console.error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
+            return [0, 0];
+          }
+          return [lng, lat];
+        })
+      ];
 
-    const aoi = aois.find((a) => a.name === selectedFieldId);
-    if (!aoi?.id) {
-      dispatch({
-        type: "FETCH_NPK_DATA_FAILURE",
-        payload: "No matching AOI found",
-      });
-      return;
+      // Ensure polygon is closed
+      if (geometryCoords[0].length > 0) {
+        const firstCoord = geometryCoords[0][0];
+        const lastCoord = geometryCoords[0][geometryCoords[0].length - 1];
+        if (firstCoord[0] !== lastCoord[0] || firstCoord[1] !== lastCoord[1]) {
+          geometryCoords[0].push([...firstCoord]);
+        }
+      }
+
+      const payload = {
+        crop: cropName.toLowerCase(),
+        geometryCoords: geometryCoords,
+        geometry_id: selectedFieldId,
+        startDate: startDate,
+        endDate: endDate,
+      };
+
+      dispatch(getNpkData(payload));
     }
-
-    const payload = {
-      crop: cropName,
-      startDate: formatToYYYYMMDD(sowingDate),
-      endDate,
-      geometry_id: aoi.id,
-      geometryCoords: convertFieldToCoordinates(farmDetails?.field),
-    };
-
-    dispatch(getNpkData(payload));
-  }, [
-    cropName,
-    sowingDate,
-    isSowingDateValid,
-    endDate,
-    selectedFieldId,
-    aois,
-    dispatch,
-    farmDetails?.field,
-  ]);
+  }, [dispatch, field, cropName, selectedFieldId, isSowingDateValid, startDate, endDate]);
 
   if (!isSowingDateValid) {
     return (
@@ -178,14 +181,16 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
     return <NpkChartSkeleton />;
   }
 
-  const isFinalHarvest = false;
+  const isFinalHarvest = daysSinceSowing > 98;
 
   return (
     <div className="w-full px-2 sm:px-4 md:scale-[0.95] md:pl-1">
+
+
       {isFinalHarvest ? (
         <div className="bg-orange-50 p-3 sm:p-4 rounded-lg border border-yellow-500 mb-4 sm:mb-6">
           <span className="block text-sm sm:text-base font-semibold text-orange-800 text-center">
-            {`Final harvest stage reached for ${cropName || "Crop"}`}
+            {`Final harvest stage reached for ${cropName} ${variety ? `(${variety})` : ''}`}
           </span>
         </div>
       ) : (
@@ -194,13 +199,13 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
             <div className="flex items-center mr-4 sm:mr-6">
               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-600 rounded-sm mr-1 sm:mr-2" />
               <span className="text-xs sm:text-sm md:text-xs text-gray-700">
-                Current
+                Current Uptake
               </span>
             </div>
             <div className="flex items-center">
               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-lime-400 rounded-sm mr-1 sm:mr-2" />
               <span className="text-xs sm:text-sm md:text-xs text-gray-700">
-                Required
+                Target Required
               </span>
             </div>
           </div>
@@ -218,7 +223,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
           {newNpkData?.data?.notes && (
             <div className="mt-4 sm:mt-6 bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-300">
               <span className="block text-sm sm:text-base font-medium text-gray-800">
-                Notes: {newNpkData.data.notes}
+                <strong>Recommendations:</strong> {newNpkData.data.notes}
               </span>
             </div>
           )}

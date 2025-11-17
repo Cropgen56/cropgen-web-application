@@ -1,22 +1,23 @@
 import React from "react";
 import ReactEcharts from "echarts-for-react";
 import { Card } from "react-bootstrap";
-// import "./Temperature.css";
 
-const Temperature = ({ forecastData }) => {
-  if (!forecastData?.forecast) {
+const Temperature = ({ forecastData, historicalData, dateRange }) => {
+  // Use historical data if available, otherwise use forecast
+  const dataSource = historicalData || forecastData?.forecast || {};
+  const isHistorical = !!historicalData;
+
+  if (!forecastData && !historicalData) {
     return <p>Loading temperature data...</p>;
   }
 
-  const { time = [], temp_max = [], temp_mean = [], temp_min = [] } = forecastData.forecast;
+  const { time = [], temp_max = [], temp_mean = [], temp_min = [] } = dataSource;
 
-  // Slice to 16 days only
   const slicedTime = time.slice(0, 16);
   const slicedTempMax = temp_max.slice(0, 16);
   const slicedTempMean = temp_mean.slice(0, 16);
   const slicedTempMin = temp_min.slice(0, 16);
 
-  // Format dates as "DD MMM"
   const formattedDates = slicedTime.map(dateStr => {
     const d = new Date(dateStr);
     const day = d.getDate();
@@ -95,8 +96,11 @@ const Temperature = ({ forecastData }) => {
         <div className="w-full">
           <div className="flex justify-between items-center">
             <h2 className="text-[#344e41] text-lg font-bold">
-              Temperature, <sup>°C</sup>
+              Temperature, <sup>°C</sup> {isHistorical && <span className="text-sm text-gray-500">(Historical)</span>}
             </h2>
+            {isHistorical && dateRange && (
+              <p className="text-sm text-gray-500">{dateRange.startDate} to {dateRange.endDate}</p>
+            )}
           </div>
           <ReactEcharts option={options} className="w-full relative h-[250px]" />
         </div>

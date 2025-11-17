@@ -6,54 +6,28 @@ import React, {
   useCallback,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  genrateAdvisory,
-  fetchSoilMoisture,
-} from "../../../redux/slices/satelliteSlice";
+import { fetchSoilMoisture } from "../../../redux/slices/satelliteSlice";
+import { fetchCropAdvisory } from "../../../redux/slices/cropSlice";
 import CropAdvisorySkeleton from "../../Skeleton/CropAdvisorySkeleton";
 import IndexPremiumWrapper from "../../subscription/Indexpremiumwrapper";
 import { selectHasWeeklyAdvisoryReports } from "../../../redux/slices/membershipSlice";
 
 const categories = [
-  "Disease/Pest Control",
-  "Fertigation",
-  "Watering",
-  "Monitoring",
+  { key: "disease_pest", label: "Disease/Pest Control" },
+  { key: "spray", label: "Spray Recommendation" },
+  { key: "fertigation", label: "Fertigation" },
+  { key: "water", label: "Watering" },
+  { key: "monitoring", label: "Monitoring" },
 ];
 
 const AdvisoryCard = React.memo(({ category, activityText }) => {
-  let content;
-  if (!activityText) {
-    content = <p>No data available</p>;
-  } else if (category === "Disease/Pest Control") {
-    const lines = activityText.split("\n");
-    if (lines.length >= 2) {
-      const diseaseLine = lines[0].replace("Disease Pest - ", "");
-      const sprayLine = lines[1].replace("Spray - ", "");
-      content = (
-        <div>
-          <p>
-            <strong>Disease/Pest:</strong> {diseaseLine}
-          </p>
-          <p>
-            <strong>Spray:</strong> {sprayLine}
-          </p>
-        </div>
-      );
-    } else {
-      content = <p>{activityText}</p>;
-    }
-  } else {
-    content = <p>{activityText}</p>;
-  }
-
   return (
     <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-[#344E41]/90 border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto no-scrollbar">
       <h3 className="text-sm lg:text-base font-bold text-white mb-1 md:mb-0.5">
         {category}
       </h3>
       <div className="text-xs lg:text-sm text-gray-300 font-medium leading-tight">
-        {content}
+        {activityText || "No data available"}
       </div>
     </div>
   );
@@ -62,11 +36,11 @@ AdvisoryCard.displayName = "AdvisoryCard";
 
 const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
   const dispatch = useDispatch();
-  const [selectedDay, setSelectedDay] = useState("Day 1");
   
-  const { advisory, cropGrowthStage } = useSelector(
-    (state) => state.satellite || {}
+  const { cropAdvisory, advisoryLoading } = useSelector(
+    (state) => state.crops || {}
   );
+  const { soilMoisture } = useSelector((state) => state.satellite || {});
   const { forecastData } = useSelector((state) => state.weather || {});
   
   // Get feature flag
@@ -82,43 +56,69 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
 
   const lastSoilFetchRef = useRef(null);
 
+  // Fetch soil moisture data
   useEffect(() => {
     if (!farmId) return;
     if (lastSoilFetchRef.current === farmId) return;
     lastSoilFetchRef.current = farmId;
 
     dispatch(fetchSoilMoisture(farmDetails));
-  }, [dispatch, farmId]);
+  }, [dispatch, farmId, farmDetails]);
 
   const lastAdvisoryKeyRef = useRef(null);
   const advisoryTimerRef = useRef(null);
 
+  // Build payload and fetch advisory
   useEffect(() => {
-    const bbch = cropGrowthStage?.finalStage?.bbch ?? null;
-    const forecastTs = forecastData?.current?.dt ?? forecastData?.dt ?? null;
-    const advisoryKey = `${farmId || "nofarm"}::${bbch ?? "nobbch"}::${
-      forecastTs ?? "nofc"
-    }`;
+    if (!farmDetails || !forecastData) return;
 
-    if (!farmId || !bbch || !forecastData || !selectedFieldsDetials?.length)
-      return;
+    const {
+      cropName,
+      sowingDate,
+      bbch,
+      variety,
+      irrigationType,
+      farmingType,
+    } = farmDetails;
+
+    // Extract weather data
+    const currentWeather = forecastData?.current || forecastData;
+    const humidity = currentWeather?.humidity || 0;
+    const temp = currentWeather?.temp || 0;
+    const rain = currentWeather?.rain?.["1h"] || 0;
+
+    // Extract soil data
+    const soilTemp = soilMoisture?.soilTemperature || 0;
+    const soilMoist = soilMoisture?.soilMoisture || 0;
+
+    const advisoryKey = `${farmId}::${cropName}::${bbch}::${forecastData?.current?.dt || Date.now()}`;
 
     if (lastAdvisoryKeyRef.current === advisoryKey) return;
 
     if (advisoryTimerRef.current) clearTimeout(advisoryTimerRef.current);
+
     advisoryTimerRef.current = setTimeout(() => {
       lastAdvisoryKeyRef.current = advisoryKey;
 
-      dispatch(
-        genrateAdvisory({
-          farmDetails: selectedFieldsDetials[0],
-          currenWeather: forecastData?.current,
-          bbchData: cropGrowthStage?.finalStage,
-        })
-      ).catch(() => {
+      const payload = {
+        crop_name: cropName || "Wheat",
+        sowing_date: sowingDate || new Date().toISOString().split("T")[0],
+        bbch_stage: String(bbch || "31"),
+        variety: variety || "Standard",
+        irrigation_type: irrigationType || "Drip",
+        type_of_farming: farmingType || "Conventional",
+        humidity: Math.round(humidity),
+        temp: Math.round(temp),
+        rain: Math.round(rain),
+        soil_temp: Math.round(soilTemp),
+        soil_moisture: Math.round(soilMoist),
+        language: "en",
+      };
+
+      dispatch(fetchCropAdvisory(payload)).catch(() => {
         lastAdvisoryKeyRef.current = null;
       });
-    }, 200);
+    }, 300);
 
     return () => {
       if (advisoryTimerRef.current) {
@@ -128,13 +128,13 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
     };
   }, [
     dispatch,
-    cropGrowthStage?.finalStage?.bbch,
-    forecastData?.current?.dt,
-    farmId,
-    selectedFieldsDetials,
+    farmDetails,
     forecastData,
+    soilMoisture,
+    farmId,
   ]);
 
+  // Drag handlers for horizontal scroll
   const attachDragHandlers = useCallback(() => {
     const slider = scrollRef.current;
     if (!slider) return () => {};
@@ -179,86 +179,46 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
     return () => cleanup && cleanup();
   }, [attachDragHandlers]);
 
+  // Get advisory data
   const advisoryData = useMemo(() => {
-    if (!Array.isArray(advisory)) return [];
-    return advisory.map((item) => ({
-      day: item.day,
-      activities: {
-        "Disease/Pest Control": `Disease Pest - ${String(
-          item.disease_pest ?? ""
-        ).replace(/[[```]/g, "")}\nSpray - ${String(item.spray ?? "").replace(
-          /[[```]/g,
-          ""
-        )}`,
-        Fertigation: item.fertigation ?? "",
-        Watering: item.water ?? "",
-        Monitoring: item.monitoring ?? "",
-      },
-    }));
-  }, [advisory]);
-
-  useEffect(() => {
-    if (
-      advisoryData.length > 0 &&
-      !advisoryData.some((item) => item.day === selectedDay)
-    ) {
-      setSelectedDay(advisoryData[0].day);
-    }
-  }, [advisoryData, selectedDay]);
-
-  const currentDayData = useMemo(() => {
-    return (
-      advisoryData.find((item) => item.day === selectedDay)?.activities || {}
-    );
-  }, [advisoryData, selectedDay]);
+    if (!cropAdvisory?.advisory) return null;
+    return cropAdvisory.advisory;
+  }, [cropAdvisory]);
 
   return (
     <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-900">Crop Advisory</h2>
-
-        <select
-          value={selectedDay}
-          onChange={(e) => setSelectedDay(e.target.value)}
-          aria-label="Select advisory day"
-          className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {advisoryData.length > 0 ? (
-            advisoryData.map((item) => (
-              <option key={item.day} value={item.day} className="text-gray-700">
-                Day {item.day}
-              </option>
-            ))
-          ) : (
-            <option value="Day 1" className="text-gray-700">
-              Day 1
-            </option>
-          )}
-        </select>
+        <h2 className="text-xl font-bold text-gray-900"> Weekly Crop Advisory</h2>
+        
       </div>
 
-      <IndexPremiumWrapper
+      {/* Temporarily remove wrapper for testing */}
+      {/* <IndexPremiumWrapper
         isLocked={!hasWeeklyAdvisoryReports}
         onSubscribe={onSubscribe}
         title="Crop Advisory"
-      >
-        {advisoryData.length > 0 ? (
+      > */}
+        {advisoryLoading ? (
+          <CropAdvisorySkeleton />
+        ) : advisoryData ? (
           <div
             ref={scrollRef}
             className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
           >
             {categories.map((category) => (
               <AdvisoryCard
-                key={category}
-                category={category}
-                activityText={currentDayData[category]}
+                key={category.key}
+                category={category.label}
+                activityText={advisoryData[category.key]}
               />
             ))}
           </div>
         ) : (
-          <CropAdvisorySkeleton />
+          <div className="flex items-center justify-center p-8 text-gray-500">
+            <p>No advisory data available. Please check your field details.</p>
+          </div>
         )}
-      </IndexPremiumWrapper>
+      {/* </IndexPremiumWrapper> */}
     </div>
   );
 };

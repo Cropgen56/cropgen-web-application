@@ -26,7 +26,7 @@ import {
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectHasWeatherAnalytics, // Updated import
+  selectHasWeatherAnalytics,
 } from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -58,7 +58,6 @@ const Weather = () => {
 
   const loading = useSelector((state) => state?.weather?.loading);
 
-  // Updated feature selector
   const showMembershipModal = useSelector(
     (state) => state.membership.showMembershipModal
   );
@@ -71,6 +70,10 @@ const Weather = () => {
   const [selectedField, setSelectedField] = useState(null);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
+  
+  const [historicalData, setHistoricalData] = useState(null);
+  const [dateRange, setDateRange] = useState(null);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -169,6 +172,16 @@ const Weather = () => {
     }
   }, [selectedField, authToken, dispatch]);
 
+  const handleHistoricalDataReceived = useCallback((data, startDate, endDate) => {
+    setHistoricalData(data);
+    setDateRange({ startDate, endDate });
+  }, []);
+
+  const handleClearHistoricalData = useCallback(() => {
+    setHistoricalData(null);
+    setDateRange(null);
+  }, []);
+
   const payload = useMemo(() => {
     if (!selectedField?.field?.length) return null;
     const geometryCoords = formatCoordinates(selectedField.field);
@@ -198,6 +211,10 @@ const Weather = () => {
       }
     }
   }, [dispatch, selectedField, aois]);
+
+  useEffect(() => {
+    handleClearHistoricalData();
+  }, [selectedField, handleClearHistoricalData]);
 
   if (fields.length === 0) {
     return (
@@ -269,26 +286,38 @@ const Weather = () => {
               <WeekWeather
                 selectedField={selectedField}
                 forecastData={forecastData}
+                historicalData={historicalData}
+                dateRange={dateRange}
               />
               <WeatherHistory
                 selectedField={selectedField}
                 forecastData={forecastData}
+                onHistoricalDataReceived={handleHistoricalDataReceived}
+                onClearHistoricalData={handleClearHistoricalData}
               />
               <RainChances
                 selectedField={selectedField}
                 forecastData={forecastData}
+                historicalData={historicalData}
+                dateRange={dateRange}
               />
               <WindSpeed
                 selectedField={selectedField}
                 forecastData={forecastData}
+                historicalData={historicalData}
+                dateRange={dateRange}
               />
               <Temperature
                 selectedField={selectedField}
                 forecastData={forecastData}
+                historicalData={historicalData}
+                dateRange={dateRange}
               />
               <Humidity
                 selectedField={selectedField}
                 forecastData={forecastData}
+                historicalData={historicalData}
+                dateRange={dateRange}
               />
             </PremiumPageWrapper>
           )}
