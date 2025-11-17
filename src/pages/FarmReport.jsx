@@ -317,7 +317,7 @@ const FarmReport = () => {
         <img
           src={img1}
           alt="No Fields"
-          className="w-[400px] h-[400px] mb-6 opacity-70"
+          className="w-[400px] h-[400px] mb-6 opacity-60"
         />
         <h2 className="text-2xl font-semibold text-white">
           Add Farm to See the Farm Report

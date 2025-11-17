@@ -87,6 +87,7 @@ const FarmReportSidebar = ({
     field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // handling download
   const handleDownload = async () => {
     setLoading(true);
     await downloadPDF();
@@ -101,7 +102,7 @@ const FarmReportSidebar = ({
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Weather2 />
-            <h2 className="text-[18px] font-bold text-[#344e41]">
+            <h2 className="text-[18px] font-bold text-[#344e41] hover:text-[#344e41]">
               Farm Report
             </h2>
           </div>
@@ -176,8 +177,10 @@ const FarmReportSidebar = ({
             className="w-full flex items-center justify-center gap-2 bg-[#344e41] text-white py-2 rounded-md hover:bg-[#2d4036] transition-all duration-300"
           >
             {loading && <LoaderCircle className="animate-spin" size={18} />}
-            {loading ? (
-              "Downloading..."
+
+            {loading ?
+              (
+              "Downloading.."
             ) : (
               <>
                 <ArrowDownToLine size={18} /> Download Farm Report
