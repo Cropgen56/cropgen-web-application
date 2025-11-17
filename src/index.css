@@ -165,3 +165,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     transform: rotate(360deg);
   }
 }
+
+.force-visible {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  transform: none !important; 
+}
+.recharts-wrapper {
+  overflow: visible !important;
+}
+
+img {
+  image-rendering: crisp-edges !important;
+}

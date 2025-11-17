@@ -228,73 +228,79 @@ const CropAdvisory = ({
   }, [advisoryData, selectedDay]);
 
   return (
-    <div className="flex flex-col gap-4 mt-4 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-900">Crop Advisory</h2>
+    <div className="p-2 mt-2">
+      <div className="flex flex-col p-3 gap-4 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto overflow-hidden">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-900">Crop Advisory</h2>
 
-        <select
-          value={selectedDay}
-          onChange={(e) => setSelectedDay(e.target.value)}
-          aria-label="Select advisory day"
-          className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 "
-        >
-          {advisoryData.length > 0 ? (
-            advisoryData.map((item) => (
-              <option key={item.day} value={item.day} className="text-gray-700">
-                Day {item.day}
+          <select
+            value={selectedDay}
+            onChange={(e) => setSelectedDay(e.target.value)}
+            aria-label="Select advisory day"
+            className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 "
+          >
+            {advisoryData.length > 0 ? (
+              advisoryData.map((item) => (
+                <option
+                  key={item.day}
+                  value={item.day}
+                  className="text-gray-700"
+                >
+                  Day {item.day}
+                </option>
+              ))
+            ) : (
+              <option value="Day 1" className="text-gray-700">
+                Day 1
               </option>
-            ))
-          ) : (
-            <option value="Day 1" className="text-gray-700">
-              Day 1
-            </option>
-          )}
-        </select>
-      </div>
+            )}
+          </select>
+        </div>
 
-      {usePremiumWrapper ? (
-        <IndexPremiumWrapper
-          isLocked={isLocked}
-          onSubscribe={onSubscribe}
-          title="Crop Advisory"
-        >
-          {advisoryData.length > 0 ? (
-            <div
-              ref={scrollRef}
-              className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
-            >
-              {categories.map((category) => (
-                <AdvisoryCard
-                  key={category}
-                  category={category}
-                  activityText={currentDayData[category]}
-                />
-              ))}
-            </div>
-          ) : (
-            <CropAdvisorySkeleton />
-          )}
-        </IndexPremiumWrapper>
-      ) : (
-        <>
-          {advisoryData.length > 0 ? (
-            <div
-              ref={scrollRef}
-              className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
-            >
-              {categories.map((category) => (
-                <AdvisoryCard
-                  key={category}
-                  category={category}
-                  activityText={currentDayData[category]}
-                />
-              ))}
-            </div>
-          ) : (
-            <CropAdvisorySkeleton />
-          )}
-        </>
-      )}
+        {usePremiumWrapper ? (
+          <IndexPremiumWrapper
+            isLocked={isLocked}
+            onSubscribe={onSubscribe}
+            title="Crop Advisory"
+          >
+            {advisoryData.length > 0 ? (
+              <div
+                ref={scrollRef}
+                className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
+              >
+                {categories.map((category) => (
+                  <AdvisoryCard
+                    key={category}
+                    category={category}
+                    activityText={currentDayData[category]}
+                  />
+                ))}
+              </div>
+            ) : (
+              <CropAdvisorySkeleton />
+            )}
+          </IndexPremiumWrapper>
+        ) : (
+          <>
+            {advisoryData.length > 0 ? (
+              <div
+                ref={scrollRef}
+                className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
+              >
+                {categories.map((category) => (
+                  <AdvisoryCard
+                    key={category}
+                    category={category}
+                    activityText={currentDayData[category]}
+                  />
+                ))}
+              </div>
+            ) : (
+              <CropAdvisorySkeleton />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

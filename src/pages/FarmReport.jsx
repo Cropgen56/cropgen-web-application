@@ -35,6 +35,7 @@ import {
 } from "../redux/slices/membershipSlice";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import domtoimage from "dom-to-image";
 
 import img1 from "../assets/image/Group 31.png";
 import FarmReportMap from "../components/farmreport/farmreportsidebar/FarmReportMap";
@@ -97,26 +98,26 @@ const FarmReport = () => {
   }, [fields, selectedField]);
 
   // Fetch index data whenever selected field changes
-useEffect(() => {
-  const field = selectedFieldDetails?.field;
-  if (!field || field.length < 3) return;
+  useEffect(() => {
+    const field = selectedFieldDetails?.field;
+    if (!field || field.length < 3) return;
 
-  // Convert to [lng, lat] and ensure polygon is closed
-  let coords = field.map(({ lat, lng }) => [lng, lat]);
-  const first = coords[0];
-  const last = coords[coords.length - 1];
-  if (first[0] !== last[0] || first[1] !== last[1]) {
-    coords.push(first);
-  }
+    // Convert to [lng, lat] and ensure polygon is closed
+    let coords = field.map(({ lat, lng }) => [lng, lat]);
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    if (first[0] !== last[0] || first[1] !== last[1]) {
+      coords.push(first);
+    }
 
-  const today = new Date().toISOString().split("T")[0];
-  const indexes = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
+    const today = new Date().toISOString().split("T")[0];
+    const indexes = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
 
-  indexes.forEach((index) => {
-    dispatch(fetchIndexData({ endDate: today, geometry: [coords], index }));
-  });
-}, [selectedFieldDetails, dispatch]);
-  
+    indexes.forEach((index) => {
+      dispatch(fetchIndexData({ endDate: today, geometry: [coords], index }));
+    });
+  }, [selectedFieldDetails, dispatch]);
+
   useEffect(() => {
     if (selectedField && authToken) {
       dispatch(setCurrentField(selectedField._id));
@@ -224,7 +225,6 @@ useEffect(() => {
 
       if (sec.classList.contains("exclude-map")) continue;
 
-      // Clone (same as soil)
       const clone = sec.cloneNode(true);
       clone.style.position = "absolute";
       clone.style.top = "0";
@@ -232,7 +232,32 @@ useEffect(() => {
       clone.style.width = sec.offsetWidth + "px";
       clone.style.background = "#fff";
 
+      // ---- FIX NDVI CHART SCROLL FOR PDF ----
+      const ndviWrapper = clone.querySelector("#ndvi-chart-wrapper");
+      let original = {};
+
+      if (ndviWrapper) {
+        original = {
+          width: ndviWrapper.style.width,
+          overflow: ndviWrapper.style.overflow,
+        };
+
+        // make it full width
+        ndviWrapper.style.overflow = "visible";
+        ndviWrapper.style.width = ndviWrapper.scrollWidth + "px";
+
+        // force Recharts to re-render full width
+        ndviWrapper
+          .querySelector("svg")
+          ?.setAttribute("width", ndviWrapper.scrollWidth);
+      }
+
       document.body.appendChild(clone);
+
+      if (ndviWrapper) {
+        ndviWrapper.style.width = original.width;
+        ndviWrapper.style.overflow = original.overflow;
+      }
 
       clone.querySelectorAll("canvas, img, svg").forEach((el) => {
         el.classList.add("force-visible");
@@ -243,7 +268,20 @@ useEffect(() => {
         tile.setAttribute("referrerpolicy", "no-referrer");
       });
 
+      clone.querySelectorAll("img").forEach((img) => {
+        img.crossOrigin = "anonymous";
+        img.referrerPolicy = "no-referrer";
+      });
+
       await new Promise((res) => setTimeout(res, 500));
+
+      const imgs = clone.querySelectorAll("img");
+      await Promise.all(
+        [...imgs].map((img) => {
+          if (img.complete) return;
+          return new Promise((res) => (img.onload = res));
+        })
+      );
 
       const canvas = await html2canvas(clone, {
         scale: 2,
@@ -315,22 +353,20 @@ useEffect(() => {
           currentFieldHasSubscription={currentFieldHasSubscription}
         />
 
-        {/* <PremiumPageWrapper
+        <PremiumPageWrapper
           isLocked={!currentFieldHasSubscription}
           onSubscribe={handleSubscribe}
           title="Farm Report"
-        > */}
+        >
         <div
           className="w-full h-screen overflow-y-auto bg-[#5a7c6b] p-4"
           ref={mainReportRef}
         >
           {selectedFieldDetails && (
             <>
-              <FarmReportMap
-                selectedFieldsDetials={[selectedFieldDetails]}
-              />
-
               <div className="farm-section">
+                <FarmReportMap selectedFieldsDetials={[selectedFieldDetails]} />
+
                 <CropHealth
                   selectedFieldsDetials={[selectedFieldDetails]}
                   fields={fields}
@@ -338,10 +374,10 @@ useEffect(() => {
                   onSubscribe={handleSubscribe}
                   usePremiumWrapper={false}
                 />
-                <ForeCast forecastData={{}} />
               </div>
-
               <div className="farm-section">
+                <ForeCast forecastData={{}} />
+
                 <NdviGraph
                   selectedFieldsDetials={[selectedFieldDetails]}
                   isLocked={!currentFieldHasSubscription}
@@ -355,10 +391,10 @@ useEffect(() => {
                   usePremiumWrapper={false}
                 />
                 <EvapotranspirationDashboard forecast={{}} units={{}} />
-                <Insights />
               </div>
 
               <div className="farm-section">
+              <Insights />
                 <CropAdvisory
                   selectedFieldsDetials={[selectedFieldDetails]}
                   isLocked={!currentFieldHasSubscription}
@@ -375,7 +411,7 @@ useEffect(() => {
             </>
           )}
         </div>
-        {/* </PremiumPageWrapper> */}
+        </PremiumPageWrapper>
       </div>
     </>
   );

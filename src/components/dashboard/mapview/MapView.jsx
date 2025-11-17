@@ -79,7 +79,7 @@ const FarmMap = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { indexData, loading } = useSelector((state) => state?.satellite);
-  console.log("indexData: ", indexData);
+  // console.log("indexData: ", indexData);
 
   const mapRef = useRef(null);
   const [image, setImage] = useState(null);

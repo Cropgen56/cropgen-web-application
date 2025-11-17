@@ -303,7 +303,7 @@ const PlantGrowthActivity = memo(
 
     if (!isSowingDateValid) {
       return (
-        <div className="w-full flex justify-center mt-6">
+        <div className="w-full flex justify-center mt-4">
           <div className="relative w-full max-w-6xl rounded-2xl shadow-lg text-white p-4 md:p-5">
             <div className="w-full flex items-center justify-center bg-gray-100 rounded-lg p-4">
               <span className="text-gray-800 text-sm">
@@ -316,8 +316,8 @@ const PlantGrowthActivity = memo(
     }
 
     return (
-      <div className="w-full flex mt-6">
-        <div className="relative w-full rounded-2xl shadow-lg flex flex-col overflow-hidden">
+      <div className="w-full flex mt-2 p-2">
+        <div className="relative w-full border border-gray-200 rounded-2xl shadow-md flex flex-col overflow-hidden">
           <div className="relative z-10 w-full bg-white backdrop-blur-sm rounded-xl p-3">
             <div className="flex justify-between items-start mb-2">
               <div className="flex flex-col gap-0.5">

@@ -166,8 +166,8 @@ const NdviGraph = ({
   const hasData = chartData.length > 0;
 
   return (
-    <div className="w-full flex justify-center mt-4">
-      <div className="relative w-full bg-white rounded-2xl shadow-md text-black flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-3">
+    <div className="w-full flex justify-center mt-2 p-2">
+      <div className="relative w-full bg-white border border-gray-200 rounded-2xl shadow-md text-black flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-3">
         <div className="absolute top-3 right-3 z-50">
           <select
             value={index}
@@ -219,6 +219,7 @@ const NdviGraph = ({
                 onSubscribe={onSubscribe}
               >
                 <div
+                  id="ndvi-chart-wrapper"
                   ref={scrollRef}
                   className="overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
                 >

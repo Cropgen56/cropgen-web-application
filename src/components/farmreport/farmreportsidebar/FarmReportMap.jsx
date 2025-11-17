@@ -178,6 +178,7 @@ const FarmReportMap = ({ selectedFieldsDetials }) => {
                 subdomains={["mt0", "mt1", "mt2", "mt3"]}
                 maxZoom={20}
                 crossOrigin={true}
+                referrerpolicy="no-referrer"
               />
               {polygonCoordinates.length > 0 && (
                 <>

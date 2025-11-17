@@ -56,7 +56,7 @@ const CropHealth = ({
   }, [cropDetials, dispatch]);
 
   return (
-    <div body className="mt-4 mb-4 ">
+    <div className="p-2">
       <div className="relative flex flex-col gap-6 rounded-2xl p-4 overflow-hidden bg-white shadow-md border border-gray-200">
         <h2 className="absolute top-4 left-6 text-[24px] sm:text-xl font-bold text-[#344E41] z-20">
           Crop Health

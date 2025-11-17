@@ -44,7 +44,7 @@ function ForeCast() {
   const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="mt-4">
+    <div className="mt-2 p-2">
 
       <div className="relative bg-white border border-gray-200 rounded-2xl shadow-md text-gray-800 flex flex-col overflow-hidden px-6 py-3">
 

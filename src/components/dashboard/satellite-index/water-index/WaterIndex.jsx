@@ -178,8 +178,8 @@ const WaterIndex = ({
   };
 
   return (
-    <div className="w-full flex justify-center mt-4">
-      <div className="relative w-full bg-white rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+    <div className="w-full flex justify-center mt-2 p-2">
+      <div className="relative w-full bg-white border border-gray-200 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
         {/* Index Selector */}
         <div className="absolute top-3 right-3 z-50">
           <select
