@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -22,8 +22,7 @@ const MoveMapToField = ({ lat, lng, bounds }) => {
   return null;
 };
 
-// Close polygon utility
-// const closePolygon = (coords) => (coords.length && (coords[0][0] !== coords[coords.length - 1][0] || coords[0][1] !== coords[coords.length - 1][1]) ? [...coords, coords[0]] : coords);
+// Close polygon 
 const closePolygon = (coords) => {
   if (!coords.length) return [];
   const first = coords[0];
@@ -59,6 +58,12 @@ const calculateBounds = (coords) => {
 const FarmReportMap = ({ selectedFieldsDetials }) => {
   const dispatch = useDispatch();
   const { indexData } = useSelector((state) => state.satellite);
+  const [showLegend, setShowLegend] = useState({
+    NDVI: false,
+    NDMI: false,
+    NDRE: false,
+    TRUE_COLOR: false,
+  });
 
   const field = selectedFieldsDetials?.[0];
 
@@ -86,14 +91,6 @@ const FarmReportMap = ({ selectedFieldsDetials }) => {
   };
 
   // Fetch data for all indexes
-  // useEffect(() => {
-  //   if (!polygonCoordinates.length) return;
-  //   dispatch(removeSelectedIndexData());
-  //   const today = new Date().toISOString().split("T")[0];
-  //   indexes.forEach((index) => {
-  //     dispatch(fetchIndexDataForMap({ endDate: today, geometry: [polygonCoordinates], index }));
-  //   });
-  // }, [polygonCoordinates, dispatch]);
   useEffect(() => {
     if (!polygonCoordinates.length) return;
     const today = new Date().toISOString().split("T")[0];
@@ -106,6 +103,7 @@ const FarmReportMap = ({ selectedFieldsDetials }) => {
           index,
         })
       );
+
     });
   }, [polygonCoordinates, dispatch]);
 
@@ -122,6 +120,47 @@ const FarmReportMap = ({ selectedFieldsDetials }) => {
             key={i}
             className="relative w-full h-[280px] rounded-xl overflow-hidden shadow-md bg-white"
           >
+            <div className="absolute top-2 right-2 z-[5000] legend-dropdown-wrapper">
+              <strong
+                onClick={() =>
+                  setShowLegend((prev) => ({
+                    ...prev,
+                    [indexName]: !prev[indexName],
+                  }))
+                }
+                className="flex items-center whitespace-nowrap bg-[#344e41] outline-none border border-[#344e41] rounded z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer"
+              >
+                🗺️ Legend
+              </strong>
+
+              {showLegend[indexName] && indexData?.[indexName]?.legend && (
+                <div className="absolute top-10 right-0 bg-[#344e41] text-white rounded-lg shadow-lg max-w-[300px] max-h-[270px] overflow-y-auto z-[6000] animate-slideIn no-scrollbar">
+                  <ul className="divide-y divide-white/10 list-none p-2 no-scrollbar">
+                    {indexData[indexName].legend.map((item) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center gap-3 p-1.5 cursor-pointer hover:bg-[#5a7c6b] transition-colors duration-200 rounded"
+                      >
+                        <span
+                          className="w-[25px] h-[15px] rounded border border-black/10"
+                          style={{ backgroundColor: item.color }}
+                        ></span>
+
+                        <span className="flex-1 text-sm whitespace-nowrap font-medium">
+                          {item.label}
+                        </span>
+
+                        <span className="text-gray-200 text-xs font-normal whitespace-nowrap">
+                          {item.hectares?.toFixed(2)} ha (
+                          {item.percent?.toFixed(2)}%)
+                        </span>
+                      </div>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
             <MapContainer
               center={
                 centroid.lat != null
@@ -138,6 +177,7 @@ const FarmReportMap = ({ selectedFieldsDetials }) => {
                 url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
                 subdomains={["mt0", "mt1", "mt2", "mt3"]}
                 maxZoom={20}
+                crossOrigin={true}
               />
               {polygonCoordinates.length > 0 && (
                 <>
@@ -182,7 +222,7 @@ const FarmReportMap = ({ selectedFieldsDetials }) => {
                 bounds={polygonBounds}
               />
             </MapContainer>
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[9999] bg-[#344E41] w-[200px] h-[40px] text-white text-base font-semibold p-2 text-center rounded-md shadow-md">
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[3000] bg-[#344E41] w-[200px] h-[40px] text-white text-base font-semibold p-2 text-center rounded-md shadow-md">
               {titles[indexName]}
             </div>
           </div>

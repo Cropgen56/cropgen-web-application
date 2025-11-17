@@ -97,26 +97,26 @@ const FarmReport = () => {
   }, [fields, selectedField]);
 
   // Fetch index data whenever selected field changes
-  useEffect(() => {
-    const field = selectedFieldDetails?.field;
-    if (!field || field.length < 3) return;
+useEffect(() => {
+  const field = selectedFieldDetails?.field;
+  if (!field || field.length < 3) return;
 
-    // Convert to [lng, lat] and ensure polygon is closed
-    let coords = field.map(({ lat, lng }) => [lng, lat]);
-    const first = coords[0];
-    const last = coords[coords.length - 1];
-    if (first[0] !== last[0] || first[1] !== last[1]) {
-      coords.push(first);
-    }
+  // Convert to [lng, lat] and ensure polygon is closed
+  let coords = field.map(({ lat, lng }) => [lng, lat]);
+  const first = coords[0];
+  const last = coords[coords.length - 1];
+  if (first[0] !== last[0] || first[1] !== last[1]) {
+    coords.push(first);
+  }
 
-    const today = new Date().toISOString().split("T")[0];
-    const indexes = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
+  const today = new Date().toISOString().split("T")[0];
+  const indexes = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
 
-    indexes.forEach((index) => {
-      dispatch(fetchIndexData({ endDate: today, geometry: [coords], index }));
-    });
-  }, [selectedFieldDetails, dispatch]);
-
+  indexes.forEach((index) => {
+    dispatch(fetchIndexData({ endDate: today, geometry: [coords], index }));
+  });
+}, [selectedFieldDetails, dispatch]);
+  
   useEffect(() => {
     if (selectedField && authToken) {
       dispatch(setCurrentField(selectedField._id));
@@ -202,76 +202,6 @@ const FarmReport = () => {
     }
   }, [selectedField, authToken, dispatch]);
 
-  // const downloadFarmReportPDF = async () => {
-  //   const input = mainReportRef.current;
-  //   if (!input) {
-  //     message.error("Report area not found!");
-  //     return;
-  //   }
-
-  //   setIsDownloading(true);
-
-  //   // PAGE SPLIT EXACT LIKE SOIL REPORT
-  //   const sections = input.querySelectorAll(".farm-section");
-  //   const pdf = new jsPDF("p", "mm", "a4");
-  //   const width = pdf.internal.pageSize.getWidth();
-  //   const height = pdf.internal.pageSize.getHeight();
-
-  //   let page = 1;
-
-  //   for (let i = 0; i < sections.length; i++) {
-  //     const sec = sections[i];
-
-  //     if (sec.classList.contains("exclude-map")) continue;
-
-  //     // Clone (same as soil)
-  //     const clone = sec.cloneNode(true);
-  //     clone.style.position = "absolute";
-  //     clone.style.top = "0";
-  //     clone.style.left = "-9999px";
-  //     clone.style.width = sec.offsetWidth + "px";
-  //     clone.style.background = "#fff";
-
-  //     document.body.appendChild(clone);
-
-  //     clone.querySelectorAll("canvas, img, svg").forEach((el) => {
-  //       el.classList.add("force-visible");
-  //     });
-
-  //     clone.querySelectorAll(".leaflet-tile").forEach((tile) => {
-  //       tile.setAttribute("crossorigin", "anonymous");
-  //       tile.setAttribute("referrerpolicy", "no-referrer");
-  //     });
-
-  //     await new Promise((res) => setTimeout(res, 500));
-
-  //     const canvas = await html2canvas(clone, {
-  //       scale: 2,
-  //       useCORS: true,
-  //       allowTaint: true,
-  //       scrollY: 0,
-  //       backgroundColor: "#ffffff",
-  //       windowWidth: document.body.scrollWidth,
-  //       windowHeight: clone.scrollHeight,
-  //     });
-
-  //     document.body.removeChild(clone);
-
-  //     const imgData = canvas.toDataURL("image/png");
-  //     const imgHeight = (canvas.height * width) / canvas.width;
-
-  //     if (i !== 0) pdf.addPage();
-  //     pdf.addImage(imgData, "PNG", 0, 0, width, imgHeight);
-
-  //     pdf.setFontSize(9);
-  //     pdf.text(`Page ${page}`, width - 20, height - 10);
-  //     page++;
-  //   }
-
-  //   pdf.save("farm-report.pdf");
-  //   setIsDownloading(false);
-  // };
-
   const downloadFarmReportPDF = async () => {
     const input = mainReportRef.current;
     if (!input) {
@@ -281,15 +211,20 @@ const FarmReport = () => {
 
     setIsDownloading(true);
 
+    // PAGE SPLIT EXACT LIKE SOIL REPORT
     const sections = input.querySelectorAll(".farm-section");
     const pdf = new jsPDF("p", "mm", "a4");
     const width = pdf.internal.pageSize.getWidth();
+    const height = pdf.internal.pageSize.getHeight();
 
     let page = 1;
 
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
 
+      if (sec.classList.contains("exclude-map")) continue;
+
+      // Clone (same as soil)
       const clone = sec.cloneNode(true);
       clone.style.position = "absolute";
       clone.style.top = "0";
@@ -299,23 +234,23 @@ const FarmReport = () => {
 
       document.body.appendChild(clone);
 
-      clone
-        .querySelectorAll("img, canvas, svg, .leaflet-tile")
-        .forEach((el) => {
-          el.classList.add("force-visible");
-          el.setAttribute("crossorigin", "anonymous");
-          el.setAttribute("referrerpolicy", "no-referrer");
-        });
+      clone.querySelectorAll("canvas, img, svg").forEach((el) => {
+        el.classList.add("force-visible");
+      });
 
-      // 🟢 Give leaflet & charts time to finish rendering
-      await new Promise((res) => setTimeout(res, 800));
+      clone.querySelectorAll(".leaflet-tile").forEach((tile) => {
+        tile.setAttribute("crossorigin", "anonymous");
+        tile.setAttribute("referrerpolicy", "no-referrer");
+      });
+
+      await new Promise((res) => setTimeout(res, 500));
 
       const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         scrollY: 0,
-        backgroundColor: "#fff",
+        backgroundColor: "#ffffff",
         windowWidth: document.body.scrollWidth,
         windowHeight: clone.scrollHeight,
       });
@@ -328,11 +263,8 @@ const FarmReport = () => {
       if (i !== 0) pdf.addPage();
       pdf.addImage(imgData, "PNG", 0, 0, width, imgHeight);
 
-      pdf.text(
-        `Page ${page}`,
-        width - 20,
-        pdf.internal.pageSize.getHeight() - 10
-      );
+      pdf.setFontSize(9);
+      pdf.text(`Page ${page}`, width - 20, height - 10);
       page++;
     }
 
@@ -394,7 +326,9 @@ const FarmReport = () => {
         >
           {selectedFieldDetails && (
             <>
-              <FarmReportMap selectedFieldsDetials={[selectedFieldDetails]} />
+              <FarmReportMap
+                selectedFieldsDetials={[selectedFieldDetails]}
+              />
 
               <div className="farm-section">
                 <CropHealth
