@@ -1,43 +1,77 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
+
 import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmReportSidebar";
-import { getFarmFields } from "../redux/slices/farmSlice";
-import img1 from "../assets/image/Group 31.png";
+import MapView from "../components/dashboard/mapview/MapView";
+import CropHealth from "../components/dashboard/crophealth/CropHealthCard";
+import ForeCast from "../components/dashboard/forecast/ForeCast";
+import PlantGrowthActivity from "../components/dashboard/plantgrowthactivity/PlantGrowthActivity";
+import Insights from "../components/dashboard/insights/Insights";
+import CropAdvisory from "../components/dashboard/cropadvisory/CropAdvisory";
+import NdviGraph from "../components/dashboard/satellite-index/vegitation-index/VegetationIndex";
+import WaterIndex from "../components/dashboard/satellite-index/water-index/WaterIndex";
+import EvapotranspirationDashboard from "../components/dashboard/satellite-index/ETChart";
+
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
+
+import { getFarmFields } from "../redux/slices/farmSlice";
 import {
   checkFieldSubscriptionStatus,
   setCurrentField,
   displayMembershipModal,
   hideMembershipModal,
-  selectCurrentFieldHasSubscription
+  selectCurrentFieldHasSubscription,
 } from "../redux/slices/membershipSlice";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import domtoimage from "dom-to-image";
+
+import img1 from "../assets/image/Group 31.png";
+import FarmReportMap from "../components/farmreport/farmreportsidebar/FarmReportMap";
+import { fetchIndexData } from "../redux/slices/satelliteSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 
 const FarmReport = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const user = useSelector((state) => state?.auth?.user);
   const authToken = useSelector((state) => state?.auth?.token);
-  
+
   const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
   const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
 
-  // Membership selectors
-  const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const currentFieldHasSubscription = useSelector(selectCurrentFieldHasSubscription);
-  const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
+  const showMembershipModal = useSelector(
+    (state) => state.membership.showMembershipModal
+  );
+  const currentFieldHasSubscription = useSelector(
+    selectCurrentFieldHasSubscription
+  );
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions
+  );
 
-  const [isSidebarVisible] = useState(true);
   const [selectedField, setSelectedField] = useState(null);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+
+  const mainReportRef = useRef();
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const subscriptionCheckRef = useRef(null);
 
   // Fetch farm fields when component mounts
   useEffect(() => {
@@ -46,34 +80,62 @@ const FarmReport = () => {
     }
   }, [dispatch, user?.id]);
 
-  // Auto-select the first field (latest) when fields are loaded
+  // Auto-select the latest field if none selected
   useEffect(() => {
     if (fields.length > 0 && !selectedField) {
       const sortedFields = [...fields].sort((a, b) => {
-        if (a.createdAt && b.createdAt) {
+        if (a.createdAt && b.createdAt)
           return new Date(b.createdAt) - new Date(a.createdAt);
-        }
         return b._id.localeCompare(a._id);
       });
-      setSelectedField(sortedFields[0]);
+      setSelectedField(sortedFields[0]._id);
     }
   }, [fields, selectedField]);
 
-  // Check subscription status when field changes
+  // Memoize selected field details
+  const selectedFieldDetails = useMemo(() => {
+    return selectedField ? fields.find((f) => f._id === selectedField) : null;
+  }, [fields, selectedField]);
+
+  // Fetch index data whenever selected field changes
+  useEffect(() => {
+    const field = selectedFieldDetails?.field;
+    if (!field || field.length < 3) return;
+
+    // Convert to [lng, lat] and ensure polygon is closed
+    let coords = field.map(({ lat, lng }) => [lng, lat]);
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    if (first[0] !== last[0] || first[1] !== last[1]) {
+      coords.push(first);
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const indexes = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
+
+    indexes.forEach((index) => {
+      dispatch(fetchIndexData({ endDate: today, geometry: [coords], index }));
+    });
+  }, [selectedFieldDetails, dispatch]);
+
   useEffect(() => {
     if (selectedField && authToken) {
       dispatch(setCurrentField(selectedField._id));
 
       const fieldSub = fieldSubscriptions[selectedField._id];
-      const shouldCheck = !fieldSub ||
+      const shouldCheck =
+        !fieldSub ||
         (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) > SUBSCRIPTION_CHECK_INTERVAL);
+          new Date() - new Date(fieldSub.lastChecked) >
+            SUBSCRIPTION_CHECK_INTERVAL);
 
       if (shouldCheck) {
-        dispatch(checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken
-        }));
+        dispatch(
+          checkFieldSubscriptionStatus({
+            fieldId: selectedField._id,
+            authToken,
+          })
+        );
       }
     }
   }, [selectedField, authToken, dispatch, fieldSubscriptions]);
@@ -82,21 +144,25 @@ const FarmReport = () => {
   useEffect(() => {
     if (!selectedField || !authToken) return;
 
-    const interval = setInterval(() => {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField._id,
-        authToken
-      }));
-    }, SUBSCRIPTION_CHECK_INTERVAL);
+    if (!subscriptionCheckRef.current) {
+      subscriptionCheckRef.current = setInterval(() => {
+        dispatch(
+          checkFieldSubscriptionStatus({
+            fieldId: selectedField._id,
+            authToken,
+          })
+        );
+      }, SUBSCRIPTION_CHECK_INTERVAL);
+    }
 
-    return () => clearInterval(interval);
+    return () => clearInterval(subscriptionCheckRef.current);
   }, [selectedField, authToken, dispatch]);
 
+  // Handlers for subscription modal & pricing
   const handleSubscribe = useCallback(() => {
     if (selectedField) {
-      const areaInHectares = selectedField?.areaInHectares ||
-        selectedField?.acre * 0.404686 ||
-        5;
+      const areaInHectares =
+        selectedField?.areaInHectares || selectedField?.acre * 0.404686 || 5;
       const fieldData = {
         id: selectedField._id,
         name: selectedField.fieldName || selectedField.farmName,
@@ -114,7 +180,9 @@ const FarmReport = () => {
 
   const handleSkipMembership = useCallback(() => {
     dispatch(hideMembershipModal());
-    message.info("You can activate premium anytime from the locked content sections");
+    message.info(
+      "You can activate premium anytime from the locked content sections"
+    );
   }, [dispatch]);
 
   const handleCloseMembershipModal = useCallback(() => {
@@ -126,46 +194,130 @@ const FarmReport = () => {
     setPricingFieldData(null);
 
     if (selectedField && authToken) {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField._id,
-        authToken
-      }));
+      dispatch(
+        checkFieldSubscriptionStatus({
+          fieldId: selectedField._id,
+          authToken,
+        })
+      );
     }
   }, [selectedField, authToken, dispatch]);
 
-  const handleGenerateReport = useCallback(async () => {
-    if (!selectedField) {
-      message.warning("Please select a field first");
+  const downloadFarmReportPDF = async () => {
+    const input = mainReportRef.current;
+    if (!input) {
+      message.error("Report area not found!");
       return;
     }
 
-    if (!currentFieldHasSubscription) {
-      dispatch(displayMembershipModal());
-      return;
+    setIsDownloading(true);
+
+    // PAGE SPLIT EXACT LIKE SOIL REPORT
+    const sections = input.querySelectorAll(".farm-section");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const width = pdf.internal.pageSize.getWidth();
+    const height = pdf.internal.pageSize.getHeight();
+
+    let page = 1;
+
+    for (let i = 0; i < sections.length; i++) {
+      const sec = sections[i];
+
+      if (sec.classList.contains("exclude-map")) continue;
+
+      const clone = sec.cloneNode(true);
+      clone.style.position = "absolute";
+      clone.style.top = "0";
+      clone.style.left = "-9999px";
+      clone.style.width = sec.offsetWidth + "px";
+      clone.style.background = "#fff";
+
+      // ---- FIX NDVI CHART SCROLL FOR PDF ----
+      const ndviWrapper = clone.querySelector("#ndvi-chart-wrapper");
+      let original = {};
+
+      if (ndviWrapper) {
+        original = {
+          width: ndviWrapper.style.width,
+          overflow: ndviWrapper.style.overflow,
+        };
+
+        // make it full width
+        ndviWrapper.style.overflow = "visible";
+        ndviWrapper.style.width = ndviWrapper.scrollWidth + "px";
+
+        // force Recharts to re-render full width
+        ndviWrapper
+          .querySelector("svg")
+          ?.setAttribute("width", ndviWrapper.scrollWidth);
+      }
+
+      document.body.appendChild(clone);
+
+      if (ndviWrapper) {
+        ndviWrapper.style.width = original.width;
+        ndviWrapper.style.overflow = original.overflow;
+      }
+
+      clone.querySelectorAll("canvas, img, svg").forEach((el) => {
+        el.classList.add("force-visible");
+      });
+
+      clone.querySelectorAll(".leaflet-tile").forEach((tile) => {
+        tile.setAttribute("crossorigin", "anonymous");
+        tile.setAttribute("referrerpolicy", "no-referrer");
+      });
+
+      clone.querySelectorAll("img").forEach((img) => {
+        img.crossOrigin = "anonymous";
+        img.referrerPolicy = "no-referrer";
+      });
+
+      await new Promise((res) => setTimeout(res, 500));
+
+      const imgs = clone.querySelectorAll("img");
+      await Promise.all(
+        [...imgs].map((img) => {
+          if (img.complete) return;
+          return new Promise((res) => (img.onload = res));
+        })
+      );
+
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        scrollY: 0,
+        backgroundColor: "#ffffff",
+        windowWidth: document.body.scrollWidth,
+        windowHeight: clone.scrollHeight,
+      });
+
+      document.body.removeChild(clone);
+
+      const imgData = canvas.toDataURL("image/png");
+      const imgHeight = (canvas.height * width) / canvas.width;
+
+      if (i !== 0) pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, 0, width, imgHeight);
+
+      pdf.setFontSize(9);
+      pdf.text(`Page ${page}`, width - 20, height - 10);
+      page++;
     }
 
-    setIsGeneratingReport(true);
-    try {
-      console.log("Generating report for:", selectedField.fieldName);
-      message.success(`Generating report for ${selectedField.fieldName}`);
-      // Add your report generation logic here
-      // await dispatch(generateFarmReport(selectedField._id));
-    } catch (error) {
-      message.error("Failed to generate report");
-      console.error("Report generation error:", error);
-    } finally {
-      setIsGeneratingReport(false);
-    }
-  }, [selectedField, currentFieldHasSubscription, dispatch]);
+    pdf.save("farm-report.pdf");
+    setIsDownloading(false);
+  };
 
-  // If no fields exist, show empty state
+  // Render empty state if no fields exist
   if (fields.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
         <img
           src={img1}
           alt="No Fields"
-          className="w-[400px] h-[400px] mb-6 opacity-70"
+          className="w-[400px] h-[400px] mb-6 opacity-60"
         />
         <h2 className="text-2xl font-semibold text-white">
           Add Farm to See the Farm Report
@@ -182,77 +334,84 @@ const FarmReport = () => {
 
   return (
     <>
-      {/* Membership Modal */}
       <SubscriptionModal
         isOpen={showMembershipModal}
         onClose={handleCloseMembershipModal}
         onSubscribe={handleSubscribe}
         onSkip={handleSkipMembership}
-        fieldName={selectedField?.fieldName || selectedField?.farmName}
+        fieldName={
+          selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName
+        }
       />
 
-      {/* Pricing Overlay */}
-      <AnimatePresence>
-        {showPricingOverlay && pricingFieldData && (
-          <motion.div
-            key="pricing-overlay"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8"
-          >
-            <PricingOverlay
-              onClose={handleClosePricing}
-              userArea={pricingFieldData.areaInHectares}
-              selectedField={pricingFieldData}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="flex w-full">
+        <FarmReportSidebar
+          fields={fields}
+          selectedField={selectedField}
+          setSelectedField={setSelectedField}
+          downloadPDF={downloadFarmReportPDF}
+          currentFieldHasSubscription={currentFieldHasSubscription}
+        />
 
-      <div className="m-0 p-0 w-full flex flex-row">
-        {isSidebarVisible && (
-          <FarmReportSidebar
-            fields={fields}
-            setSelectedField={setSelectedField}
-            selectedField={selectedField}
-          />
-        )}
-        
-        <div className="w-full bg-[#5a7c6b] m-0 p-0 ml-[320px] h-screen overflow-y-auto overflow-x-hidden">
-          <PremiumPageWrapper
-            isLocked={!currentFieldHasSubscription}
-            onSubscribe={handleSubscribe}
-            title="Farm Report"
-          >
-            <div className="h-screen flex justify-center items-center relative">
-              <div className="absolute">
-                <svg
-                  width="270"
-                  height="270"
-                  viewBox="0 0 400 400"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <g clipPath="url(#clip0_867_324)">
-                    <path
-                      d="M25 200C25 219.401 27.9948 237.956 33.9844 255.664C39.974 273.372 48.5026 289.648 59.5703 304.492C70.638 319.336 83.8542 332.161 99.2188 342.969C114.583 353.776 131.51 361.979 150 367.578V393.359C127.995 387.63 107.812 378.646 89.4531 366.406C71.0938 354.167 55.2734 339.453 41.9922 322.266C28.7109 305.078 18.4245 286.133 11.1328 265.43C3.84115 244.727 0.130208 222.917 0 200C0 181.641 2.34375 163.932 7.03125 146.875C11.7188 129.818 18.4896 113.932 27.3438 99.2188C36.1979 84.5052 46.6146 71.0286 58.5938 58.7891C70.5729 46.5495 84.0495 36.0677 99.0234 27.3438C113.997 18.6198 129.948 11.9141 146.875 7.22656C163.802 2.53906 181.51 0.130208 200 0C217.578 0 234.505 2.14844 250.781 6.44531C267.057 10.7422 282.422 16.9271 296.875 25C311.328 33.0729 324.544 42.7734 336.523 54.1016C348.503 65.4297 358.984 77.9948 367.969 91.7969C376.953 105.599 384.115 120.573 389.453 136.719C394.792 152.865 398.112 169.596 399.414 186.914L369.336 156.836C364.388 137.565 356.576 119.857 345.898 103.711C335.221 87.5651 322.331 73.6328 307.227 61.9141C292.122 50.1953 275.521 41.1458 257.422 34.7656C239.323 28.3854 220.182 25.1302 200 25C183.854 25 168.359 27.0833 153.516 31.25C138.672 35.4167 124.805 41.276 111.914 48.8281C99.0234 56.3802 87.1745 65.5599 76.3672 76.3672C65.5599 87.1745 56.4453 98.9583 49.0234 111.719C41.6016 124.479 35.6771 138.411 31.25 153.516C26.8229 168.62 24.7396 184.115 25 200ZM200 100C186.198 100 173.242 102.604 161.133 107.812C149.023 113.021 138.477 120.182 129.492 129.297C120.508 138.411 113.346 149.023 108.008 161.133C102.669 173.242 100 186.198 100 200C100 213.411 102.474 226.172 107.422 238.281C112.37 250.391 119.661 261.198 129.297 270.703L111.523 288.477C99.6745 276.628 90.625 263.086 84.375 247.852C78.125 232.617 75 216.667 75 200C75 188.542 76.4974 177.474 79.4922 166.797C82.487 156.12 86.6536 146.159 91.9922 136.914C97.3307 127.669 103.841 119.271 111.523 111.719C119.206 104.167 127.669 97.6562 136.914 92.1875C146.159 86.7188 156.12 82.487 166.797 79.4922C177.474 76.4974 188.542 75 200 75C209.766 75 219.336 76.1068 228.711 78.3203C238.086 80.5339 247.005 83.8542 255.469 88.2812C263.932 92.7083 271.94 97.9167 279.492 103.906C287.044 109.896 293.685 116.927 299.414 125H265.43C256.315 116.927 246.224 110.742 235.156 106.445C224.089 102.148 212.37 100 200 100ZM317.773 150L400 232.227V400H175V150H317.773ZM325 192.773V225H357.227L325 192.773ZM375 375V250H300V175H200V375H375ZM350 275V350H325V275H350ZM225 350V250H250V350H225ZM275 350V300H300V350H275Z"
-                      fill="#A7A5A5"
-                      fillOpacity="0.5"
-                    />
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_867_324">
-                      <rect width="400" height="400" fill="white" />
-                    </clipPath>
-                  </defs>
-                </svg>
+        <PremiumPageWrapper
+          isLocked={!currentFieldHasSubscription}
+          onSubscribe={handleSubscribe}
+          title="Farm Report"
+        >
+        <div
+          className="w-full h-screen overflow-y-auto bg-[#5a7c6b] p-4"
+          ref={mainReportRef}
+        >
+          {selectedFieldDetails && (
+            <>
+              <div className="farm-section">
+                <FarmReportMap selectedFieldsDetials={[selectedFieldDetails]} />
+
+                <CropHealth
+                  selectedFieldsDetials={[selectedFieldDetails]}
+                  fields={fields}
+                  isLocked={!currentFieldHasSubscription}
+                  onSubscribe={handleSubscribe}
+                  usePremiumWrapper={false}
+                />
               </div>
-              
-            </div>
-          </PremiumPageWrapper>
+              <div className="farm-section">
+                <ForeCast forecastData={{}} />
+
+                <NdviGraph
+                  selectedFieldsDetials={[selectedFieldDetails]}
+                  isLocked={!currentFieldHasSubscription}
+                  onSubscribe={handleSubscribe}
+                  usePremiumWrapper={false}
+                />
+                <WaterIndex
+                  selectedFieldsDetials={[selectedFieldDetails]}
+                  isLocked={!currentFieldHasSubscription}
+                  onSubscribe={handleSubscribe}
+                  usePremiumWrapper={false}
+                />
+                <EvapotranspirationDashboard forecast={{}} units={{}} />
+              </div>
+
+              <div className="farm-section">
+              <Insights />
+                <CropAdvisory
+                  selectedFieldsDetials={[selectedFieldDetails]}
+                  isLocked={!currentFieldHasSubscription}
+                  onSubscribe={handleSubscribe}
+                  usePremiumWrapper={false}
+                />{" "}
+                <PlantGrowthActivity
+                  selectedFieldsDetials={[selectedFieldDetails]}
+                  isLocked={!currentFieldHasSubscription}
+                  onSubscribe={handleSubscribe}
+                  usePremiumWrapper={false}
+                />{" "}
+              </div>
+            </>
+          )}
         </div>
+        </PremiumPageWrapper>
       </div>
     </>
   );

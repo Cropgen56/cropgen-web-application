@@ -79,8 +79,8 @@ const Insights = () => {
   ];
 
   return (
-    <div className="w-full flex mt-8">
-      <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden p-4 md:p-6">
+    <div className="w-full flex mt-4 p-2">
+      <div className="relative w-full bg-gray-50 border border-gray-200 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden p-4 md:p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
           <div className="flex items-center gap-1">
             <div className="text-md lg:text-lg font-semibold text-gray-900">

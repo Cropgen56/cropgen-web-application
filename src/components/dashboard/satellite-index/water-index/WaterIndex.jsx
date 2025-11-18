@@ -29,7 +29,12 @@ import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper";
 const WATER_COLOR_MAIN = "#38bdf8";
 const WATER_COLOR_LIGHT = "#7dd3fc";
 
-const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
+const WaterIndex = ({
+  selectedFieldsDetials,
+  isLocked,
+  onSubscribe,
+  usePremiumWrapper = true,
+}) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { waterIndexData = null, loading } =
     useSelector((state) => state.satellite) || {};
@@ -173,8 +178,8 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
   };
 
   return (
-    <div className="w-full flex justify-center mt-4">
-      <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+    <div className="w-full flex justify-center mt-2 p-2">
+      <div className="relative w-full bg-white border border-gray-200 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
         {/* Index Selector */}
         <div className="absolute top-3 right-3 z-50">
           <select
@@ -210,9 +215,7 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
         <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
           <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
             <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
-              <h2 className="text-xl font-bold text-sky-700">
-                {index}
-              </h2>
+              <h2 className="text-xl font-bold text-sky-700">{index}</h2>
               <button className="bg-sky-50 text-sky-700 px-3 py-1 text-sm font-semibold rounded mt-1 border border-sky-200 hover:bg-sky-100 transition-all">
                 +0.15
               </button>
@@ -240,10 +243,102 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
           </div>
 
           <div className="lg:w-3/4 flex-grow">
-            <IndexPremiumWrapper
-              isLocked={isLocked}
-              onSubscribe={onSubscribe}
-            >
+            {usePremiumWrapper ? (
+              <IndexPremiumWrapper
+                isLocked={isLocked}
+                onSubscribe={onSubscribe}
+              >
+                <div
+                  ref={scrollRef}
+                  className="w-full overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
+                >
+                  {isLoading ? (
+                    <div
+                      className="text-center text-gray-900"
+                      style={{
+                        minHeight: "180px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />
+                      <strong>Loading Water Index...</strong>
+                    </div>
+                  ) : !hasData ? (
+                    <div className="bg-gray-100 rounded-lg p-4 mx-auto mt-2 max-w-md">
+                      <div className="text-center">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                          No Data Available
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          We couldn't find any data for the selected field and
+                          time range. Please verify the field selection or
+                          adjust the date range to ensure data availability.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full">
+                      <ResponsiveContainer
+                        width={chartConfig.width}
+                        height={180}
+                      >
+                        <LineChart
+                          data={chartData}
+                          margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
+                        >
+                          <CartesianGrid stroke="rgba(0, 0, 0, 0.1)" />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fontSize: 12, fill: "#333" }}
+                            interval={chartConfig.interval}
+                            type="category"
+                          />
+                          <YAxis
+                            domain={yAxisConfig.domain}
+                            tick={{ fontSize: 12, fill: "#333" }}
+                            ticks={yAxisConfig.ticks}
+                            tickFormatter={tickFormatter}
+                            type="number"
+                          />
+                          <Tooltip
+                            formatter={tooltipFormatter}
+                            labelFormatter={labelFormatter}
+                            contentStyle={{
+                              backgroundColor: "#fff",
+                              border: "none",
+                              borderRadius: "8px",
+                              boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                            }}
+                          />
+                          <Legend
+                            layout="horizontal"
+                            verticalAlign="top"
+                            align="start"
+                            wrapperStyle={{
+                              paddingBottom: "8px",
+                              paddingLeft: "40px",
+                              fontWeight: "bold",
+                              color: "#333",
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey={index}
+                            stroke={WATER_COLOR_MAIN}
+                            strokeWidth={3}
+                            dot={{ r: 3, fill: WATER_COLOR_MAIN }}
+                            activeDot={{ r: 5, fill: WATER_COLOR_LIGHT }}
+                            connectNulls={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
+                </div>
+              </IndexPremiumWrapper>
+            ) : (
               <div
                 ref={scrollRef}
                 className="w-full overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
@@ -268,9 +363,9 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
                         No Data Available
                       </h3>
                       <p className="text-sm text-gray-600">
-                        We couldn't find any data for the selected field and time
-                        range. Please verify the field selection or adjust the date
-                        range to ensure data availability.
+                        We couldn't find any data for the selected field and
+                        time range. Please verify the field selection or adjust
+                        the date range to ensure data availability.
                       </p>
                     </div>
                   </div>
@@ -330,7 +425,7 @@ const WaterIndex = ({ selectedFieldsDetials, isLocked, onSubscribe }) => {
                   </div>
                 )}
               </div>
-            </IndexPremiumWrapper>
+            )}
           </div>
         </div>
       </div>

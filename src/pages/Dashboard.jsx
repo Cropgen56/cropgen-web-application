@@ -504,6 +504,7 @@ const Dashboard = () => {
           selectedFieldDetails ? [selectedFieldDetails] : []
         }
         fields={fields}
+        showFieldDropdown={true}
       />
 
       {/* Dashboard widgets (render only if fields exist) */}
@@ -516,6 +517,7 @@ const Dashboard = () => {
             fields={fields}
             isLocked={!hasSoilMoistureTemp}
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
 
           <PremiumContentWrapper
@@ -532,6 +534,7 @@ const Dashboard = () => {
             }
             isLocked={!hasSatelliteMonitoring}
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
 
           <WaterIndex
@@ -540,6 +543,7 @@ const Dashboard = () => {
             }
             isLocked={!hasSatelliteMonitoring}
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
 
           <PremiumContentWrapper
@@ -564,6 +568,7 @@ const Dashboard = () => {
             }
             isLocked={!hasAdvisory}
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
 
           <PlantGrowthActivity
@@ -572,6 +577,7 @@ const Dashboard = () => {
             }
             isLocked={!hasGrowthStageTracking}
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
         </>
       )}

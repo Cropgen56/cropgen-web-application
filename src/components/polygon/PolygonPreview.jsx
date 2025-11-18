@@ -33,7 +33,7 @@ const PolygonPreview = ({
                 points={points}
                 fill="none"
                 stroke={isSelected ? "#FCC21B" : "#FCC21B"}
-                strokeWidth="4"
+                strokeWidth="2"
             />
         </svg>
     );

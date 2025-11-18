@@ -22,25 +22,40 @@ const USD_TO_INR = 83;
 const DEFAULT_AREA = 5;
 
 const FEATURE_DISPLAY_NAMES = {
-  graphHistoricalData: "Graphs & Historical Data",
-  satelliteCropMonitoring: "Satellite Crop Monitoring",
-  weatherForecast: "Weather Forecast",
-  soilMoistureTemp: "Soil Moisture & Temperature",
-  growthStageTracking: "Growth Stage Tracking (BBCH)",
-  advisory: "Fertilizer (NPK) Advisory",
-  irrigationUpdates: "Irrigation Updates (ET-based)",
-  pestDiseaseAlerts: "Pest & Disease Alerts",
-  yieldPrediction: "Yield Prediction",
-  harvestWindow: "Harvest Window Insights",
-  insights: "Insights",
-  soilFertilityAnalysis: "Soil Fertility Analysis",
-  socCarbon: "SOC Analytics (Soil Organic Carbon)",
-  advisoryControl: "Advisory Control",
-  advisoryDelivery: "Advisory Delivery",
-  weeklyReports: "Weekly Reports",
-  operationsManagement: "Operations Management Dashboard",
-  apiIntegration: "API/ERP Integration",
-  enterpriseSupport: "Enterprise Support",
+  // graphHistoricalData: "Graphs & Historical Data",
+  // satelliteCropMonitoring: "Satellite Crop Monitoring",
+  // weatherForecast: "Weather Forecast",
+  // soilMoistureTemp: "Soil Moisture & Temperature",
+  // growthStageTracking: "Growth Stage Tracking (BBCH)",
+  // advisory: "Fertilizer (NPK) Advisory",
+  // irrigationUpdates: "Irrigation Updates (ET-based)",
+  // pestDiseaseAlerts: "Pest & Disease Alerts",
+  // yieldPrediction: "Yield Prediction",
+  // harvestWindow: "Harvest Window Insights",
+  // insights: "Insights",
+  // soilFertilityAnalysis: "Soil Fertility Analysis",
+  // socCarbon: "SOC Analytics (Soil Organic Carbon)",
+  // advisoryControl: "Advisory Control",
+  // advisoryDelivery: "Advisory Delivery",
+  // weeklyReports: "Weekly Reports",
+  // operationsManagement: "Operations Management Dashboard",
+  // apiIntegration: "API/ERP Integration",
+  // enterpriseSupport: "Enterprise Support",
+  satelliteImagery: "Satellite Imagery",
+  cropHealthAndYield: "Crop Health & Yield Monitoring",
+  soilAnalysisAndHealth: "Soil Analysis & Health",
+  weatherAnalytics: "Weather Analytics",
+  vegetationIndices: "Vegetation Indices",
+  waterIndices: "Water Indices",
+  evapotranspirationMonitoring: "Evapotranspiration Monitoring",
+  agronomicInsights: "Agronomic Insights",
+  weeklyAdvisoryReports: "Weekly Advisory Reports",
+  cropGrowthMonitoring: "Crop Growth Monitoring",
+  farmOperationsManagement: "Farm Operations Management",
+  diseaseDetectionAlerts: "Disease Detection Alerts",
+  smartAdvisorySystem: "Smart Advisory System",
+  soilReportGeneration: "Soil Report Generation",
+  other: "Other ..",
 };
 
 function transformApiData(apiData, billing, currency, userArea) {
@@ -185,7 +200,7 @@ export default function PricingOverlay({
   onClose,
   userArea,
   selectedField,
-  onPaymentSuccess
+  onPaymentSuccess,
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -334,14 +349,16 @@ export default function PricingOverlay({
         contact: user?.contact || "",
       },
       notes: {
-        subscriptionId: subscriptionRecordId || razorpayData.subscriptionRecordId
+        subscriptionId:
+          subscriptionRecordId || razorpayData.subscriptionRecordId,
       },
       theme: { color: "#344E41" },
       handler: async (response) => {
         try {
           const verifyRes = await dispatch(
             verifyUserSubscriptionPayment({
-              subscriptionId: subscriptionRecordId || razorpayData.subscriptionRecordId,
+              subscriptionId:
+                subscriptionRecordId || razorpayData.subscriptionRecordId,
               paymentData: {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_subscription_id: response.razorpay_subscription_id,
@@ -368,7 +385,10 @@ export default function PricingOverlay({
               onClose?.();
             } else {
               // Fallback: Store in sessionStorage for page reload scenario
-              sessionStorage.setItem('paymentSuccess', JSON.stringify(successData));
+              sessionStorage.setItem(
+                "paymentSuccess",
+                JSON.stringify(successData)
+              );
 
               // Also dispatch to Redux
               dispatch(setPaymentSuccess(successData));
@@ -411,8 +431,18 @@ export default function PricingOverlay({
       setSubscriptionRecordId(null);
     });
     rzp.open();
-
-  }, [showCheckout, checkoutPlan, dispatch, user, userArea, onPaymentSuccess, selectedField, onClose, navigate, subscriptionRecordId]);
+  }, [
+    showCheckout,
+    checkoutPlan,
+    dispatch,
+    user,
+    userArea,
+    onPaymentSuccess,
+    selectedField,
+    onClose,
+    navigate,
+    subscriptionRecordId,
+  ]);
 
   // Render
   if (subLoading) {
@@ -471,8 +501,9 @@ export default function PricingOverlay({
               {/* Billing Toggle */}
               <div className="flex items-center gap-3">
                 <span
-                  className={`font-bold text-sm cursor-pointer transition-colors ${billing === "monthly" ? "text-white" : "text-gray-300"
-                    }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${
+                    billing === "monthly" ? "text-white" : "text-gray-300"
+                  }`}
                   onClick={() => setBilling("monthly")}
                 >
                   Monthly
@@ -484,15 +515,17 @@ export default function PricingOverlay({
                   className="relative flex items-center bg-gray-200 rounded-full w-14 h-7 cursor-pointer"
                 >
                   <div
-                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${billing === "monthly"
-                      ? "left-1 bg-[#344E41]"
-                      : "left-7 bg-[#344E41]"
-                      }`}
+                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${
+                      billing === "monthly"
+                        ? "left-1 bg-[#344E41]"
+                        : "left-7 bg-[#344E41]"
+                    }`}
                   />
                 </div>
                 <span
-                  className={`font-bold text-sm cursor-pointer transition-colors ${billing === "yearly" ? "text-white" : "text-gray-300"
-                    }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${
+                    billing === "yearly" ? "text-white" : "text-gray-300"
+                  }`}
                   onClick={() => setBilling("yearly")}
                 >
                   Yearly
@@ -505,8 +538,9 @@ export default function PricingOverlay({
               {/* Currency Toggle */}
               <div className="flex items-center gap-3">
                 <span
-                  className={`font-bold text-sm cursor-pointer transition-colors ${currency === "USD" ? "text-white" : "text-gray-300"
-                    }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${
+                    currency === "USD" ? "text-white" : "text-gray-300"
+                  }`}
                   onClick={() => setCurrency("USD")}
                 >
                   Plan in $
@@ -518,15 +552,17 @@ export default function PricingOverlay({
                   className="relative flex items-center bg-gray-200 rounded-full w-14 h-7 cursor-pointer"
                 >
                   <div
-                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${currency === "USD"
-                      ? "left-1 bg-[#344E41]"
-                      : "left-7 bg-[#344E41]"
-                      }`}
+                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${
+                      currency === "USD"
+                        ? "left-1 bg-[#344E41]"
+                        : "left-7 bg-[#344E41]"
+                    }`}
                   />
                 </div>
                 <span
-                  className={`font-bold text-sm cursor-pointer transition-colors ${currency === "INR" ? "text-white" : "text-gray-300"
-                    }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${
+                    currency === "INR" ? "text-white" : "text-gray-300"
+                  }`}
                   onClick={() => setCurrency("INR")}
                 >
                   Plan in ₹
