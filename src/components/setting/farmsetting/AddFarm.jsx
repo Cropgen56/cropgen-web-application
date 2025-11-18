@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Save, Trash2 } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Save, Trash2, ChevronDown, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import {
   getFarmFields,
   updateFarmField,
@@ -72,8 +72,7 @@ const AddFarm = ({ selectedFarm }) => {
     dispatch(fetchCrops());
   }, [dispatch]);
 
-  const handleFarmChange = (e) => {
-    const value = e.target.value;
+  const handleFarmChange = (value) => {
     setFormData((prev) => ({ ...prev, farmName: value }));
 
     const existingFarm = farms?.find(
@@ -98,8 +97,7 @@ const AddFarm = ({ selectedFarm }) => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (name, value) => {
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -107,7 +105,7 @@ const AddFarm = ({ selectedFarm }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
 
     if (!selectedFarmState?._id) {
       message.error("No farm selected to update!");
@@ -206,88 +204,55 @@ const AddFarm = ({ selectedFarm }) => {
       </div>
 
       {/* FORM + BUTTONS */}
-      {/* FORM + BUTTONS */}
       <div className="h-[30vh] px-3 py-2 flex flex-col">
         {/* Scrollable form */}
         <div className="flex-grow pr-1">
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
-            {[
-              {
-                label: "Farm Name",
-                name: "farmName",
-                type: "text",
-                value: formData.farmName,
-                onChange: handleFarmChange,
-              },
-              {
-                label: "Crop Name",
-                name: "cropName",
-                type: "select",
-                value: formData.cropName,
-              },
-              {
-                label: "Variety",
-                name: "variety",
-                type: "text",
-                value: formData.variety,
-              },
-              {
-                label: "Sowing Date",
-                name: "sowingDate",
-                type: "date",
-                value: formData.sowingDate,
-              },
-              {
-                label: "Type Of Irrigation",
-                name: "typeOfIrrigation",
-                type: "select",
-                value: formData.typeOfIrrigation,
-                options: ["Open", "Drip", "Sprinkler"],
-              },
-              {
-                label: "Type Of Farming",
-                name: "typeOfFarming",
-                type: "select",
-                value: formData.typeOfFarming,
-                options: ["Organic", "Inorganic", "Integrated"],
-              },
-            ].map((field, index) => (
-              <div key={index} className="flex flex-col gap-1">
-                <label className="text-sm font-semibold">{field.label}</label>
-                {field.type === "select" ? (
-                  <select
-                    name={field.name}
-                    value={field.value}
-                    onChange={handleChange}
-                    className="bg-[#344E41] text-gray-300 border border-[#344e41] rounded px-2 py-1"
-                  >
-                    <option value="" disabled>
-                      Select
-                    </option>
-                    {field.options
-                      ? field.options.map((opt, i) => (
-                          <option key={i} value={opt}>
-                            {opt}
-                          </option>
-                        ))
-                      : crops?.map((crop) => (
-                          <option key={crop._id} value={crop.cropName}>
-                            {crop.cropName}
-                          </option>
-                        ))}
-                  </select>
-                ) : (
-                  <input
-                    type={field.type}
-                    name={field.name}
-                    value={field.value}
-                    onChange={field.onChange || handleChange}
-                    placeholder={field.label}
-                    className="bg-[#344E41] text-gray-300 placeholder-gray-300 border border-[#344e41] rounded px-2 py-1"
-                  />
-                )}
-              </div>
-            ))}
+            <FormInput
+              label="Farm Name"
+              value={formData.farmName}
+              onChange={handleFarmChange}
+              placeholder="Enter farm name"
+            />
+            
+            <CustomDropdown
+              label="Crop Name"
+              value={formData.cropName}
+              onChange={(value) => handleChange('cropName', value)}
+              options={crops?.map((crop) => crop.cropName) || []}
+              placeholder="Select Crop"
+            />
+
+            <FormInput
+              label="Variety"
+              value={formData.variety}
+              onChange={(value) => handleChange('variety', value)}
+              placeholder="Enter crop variety"
+            />
+
+            <CustomDatePicker
+              label="Sowing Date"
+              value={formData.sowingDate}
+              onChange={(value) => handleChange('sowingDate', value)}
+              placeholder="Select sowing date"
+              maxDate={new Date()}
+            />
+
+            <CustomDropdown
+              label="Type Of Irrigation"
+              value={formData.typeOfIrrigation}
+              onChange={(value) => handleChange('typeOfIrrigation', value)}
+              options={["Open", "Drip", "Sprinkler"]}
+              placeholder="Select Irrigation Type"
+            />
+
+            <CustomDropdown
+              label="Type Of Farming"
+              value={formData.typeOfFarming}
+              onChange={(value) => handleChange('typeOfFarming', value)}
+              options={["Organic", "Inorganic", "Integrated"]}
+              placeholder="Select Farming Type"
+            />
           </form>
         </div>
 
@@ -338,7 +303,6 @@ const AddFarm = ({ selectedFarm }) => {
     </div>
   ) : (
     // === DESKTOP UI ===
-    // KEEP YOUR EXISTING RETURN BLOCK HERE (unchanged)
     <>
       <div className="flex flex-col flex-grow justify-between gap-4 p-2 overflow-hidden overflow-y-auto">
         <form
@@ -350,95 +314,51 @@ const AddFarm = ({ selectedFarm }) => {
             <h5 className="mt-2 font-semibold text-[#344E41]">Crop Details</h5>
 
             <div className="flex flex-col gap-2">
-              <div className="flex flex-col gap-1">
-                <label className="font-semibold text-sm">Farm Name</label>
-                <input
-                  type="text"
-                  name="farmName"
-                  value={formData.farmName}
-                  onChange={handleFarmChange}
-                  placeholder="Enter farm name"
-                  className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] placeholder-gray-300 text-gray-300"
-                />
-              </div>
+              <FormInput
+                label="Farm Name"
+                value={formData.farmName}
+                onChange={handleFarmChange}
+                placeholder="Enter farm name"
+              />
 
-              <div className="flex flex-col gap-1">
-                <label className="font-semibold text-sm">Crop Name</label>
-                <select
-                  name="cropName"
-                  value={formData.cropName}
-                  onChange={handleChange}
-                  className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300"
-                >
-                  <option value="" disabled>
-                    Select Crop
-                  </option>
-                  {crops?.map((crop) => (
-                    <option key={crop._id} value={crop.cropName}>
-                      {crop.cropName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CustomDropdown
+                label="Crop Name"
+                value={formData.cropName}
+                onChange={(value) => handleChange('cropName', value)}
+                options={crops?.map((crop) => crop.cropName) || []}
+                placeholder="Select Crop"
+              />
 
-              <div className="flex flex-col gap-1">
-                <label className="font-semibold text-sm">Variety</label>
-                <input
-                  type="text"
-                  name="variety"
-                  value={formData.variety}
-                  onChange={handleChange}
-                  placeholder="Enter crop variety"
-                  className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] placeholder-gray-300 text-gray-300"
-                />
-              </div>
+              <FormInput
+                label="Variety"
+                value={formData.variety}
+                onChange={(value) => handleChange('variety', value)}
+                placeholder="Enter crop variety"
+              />
 
-              <div className="flex flex-col gap-1">
-                <label className="font-semibold text-sm">Sowing Date</label>
-                <input
-                  type="date"
-                  name="sowingDate"
-                  value={formData.sowingDate}
-                  onChange={handleChange}
-                  className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300"
-                />
-              </div>
+              <CustomDatePicker
+                label="Sowing Date"
+                value={formData.sowingDate}
+                onChange={(value) => handleChange('sowingDate', value)}
+                placeholder="Select sowing date"
+                maxDate={new Date()}
+              />
 
-              <div className="flex flex-col gap-1">
-                <label className="font-semibold text-sm">
-                  Type Of Irrigation
-                </label>
-                <select
-                  name="typeOfIrrigation"
-                  value={formData.typeOfIrrigation}
-                  onChange={handleChange}
-                  className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300"
-                >
-                  <option value="" disabled>
-                    Select Irrigation Type
-                  </option>
-                  <option value="Open">Open Irrigation</option>
-                  <option value="Drip">Drip Irrigation</option>
-                  <option value="Sprinkler">Sprinkler Irrigation</option>
-                </select>
-              </div>
+              <CustomDropdown
+                label="Type Of Irrigation"
+                value={formData.typeOfIrrigation}
+                onChange={(value) => handleChange('typeOfIrrigation', value)}
+                options={["Open", "Drip", "Sprinkler"]}
+                placeholder="Select Irrigation Type"
+              />
 
-              <div className="flex flex-col gap-1">
-                <label className="font-semibold text-sm">Type Of Farming</label>
-                <select
-                  name="typeOfFarming"
-                  value={formData.typeOfFarming}
-                  onChange={handleChange}
-                  className="border border-[#344e41] w-full outline-none rounded px-2 py-1 bg-[#344E41] text-gray-300"
-                >
-                  <option value="" disabled>
-                    Select Farming Type
-                  </option>
-                  <option value="Organic">Organic</option>
-                  <option value="Inorganic">Inorganic</option>
-                  <option value="Integrated">Integrated</option>
-                </select>
-              </div>
+              <CustomDropdown
+                label="Type Of Farming"
+                value={formData.typeOfFarming}
+                onChange={(value) => handleChange('typeOfFarming', value)}
+                options={["Organic", "Inorganic", "Integrated"]}
+                placeholder="Select Farming Type"
+              />
             </div>
           </div>
 
@@ -518,6 +438,323 @@ const AddFarm = ({ selectedFarm }) => {
         </Modal>
       </div>
     </>
+  );
+};
+
+// Reusable form input
+const FormInput = ({
+  label,
+  value,
+  onChange,
+  placeholder = "",
+  type = "text",
+}) => (
+  <div className="flex flex-col gap-1">
+    <label className="font-semibold text-sm">{label}</label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="border border-[#344e41] w-full outline-none rounded px-3 py-2 bg-[#344E41] text-white placeholder-gray-300 focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50"
+    />
+  </div>
+);
+
+// Custom Date Picker Component (Compact Version)
+const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const datePickerRef = useRef(null);
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
+
+  // Close date picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleDateSelect = (day) => {
+    const selectedDate = new Date(currentYear, currentMonth, day);
+    const formattedDate = selectedDate.toISOString().split('T')[0];
+    onChange(formattedDate);
+    setIsOpen(false);
+  };
+
+  const handlePrevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const isDateDisabled = (day) => {
+    if (!maxDate) return false;
+    const checkDate = new Date(currentYear, currentMonth, day);
+    return checkDate > maxDate;
+  };
+
+  const renderCalendar = () => {
+    const totalDays = daysInMonth(currentMonth, currentYear);
+    const startDay = firstDayOfMonth(currentMonth, currentYear);
+    const days = [];
+    
+    // Add empty cells for days before month starts
+    for (let i = 0; i < startDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-6 w-6"></div>);
+    }
+
+    // Add days of the month
+    for (let day = 1; day <= totalDays; day++) {
+      const isSelected = value && 
+        new Date(value).getDate() === day &&
+        new Date(value).getMonth() === currentMonth &&
+        new Date(value).getFullYear() === currentYear;
+      
+      const isDisabled = isDateDisabled(day);
+      const isToday = 
+        new Date().getDate() === day &&
+        new Date().getMonth() === currentMonth &&
+        new Date().getFullYear() === currentYear;
+
+      days.push(
+        <button
+          key={day}
+          type="button"
+          onClick={() => !isDisabled && handleDateSelect(day)}
+          disabled={isDisabled}
+          className={`
+            h-6 w-6 rounded text-xs flex items-center justify-center
+            transition-all duration-150
+            ${isSelected 
+              ? 'bg-white text-[#344E41] font-bold' 
+              : isToday
+              ? 'bg-[#4a6b5a] text-white'
+              : isDisabled
+              ? 'text-gray-500 cursor-not-allowed'
+              : 'text-white hover:bg-[#2b3e33]'
+            }
+          `}
+        >
+          {day}
+        </button>
+      );
+    }
+
+    return days;
+  };
+
+  return (
+    <div className="flex flex-col gap-1" ref={datePickerRef}>
+      <label className="font-semibold text-sm">{label}</label>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={`
+            w-full px-3 py-2 bg-[#344E41] text-white rounded
+            border border-[#344e41] outline-none
+            flex items-center justify-between
+            hover:bg-[#2b3e33] transition-all duration-200
+            focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
+            ${!value ? 'text-gray-300' : 'text-white'}
+          `}
+        >
+          <span className="flex items-center gap-2">
+            <Calendar size={14} />
+            <span className="truncate text-sm">
+              {value ? formatDisplayDate(value) : placeholder}
+            </span>
+          </span>
+          <ChevronDown
+            size={18}
+            className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {/* Date Picker Calendar - Compact */}
+        {isOpen && (
+          <div className="absolute z-50 w-56 mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-lg p-2">
+            {/* Month/Year Navigation */}
+            <div className="flex items-center justify-between mb-2 text-white">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className="p-0.5 hover:bg-[#2b3e33] rounded transition-colors"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="text-xs font-semibold">
+                {monthNames[currentMonth].slice(0, 3)} {currentYear}
+              </div>
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className="p-0.5 hover:bg-[#2b3e33] rounded transition-colors"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            {/* Days of Week Headers */}
+            <div className="grid grid-cols-7 gap-0.5 mb-1">
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                <div key={`${day}-${index}`} className="h-5 w-6 flex items-center justify-center text-xs text-gray-300">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Days */}
+            <div className="grid grid-cols-7 gap-0.5">
+              {renderCalendar()}
+            </div>
+
+            {/* Today Button */}
+            <div className="mt-2 pt-2 border-t border-[#2b3e33]">
+              <button
+                type="button"
+                onClick={() => {
+                  const today = new Date();
+                  setCurrentMonth(today.getMonth());
+                  setCurrentYear(today.getFullYear());
+                  handleDateSelect(today.getDate());
+                }}
+                className="w-full py-1 text-xs text-white bg-[#2b3e33] hover:bg-[#253429] rounded transition-colors"
+              >
+                Today
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Custom Dropdown Component
+const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSelect = (option) => {
+    onChange(option);
+    setIsOpen(false);
+  };
+
+  const formatOptionDisplay = (option) => {
+    // If it's a simple word like "Open", "Drip", just capitalize it
+    if (!option.includes("-") && !option.includes(" ")) {
+      return option;
+    }
+    // Format compound words (e.g., "open-irrigation" -> "Open Irrigation")
+    return option
+      .split("-")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
+  return (
+    <div className="flex flex-col gap-1" ref={dropdownRef}>
+      <label className="font-semibold text-sm">{label}</label>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={`
+            w-full px-3 py-2 bg-[#344E41] text-white rounded
+            border border-[#344e41] outline-none
+            flex items-center justify-between
+            hover:bg-[#2b3e33] transition-all duration-200
+            focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
+            ${!value ? 'text-gray-300' : 'text-white'}
+          `}
+        >
+          <span className="truncate">
+            {value ? formatOptionDisplay(value) : placeholder}
+          </span>
+          <ChevronDown
+            size={20}
+            className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+              }`}
+          />
+        </button>
+
+        {/* Dropdown Menu */}
+        {isOpen && (
+          <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-lg max-h-60 overflow-auto">
+            {options.length > 0 ? (
+              options.map((option, index) => (
+                <div
+                  key={option}
+                  onClick={() => handleSelect(option)}
+                  className={`
+                    px-3 py-2 cursor-pointer text-white
+                    hover:bg-[#2b3e33] transition-colors duration-150
+                    ${value === option ? "bg-[#2b3e33]" : ""}
+                    ${index !== options.length - 1 ? "border-b border-[#2b3e33]" : ""}
+                  `}
+                >
+                  {formatOptionDisplay(option)}
+                </div>
+              ))
+            ) : (
+              <div className="px-3 py-2 text-gray-300">No options available</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
