@@ -6,10 +6,13 @@ import { getUserData, updateUserData } from "../../../redux/slices/authSlice";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { message } from "antd";
 import PersonalInfoSkeleton from "../../Skeleton/PersonalInfoSkeleton";
+import { ArrowLeft } from "lucide-react";
 
 const PersonalInfo = ({ setShowSidebar }) => {
   const dispatch = useDispatch();
-  const token = localStorage.getItem("authToken");
+  // const token = localStorage.getItem("auth_Token");
+  const token = useSelector((state) => state.auth.token);
+  const status = useSelector((state) => state.auth.status);
   const userId = useSelector((state) => state?.auth?.user?.id);
   const { userDetails, loading } = useSelector((state) => state.auth);
   const fields = useSelector((state) => state?.farmfield?.fields);
@@ -43,11 +46,11 @@ const PersonalInfo = ({ setShowSidebar }) => {
   }, [updateStatus]);
 
   // Fetch user data when token changes or on initial load
-  useEffect(() => {
-    if (token) {
-      dispatch(getUserData(token));
-    }
-  }, [token, dispatch, updateStatus]);
+useEffect(() => {
+  if (token && status === "idle" && !userDetails) {
+    dispatch(getUserData(token));
+  }
+}, [token, status, userDetails]);
 
   // Fetch farm fields when userId changes
   useEffect(() => {
@@ -113,11 +116,9 @@ const PersonalInfo = ({ setShowSidebar }) => {
         <h5 className="font-bold">Personal Info</h5>
         <button
           onClick={() => setShowSidebar(true)}
-          className="flex items-center gap-1 text-sm text-[#344E41] hover:text-[#1d3039]"
+          className="flex items-center gap-1 text-sm text-[#344E41] hover:text-[#1d3039] transition-all duration-300 ease-in-out cursor-pointer"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+          <ArrowLeft size={18} />
           Back to Settings
         </button>
       </div>

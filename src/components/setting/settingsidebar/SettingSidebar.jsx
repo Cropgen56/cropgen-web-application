@@ -3,7 +3,7 @@ import { SettingDarkIcon } from "../../../assets/Icons";
 
 const SettingSidebar = ({ handleOptionClick, selectedOption }) => {
   return (
-    <div className="w-[20vw] h-screen bg-white m-0 p-0 overflow-hidden">
+    <div className="w-[20vw] h-screen bg-white m-0 p-0">
       {/* Header */}
       <div className="flex flex-row justify-start items-center px-4 py-3 gap-2 border-b border-[#344e41]">
         <SettingDarkIcon />
@@ -23,7 +23,7 @@ const SettingSidebar = ({ handleOptionClick, selectedOption }) => {
           Personal Info
         </div>
         <div
-          className={`text-center p-4 text-sm lg:text-lg font-bold border-b border-[#344E4166] transition duration-400 ease-in-out ${
+          className={`text-center p-4 text-sm lg:text-lg font-bold border-y border-[#344E4166] transition duration-400 ease-in-out ${
             selectedOption === "farmSettings"
               ? "bg-[#5a7c6b] text-white"
               : "bg-white text-[#344E41]"
@@ -31,6 +31,16 @@ const SettingSidebar = ({ handleOptionClick, selectedOption }) => {
           onClick={() => handleOptionClick("farmSettings")}
         >
           Farm Settings
+        </div>
+        <div
+          className={`text-center p-4 text-sm lg:text-lg font-bold border-b border-[#344E4166] transition duration-400 ease-in-out ${
+            selectedOption === "pricing"
+              ? "bg-[#5a7c6b] text-white"
+              : "bg-white text-[#344E41]"
+          }`}
+          onClick={() => handleOptionClick("pricing")}
+        >
+          Pricing
         </div>
       </div>
     </div>

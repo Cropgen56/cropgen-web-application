@@ -69,7 +69,7 @@ const SoilReport = () => {
         !fieldSub ||
         (fieldSub.lastChecked &&
           new Date() - new Date(fieldSub.lastChecked) >
-          SUBSCRIPTION_CHECK_INTERVAL);
+            SUBSCRIPTION_CHECK_INTERVAL);
 
       if (shouldCheck) {
         dispatch(
@@ -100,9 +100,7 @@ const SoilReport = () => {
   const handleSubscribe = useCallback(() => {
     if (selectedField) {
       const areaInHectares =
-        selectedField?.areaInHectares ||
-        selectedField?.acre * 0.404686 ||
-        5;
+        selectedField?.areaInHectares || selectedField?.acre * 0.404686 || 5;
       const fieldData = {
         id: selectedField._id,
         name: selectedField.fieldName || selectedField.farmName,
@@ -312,10 +310,10 @@ const SoilReport = () => {
                 </div>
 
                 <div
-                  className={`mt-5 p-4 rounded-lg shadow-md ${isdownloading ? "text-black" : "text-green-100"
-                    }`}
-                >
-                </div>
+                  className={`mt-5 p-4 rounded-lg shadow-md ${
+                    isdownloading ? "text-black" : "text-green-100"
+                  }`}
+                ></div>
               </div>
             </PremiumPageWrapper>
           )}

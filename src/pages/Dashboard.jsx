@@ -509,6 +509,7 @@ const Dashboard = () => {
           selectedFieldDetails ? [selectedFieldDetails] : []
         }
         fields={fields}
+        showFieldDropdown={true}
       />
 
       {fields.length > 0 && !isRefreshingSubscription && (
@@ -519,6 +520,7 @@ const Dashboard = () => {
             }
             fields={fields}
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
 
           <ForeCast onSubscribe={handleSubscribe} />
@@ -528,6 +530,7 @@ const Dashboard = () => {
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
 
           <WaterIndex
@@ -535,6 +538,7 @@ const Dashboard = () => {
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
 
           <EvapotranspirationDashboard
@@ -550,6 +554,7 @@ const Dashboard = () => {
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
 
           <PlantGrowthActivity
@@ -557,6 +562,7 @@ const Dashboard = () => {
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
             onSubscribe={handleSubscribe}
+            usePremiumWrapper={true}
           />
         </>
       )}

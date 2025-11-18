@@ -82,8 +82,7 @@ const WaterIndex = ({ selectedFieldsDetials, onSubscribe }) => {
 
   // Calculate summary statistics
   const summaryData = useMemo(() => {
-    const summary =
-      waterIndexData?.data?.summary ||
+    const summary = waterIndexData?.data?.summary ||
       waterIndexData?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
     const timestamp = waterIndexData?.timestamp || null;
 
@@ -200,8 +199,8 @@ const WaterIndex = ({ selectedFieldsDetials, onSubscribe }) => {
   };
 
   return (
-    <div className="w-full flex justify-center mt-4">
-      <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+    <div className="w-full flex justify-center mt-2 p-2">
+      <div className="relative w-full bg-white border border-gray-200 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
         {/* Index Selector */}
         <div className="absolute top-3 right-3 z-50">
           <select
@@ -298,9 +297,9 @@ const WaterIndex = ({ selectedFieldsDetials, onSubscribe }) => {
                         No Data Available
                       </h3>
                       <p className="text-sm text-gray-600">
-                        We couldn't find any data for the selected field and time
-                        range. Please verify the field selection or adjust the date
-                        range to ensure data availability.
+                        We couldn't find any data for the selected field and
+                        time range. Please verify the field selection or adjust
+                        the date range to ensure data availability.
                       </p>
                     </div>
                   </div>

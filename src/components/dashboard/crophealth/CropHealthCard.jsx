@@ -6,16 +6,27 @@ import SoilAnalysisChart from "./SoilAnalysisChart.jsx";
 import SoilHealthChart from "./SoilHealthChart.jsx";
 // REMOVED: fetchSoilData import
 import CropHealthStatusBar from "./CropHealthStatusBar.jsx";
-import { fetchCrops, fetchCropHealthYield } from "../../../redux/slices/cropSlice.js";
+import {
+  fetchCrops,
+  fetchCropHealthYield,
+} from "../../../redux/slices/cropSlice.js";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
 import { selectHasCropHealthAndYield } from "../../../redux/slices/membershipSlice.js";
 
 const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
   const cropDetials = selectedFieldsDetials?.[0];
-  const { sowingDate, field: corrdinatesPoint, cropName, bbch, bbchDescription } = cropDetials || {};
+  const {
+    sowingDate,
+    field: corrdinatesPoint,
+    cropName,
+    bbch,
+    bbchDescription,
+  } = cropDetials || {};
   const dispatch = useDispatch();
 
-  const { crops, cropHealthYield, healthYieldLoading } = useSelector((state) => state.crops);
+  const { crops, cropHealthYield, healthYieldLoading } = useSelector(
+    (state) => state.crops
+  );
   const { cropYield } = useSelector((state) => state.satellite);
   const hasCropHealthAndYield = useSelector(selectHasCropHealthAndYield);
 
@@ -49,32 +60,40 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
 
   const buildGeometry = useMemo(() => {
     if (!corrdinatesPoint || corrdinatesPoint.length < 3) return null;
-    
+
     const coordinates = corrdinatesPoint.map((p) => [p.lng, p.lat]);
     coordinates.push(coordinates[0]); // Close the polygon
-    
+
     return {
       type: "Polygon",
-      coordinates: [coordinates]
+      coordinates: [coordinates],
     };
   }, [corrdinatesPoint]);
 
   useEffect(() => {
     if (cropDetials && cropName && sowingDate && buildGeometry) {
-      const currentDate = new Date().toISOString().split('T')[0];
-      
+      const currentDate = new Date().toISOString().split("T")[0];
+
       const payload = {
         cropName: cropName,
         sowingDate: sowingDate,
         currentDate: currentDate,
-        bbch: bbch?.toString() || "75", 
-        bbchDescription: bbchDescription || "Stem elongation", 
-        geometry: buildGeometry
+        bbch: bbch?.toString() || "75",
+        bbchDescription: bbchDescription || "Stem elongation",
+        geometry: buildGeometry,
       };
-      
+
       dispatch(fetchCropHealthYield(payload));
     }
-  }, [cropDetials, cropName, sowingDate, buildGeometry, bbch, bbchDescription, dispatch]);
+  }, [
+    cropDetials,
+    cropName,
+    sowingDate,
+    buildGeometry,
+    bbch,
+    bbchDescription,
+    dispatch,
+  ]);
 
   // REMOVED: fetchSoilData useEffect
 
@@ -82,19 +101,27 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
   const yieldData = useMemo(() => {
     if (cropHealthYield?.success) {
       return {
-        standardYield: `${cropHealthYield.standardYield?.value || 'N/A'} ${cropHealthYield.standardYield?.unit || ''}`,
-        aiYield: `${cropHealthYield.aiYield?.value || 'N/A'} ${cropHealthYield.aiYield?.unit || ''}`,
-        confidence: cropHealthYield.aiYield?.confidence ? `(${(cropHealthYield.aiYield.confidence * 100).toFixed(0)}% confidence)` : '',
-        cropHealth: cropHealthYield.cropHealth?.Crop_Health || 'N/A',
+        standardYield: `${cropHealthYield.standardYield?.value || "N/A"} ${
+          cropHealthYield.standardYield?.unit || ""
+        }`,
+        aiYield: `${cropHealthYield.aiYield?.value || "N/A"} ${
+          cropHealthYield.aiYield?.unit || ""
+        }`,
+        confidence: cropHealthYield.aiYield?.confidence
+          ? `(${(cropHealthYield.aiYield.confidence * 100).toFixed(
+              0
+            )}% confidence)`
+          : "",
+        cropHealth: cropHealthYield.cropHealth?.Crop_Health || "N/A",
         healthPercentage: cropHealthYield.cropHealth?.Health_Percentage || 0,
-        summary: cropHealthYield.summary || ''
+        summary: cropHealthYield.summary || "",
       };
     }
     return null;
   }, [cropHealthYield]);
 
   return (
-    <Card body className="mt-2 mb-4 bg-white">
+    <div className="p-2">
       <div className="relative flex flex-col gap-6 rounded-2xl p-4 overflow-hidden bg-white shadow-md border border-gray-200">
         <h2 className="absolute top-4 left-6 text-[24px] sm:text-xl font-bold text-[#344E41] z-20">
           Crop Health
@@ -144,9 +171,11 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
                   Standard Yield:
                 </span>
                 <span className="font-medium text-black lg:text-[18px] md:text-[14px]">
-                  {healthYieldLoading 
-                    ? "Loading..." 
-                    : yieldData?.standardYield || cropYield?.data?.standard_yield || "N/A"}
+                  {healthYieldLoading
+                    ? "Loading..."
+                    : yieldData?.standardYield ||
+                      cropYield?.data?.standard_yield ||
+                      "N/A"}
                 </span>
               </div>
 
@@ -155,9 +184,12 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
                   AI Yield:
                 </span>
                 <span className="font-medium text-black lg:text-[18px] md:text-[12px]">
-                  {healthYieldLoading 
-                    ? "Loading..." 
-                    : yieldData?.aiYield || cropYield?.data?.ai_predicted_yield || cropYield?.data?.message || "N/A"}
+                  {healthYieldLoading
+                    ? "Loading..."
+                    : yieldData?.aiYield ||
+                      cropYield?.data?.ai_predicted_yield ||
+                      cropYield?.data?.message ||
+                      "N/A"}
                 </span>
               </div>
             </div>
@@ -188,7 +220,7 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
           </div>
         </div>
       </PremiumContentWrapper>
-    </Card>
+    </div>
   );
 };
 

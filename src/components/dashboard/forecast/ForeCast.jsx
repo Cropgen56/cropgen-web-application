@@ -1,7 +1,16 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { DropIcon, WaveIcon, WindSpeedIcon } from "../../../assets/DashboardIcons";
-import { Sun, RainSun, Cloudesun, RainCloude } from "../../../assets/image/weather/index.js";
+import {
+  DropIcon,
+  WaveIcon,
+  WindSpeedIcon,
+} from "../../../assets/DashboardIcons";
+import {
+  Sun,
+  RainSun,
+  Cloudesun,
+  RainCloude,
+} from "../../../assets/image/weather/index.js";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
 import { selectHasWeatherAnalytics } from "../../../redux/slices/membershipSlice";
 
@@ -30,8 +39,10 @@ function ForeCast({ onSubscribe }) {
 
   const getWeatherIcon = (temperature, cloudCover) => {
     if (!cloudCover && !temperature) return "🧊";
-    if (cloudCover >= 90) return <RainCloude className="w-8 h-8 lg:w-11 lg:h-11" />;
-    if (cloudCover >= 70) return <RainSun className="w-8 h-8 lg:w-11 lg:h-11" />;
+    if (cloudCover >= 90)
+      return <RainCloude className="w-8 h-8 lg:w-11 lg:h-11" />;
+    if (cloudCover >= 70)
+      return <RainSun className="w-8 h-8 lg:w-11 lg:h-11" />;
     if (cloudCover >= 40) return <Cloudesun />;
     if (cloudCover < 40) return <Sun />;
 
@@ -43,7 +54,8 @@ function ForeCast({ onSubscribe }) {
     return "🧊";
   };
 
-  const { currentConditions: weather = {}, days: weekForecast = [] } = weatherData;
+  const { currentConditions: weather = {}, days: weekForecast = [] } =
+    weatherData;
   const today = new Date().toISOString().split("T")[0];
 
   return (
@@ -54,11 +66,14 @@ function ForeCast({ onSubscribe }) {
     >
       <div className="mt-8">
         <div className="relative bg-white border border-gray-200 rounded-2xl shadow-md text-gray-800 flex flex-col overflow-hidden px-6 py-3">
-          <div className="relative z-10 flex items-start w-full gap-6 lg:flex-row">
+          <div className="relative z-10 flex items-start w-full gap-6  lg:flex-row">
+            {/* Today's Weather */}
             <div className="flex flex-col items-center">
               <div className="p-[2px] rounded-xl bg-gray-100 shadow-xl">
                 <div className="bg-white rounded-xl p-4 flex-shrink-0 w-[200px] flex flex-col items-center shadow-xl h-full">
-                  <h3 className="text-sm lg:text-base font-semibold mb-2 text-gray-700">Today's Weather</h3>
+                  <h3 className="text-sm lg:text-base font-semibold mb-2 text-gray-700">
+                    Today's Weather
+                  </h3>
                   <div className="flex items-center justify-center mb-2 text-4xl text-gray-800">
                     {getWeatherIcon(weather.temp, weather.cloudCover)}
                   </div>
@@ -100,17 +115,25 @@ function ForeCast({ onSubscribe }) {
                       <div
                         key={index}
                         className={`flex flex-col items-center justify-center p-4 rounded-xl min-w-[130px] h-[150px] transition-all
-                        ${isToday 
-                          ? "bg-gray-200 text-gray-900" 
-                          : "bg-gray-100 text-gray-700"}
+                        ${
+                          isToday
+                            ? "bg-gray-200 text-gray-900"
+                            : "bg-gray-100 text-gray-700"
+                        }
                         flex-shrink-0`}
                       >
                         <span className="text-sm font-semibold mb-1">
-                          {new Date(day.datetime).toLocaleDateString("en-US", { weekday: "short" })}
+                          {new Date(day.datetime).toLocaleDateString("en-US", {
+                            weekday: "short",
+                          })}
                         </span>
                         <span className="text-3xl mb-1">{icon}</span>
-                        <span className="text-lg font-bold">{day.temp ?? "--"}°C</span>
-                        <span className="text-sm mt-1">{day.precipprob ?? 0}%</span>
+                        <span className="text-lg font-bold">
+                          {day.temp ?? "--"}°C
+                        </span>
+                        <span className="text-sm mt-1">
+                          {day.precipprob ?? 0}%
+                        </span>
                       </div>
                     );
                   })}

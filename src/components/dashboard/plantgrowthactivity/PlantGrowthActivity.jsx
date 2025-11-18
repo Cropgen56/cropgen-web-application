@@ -18,7 +18,10 @@ import {
 } from "recharts";
 import { useSelector, useDispatch } from "react-redux";
 import { formatToYYYYMMDD } from "../../../utility/convertYYYYMMDD";
-import { getTheCropGrowthStage, calculateAiYield } from "../../../redux/slices/satelliteSlice";
+import {
+  getTheCropGrowthStage,
+  calculateAiYield,
+} from "../../../redux/slices/satelliteSlice";
 import PlantGrowthSkeleton from "../../Skeleton/PlantGrowthSkeleton";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
 import { selectHasCropGrowthMonitoring } from "../../../redux/slices/membershipSlice";
@@ -153,18 +156,24 @@ const parseKeyActivities = (keyActivity) => {
   if (Array.isArray(keyActivity)) {
     return keyActivity;
   }
-  if (typeof keyActivity === 'string') {
+  if (typeof keyActivity === "string") {
     // Split by common delimiters if it's a comma or semicolon separated string
-    if (keyActivity.includes(';')) {
-      return keyActivity.split(';').map(s => s.trim()).filter(Boolean);
+    if (keyActivity.includes(";")) {
+      return keyActivity
+        .split(";")
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
-    if (keyActivity.includes(',')) {
-      return keyActivity.split(',').map(s => s.trim()).filter(Boolean);
+    if (keyActivity.includes(",")) {
+      return keyActivity
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
     // Return as single item array
     return [keyActivity];
   }
-  return ['No activities available'];
+  return ["No activities available"];
 };
 
 const PlantGrowthActivity = memo(
@@ -175,7 +184,7 @@ const PlantGrowthActivity = memo(
       sowingDate,
       _id: selectedFieldId,
     } = selectedFieldsDetials[0] || {};
-    
+
     const aois = useSelector((state) => state.weather?.aois || []);
     const { cropGrowthStage, loading } = useSelector(
       (state) => state.satellite || {}
@@ -199,7 +208,7 @@ const PlantGrowthActivity = memo(
       const today = new Date();
       const isTodayValid = isValidDate(today);
       let formattedCurrentDate = "";
-      
+
       if (isTodayValid) {
         formattedCurrentDate = formatToYYYYMMDD(today);
       } else {
@@ -207,9 +216,10 @@ const PlantGrowthActivity = memo(
       }
 
       const sowing = isSowingValid ? new Date(sowingDate) : null;
-      
+
       // Use API response days if available, otherwise calculate
-      const days = cropGrowthStage?.days || 
+      const days =
+        cropGrowthStage?.days ||
         (sowing
           ? Math.max(
               1,
@@ -229,7 +239,9 @@ const PlantGrowthActivity = memo(
       if (cropGrowthStage?.finalStage?.stage && cropGrowthStage?.keyActivity) {
         const stage = cropGrowthStage.finalStage.stage;
         const bbch = cropGrowthStage.finalStage.bbch;
-        suggestionText = `BBCH ${bbch} - ${stage}${gdd ? ` (GDD: ${gdd})` : ''}`;
+        suggestionText = `BBCH ${bbch} - ${stage}${
+          gdd ? ` (GDD: ${gdd})` : ""
+        }`;
       } else if (cropGrowthStage?.finalStage?.stage) {
         suggestionText = `Current stage: ${cropGrowthStage.finalStage.stage}`;
       }
@@ -263,7 +275,7 @@ const PlantGrowthActivity = memo(
         currentDate,
         geometryId: aoi.id,
       };
-      
+
       dispatch(getTheCropGrowthStage(payload));
     }, [
       cropName,
@@ -318,14 +330,14 @@ const PlantGrowthActivity = memo(
       setInterval(e.target.value);
     }, []);
 
-    const keyActivities = useMemo(() => 
-      parseKeyActivities(cropGrowthStage?.keyActivity),
+    const keyActivities = useMemo(
+      () => parseKeyActivities(cropGrowthStage?.keyActivity),
       [cropGrowthStage?.keyActivity]
     );
 
     if (!isSowingDateValid) {
       return (
-        <div className="w-full flex justify-center mt-6">
+        <div className="w-full flex justify-center mt-4">
           <div className="relative w-full max-w-6xl rounded-2xl shadow-lg text-white p-4 md:p-5">
             <div className="w-full flex items-center justify-center bg-gray-100 rounded-lg p-4">
               <span className="text-gray-800 text-sm">
@@ -463,7 +475,8 @@ const PlantGrowthActivity = memo(
                       }}
                     >
                       <p className="font-bold sm:text-base">
-                        BBCH {cropGrowthStage.finalStage.bbch}: {cropGrowthStage.finalStage.stage}
+                        BBCH {cropGrowthStage.finalStage.bbch}:{" "}
+                        {cropGrowthStage.finalStage.stage}
                       </p>
                       {gddValue && (
                         <p className="text-xs text-gray-300 mb-1">

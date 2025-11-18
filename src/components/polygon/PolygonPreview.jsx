@@ -2,8 +2,8 @@ import React from "react";
 
 const PolygonPreview = ({
     coordinates = [],
-    width = 60,
-    height = 60,
+    width = 80,
+    height = 80,
     isSelected = false
 }) => {
     if (!coordinates.length) return null;
@@ -32,8 +32,8 @@ const PolygonPreview = ({
             <polygon
                 points={points}
                 fill="none"
-                stroke={isSelected ? "#344e41" : "#344e41"}
-                strokeWidth="1"
+                stroke={isSelected ? "#FCC21B" : "#FCC21B"}
+                strokeWidth="2"
             />
         </svg>
     );

@@ -36,13 +36,13 @@ AdvisoryCard.displayName = "AdvisoryCard";
 
 const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
   const dispatch = useDispatch();
-  
+
   const { cropAdvisory, advisoryLoading } = useSelector(
     (state) => state.crops || {}
   );
   const { soilMoisture } = useSelector((state) => state.satellite || {});
   const { forecastData } = useSelector((state) => state.weather || {});
-  
+
   // Get feature flag
   const hasWeeklyAdvisoryReports = useSelector(selectHasWeeklyAdvisoryReports);
 
@@ -72,14 +72,8 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
   useEffect(() => {
     if (!farmDetails || !forecastData) return;
 
-    const {
-      cropName,
-      sowingDate,
-      bbch,
-      variety,
-      irrigationType,
-      farmingType,
-    } = farmDetails;
+    const { cropName, sowingDate, bbch, variety, irrigationType, farmingType } =
+      farmDetails;
 
     // Extract weather data
     const currentWeather = forecastData?.current || forecastData;
@@ -91,7 +85,9 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
     const soilTemp = soilMoisture?.soilTemperature || 0;
     const soilMoist = soilMoisture?.soilMoisture || 0;
 
-    const advisoryKey = `${farmId}::${cropName}::${bbch}::${forecastData?.current?.dt || Date.now()}`;
+    const advisoryKey = `${farmId}::${cropName}::${bbch}::${
+      forecastData?.current?.dt || Date.now()
+    }`;
 
     if (lastAdvisoryKeyRef.current === advisoryKey) return;
 
@@ -126,13 +122,7 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
         advisoryTimerRef.current = null;
       }
     };
-  }, [
-    dispatch,
-    farmDetails,
-    forecastData,
-    soilMoisture,
-    farmId,
-  ]);
+  }, [dispatch, farmDetails, forecastData, soilMoisture, farmId]);
 
   // Drag handlers for horizontal scroll
   const attachDragHandlers = useCallback(() => {
@@ -188,8 +178,10 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
   return (
     <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-900"> Weekly Crop Advisory</h2>
-        
+        <h2 className="text-xl font-bold text-gray-900">
+          {" "}
+          Weekly Crop Advisory
+        </h2>
       </div>
 
       {/* Temporarily remove wrapper for testing */}
@@ -198,26 +190,26 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
         onSubscribe={onSubscribe}
         title="Crop Advisory"
       > */}
-        {advisoryLoading ? (
-          <CropAdvisorySkeleton />
-        ) : advisoryData ? (
-          <div
-            ref={scrollRef}
-            className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
-          >
-            {categories.map((category) => (
-              <AdvisoryCard
-                key={category.key}
-                category={category.label}
-                activityText={advisoryData[category.key]}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="flex items-center justify-center p-8 text-gray-500">
-            <p>No advisory data available. Please check your field details.</p>
-          </div>
-        )}
+      {advisoryLoading ? (
+        <CropAdvisorySkeleton />
+      ) : advisoryData ? (
+        <div
+          ref={scrollRef}
+          className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
+        >
+          {categories.map((category) => (
+            <AdvisoryCard
+              key={category.key}
+              category={category.label}
+              activityText={advisoryData[category.key]}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center p-8 text-gray-500">
+          <p>No advisory data available. Please check your field details.</p>
+        </div>
+      )}
       {/* </IndexPremiumWrapper> */}
     </div>
   );

@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   LineChart,
   Line,
@@ -23,10 +29,8 @@ import { selectHasVegetationIndices } from "../../../../redux/slices/membershipS
 
 const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
-  const {
-    indexTimeSeriesSummary = null,
-    loading,
-  } = useSelector((state) => state.satellite) || {};
+  const { indexTimeSeriesSummary = null, loading } =
+    useSelector((state) => state.satellite) || {};
 
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDVI");
@@ -54,13 +58,14 @@ const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
 
   // Process chart data
   const chartData = useMemo(() => {
-    let timeseries = indexTimeSeriesSummary?.data?.timeseries ||
+    let timeseries =
+      indexTimeSeriesSummary?.data?.timeseries ||
       indexTimeSeriesSummary?.timeseries ||
       (Array.isArray(indexTimeSeriesSummary) ? indexTimeSeriesSummary : []);
 
     if (!Array.isArray(timeseries)) return [];
 
-    return timeseries.map(item => ({
+    return timeseries.map((item) => ({
       date: new Date(item.date).toLocaleDateString("en-US", {
         month: "short",
         day: "2-digit",
@@ -105,7 +110,7 @@ const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
 
   // Tick formatter for Y-axis
   const tickFormatter = useCallback(
-    value => {
+    (value) => {
       const { min, mean, max } = summaryData;
       if (Math.abs(value - min) < 0.001) return `Min: ${value.toFixed(3)}`;
       if (Math.abs(value - mean) < 0.001) return `Mean: ${value.toFixed(3)}`;
@@ -117,15 +122,15 @@ const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
 
   // Tooltip formatter
   const tooltipFormatter = useCallback(
-    value => [value.toFixed(3), index],
+    (value) => [value.toFixed(3), index],
     [index]
   );
 
   // Label formatter
-  const labelFormatter = useCallback(label => `Date: ${label}`, []);
+  const labelFormatter = useCallback((label) => `Date: ${label}`, []);
 
   // Index change handler
-  const handleIndexChange = useCallback(e => setIndex(e.target.value), []);
+  const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
   // Drag scroll handlers
   useEffect(() => {
@@ -216,8 +221,8 @@ const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
               <div className="border border-gray-200 bg-white/90 p-2 rounded text-black text-sm w-full">
                 <div className="flex items-start justify-between gap-2">
                   <span className="flex-1 text-xs text-gray-500">
-                    {index} values help in mapping vegetation and detecting cover
-                    changes over time.
+                    {index} values help in mapping vegetation and detecting
+                    cover changes over time.
                   </span>
                   <span className="bg-white/90 rounded-full p-1 border border-gray-200">
                     <Info size={16} strokeWidth={1.5} color="#22c55e" />
@@ -259,9 +264,9 @@ const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
                         No Data Available
                       </h3>
                       <p className="text-sm text-gray-500">
-                        We couldn't find any data for the selected field and time
-                        range. Please verify the field selection or adjust the date
-                        range to ensure data availability.
+                        We couldn't find any data for the selected field and
+                        time range. Please verify the field selection or adjust
+                        the date range to ensure data availability.
                       </p>
                     </div>
                   </div>
@@ -304,6 +309,7 @@ const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
                             paddingBottom: "8px",
                             paddingLeft: "40px",
                             fontWeight: "bold",
+                            color: "#333",
                             color: "#333",
                           }}
                         />

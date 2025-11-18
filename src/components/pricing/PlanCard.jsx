@@ -51,7 +51,7 @@ export default function PlanCard({ plan, selectedField, onSubscribeClick }) {
           )}
           <h3 className="text-[24px] font-extrabold mt-6 mb-1">{plan.name}</h3>
           <p className="text-xs mb-2">{plan.tagline}</p>
-          <div className="flex items-baseline gap-5 mt-2">
+          <div className="flex items-baseline justify-between mt-2">
             <p className="text-[20px] font-bold">{plan.price || ""}</p>
             {plan.priceBreakdown && (
               <p className="text-xs text-gray-400">{plan.priceBreakdown}</p>
@@ -59,10 +59,10 @@ export default function PlanCard({ plan, selectedField, onSubscribeClick }) {
           </div>
 
           <hr className="border-t border-gray-800 mb-3" />
-          <div className="flex-1 flex flex-col gap-1 text-[11px] font-semibold leading-[11px] overflow-hidden">
+          <div className="flex-1 flex flex-col gap-1 text-[11px] font-semibold leading-[24px] overflow-hidden">
             {frontFeatures.length > 0 ? (
               frontFeatures.map((f, idx) => (
-                <p key={idx} className="flex items-start gap-2">
+                <p key={idx} className="flex items-center gap-2 mb-0">
                   <Check
                     strokeWidth={4}
                     size={14}
@@ -107,9 +107,9 @@ export default function PlanCard({ plan, selectedField, onSubscribeClick }) {
           <h3 className="text-[18px] font-bold mt-6 mb-3">
             {plan.name} — All Features
           </h3>
-          <div className="text-[11px] flex-1 overflow-auto font-semibold leading-[14px] pr-2">
+          <div className="text-[11px] flex-1 overflow-auto font-semibold leading-[20px] pr-2">
             {backFeatures.map((f, idx) => (
-              <p key={idx} className="flex items-start gap-2 mb-1">
+              <p key={idx} className="flex items-center gap-2 mb-1">
                 {plan.features.includes(f) ? (
                   <Check
                     strokeWidth={4}
