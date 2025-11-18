@@ -1,27 +1,38 @@
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import PolygonPreview from "../../polygon/PolygonPreview";
+import {
+  checkFieldSubscriptionStatus,
+} from "../../../redux/slices/membershipSlice";
 
-
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) => (
+const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates, isSubscribed }) => (
   <div
     className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
       isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
     }`}
     onClick={onClick}
   >
-    <PolygonPreview coordinates={coordinates}  isSelected={isSelected}/>
-    <div>
-      <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
-        {title}
-      </h4>
+    <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
+    <div className="flex-grow">
+      <div className="flex items-center justify-between mb-1">
+        <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
+          {title}
+        </h4>
+        <div
+          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+            isSubscribed
+              ? "bg-[#DAFFED] text-[#28C878] border border-[#28C878]/30"
+              : "bg-[#FFDEDF] text-[#EC1C24] border border-[#EC1C24]/30"
+          }`}
+        >
+          {isSubscribed ? "Subscribed" : "Unsubscribed"}
+        </div>
+      </div>
       <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
       <div className="flex gap-4 text-xs text-[#a2a2a2]">
         <p>{lat} N</p>
-
-
         <p>{lon} E</p>
       </div>
     </div>
@@ -29,11 +40,23 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) 
 );
 
 const WeatherSidebar = ({ setSelectedField, selectedField }) => {
+  const dispatch = useDispatch();
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const fields = useSelector((state) => state?.farmfield?.fields) || [];
+  
+  // Get auth token for membership check
+  const authToken = useSelector((state) => state.auth.token);
 
-  // calculate the centroid of a field
+  // Get all field subscriptions from store
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions || {}
+  );
+
+  // Sort fields in descending order (last added first)
+  const sortedFields = [...fields].reverse();
+
+  // Calculate the centroid of a field
   const calculateCentroid = (field) => {
     if (!field || field.length === 0) return { lat: 0, lon: 0 };
     const total = field.reduce(
@@ -58,9 +81,45 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
-  const filteredFields = fields.filter((field) =>
+  // Filter fields based on search query (from sorted fields)
+  const filteredFields = sortedFields.filter((field) =>
     field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Check subscription status for each field
+  useEffect(() => {
+    if (fields.length > 0 && authToken) {
+      fields.forEach((field) => {
+        if (field._id) {
+          dispatch(
+            checkFieldSubscriptionStatus({
+              fieldId: field._id,
+              authToken,
+            })
+          );
+        }
+      });
+    }
+  }, [fields, authToken, dispatch]);
+
+  // Auto-select the last added field (first in the sorted list) when component mounts or fields change
+  useEffect(() => {
+    if (filteredFields.length > 0 && !selectedField) {
+      setSelectedField(filteredFields[0]);
+    }
+  }, [filteredFields.length]); // Only depend on length to avoid infinite loops
+
+  // Update selection when search query changes and current selection is filtered out
+  useEffect(() => {
+    if (filteredFields.length > 0 && selectedField) {
+      const isSelectedInFiltered = filteredFields.some(
+        (field) => field._id === selectedField._id
+      );
+      if (!isSelectedInFiltered) {
+        setSelectedField(filteredFields[0]);
+      }
+    }
+  }, [searchQuery]);
 
   if (!isSidebarVisible) return null;
 
@@ -119,6 +178,9 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
         {filteredFields.length > 0 ? (
           filteredFields.map((field) => {
             const { lat, lon } = calculateCentroid(field.field);
+            const isSubscribed =
+              fieldSubscriptions[field._id]?.hasActiveSubscription || false;
+            
             return (
               <FieldInfo
                 key={field._id}
@@ -129,6 +191,7 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
                 coordinates={field.field}
                 isSelected={field._id === selectedField?._id}
                 onClick={() => setSelectedField(field)}
+                isSubscribed={isSubscribed}
               />
             );
           })

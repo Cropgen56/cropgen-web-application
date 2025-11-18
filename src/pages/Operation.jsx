@@ -45,9 +45,11 @@ const Operation = () => {
     }
   }, [dispatch, userId]);
 
+  // Updated to select the last added field (most recent)
   useEffect(() => {
     if (fields?.length > 0 && !selectedField) {
-      setSelectedField(fields[0]._id);
+      // Select the last field in the array (most recently added)
+      setSelectedField(fields[fields.length - 1]._id);
     }
   }, [fields, selectedField]);
 

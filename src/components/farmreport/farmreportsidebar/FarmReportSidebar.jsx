@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import PolygonPreview from "../../polygon/PolygonPreview";
 import { ArrowDownToLine, LoaderCircle } from "lucide-react";
+import {
+  checkFieldSubscriptionStatus,
+} from "../../../redux/slices/membershipSlice";
 
 const FieldInfo = ({
   title,
@@ -13,6 +16,7 @@ const FieldInfo = ({
   isSelected,
   onClick,
   coordinates,
+  isSubscribed,
 }) => (
   <div
     className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
@@ -21,12 +25,23 @@ const FieldInfo = ({
     onClick={onClick}
   >
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
-    <div>
-      <h4
-        className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}
-      >
-        {title}
-      </h4>
+    <div className="flex-grow">
+      <div className="flex items-center justify-between mb-1">
+        <h4
+          className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}
+        >
+          {title}
+        </h4>
+        <div
+          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+            isSubscribed
+              ? "bg-[#DAFFED] text-[#28C878] border border-[#28C878]/30"
+              : "bg-[#FFDEDF] text-[#EC1C24] border border-[#EC1C24]/30"
+          }`}
+        >
+          {isSubscribed ? "Subscribed" : "Unsubscribed"}
+        </div>
+      </div>
       <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
       <div className="flex gap-4 text-xs text-[#a2a2a2]">
         <p>{lat} N</p>
@@ -42,11 +57,20 @@ const FarmReportSidebar = ({
   downloadPDF,
   currentFieldHasSubscription,
 }) => {
+  const dispatch = useDispatch();
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
   const fields = useSelector((state) => state?.farmfield?.fields) || [];
+
+  // Get auth token for membership check
+  const authToken = useSelector((state) => state.auth.token);
+
+  // Get all field subscriptions from store
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions || {}
+  );
 
   // Sort fields in descending order (latest first)
   const sortedFields = [...fields].sort((a, b) => {
@@ -86,6 +110,22 @@ const FarmReportSidebar = ({
   const filteredFields = sortedFields.filter((field) =>
     field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Check subscription status for each field
+  useEffect(() => {
+    if (fields.length > 0 && authToken) {
+      fields.forEach((field) => {
+        if (field._id) {
+          dispatch(
+            checkFieldSubscriptionStatus({
+              fieldId: field._id,
+              authToken,
+            })
+          );
+        }
+      });
+    }
+  }, [fields, authToken, dispatch]);
 
   // handling download
   const handleDownload = async () => {
@@ -151,6 +191,9 @@ const FarmReportSidebar = ({
         {filteredFields.length > 0 ? (
           filteredFields.map((field) => {
             const { lat, lon } = calculateCentroid(field.field);
+            const isSubscribed =
+              fieldSubscriptions[field._id]?.hasActiveSubscription || false;
+
             return (
               <FieldInfo
                 key={field._id}
@@ -160,6 +203,7 @@ const FarmReportSidebar = ({
                 lon={lon}
                 coordinates={field.field}
                 isSelected={field._id === selectedField}
+                isSubscribed={isSubscribed}
                 onClick={() => setSelectedField(field._id)}
               />
             );

@@ -83,11 +83,11 @@ const Weather = () => {
     }
   }, [dispatch, user?.id]);
 
-  useEffect(() => {
-    if (fields.length > 0 && !selectedField) {
-      setSelectedField(fields[0]);
-    }
-  }, [fields, selectedField]);
+useEffect(() => {
+  if (fields.length > 0 && !selectedField) {
+    setSelectedField(fields[fields.length - 1]);
+  }
+}, [fields, selectedField]);
 
   useEffect(() => {
     if (selectedField && authToken) {

@@ -20,70 +20,76 @@ import {
 import mapLocation from "../../../assets/image/setting/map-location.svg";
 
 const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
-  <div
-    onClick={() => onClick(farm)}
-    className="relative flex flex-col rounded-xl shadow-sm border-1 border-[#000000] text-center transition-shadow duration-500 ease-in-out hover:shadow-md overflow-hidden cursor-pointer"
+  <div 
+    onClick={() => onClick(farm)} 
+    className="relative flex flex-col bg-white rounded-xl shadow-md border border-[#344E41]/20 transition-all duration-300 ease-in-out hover:shadow-xl hover:border-[#344E41]/40 overflow-hidden cursor-pointer"
   >
-    <div className="flex items-start justify-between px-3 py-2">
+    {/* Header Section */}
+    <div className="flex items-start justify-between px-4 py-3 bg-[#344E41]/5 border-b border-[#344E41]/10">
       <div className="text-left">
-        <span className="block font-semibold text-[#344E41] text-lg lg:text-xl leading-tight">
+        <span className="block font-bold text-[#344E41] text-lg lg:text-xl leading-tight">
           {farm.fieldName}
         </span>
-        <span className="block text-xs font-medium text-[#848484] mt-0.5">
+        <span className="block text-sm font-semibold text-[#344E41]/70 mt-1">
           {Number(farm.acre || 0).toFixed(2)} ha
         </span>
       </div>
-
       <div
-        className={`px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm ${
+        className={`px-3 py-1.5 rounded-full text-xs font-bold ${
           isSubscribed
-            ? "bg-[#DAFFED] text-[#28C878]"
-            : "bg-[#FFDEDF] text-[#EC1C24]"
+            ? "bg-[#DAFFED] text-[#28C878] border border-[#28C878]/30"
+            : "bg-[#FFDEDF] text-[#EC1C24] border border-[#EC1C24]/30"
         }`}
       >
         {isSubscribed ? "Subscribed" : "Unsubscribed"}
       </div>
     </div>
 
-    <div className="flex-grow flex flex-col justify-center bg-white py-2">
-      <div className="w-full h-28 flex items-center justify-center">
+    {/* Map Preview Section */}
+    <div className="flex-grow flex flex-col justify-center bg-gradient-to-b from-white to-[#344E41]/5 py-3">
+      <div className="w-full h-28 flex items-center justify-center px-3">
         {farm.field && farm.field.length > 0 ? (
-          <PolygonPreview coordinates={farm.field} />
+            <PolygonPreview coordinates={farm.field} />
+     
         ) : (
-          <span className="text-gray-400 text-sm">No Shape</span>
+          <span className="text-[#344E41]/30 text-sm font-medium">No Shape</span>
         )}
       </div>
-
-      <div className="flex items-center gap-2 px-2 mt-4 text-left">
-        <Sprout className="w-5 h-5 text-[#075A53]" />
-        <span className="text-sm lg:text-sm text-black font-medium">
+      
+      {/* Crop Details */}
+      <div className="flex items-center gap-2 px-3 mt-4 bg-[#344E41]/5 mx-3 py-2 rounded-lg border border-[#344E41]/10">
+        <Sprout className="w-5 h-5 text-[#344E41]" />
+        <span className="text-sm text-[#344E41] font-semibold">
           {farm.cropName || "N/A"}
         </span>
-        <span className="text-xs lg:text-sm text-black font-medium">
-          {farm.sowingDate
-            ? new Date(farm.sowingDate).toLocaleDateString()
+        <span className="text-[#344E41]/30">•</span>
+        <span className="text-sm text-[#344E41]/80 font-medium">
+          {farm.sowingDate 
+            ? new Date(farm.sowingDate).toLocaleDateString() 
             : "No Date"}
         </span>
-        <span className="text-xs lg:text-sm text-black font-medium">
+        <span className="text-[#344E41]/30">•</span>
+        <span className="text-sm text-[#344E41]/80 font-medium">
           {farm.variety || "N/A"}
         </span>
       </div>
     </div>
 
-    <div className="flex justify-between items-center bg-white border-t border-[#075A53] p-3">
-      <span className="text-base text-[#9A9898] font-semibold">
-        Id: Crop-{String(index + 1).padStart(3, "0")}
-      </span>
-
-      <img
-        src={mapLocation}
-        alt="map-location"
-        className="w-7 h-6 cursor-pointer"
-      />
-    </div>
+    {/* Footer */}
+<div className="flex justify-between items-center bg-gradient-to-r from-[#344E41] to-[#4a6b5e] px-4 py-3">
+  <span className="text-sm text-white font-semibold">
+    ID: CROP-{String(index + 1).padStart(3, "0")}
+  </span>
+  <div className="bg-white/20 p-1.5 rounded-lg hover:bg-white/30 transition-colors">
+    <img 
+      src={mapLocation} 
+      alt="map-location" 
+      className="w-5 h-5 brightness-0 invert" 
+    />
+  </div>
+</div>
   </div>
 );
-
 const AddNewFarmCard = ({ onClick }) => (
   <div
     className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg shadow-sm border-1 border-[#000000] text-center cursor-pointer transition-all duration-500 ease-in-out hover:bg-emerald-50"

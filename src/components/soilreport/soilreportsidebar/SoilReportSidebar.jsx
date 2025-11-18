@@ -5,18 +5,32 @@ import { ChevronDown } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchSatelliteDates } from "../../../redux/slices/satelliteSlice";
 import PolygonPreview from "../../polygon/PolygonPreview";
+import {
+  checkFieldSubscriptionStatus,
+} from "../../../redux/slices/membershipSlice";
 
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates }) => (
+const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates, isSubscribed }) => (
   <div
     className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
       }`}
     onClick={onClick}
   >
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
-    <div>
-      <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
-        {title}
-      </h4>
+    <div className="flex-grow">
+      <div className="flex items-center justify-between mb-1">
+        <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
+          {title}
+        </h4>
+        <div
+          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+            isSubscribed
+              ? "bg-[#DAFFED] text-[#28C878] border border-[#28C878]/30"
+              : "bg-[#FFDEDF] text-[#EC1C24] border border-[#EC1C24]/30"
+          }`}
+        >
+          {isSubscribed ? "Subscribed" : "Unsubscribed"}
+        </div>
+      </div>
       <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
       <div className="flex gap-4 text-xs text-[#a2a2a2]">
         <p>{lat} N</p>
@@ -204,6 +218,14 @@ const SoilReportSidebar = ({
 
   const fields = useSelector((state) => state.farmfield.fields);
 
+  // Get auth token for membership check
+  const authToken = useSelector((state) => state.auth.token);
+
+  // Get all field subscriptions from store
+  const fieldSubscriptions = useSelector(
+    (state) => state.membership.fieldSubscriptions || {}
+  );
+
   const sortedAndFilteredFields = (fields || [])
     .filter((field) =>
       field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -217,6 +239,22 @@ const SoilReportSidebar = ({
   const selectedFieldObj = sortedAndFilteredFields.find(
     field => field._id === selectedFieldId
   );
+
+  // Check subscription status for each field
+  useEffect(() => {
+    if (fields && fields.length > 0 && authToken) {
+      fields.forEach((field) => {
+        if (field._id) {
+          dispatch(
+            checkFieldSubscriptionStatus({
+              fieldId: field._id,
+              authToken,
+            })
+          );
+        }
+      });
+    }
+  }, [fields, authToken, dispatch]);
 
   return (
     <>
@@ -274,41 +312,47 @@ const SoilReportSidebar = ({
           </h2>
           <div className="flex flex-col">
             <div className="overflow-y-auto max-h-[225px] no-scrollbar">
-              {sortedAndFilteredFields.map((fieldObj) => (
-                <FieldInfo
-                  key={fieldObj._id}
-                  title={fieldObj.fieldName || `Field`}
-                  area={
-                    fieldObj.acre !== undefined &&
-                      fieldObj.acre !== null &&
-                      fieldObj.acre !== ""
-                      ? `${Number(fieldObj.acre).toFixed(3)} acres`
-                      : ""
-                  }
-                  lat={
-                    fieldObj.field?.[0]?.lat !== undefined
-                      ? Number(fieldObj.field[0].lat).toFixed(3)
-                      : ""
-                  }
-                  lon={
-                    fieldObj.field?.[0]?.lng !== undefined
-                      ? Number(fieldObj.field[0].lng).toFixed(3)
-                      : ""
-                  }
-                  isSelected={selectedFieldId === fieldObj._id}
-                  coordinates={fieldObj.field}
-                  onClick={() => {
-                    setSelectedFieldId(fieldObj._id);
-                    setSelectedOperation(fieldObj);
-                    if (setSelectedField) {
-                      setSelectedField(fieldObj);
+              {sortedAndFilteredFields.map((fieldObj) => {
+                const isSubscribed =
+                  fieldSubscriptions[fieldObj._id]?.hasActiveSubscription || false;
+
+                return (
+                  <FieldInfo
+                    key={fieldObj._id}
+                    title={fieldObj.fieldName || `Field`}
+                    area={
+                      fieldObj.acre !== undefined &&
+                        fieldObj.acre !== null &&
+                        fieldObj.acre !== ""
+                        ? `${Number(fieldObj.acre).toFixed(3)} acres`
+                        : ""
                     }
-                    setcurrentcrop("");
-                    setnextcrop("");
-                    setReportGenerated(false);
-                  }}
-                />
-              ))}
+                    lat={
+                      fieldObj.field?.[0]?.lat !== undefined
+                        ? Number(fieldObj.field[0].lat).toFixed(3)
+                        : ""
+                    }
+                    lon={
+                      fieldObj.field?.[0]?.lng !== undefined
+                        ? Number(fieldObj.field[0].lng).toFixed(3)
+                        : ""
+                    }
+                    isSelected={selectedFieldId === fieldObj._id}
+                    coordinates={fieldObj.field}
+                    isSubscribed={isSubscribed}
+                    onClick={() => {
+                      setSelectedFieldId(fieldObj._id);
+                      setSelectedOperation(fieldObj);
+                      if (setSelectedField) {
+                        setSelectedField(fieldObj);
+                      }
+                      setcurrentcrop("");
+                      setnextcrop("");
+                      setReportGenerated(false);
+                    }}
+                  />
+                );
+              })}
             </div>
 
             {selectedFieldId !== null && selectedFieldObj && (
