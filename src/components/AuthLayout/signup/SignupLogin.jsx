@@ -142,7 +142,6 @@ const SignupLogin = () => {
       setOtpInputs(digits);
       setFormData((prev) => ({ ...prev, otp: paste }));
 
-      // Last box par focus
       inputRefs.current[5]?.focus();
     }
   };
