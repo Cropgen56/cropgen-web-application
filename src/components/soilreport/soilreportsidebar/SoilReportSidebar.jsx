@@ -363,7 +363,7 @@ const SoilReportSidebar = ({
                   label="Current Crop"
                   value={currentcrop}
                   onChange={setcurrentcrop}
-                  options={cropOptions}
+                    options={[...cropOptions].sort((a, b) => a.localeCompare(b))}
                   placeholder="Select Crop"
                 />
 
@@ -371,7 +371,7 @@ const SoilReportSidebar = ({
                   label="Next Crop"
                   value={nextcrop}
                   onChange={setnextcrop}
-                  options={cropOptions}
+                    options={[...cropOptions].sort((a, b) => a.localeCompare(b))}
                   placeholder="Select Crop"
                 />
 

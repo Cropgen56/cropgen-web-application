@@ -64,12 +64,12 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
         // 📱 Tablet View
         <div className="flex-1 flex flex-col justify-center items-center px-4 pb-4 text-[#344e41] z-[9999]">
           <div className="flex justify-center items-center p-2">
-            <div className="w-full max-w-4xl bg-white shadow-lg rounded-xl p-6">
-              <h5 className="text-[#344e41] mb-6 text-center text-lg font-semibold mt-3">
+            <div className="w-full max-w-6xl bg-white shadow-lg rounded-xl p-6 mx-auto">
+              <h5 className="text-[#344e41] mb-6 text-center text-lg font-bold ">
                 Crop Details
               </h5>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* FARM NAME */}
                 <FormInput
                   label="Farm Name"
@@ -120,7 +120,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
 
               <div className="mt-6">
                 <button
-                  className="w-full h-11 bg-[#344e41] hover:bg-[#2b3e33] text-white font-semibold mt-8 rounded-md transition-all duration-300"
+                  className="w-full h-11 bg-[#344e41] hover:bg-[#2b3e33] text-white font-semibold mt-4 rounded-md transition-all duration-300"
                   onClick={handleAddField}
                 >
                   Add Field
@@ -431,6 +431,8 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
     </div>
   );
 };
+
+
 
 // Custom Dropdown Component
 const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {

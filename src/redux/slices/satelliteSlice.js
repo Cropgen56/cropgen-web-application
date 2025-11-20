@@ -135,7 +135,8 @@ export const fetchIndexData = createAsyncThunk(
         width: 800,
         height: 800,
         supersample: 1,
-        smooth: true,
+        // smooth: true,
+        smooth: false,
         gaussian_sigma: 1,
       };
 
@@ -149,56 +150,6 @@ export const fetchIndexData = createAsyncThunk(
 
       return response.data;
       // return { [index]: response.data };
-    } catch (error) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-export const fetchIndexDataForMap = createAsyncThunk(
-  "satellite/fetchIndexDataForMap",
-  async ({ endDate, geometry, index }, { rejectWithValue }) => {
-    try {
-      const input = { endDate, geometry, index };
-      const cacheKey = generateCacheKey("indexData", null, input);
-      const cached = await get(cacheKey);
-      const now = Date.now();
-
-      if (cached && now - cached.timestamp < CACHE_TTL) {
-        // console.log("return the cache", cached);
-
-        return { [index]: cached.data };
-      }
-
-      if (!endDate || !geometry || !index) {
-        return rejectWithValue("Missing required parameters");
-      }
-
-      const payload = {
-        geometry: {
-          type: "Polygon",
-          coordinates: geometry,
-        },
-        date: endDate,
-        index_name: index,
-        provider: "both",
-        satellite: "s2",
-        width: 800,
-        height: 800,
-        supersample: 1,
-        smooth: true,
-        gaussian_sigma: 1,
-      };
-
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/calculate/index`,
-        payload
-      );
-
-      // console.log("cache new data");
-      await set(cacheKey, { data: response.data, timestamp: now });
-
-      return { [index]: response.data };
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
@@ -707,21 +658,6 @@ const satelliteSlice = createSlice({
         state.error = action.payload;
       })
 
-      .addCase(fetchIndexDataForMap.pending, (state) => {
-        state.loading.indexDataForFarmMap = true;
-        state.error = null;
-      })
-      .addCase(fetchIndexDataForMap.fulfilled, (state, action) => {
-        state.loading.indexDataForFarmMap = false;
-        state.indexData = {
-          ...state.indexData,
-          ...action.payload,
-        };
-      })
-      .addCase(fetchIndexDataForMap.rejected, (state, action) => {
-        state.loading.indexDataForFarmMap = false;
-        state.error = action.payload;
-      })
       // fetch the crop health data
       .addCase(fetchCropHealth.pending, (state) => {
         state.loading.cropHealth = true;

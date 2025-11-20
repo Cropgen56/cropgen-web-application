@@ -32,8 +32,7 @@ const AddField = () => {
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
-      const height = window.innerHeight;
-      setIsTabletView(width >= 768 && width <= 1024 && height <= 1366);
+      setIsTabletView(width < 1024);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -153,10 +152,9 @@ const AddField = () => {
       {isTabletView ? (
         // Tablet Layout
         <div className="w-full h-screen flex flex-col relative">
-          {/* Map Top Half */}
           <div
             className={`relative w-full z-0 ${
-              showOverlay ? "h-screen z-[30]" : "h-[60vh] z-0"
+              showOverlay ? "h-screen z-[30]" : "h-[40vh] z-0"
             }`}
           >
             <AddFieldMap
@@ -169,8 +167,7 @@ const AddField = () => {
               onToggleSidebar={toggleSidebar}
               showUploadOverlay={showOverlay}
             />
-
-            {/* Bottom Controls */}
+            ={" "}
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-4 z-50 pointer-events-auto">
               <button className="bg-[#344E41] text-white px-4 py-1 rounded">
                 Calendar
@@ -190,7 +187,6 @@ const AddField = () => {
             </div>
           </div>
 
-          {/* Sidebar Bottom Half */}
           <AnimatePresence>
             {isSidebarVisible && (
               <motion.div
@@ -198,7 +194,7 @@ const AddField = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className={`w-full h-[40vh] p-4 flex justify-center items-center overflow-y-auto bg-white pointer-events-auto ${
+                className={`w-full h-[60vh] p-4 flex justify-center items-center overflow-y-auto bg-white pointer-events-auto ${
                   showOverlay ? "z-10" : "z-20"
                 }`}
               >
@@ -213,7 +209,6 @@ const AddField = () => {
           </AnimatePresence>
         </div>
       ) : (
-        // Desktop Layout
         <div className="w-full h-screen flex">
           <AddFieldSidebar
             saveFarm={saveFarm}

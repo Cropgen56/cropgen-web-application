@@ -215,7 +215,7 @@ const FarmReportSidebar = ({
         )}
       </div>
       <div className="mt-auto sticky bottom-0 bg-white p-3  z-10">
-        {currentFieldHasSubscription ? (
+        {/* {currentFieldHasSubscription ? ( */}
           <button
             onClick={handleDownload}
             className="w-full flex items-center justify-center gap-2 bg-[#344e41] text-white py-2 rounded-md hover:bg-[#2d4036] transition-all duration-300"
@@ -231,7 +231,7 @@ const FarmReportSidebar = ({
               </>
             )}
           </button>
-        ) : null} 
+        {/* ) : null}  */}
       </div>
     </div>
   );

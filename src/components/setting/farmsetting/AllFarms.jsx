@@ -20,8 +20,8 @@ import {
 import mapLocation from "../../../assets/image/setting/map-location.svg";
 
 const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
-  <div 
-    onClick={() => onClick(farm)} 
+  <div
+    onClick={() => onClick(farm)}
     className="relative flex flex-col bg-white rounded-xl shadow-md border border-[#344E41]/20 transition-all duration-300 ease-in-out hover:shadow-xl hover:border-[#344E41]/40 overflow-hidden cursor-pointer"
   >
     {/* Header Section */}
@@ -49,13 +49,14 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
     <div className="flex-grow flex flex-col justify-center bg-gradient-to-b from-white to-[#344E41]/5 py-3">
       <div className="w-full h-28 flex items-center justify-center px-3">
         {farm.field && farm.field.length > 0 ? (
-            <PolygonPreview coordinates={farm.field} />
-     
+          <PolygonPreview coordinates={farm.field} />
         ) : (
-          <span className="text-[#344E41]/30 text-sm font-medium">No Shape</span>
+          <span className="text-[#344E41]/30 text-sm font-medium">
+            No Shape
+          </span>
         )}
       </div>
-      
+
       {/* Crop Details */}
       <div className="flex items-center gap-2 px-3 mt-4 bg-[#344E41]/5 mx-3 py-2 rounded-lg border border-[#344E41]/10">
         <Sprout className="w-5 h-5 text-[#344E41]" />
@@ -64,8 +65,8 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
         </span>
         <span className="text-[#344E41]/30">•</span>
         <span className="text-sm text-[#344E41]/80 font-medium">
-          {farm.sowingDate 
-            ? new Date(farm.sowingDate).toLocaleDateString() 
+          {farm.sowingDate
+            ? new Date(farm.sowingDate).toLocaleDateString()
             : "No Date"}
         </span>
         <span className="text-[#344E41]/30">•</span>
@@ -76,18 +77,18 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
     </div>
 
     {/* Footer */}
-<div className="flex justify-between items-center bg-gradient-to-r from-[#344E41] to-[#4a6b5e] px-4 py-3">
-  <span className="text-sm text-white font-semibold">
-    ID: CROP-{String(index + 1).padStart(3, "0")}
-  </span>
-  <div className="bg-white/20 p-1.5 rounded-lg hover:bg-white/30 transition-colors">
-    <img 
-      src={mapLocation} 
-      alt="map-location" 
-      className="w-5 h-5 brightness-0 invert" 
-    />
-  </div>
-</div>
+    <div className="flex justify-between items-center bg-gradient-to-r from-[#344E41] to-[#4a6b5e] px-4 py-3">
+      <span className="text-sm text-white font-semibold">
+        ID: CROP-{String(index + 1).padStart(3, "0")}
+      </span>
+      <div className="bg-white/20 p-1.5 rounded-lg hover:bg-white/30 transition-colors">
+        <img
+          src={mapLocation}
+          alt="map-location"
+          className="w-5 h-5 brightness-0 invert"
+        />
+      </div>
+    </div>
   </div>
 );
 const AddNewFarmCard = ({ onClick }) => (
@@ -175,7 +176,7 @@ const AllFarms = ({ onAddFarmClick }) => {
   });
 
   const sortedFarms = [...filteredFarms].sort((a, b) => {
-    return new Date(a.createdAt) - new Date(b.createdAt);
+    return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
   return (

@@ -283,6 +283,7 @@ useEffect(() => {
               onSubscribe={handleSubscribe}
               title="Weather Analytics"
             >
+              {/* <>  */}
               <WeekWeather
                 selectedField={selectedField}
                 forecastData={forecastData}
@@ -319,7 +320,8 @@ useEffect(() => {
                 historicalData={historicalData}
                 dateRange={dateRange}
               />
-            </PremiumPageWrapper>
+             {/* </>  */}
+          </PremiumPageWrapper>
           )}
         </div>
       </div>

@@ -2,8 +2,15 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, Button, Spinner, Alert } from "react-bootstrap";
 import { fetchHistoricalWeather } from "../../../redux/slices/weatherSlice";
+import CustomDatePicker from "../CustomDatePicker";
+import { message } from "antd";
 
-const WeatherHistory = ({ selectedField, forecastData, onHistoricalDataReceived, onClearHistoricalData }) => {
+const WeatherHistory = ({
+  selectedField,
+  forecastData,
+  onHistoricalDataReceived,
+  onClearHistoricalData,
+}) => {
   const dispatch = useDispatch();
 
   const aois = useSelector((state) => state.weather.aois);
@@ -30,17 +37,24 @@ const WeatherHistory = ({ selectedField, forecastData, onHistoricalDataReceived,
 
   const handleFetchWeather = async () => {
     if (!startDate || !endDate) {
-      setError("Please select both start and end dates");
+      message.error("Please select both start and end dates");
       return;
     }
 
     if (!geometryId) {
-      setError("Waiting for AOI to be created. Please try again in a moment.");
+      message.error(
+        "Waiting for AOI to be created. Please try again in a moment."
+      );
       return;
     }
 
     if (new Date(startDate) > new Date(endDate)) {
-      setError("Start date must be before end date");
+      message.error("Start date must be before end date");
+      return;
+    }
+
+    if (new Date(endDate) > new Date()) {
+      message.error("End date cannot be in the future");
       return;
     }
 
@@ -62,17 +76,29 @@ const WeatherHistory = ({ selectedField, forecastData, onHistoricalDataReceived,
         setWeatherData(resultAction.payload);
 
         if (onHistoricalDataReceived && resultAction.payload?.daily) {
-          onHistoricalDataReceived(resultAction.payload.daily, startDate, endDate);
+          onHistoricalDataReceived(
+            resultAction.payload.daily,
+            startDate,
+            endDate
+          );
         }
       } else {
-        setError(resultAction.payload || "Failed to fetch weather data");
+        if (resultAction.payload?.detail) {
+          message.error(resultAction.payload.detail);
+        } else if (resultAction.payload?.error) {
+          message.error(resultAction.payload.error);
+        } else {
+          message.error("Failed to fetch weather data");
+        }
       }
     } catch (err) {
-      setError("An unexpected error occurred");
+      message.error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
   };
+
+  const today = new Date().toISOString().split("T")[0];
 
   const handleShowForecast = () => {
     setStartDate("");
@@ -97,12 +123,17 @@ const WeatherHistory = ({ selectedField, forecastData, onHistoricalDataReceived,
         )}
 
         {error && (
-          <Alert variant="danger" className="mt-2 text-sm" onClose={() => setError(null)} dismissible>
+          <Alert
+            variant="danger"
+            className="mt-2 text-sm"
+            onClose={() => setError(null)}
+            dismissible
+          >
             {error}
           </Alert>
         )}
 
-        <div className="flex gap-3 mt-4">
+        {/* <div className="flex gap-3 mt-4">
           <div className="flex flex-col gap-2 mt-2">
             <div className="subtext text-[12px] text-gray-400 font-bold">
               Start Date
@@ -132,7 +163,36 @@ const WeatherHistory = ({ selectedField, forecastData, onHistoricalDataReceived,
               }}
             />
           </div>
+        </div> */}
+
+        <div className="flex gap-3 mt-4">
+          <div className="flex flex-col gap-2 mt-2 w-[150px]">
+            <CustomDatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={(date) => {
+                setStartDate(date);
+                setError(null);
+              }}
+              placeholder="Select start date"
+              maxDate={today}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2 mt-2 w-[150px]">
+            <CustomDatePicker
+              label="End Date"
+              value={endDate}
+              onChange={(date) => {
+                setEndDate(date);
+                setError(null);
+              }}
+              placeholder="Select end date"
+              maxDate={today}
+            />
+          </div>
         </div>
+
         <div className="flex gap-3 mt-4">
           <Button
             variant="primary"

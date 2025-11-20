@@ -1,23 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { CiSearch } from "react-icons/ci";
-import {DieaseDetactiondark} from "../../../assets/Icons";
+import { DieaseDetactiondark } from "../../../assets/Icons";
 import PolygonPreview from "../../polygon/PolygonPreview";
-import {
-  checkFieldSubscriptionStatus,
-} from "../../../redux/slices/membershipSlice";
+import { checkFieldSubscriptionStatus } from "../../../redux/slices/membershipSlice";
 
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates, isSubscribed }) => (
+const FieldInfo = ({
+  title,
+  area,
+  lat,
+  lon,
+  isSelected,
+  onClick,
+  coordinates,
+  isSubscribed,
+}) => (
   <div
     className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
       isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
     }`}
     onClick={onClick}
   >
-    <PolygonPreview coordinates={coordinates}  isSelected={isSelected}/>
+    <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
     <div className="flex-grow">
       <div className="flex items-center justify-between mb-1">
-        <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
+        <h4
+          className={`text-base ${
+            isSelected ? "text-white" : "text-[#344e41]"
+          }`}
+        >
           {title}
         </h4>
         <div
@@ -95,6 +106,10 @@ const DiseaseSidebar = ({ setSelectedField }) => {
 
   if (!isSidebarVisible) return null;
 
+  const sortedFields = [...fields].sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
   return (
     <div className="w-[25vw] bg-white shadow-md flex flex-col h-full ">
       {/* Header */}
@@ -102,7 +117,9 @@ const DiseaseSidebar = ({ setSelectedField }) => {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1">
             <DieaseDetactiondark />
-            <h2 className="text-[18px] font-bold text-[#344e41]">Disease Detection</h2>
+            <h2 className="text-[18px] font-bold text-[#344e41]">
+              Disease Detection
+            </h2>
           </div>
           <svg
             width="30"
@@ -135,9 +152,11 @@ const DiseaseSidebar = ({ setSelectedField }) => {
 
       {/* Scrollable Fields */}
       <div className="overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
-        <h2 className="text-[18px] font-bold text-[#344e41] pl-2 py-2">All Farms</h2>
-        {fields && fields.length > 0 ? (
-          fields.map((field, index) => {
+        <h2 className="text-[18px] font-bold text-[#344e41] pl-2 py-2">
+          All Farms
+        </h2>
+        {sortedFields && sortedFields.length > 0 ? (
+          sortedFields.map((field, index) => {
             const { lat, lon } = calculateCentroid(field.field);
             const isSubscribed =
               fieldSubscriptions[field._id]?.hasActiveSubscription || false;

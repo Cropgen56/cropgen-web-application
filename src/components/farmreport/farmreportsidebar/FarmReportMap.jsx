@@ -22,7 +22,7 @@ const MoveMapToField = ({ lat, lng, bounds }) => {
   return null;
 };
 
-// Close polygon 
+// Close polygon
 const closePolygon = (coords) => {
   if (!coords.length) return [];
   const first = coords[0];
@@ -95,15 +95,17 @@ const FarmReportMap = ({ selectedFieldsDetials }) => {
     if (!polygonCoordinates.length) return;
     const today = new Date().toISOString().split("T")[0];
 
+    // Clear previous index data
+    dispatch(removeSelectedIndexData());
+
     indexes.forEach((index) => {
       dispatch(
-        fetchIndexDataForMap({
+        fetchIndexData({
           endDate: today,
           geometry: [polygonCoordinates],
           index,
         })
       );
-
     });
   }, [polygonCoordinates, dispatch]);
 
@@ -134,7 +136,7 @@ const FarmReportMap = ({ selectedFieldsDetials }) => {
               </strong>
 
               {showLegend[indexName] && indexData?.[indexName]?.legend && (
-                <div className="absolute top-10 right-0 bg-[#344e41] text-white rounded-lg shadow-lg max-w-[300px] max-h-[270px] overflow-y-auto z-[6000] animate-slideIn no-scrollbar">
+                <div className="absolute top-10 right-0 bg-[#344e41] text-white rounded-lg shadow-lg max-w-[300px] max-h-[270px] overflow-y-auto z-[4000] animate-slideIn no-scrollbar">
                   <ul className="divide-y divide-white/10 list-none p-2 no-scrollbar">
                     {indexData[indexName].legend.map((item) => (
                       <div
