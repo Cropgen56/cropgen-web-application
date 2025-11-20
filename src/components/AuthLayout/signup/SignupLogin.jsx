@@ -122,6 +122,21 @@ const SignupLogin = () => {
 
   const translateY = `${-(step - 1) * 100}%`;
 
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const paste = e.clipboardData.getData("text").trim();
+
+    if (/^\d{6}$/.test(paste)) {
+      const digits = paste.split("");
+
+      setOtpInputs(digits);
+      setFormData((prev) => ({ ...prev, otp: paste }));
+
+      // Last box par focus
+      inputRefs.current[5]?.focus();
+    }
+  };
+
   return (
     <div className="w-full h-full flex items-start sm:items-center justify-center mt-10 sm:mt-0 bg-white p-2  sm:p-4 lg:p-8 ">
       <div className="w-full max-w-lg lg:max-w-xl bg-white rounded-xl flex flex-col gap-2.5 sm:gap-4 justify-start overflow-hidden relative">
@@ -146,10 +161,11 @@ const SignupLogin = () => {
 
               <div className="flex items-center gap-2 w-[95%] sm:w-[70%] mx-auto">
                 <hr className="flex-1 border-2 border-green-900 my-1 sm:my-4" />
-                <span className="text-xs text-green-900/80 font-semibold">OR</span>
+                <span className="text-xs text-green-900/80 font-semibold">
+                  OR
+                </span>
                 <hr className="flex-1  border-2 border-green-900 my-1 sm:my-4" />
               </div>
-
 
               <div className="flex flex-col gap-2 w-full justify-center items-center">
                 <input
@@ -176,9 +192,12 @@ const SignupLogin = () => {
             </section>
 
             <section className="w-full h-full flex flex-col justify-start p-4">
-
               <div className="flex flex-col gap-2 items-center ">
-                <img src={tick} alt="Success" className="w-12 h-12 sm:w-16 sm:h-16 animate-bounce" />
+                <img
+                  src={tick}
+                  alt="Success"
+                  className="w-12 h-12 sm:w-16 sm:h-16 animate-bounce"
+                />
                 <h3 className="text-lg font-semibold text-green-700">
                   OTP Sent Successfully!
                 </h3>
@@ -188,10 +207,9 @@ const SignupLogin = () => {
               </div>
 
               <div className="relative">
-
                 <div className="flex flex-col gap-2 justify-center lg:gap-3 sm:mt-3 lg:mt-2 w-full">
                   <div className="flex justify-center">
-                    <div className="grid grid-cols-6 gap-1 lg:gap-2 w-[70%]  sm:flex-[0.8]">
+                    <div className="grid grid-cols-6 gap-1 lg:gap-2 w-[70%]  sm:flex-[0.8]" onPaste={handleOtpPaste} >
                       {otpInputs.map((digit, idx) => (
                         <input
                           key={idx}
@@ -202,7 +220,7 @@ const SignupLogin = () => {
                           value={digit}
                           onChange={(e) => handleOtpChange(e.target.value, idx)}
                           onKeyDown={(e) => handleKeyDown(e, idx)}
-                          className="w-full h-9 lg:h-10 text-center border-2 border-green-900/30 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm"
+                          className="w-14 h-14 text-center border-2 border-green-900/30 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-600 text-lg font-semibold"
                         />
                       ))}
                     </div>
@@ -250,8 +268,9 @@ const SignupLogin = () => {
                   placeholder="Enter Code Eg: CropGen01234"
                   value={formData.organizationCode || ""}
                   onChange={handleOrgCodeChange}
-                  className={`mt-1 w-full rounded-xl px-2 py-1.5 lg:px-3 lg:py-2 text-xs lg:text-sm bg-white border ${orgCodeError ? "border-red-500" : "border-gray-300"
-                    } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
+                  className={`mt-1 w-full rounded-xl px-2 py-1.5 lg:px-3 lg:py-2 text-xs lg:text-sm bg-white border ${
+                    orgCodeError ? "border-red-500" : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-emerald-600`}
                 />
                 {orgCodeError && (
                   <div className="flex items-center gap-2 mt-2 text-red-600 text-xs lg:text-sm">
@@ -291,7 +310,8 @@ const SignupLogin = () => {
                     >
                       Terms of Use and Privacy Policy
                     </a>
-                    , to the processing of my personal data, and to receive emails
+                    , to the processing of my personal data, and to receive
+                    emails
                   </label>
                 </div>
               )}
@@ -312,7 +332,9 @@ const SignupLogin = () => {
 
               <div className="flex items-center gap-2 w-[95%] sm:w-[70%] mx-auto">
                 <hr className="flex-1 border-2 border-green-900" />
-                <span className="text-xs text-green-900/80 font-semibold">OR</span>
+                <span className="text-xs text-green-900/80 font-semibold">
+                  OR
+                </span>
                 <hr className="flex-1  border-2 border-green-900" />
               </div>
 

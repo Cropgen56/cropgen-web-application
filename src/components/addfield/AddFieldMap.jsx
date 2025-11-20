@@ -192,20 +192,20 @@ const AddFieldMap = ({
       const searchControl = new GeoSearchControl({
         provider,
         style: "bar",
-        showMarker: true,
-        retainZoomLevel: false,
+        // showMarker: true,
+        // retainZoomLevel: false,
         autoComplete: true,
         autoCompleteDelay: 250,
-        classNames: {
-          container: "bg-white rounded shadow-md",
-          form: "w-full",
-          input:
-            " w-full p-2 border-b border-gray-300 text-sm text-black bg-white",
-          results:
-            "z-[2000] bg-white border border-gray-300 rounded max-h-[200px] overflow-y-auto w-full",
-          result:
-            "p-2 cursor-pointer text-gray-800 text-sm hover:bg-gray-100 hover:text-black transition ease-in-out duration-400",
-        },
+        // classNames: {
+        //   container: "bg-white rounded shadow-md",
+        //   form: "w-full",
+        //   input:
+        //     " w-full p-2 border-b border-gray-300 text-sm text-black bg-white",
+        //   results:
+        //     "z-[2000] bg-white border border-gray-300 rounded max-h-[200px] overflow-y-auto w-full",
+        //   result:
+        //     "p-2 cursor-pointer text-gray-800 text-sm hover:bg-gray-100 hover:text-black transition ease-in-out duration-400",
+        // },
         resultFormat: ({ result }) => result.label,
       });
 
@@ -264,6 +264,11 @@ const AddFieldMap = ({
                     const { latitude, longitude } = pos.coords;
                     setSelectedLocation({ lat: latitude, lng: longitude });
                     setLoading(false);
+                    setLocationBlocked(false);
+
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 300);
                   },
                   () => {
                     setLocationBlocked(true);
@@ -282,7 +287,7 @@ const AddFieldMap = ({
       <div className="min-h-screen w-full flex flex-col items-center relative overflow-hidden">
         <div
           className={`w-full m-0 p-0 z-[1000] relative ${
-            isTabletView ? "h-[50vh]" : "h-screen"
+            isTabletView ? "h-[40vh]" : "h-screen"
           }`}
         >
           {loading && (
@@ -409,7 +414,14 @@ const AddFieldMap = ({
               )}
 
               {/* Right side buttons */}
-              <div className="absolute top-[-10%] right-4 h-screen flex flex-col justify-center gap-4 z-[1000] ">
+              <div
+                className="absolute right-4 flex flex-col gap-4 z-[1000] justify-center"
+                style={{
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  height: isTabletView ? "40vh" : "100vh",
+                }}
+              >
                 <button
                   onClick={() => {
                     setSelectedIcon("back-button");
@@ -477,7 +489,7 @@ const AddFieldMap = ({
               <div
                 className={`z-[1100] w-full px-2 ${
                   isTabletView
-                    ? "absolute bottom-[-15%] left-0"
+                    ? "absolute bottom-0 left-0"
                     : "absolute bottom-1 left-1/2 transform -translate-x-1/2"
                 }`}
               >

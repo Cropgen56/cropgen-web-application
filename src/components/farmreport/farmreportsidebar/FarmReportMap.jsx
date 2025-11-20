@@ -109,6 +109,9 @@ const FarmReportMap = ({ selectedFieldsDetials }) => {
     });
   }, [polygonCoordinates, dispatch]);
 
+  console.log("selectedFieldsDetials", selectedFieldsDetials);
+  console.log("polygonCoordinates", polygonCoordinates);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full p-2">
       {indexes.map((indexName, i) => {

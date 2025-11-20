@@ -352,11 +352,11 @@ const FarmReport = () => {
           currentFieldHasSubscription={currentFieldHasSubscription}
         />
         
-        <PremiumPageWrapper
+        {/* <PremiumPageWrapper
           isLocked={!currentFieldHasSubscription}
           onSubscribe={handleSubscribe}
           title="Farm Report"
-        >
+        > */}
         <div
           className="w-full h-screen overflow-y-auto bg-[#5a7c6b] p-4"
           ref={mainReportRef}
@@ -410,7 +410,7 @@ const FarmReport = () => {
             </>
           )}
         </div>
-        </PremiumPageWrapper>
+        {/* </PremiumPageWrapper> */}
       </div>
     </>
   );
