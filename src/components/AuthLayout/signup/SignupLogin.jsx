@@ -39,7 +39,9 @@ const SignupLogin = () => {
       const newOtp = [...otpInputs];
       newOtp[index] = value;
       setOtpInputs(newOtp);
+
       setFormData((prev) => ({ ...prev, otp: newOtp.join("") }));
+
       if (value && index < 5) inputRefs.current[index + 1]?.focus();
     }
   };
@@ -47,6 +49,14 @@ const SignupLogin = () => {
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && !otpInputs[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
+    }
+
+    if (e.key === "Enter") {
+      if (formData.otp.length === 6) {
+        handleVerifyOtp();
+      } else {
+        message.error("Enter full 6-digit OTP");
+      }
     }
   };
 
@@ -175,6 +185,11 @@ const SignupLogin = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSendOtp();
+                    }
+                  }}
                   className="w-[95%] sm:w-[70%] sm:mt-1 lg:mt-2 rounded-full px-2 lg:py-3 py-2  text-center font-semibold text-green-900 text-xs sm:text-sm bg-white border-2 border-green-900/60 focus:outline-none "
                 />
 
@@ -209,7 +224,10 @@ const SignupLogin = () => {
               <div className="relative">
                 <div className="flex flex-col gap-2 justify-center lg:gap-3 sm:mt-3 lg:mt-2 w-full">
                   <div className="flex justify-center">
-                    <div className="grid grid-cols-6 gap-1 lg:gap-2 w-[70%]  sm:flex-[0.8]" onPaste={handleOtpPaste} >
+                    <div
+                      className="grid grid-cols-6 gap-1 lg:gap-2 w-[70%]  sm:flex-[0.8]"
+                      onPaste={handleOtpPaste}
+                    >
                       {otpInputs.map((digit, idx) => (
                         <input
                           key={idx}

@@ -24,6 +24,7 @@ import {
   hideMembershipModal,
   selectHasSoilReportGeneration, // Correct import
 } from "../redux/slices/membershipSlice";
+import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 
@@ -248,18 +249,19 @@ const SoilReport = () => {
 
         <div className="w-100 p-4 h-screen overflow-y-auto">
           {!reportdata ? (
-            <div className="flex items-center justify-center h-full w-full">
-              <div className="flex flex-col items-center text-center opacity-60">
-                <img
-                  src={img1}
-                  alt="placeholder"
-                  className="w-[300px] h-[300px] mb-6 opacity-70"
-                />
-                <p className="text-2xl font-semibold text-white">
-                  Select Field to Generate Soil Report
-                </p>
-              </div>
-            </div>
+            // <div className="flex items-center justify-center h-full w-full">
+            //   <div className="flex flex-col items-center text-center opacity-60">
+            //     <img
+            //       src={img1}
+            //       alt="placeholder"
+            //       className="w-[300px] h-[300px] mb-6 opacity-70"
+            //     />
+            //     <p className="text-2xl font-semibold text-white">
+            //       Select Field to Generate Soil Report
+            //     </p>
+            //   </div>
+            // </div>
+            <ComingSoonSection />
           ) : (
             <PremiumPageWrapper
               isLocked={!hasSoilReportGeneration}

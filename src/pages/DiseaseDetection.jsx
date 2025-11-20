@@ -17,6 +17,7 @@ import {
   hideMembershipModal,
   selectHasDiseaseDetectionAlerts,
 } from "../redux/slices/membershipSlice";
+import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 
@@ -195,13 +196,16 @@ const DiseaseDetection = () => {
           setSelectedField={setSelectedField}
           fields={fields}
         />
-        <PremiumPageWrapper
+        {/* <PremiumPageWrapper
           isLocked={!hasDiseaseDetectionAlerts}
           onSubscribe={handleSubscribe}
           title="Disease Detection & Alerts"
-        >
-          <UploadCropImage selectedField={selectedField} />
-        </PremiumPageWrapper>
+        > */}
+
+        <ComingSoonSection />
+        {/* <UploadCropImage selectedField={selectedField} /> */}
+        
+        {/* </PremiumPageWrapper> */}
       </div>
     </>
   );

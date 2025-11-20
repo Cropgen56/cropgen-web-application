@@ -39,6 +39,7 @@ import jsPDF from "jspdf";
 import img1 from "../assets/image/Group 31.png";
 import FarmReportMap from "../components/farmreport/farmreportsidebar/FarmReportMap";
 import { fetchIndexData } from "../redux/slices/satelliteSlice";
+import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 
@@ -361,7 +362,9 @@ const FarmReport = () => {
           className="w-full h-screen overflow-y-auto bg-[#5a7c6b] p-4"
           ref={mainReportRef}
         >
-          {selectedFieldDetails && (
+          <ComingSoonSection />
+
+          {/* {selectedFieldDetails && (
             <>
               <div className="farm-section">
                 <FarmReportMap selectedFieldsDetials={[selectedFieldDetails]} />
@@ -408,7 +411,8 @@ const FarmReport = () => {
                 />{" "}
               </div>
             </>
-          )}
+          )} */}
+
         </div>
         {/* </PremiumPageWrapper> */}
       </div>
