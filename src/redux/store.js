@@ -7,6 +7,8 @@ import operationSlice from "./slices/operationSlice";
 import cropReducer from "./slices/cropSlice";
 import subscriptionSlice from "./slices/subscriptionSlice";
 import membershipReducer from './slices/membershipSlice';
+import smartAdvisoryReducer from './slices/smartAdvisorySlice';
+
 
 // Configure the Redux store
 export const store = configureStore({
@@ -19,6 +21,7 @@ export const store = configureStore({
     crops: cropReducer,
     subscription: subscriptionSlice,
     membership: membershipReducer,
+    smartAdvisory: smartAdvisoryReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

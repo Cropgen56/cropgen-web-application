@@ -30,6 +30,9 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
   const { cropYield } = useSelector((state) => state.satellite);
   const hasCropHealthAndYield = useSelector(selectHasCropHealthAndYield);
 
+  const advisory = useSelector((state) => state.smartAdvisory.advisory);
+  const advisoryLoading = useSelector((state) => state.smartAdvisory.loading);
+
   useEffect(() => {
     dispatch(fetchCrops());
   }, [dispatch]);
@@ -95,30 +98,23 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
     dispatch,
   ]);
 
-  // REMOVED: fetchSoilData useEffect
-
-  // NEW: Get yield data from new API
   const yieldData = useMemo(() => {
-    if (cropHealthYield?.success) {
+    if (advisory?.yield) {
       return {
-        standardYield: `${cropHealthYield.standardYield?.value || "N/A"} ${
-          cropHealthYield.standardYield?.unit || ""
-        }`,
-        aiYield: `${cropHealthYield.aiYield?.value || "N/A"} ${
-          cropHealthYield.aiYield?.unit || ""
-        }`,
-        confidence: cropHealthYield.aiYield?.confidence
-          ? `(${(cropHealthYield.aiYield.confidence * 100).toFixed(
-              0
-            )}% confidence)`
-          : "",
-        cropHealth: cropHealthYield.cropHealth?.Crop_Health || "N/A",
-        healthPercentage: cropHealthYield.cropHealth?.Health_Percentage || 0,
-        summary: cropHealthYield.summary || "",
+        standardYield: advisory.yield.standardYield
+          ? `${advisory.yield.standardYield} ${advisory.yield.unit || ""}`
+          : "N/A",
+
+        aiYield:
+          advisory.yield.aiYield !== null &&
+          advisory.yield.aiYield !== undefined
+            ? `${advisory.yield.aiYield} ${advisory.yield.unit || ""}`
+            : "N/A",
       };
     }
+
     return null;
-  }, [cropHealthYield]);
+  }, [advisory]);
 
   return (
     <div className="p-2">
@@ -165,17 +161,14 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
                 </span>
               </div>
 
-              {/* NEW: Use data from new API */}
               <div className="flex gap-2">
                 <span className="font-semibold lg:text-[18px] md:text-[15px] text-[#344E41]">
                   Standard Yield:
                 </span>
                 <span className="font-medium text-black lg:text-[18px] md:text-[14px]">
-                  {healthYieldLoading
+                  {advisoryLoading
                     ? "Loading..."
-                    : yieldData?.standardYield ||
-                      cropYield?.data?.standard_yield ||
-                      "N/A"}
+                    : yieldData?.standardYield || "N/A"}
                 </span>
               </div>
 
@@ -184,12 +177,7 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
                   AI Yield:
                 </span>
                 <span className="font-medium text-black lg:text-[18px] md:text-[12px]">
-                  {healthYieldLoading
-                    ? "Loading..."
-                    : yieldData?.aiYield ||
-                      cropYield?.data?.ai_predicted_yield ||
-                      cropYield?.data?.message ||
-                      "N/A"}
+                  {advisoryLoading ? "Loading..." : yieldData?.aiYield || "N/A"}
                 </span>
               </div>
             </div>

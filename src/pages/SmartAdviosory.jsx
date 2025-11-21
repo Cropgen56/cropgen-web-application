@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +28,10 @@ import {
   hideMembershipModal,
   selectHasSmartAdvisorySystem, // Updated import
 } from "../redux/slices/membershipSlice";
+import {
+  fetchSmartAdvisory,
+  runSmartAdvisory,
+} from "../redux/slices/smartAdvisorySlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 
@@ -35,7 +39,7 @@ const SmartAdvisory = () => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state?.auth?.user);
   const authToken = useSelector((state) => state?.auth?.token);
-  const fields = useSelector((state) => state?.farmfield?.fields);
+  const fieldsRaw = useSelector((s) => s?.farmfield?.fields);
 
   const showMembershipModal = useSelector(
     (state) => state.membership.showMembershipModal
@@ -55,6 +59,21 @@ const SmartAdvisory = () => {
   const navigate = useNavigate();
   const userId = user?.id;
 
+  const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
+
+  // AOIs from redux
+  const aoisRaw = useSelector((state) => state?.weather?.aois);
+  const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
+
+  // Selected field details
+  const selectedFieldDetails = useMemo(() => {
+    if (!selectedField) return null;
+    return selectedField;
+  }, [selectedField]);
+
+  // console.log("AOIs:", aois);
+  // console.log("Selected Field:", selectedFieldDetails);
+
   useEffect(() => {
     if (userId) {
       dispatch(getFarmFields(userId));
@@ -70,7 +89,7 @@ const SmartAdvisory = () => {
         !fieldSub ||
         (fieldSub.lastChecked &&
           new Date() - new Date(fieldSub.lastChecked) >
-          SUBSCRIPTION_CHECK_INTERVAL);
+            SUBSCRIPTION_CHECK_INTERVAL);
 
       if (shouldCheck) {
         dispatch(
@@ -98,12 +117,33 @@ const SmartAdvisory = () => {
     return () => clearInterval(interval);
   }, [selectedField, authToken, dispatch]);
 
+  useEffect(() => {
+    if (!selectedFieldDetails || !authToken || aois.length === 0) return;
+
+    const matchingAOI = aois.find((a) => a.name === selectedFieldDetails._id);
+    if (!matchingAOI || !matchingAOI.id) {
+      console.log("❌ AOI not found yet. Skipping fetch advisory call");
+      return;
+    }
+
+    const payload = {
+      fieldId: selectedFieldDetails._id,
+      geometryId: matchingAOI.id,
+      targetDate: new Date().toISOString().split("T")[0],
+      language: "en",
+      token: authToken,
+    };
+
+    dispatch(fetchSmartAdvisory(payload))
+      .unwrap()
+      .then((res) => console.log("✔ FETCH SMART ADVISORY SUCCESS:", res))
+      .catch((err) => console.log("❌ FETCH SMART ADVISORY ERROR:", err));
+  }, [selectedFieldDetails, aois, authToken, dispatch]);
+
   const handleSubscribe = useCallback(() => {
     if (selectedField) {
       const areaInHectares =
-        selectedField?.areaInHectares ||
-        selectedField?.acre * 0.404686 ||
-        5;
+        selectedField?.areaInHectares || selectedField?.acre * 0.404686 || 5;
       const fieldData = {
         id: selectedField._id,
         name: selectedField.fieldName || selectedField.farmName,
@@ -252,7 +292,8 @@ const SmartAdvisory = () => {
 
                   <div className="grid grid-cols-2 gap-4 w-full">
                     <div className="bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
-                      <IrrigationStatusCard />
+                      <IrrigationStatusCard
+                      />
                     </div>
                     <div className="bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
                       <CropAdvisoryCard />

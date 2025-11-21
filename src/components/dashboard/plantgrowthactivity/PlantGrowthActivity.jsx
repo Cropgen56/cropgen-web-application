@@ -195,6 +195,7 @@ const PlantGrowthActivity = memo(
     const [interval, setInterval] = useState("Weeks");
     const [tooltipPos, setTooltipPos] = useState(null);
     const lastYieldCalcRef = useRef({ bbch: null, fieldId: null });
+    const { advisory } = useSelector((state) => state.smartAdvisory);
 
     const {
       daysSinceSowing,
@@ -313,6 +314,8 @@ const PlantGrowthActivity = memo(
         console.warn("calculateAiYield failed", err);
       });
     }, [cropGrowthStage?.finalStage?.bbch, selectedFieldsDetials, dispatch]);
+
+    const plantActivity = advisory?.plantGrowthActivity || null;
 
     const data = useMemo(
       () => generateCurveData(interval, cropName),
@@ -475,20 +478,26 @@ const PlantGrowthActivity = memo(
                       }}
                     >
                       <p className="font-bold sm:text-base">
-                        BBCH {cropGrowthStage.finalStage.bbch}:{" "}
-                        {cropGrowthStage.finalStage.stage}
+                        BBCH {plantActivity?.bbchStage}:{" "}
+                        {plantActivity?.stageName}
                       </p>
                       {gddValue && (
                         <p className="text-xs text-gray-300 mb-1">
                           Growing Degree Days: {gddValue}
                         </p>
                       )}
-                      <p className="font-semibold mb-1">Key Activities:</p>
-                      <ul className="list-disc list-inside space-y-1 max-h-[140px] overflow-auto">
+                      {/* <p className="font-semibold mb-1">Key Activities:</p> */}
+                      {/* <ul className="list-disc list-inside space-y-1 max-h-[140px] overflow-auto">
                         {keyActivities.map((act, idx) => (
                           <li key={idx}>{act}</li>
                         ))}
-                      </ul>
+                      </ul> */}
+                      <p className="font-semibold mb-1">Stage Details:</p>
+                      <p className="text-xs leading-normal text-gray-300">
+                        {plantActivity?.description ||
+                          "No description available"}
+                      </p>
+
                       <p className="italic mt-1 text-gray-400">
                         {interval === "Days"
                           ? formatDayToWeekDay(daysSinceSowing)

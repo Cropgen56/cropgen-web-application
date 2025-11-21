@@ -42,6 +42,9 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
   );
   const { soilMoisture } = useSelector((state) => state.satellite || {});
   const { forecastData } = useSelector((state) => state.weather || {});
+  const { advisory: smartAdvisory, loading } = useSelector(
+    (state) => state.smartAdvisory
+  );
 
   // Get feature flag
   const hasWeeklyAdvisoryReports = useSelector(selectHasWeeklyAdvisoryReports);
@@ -57,72 +60,86 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
   const lastSoilFetchRef = useRef(null);
 
   // Fetch soil moisture data
-  useEffect(() => {
-    if (!farmId) return;
-    if (lastSoilFetchRef.current === farmId) return;
-    lastSoilFetchRef.current = farmId;
+  // useEffect(() => {
+  //   if (!farmId) return;
+  //   if (lastSoilFetchRef.current === farmId) return;
+  //   lastSoilFetchRef.current = farmId;
 
-    dispatch(fetchSoilMoisture(farmDetails));
-  }, [dispatch, farmId, farmDetails]);
+  //   dispatch(fetchSoilMoisture(farmDetails));
+  // }, [dispatch, farmId, farmDetails]);
 
-  const lastAdvisoryKeyRef = useRef(null);
-  const advisoryTimerRef = useRef(null);
+  // const lastAdvisoryKeyRef = useRef(null);
+  // const advisoryTimerRef = useRef(null);
 
-  // Build payload and fetch advisory
-  useEffect(() => {
-    if (!farmDetails || !forecastData) return;
+  // // Build payload and fetch advisory
+  // useEffect(() => {
+  //   if (!farmDetails || !forecastData) return;
 
-    const { cropName, sowingDate, bbch, variety, irrigationType, farmingType } =
-      farmDetails;
+  //   const { cropName, sowingDate, bbch, variety, irrigationType, farmingType } =
+  //     farmDetails;
 
-    // Extract weather data
-    const currentWeather = forecastData?.current || forecastData;
-    const humidity = currentWeather?.humidity || 0;
-    const temp = currentWeather?.temp || 0;
-    const rain = currentWeather?.rain?.["1h"] || 0;
+  //   // Extract weather data
+  //   const currentWeather = forecastData?.current || forecastData;
+  //   const humidity = currentWeather?.humidity || 0;
+  //   const temp = currentWeather?.temp || 0;
+  //   const rain = currentWeather?.rain?.["1h"] || 0;
 
-    // Extract soil data
-    const soilTemp = soilMoisture?.soilTemperature || 0;
-    const soilMoist = soilMoisture?.soilMoisture || 0;
+  //   // Extract soil data
+  //   const soilTemp = soilMoisture?.soilTemperature || 0;
+  //   const soilMoist = soilMoisture?.soilMoisture || 0;
 
-    const advisoryKey = `${farmId}::${cropName}::${bbch}::${
-      forecastData?.current?.dt || Date.now()
-    }`;
+  //   const advisoryKey = `${farmId}::${cropName}::${bbch}::${
+  //     forecastData?.current?.dt || Date.now()
+  //   }`;
 
-    if (lastAdvisoryKeyRef.current === advisoryKey) return;
+  //   if (lastAdvisoryKeyRef.current === advisoryKey) return;
 
-    if (advisoryTimerRef.current) clearTimeout(advisoryTimerRef.current);
+  //   if (advisoryTimerRef.current) clearTimeout(advisoryTimerRef.current);
 
-    advisoryTimerRef.current = setTimeout(() => {
-      lastAdvisoryKeyRef.current = advisoryKey;
+  //   advisoryTimerRef.current = setTimeout(() => {
+  //     lastAdvisoryKeyRef.current = advisoryKey;
 
-      const payload = {
-        crop_name: cropName || "Wheat",
-        sowing_date: sowingDate || new Date().toISOString().split("T")[0],
-        bbch_stage: String(bbch || "31"),
-        variety: variety || "Standard",
-        irrigation_type: irrigationType || "Drip",
-        type_of_farming: farmingType || "Conventional",
-        humidity: Math.round(humidity),
-        temp: Math.round(temp),
-        rain: Math.round(rain),
-        soil_temp: Math.round(soilTemp),
-        soil_moisture: Math.round(soilMoist),
-        language: "en",
-      };
+  //     const payload = {
+  //       crop_name: cropName || "Wheat",
+  //       sowing_date: sowingDate || new Date().toISOString().split("T")[0],
+  //       bbch_stage: String(bbch || "31"),
+  //       variety: variety || "Standard",
+  //       irrigation_type: irrigationType || "Drip",
+  //       type_of_farming: farmingType || "Conventional",
+  //       humidity: Math.round(humidity),
+  //       temp: Math.round(temp),
+  //       rain: Math.round(rain),
+  //       soil_temp: Math.round(soilTemp),
+  //       soil_moisture: Math.round(soilMoist),
+  //       language: "en",
+  //     };
 
-      dispatch(fetchCropAdvisory(payload)).catch(() => {
-        lastAdvisoryKeyRef.current = null;
-      });
-    }, 300);
+  //     dispatch(fetchCropAdvisory(payload)).catch(() => {
+  //       lastAdvisoryKeyRef.current = null;
+  //     });
+  //   }, 300);
 
-    return () => {
-      if (advisoryTimerRef.current) {
-        clearTimeout(advisoryTimerRef.current);
-        advisoryTimerRef.current = null;
-      }
-    };
-  }, [dispatch, farmDetails, forecastData, soilMoisture, farmId]);
+  //   return () => {
+  //     if (advisoryTimerRef.current) {
+  //       clearTimeout(advisoryTimerRef.current);
+  //       advisoryTimerRef.current = null;
+  //     }
+  //   };
+  // }, [dispatch, farmDetails, forecastData, soilMoisture, farmId]);
+
+  const weeklyItems = smartAdvisory?.smartAdvisory?.weeklyAdvisory?.items || [];
+
+  const advisoryMapped = useMemo(() => {
+    if (!weeklyItems.length) return null;
+
+    const map = {};
+
+    weeklyItems.forEach((item) => {
+      map[item.key] = item.advice;
+    });
+
+    return map;
+  }, [weeklyItems]);
 
   // Drag handlers for horizontal scroll
   const attachDragHandlers = useCallback(() => {
@@ -170,10 +187,10 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
   }, [attachDragHandlers]);
 
   // Get advisory data
-  const advisoryData = useMemo(() => {
-    if (!cropAdvisory?.advisory) return null;
-    return cropAdvisory.advisory;
-  }, [cropAdvisory]);
+  // const advisoryData = useMemo(() => {
+  //   if (!cropAdvisory?.advisory) return null;
+  //   return cropAdvisory.advisory;
+  // }, [cropAdvisory]);
 
   return (
     <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
@@ -190,9 +207,9 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
         onSubscribe={onSubscribe}
         title="Crop Advisory"
       > */}
-      {advisoryLoading ? (
+      {loading ? (
         <CropAdvisorySkeleton />
-      ) : advisoryData ? (
+      ) : advisoryMapped  ? (
         <div
           ref={scrollRef}
           className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
@@ -201,7 +218,7 @@ const CropAdvisory = ({ selectedFieldsDetials, onSubscribe }) => {
             <AdvisoryCard
               key={category.key}
               category={category.label}
-              activityText={advisoryData[category.key]}
+              activityText={advisoryMapped[category.key]}
             />
           ))}
         </div>

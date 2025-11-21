@@ -46,6 +46,7 @@ import {
 } from "../redux/slices/subscriptionSlice";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
+import { runSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
 
 const SELECTED_FIELD_KEY = "selectedFieldId";
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -65,7 +66,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const [showSelectFarmModal, setShowSelectFarmModal] = useState(false);
-  const [isRefreshingSubscription, setIsRefreshingSubscription] = useState(false);
+  const [isRefreshingSubscription, setIsRefreshingSubscription] =
+    useState(false);
   const [aoisInitialized, setAoisInitialized] = useState(false);
 
   const aoiCreationRef = useRef(new Set());
@@ -131,9 +133,9 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!userId) return;
-    
+
     dispatch(getFarmFields(userId));
-    
+
     if (!isMountedRef.current) {
       dispatch(fetchAOIs())
         .unwrap()
@@ -184,12 +186,12 @@ const Dashboard = () => {
 
   const aoiNeedsCreation = useMemo(() => {
     if (!aoisInitialized || !selectedFieldDetails?._id) return null;
-    
+
     const aoiName = selectedFieldDetails._id;
     const exists = aois.some((a) => a.name === aoiName);
     const attempted = attemptedAOIsRef.current.has(aoiName);
     const creating = aoiCreationRef.current.has(aoiName);
-    
+
     return !exists && !attempted && !creating ? aoiName : null;
   }, [aoisInitialized, selectedFieldDetails, aois]);
 
@@ -301,6 +303,31 @@ const Dashboard = () => {
     }
   }, [isCheckingSubscription]);
 
+  useEffect(() => {
+    if (!selectedFieldDetails || !authToken || aois.length === 0) return;
+
+    const matchingAOI = aois.find((a) => a.name === selectedFieldDetails._id);
+    if (!matchingAOI || !matchingAOI.id) {
+      console.log("❌ AOI not found yet. Skipping advisory call");
+      return;
+    }
+
+    const geoId = matchingAOI.id;
+
+    const payload = {
+      fieldId: selectedFieldDetails._id,
+      geometryId: geoId,
+      targetDate: new Date().toISOString().split("T")[0],
+      language: "en",
+      token: authToken,
+    };
+
+    dispatch(runSmartAdvisory(payload))
+      .unwrap()
+      .then((res) => console.log("✔ RUN SMART ADVISORY SUCCESS:", res))
+      .catch((err) => console.log("❌ RUN SMART ADVISORY ERROR:", err));
+  }, [selectedFieldDetails, aois, authToken, dispatch]);
+
   const handleFieldSelection = useCallback((fieldId) => {
     setSelectedField(fieldId);
     try {
@@ -377,7 +404,9 @@ const Dashboard = () => {
         }
       } catch (error) {
         setIsRefreshingSubscription(false);
-        message.error("Failed to update subscription status. Please refresh the page.");
+        message.error(
+          "Failed to update subscription status. Please refresh the page."
+        );
       }
     },
     [dispatch, selectedField, authToken, selectedFieldDetails]

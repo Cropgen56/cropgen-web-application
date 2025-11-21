@@ -4,29 +4,34 @@ import { useSelector } from "react-redux";
 const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
-  const { cropHealthYield, healthYieldLoading } = useSelector((state) => state.crops);
+  const { cropHealthYield, healthYieldLoading } = useSelector(
+    (state) => state.crops
+  );
 
-  const { cropHealth: oldCropHealth, loading: satelliteLoading } = useSelector((state) => state?.satellite);
+  const { cropHealth: oldCropHealth, loading: satelliteLoading } = useSelector(
+    (state) => state?.satellite
+  );
 
-  const isLoading = healthYieldLoading || (satelliteLoading && !cropHealthYield && !oldCropHealth);
+  const advisory = useSelector((state) => state.smartAdvisory.advisory);
+  const advisoryLoading = useSelector((state) => state.smartAdvisory.loading);
 
-  const healthData = cropHealthYield?.success
+  const isLoading = advisoryLoading || !advisory?.cropHealth;
+
+  const healthData = advisory?.cropHealth
     ? {
-      Health_Percentage: cropHealthYield.cropHealth?.Health_Percentage || 0,
-      Crop_Health: cropHealthYield.cropHealth?.Crop_Health || "Unknown",
-      NDVI_Mean: cropHealthYield.cropHealth?.NDVI_Mean || 0,
-      summary: cropHealthYield.summary || "No summary available",
-      source: cropHealthYield.cropHealth?.source || "unknown"
-    }
-    : {
-      Health_Percentage: oldCropHealth?.Health_Percentage || 0,
-      Crop_Health: oldCropHealth?.Crop_Health || "Unknown",
-      NDVI_Mean: oldCropHealth?.NDVI_Mean || 0,
-      summary: "Loading crop health data...",
-      source: "legacy"
-    };
+        Health_Percentage: advisory.cropHealth.percentage ?? 0,
+        Crop_Health: advisory.cropHealth.category ?? "Unknown",
+        NDVI_Mean: advisory.cropHealth.score ?? 0,
+        summary: advisory.cropHealth.recommendation ?? "No summary available",
+      }
+    : null;
 
-  const { Health_Percentage, Crop_Health, NDVI_Mean, summary } = healthData;
+  const {
+    Health_Percentage = 0,
+    Crop_Health = "Unknown",
+    NDVI_Mean = 0,
+    summary = "No summary available",
+  } = healthData || {};
 
   const getHealthColor = (percentage) => {
     if (percentage >= 75) return "#22C55E"; // Green
@@ -62,10 +67,11 @@ const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
           <div
             className="absolute left-0 top-0 h-3 rounded-full"
             style={{
-              width: '100%',
-              background: 'linear-gradient(90deg, #5a7c6b 0%, #7a9c8b 50%, #5a7c6b 100%)',
-              backgroundSize: '200% 100%',
-              animation: 'progressiveLoad 1.5s ease-in-out infinite'
+              width: "100%",
+              background:
+                "linear-gradient(90deg, #5a7c6b 0%, #7a9c8b 50%, #5a7c6b 100%)",
+              backgroundSize: "200% 100%",
+              animation: "progressiveLoad 1.5s ease-in-out infinite",
             }}
           />
         </div>
@@ -109,50 +115,44 @@ const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
             className="focus:outline-none"
             aria-label="Crop health information"
             style={{
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              border: '2px solid #6B7280',
-              backgroundColor: 'transparent',
-              color: '#6B7280',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              cursor: 'help',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s'
+              width: "20px",
+              height: "20px",
+              borderRadius: "50%",
+              border: "2px solid #6B7280",
+              backgroundColor: "transparent",
+              color: "#6B7280",
+              fontSize: "12px",
+              fontWeight: "bold",
+              cursor: "help",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.2s",
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#6B7280';
-              e.currentTarget.style.color = 'white';
+              e.currentTarget.style.backgroundColor = "#6B7280";
+              e.currentTarget.style.color = "white";
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#6B7280';
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = "#6B7280";
             }}
           >
             i
           </button>
 
-     
           {showTooltip && (
             <div
               className="absolute left-8 top-1/2 -translate-y-1/2 z-50 w-72 sm:w-80 p-4 bg-gray-800 text-white text-sm rounded-lg shadow-xl"
               style={{
-                animation: 'slideInRight 0.2s ease-out'
+                animation: "slideInRight 0.2s ease-out",
               }}
             >
-         
-              <div
-                className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-800 transform rotate-45"
-              ></div>
+              <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 bg-gray-800 transform rotate-45"></div>
 
-  
               <div className="relative">
                 <p className="font-semibold mb-2 text-white">Yield Summary:</p>
                 <p className="text-gray-200 leading-relaxed">{summary}</p>
-
               </div>
             </div>
           )}
@@ -174,7 +174,9 @@ const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
         </div>
 
         <span
-          className={`px-4 py-1 rounded-md text-[18px] font-semibold ${getHealthBgColor(Health_Percentage)}`}
+          className={`px-4 py-1 rounded-md text-[18px] font-semibold ${getHealthBgColor(
+            Health_Percentage
+          )}`}
         >
           {Crop_Health}
         </span>
@@ -186,7 +188,7 @@ const CropHealthStatusBar = ({ selectedFieldsDetials }) => {
           className="absolute left-0 top-0 h-3 rounded-full transition-all duration-500 ease-out"
           style={{
             width: `${Health_Percentage}%`,
-            backgroundColor: getHealthColor(Health_Percentage)
+            backgroundColor: getHealthColor(Health_Percentage),
           }}
         />
       </div>
