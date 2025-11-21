@@ -310,12 +310,10 @@ export default function PricingOverlay({
           isTrial: true,
         };
 
-        // Use callback if provided
         if (onPaymentSuccess) {
           onPaymentSuccess(successData);
         }
 
-        // Also dispatch to Redux
         dispatch(setPaymentSuccess(successData));
 
         toast.success("Trial activated!");
