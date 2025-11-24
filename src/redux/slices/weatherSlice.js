@@ -22,13 +22,13 @@ export const createAOI = createAsyncThunk(
   async (payload, { rejectWithValue, dispatch, getState }) => {
     const apiKey = "5b97d3f0-a01a-490b-aad1-3bfa848309f2";
     const url = "https://observearth.com/api/geometry/";
-    
+
     try {
       const state = getState();
       const existingAOI = state.weather.aois?.find(
         (aoi) => aoi.name === payload.name
       );
-      
+
       if (existingAOI) {
         return existingAOI.id;
       }
@@ -39,18 +39,19 @@ export const createAOI = createAsyncThunk(
           "Content-Type": "application/json",
         },
       });
-      
+
       await dispatch(fetchAOIs()).unwrap();
-      
+
       return response.data.id;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || '';
-      const isDuplicate = 
-        error.response?.status === 409 || 
+      const errorMessage =
+        error.response?.data?.message || error.response?.data?.error || "";
+      const isDuplicate =
+        error.response?.status === 409 ||
         error.response?.status === 400 ||
-        errorMessage.toLowerCase().includes('already exists') ||
-        errorMessage.toLowerCase().includes('duplicate');
-      
+        errorMessage.toLowerCase().includes("already exists") ||
+        errorMessage.toLowerCase().includes("duplicate");
+
       if (isDuplicate) {
         await dispatch(fetchAOIs()).unwrap();
         const state = getState();
@@ -61,7 +62,7 @@ export const createAOI = createAsyncThunk(
           return existingAOI.id;
         }
       }
-      
+
       return rejectWithValue(error.response?.data || "Failed to create AOI");
     }
   }
@@ -110,9 +111,9 @@ export const fetchForecastData = createAsyncThunk(
   }
 );
 
-
 export const fetchHistoricalWeather = createAsyncThunk(
   "weather/fetchHistoricalWeather",
+
   async ({ geometry_id, start_date, end_date }, { rejectWithValue }) => {
     const apiKey = "5b97d3f0-a01a-490b-aad1-3bfa848309f2";
     const url = `https://observearth.com/api/weather/historical/?geometry_id=${geometry_id}&start_date=${start_date}&end_date=${end_date}`;
@@ -227,7 +228,7 @@ const weatherSlice = createSlice({
 export const { setDateRange, clearHistoricalWeather } = weatherSlice.actions;
 
 export const selectAOIs = (state) => state.weather.aois || [];
-export const selectAOIByName = (name) => (state) => 
-  state.weather.aois?.find(aoi => aoi.name === name) || null;
+export const selectAOIByName = (name) => (state) =>
+  state.weather.aois?.find((aoi) => aoi.name === name) || null;
 
 export default weatherSlice.reducer;

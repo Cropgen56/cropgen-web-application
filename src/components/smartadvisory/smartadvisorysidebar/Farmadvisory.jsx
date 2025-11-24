@@ -1,72 +1,89 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { message } from "antd";
+import { useSelector } from "react-redux";
 
-// Icon/image imports
-import img1 from "../../../assets/image/Icon.png";
-import img2 from "../../../assets/image/Frame 278.png";
+import imgIcon from "../../../assets/image/Icon.png";
+import imgFrame278 from "../../../assets/image/Frame 278.png";
 import img3 from "../../../assets/image/3f4ad4d5b8.png";
-import img4 from "../../../assets/image/Frame 266 (1).png";
-import img5 from "../../../assets/image/fluent_weather-fog-24-filled.png";
-import img6 from "../../../assets/image/Frame 280.png";
-import img7 from "../../../assets/image/Frame 275.png";
-import img8 from "../../../assets/image/Frame 276.png";
-import img9 from "../../../assets/image/Frame 277.png";
-import img10 from "../../../assets/image/Group 530.png"
-import img11 from "../../../assets/image/Group 531.png"
-// Initial tips with icons
-const initialTips = [
-  {
-    icon: <img src={img1} alt="" />,
-    text: "Increase irrigation in Field 2: Soil moisture at 22%",
-    badge: <img src={img7} alt="" />,
-  },
-  {
-    icon: <img src={img2} alt="" />,
-    text: "Apply organic fertilizer in Field 3 (flowering stage)",
-  },
-  {
-    icon: <img src={img3} alt="" />,
-    text: "Schedule pesticide spraying tomorrow morning (low wind)",
-    badge: <img src={img9} alt="" />,
-  },
-  {
-    icon: <img src={img4} alt="" />,
-    text: "Monitor NDVI drop in Field 1: possible stress",
-  },
-  {
-    icon: <img src={img5} alt="" />,
-    text: "Avoid spraying today due to high winds; plan for tomorrow morning (6–10 AM).",
-    badge: <img src={img8} alt="" />,
-  },
-];
+import imgFrame280 from "../../../assets/image/Frame 280.png";
+import imgGroup530 from "../../../assets/image/Group 530.png";
+import imgGroup531 from "../../../assets/image/Group 531.png";
+
+/* uploaded badge image available in conversation files */
+const UPLOADED_IMAGE = "/mnt/data/92fc842d-fdcc-47c7-b2d4-2477640a1bc8.png";
 
 export default function FarmAdvisoryCard() {
+  const { advisory } = useSelector((state) => state.smartAdvisory || {});
+  const weeklyItems = advisory?.smartAdvisory?.weeklyAdvisory?.items ?? [];
+
+  const buildTipsFromWeekly = (items) => {
+    if (!Array.isArray(items) || items.length === 0) return null;
+    return items.map((it, idx) => ({
+      id: `${it.key ?? "item"}_${idx}`,
+      iconSrc: idx % 2 === 0 ? imgIcon : imgFrame278,
+      text: it.advice ?? "No advice available",
+      badgeSrc: it.key === "water" ? UPLOADED_IMAGE : null,
+      status: "pending",
+    }));
+  };
+
+  const fallbackTips = [
+    {
+      id: "fb_1",
+      iconSrc: imgIcon,
+      text: "Increase irrigation in Field 2: Soil moisture at 22%",
+      status: "pending",
+    },
+    {
+      id: "fb_2",
+      iconSrc: imgFrame278,
+      text: "Apply organic fertilizer in Field 3 (flowering stage)",
+      status: "pending",
+    },
+    {
+      id: "fb_3",
+      iconSrc: img3,
+      text: "Schedule pesticide spraying tomorrow morning (low wind)",
+      status: "pending",
+    },
+  ];
+
   const [tips, setTips] = useState(
-    initialTips.map((tip) => ({ ...tip, status: "pending" }))
+    buildTipsFromWeekly(weeklyItems) || fallbackTips
   );
 
+  useEffect(() => {
+    const newTips = buildTipsFromWeekly(weeklyItems);
+    if (!newTips) return;
+    setTips((prev) => {
+      const map = new Map(prev.map((p) => [p.id, p.status]));
+      return newTips.map((t) => ({ ...t, status: map.get(t.id) || "pending" }));
+    });
+  }, [weeklyItems]);
+
   const handleAcceptAll = () => {
-    setTips((prev) => prev.map((tip) => ({ ...tip, status: "accepted" })));
-    message.success("All tasks have been accepted!");
+    setTips((prev) => prev.map((t) => ({ ...t, status: "accepted" })));
+    message.success("All tasks accepted");
   };
 
   const handleRejectAll = () => {
-    setTips((prev) => prev.map((tip) => ({ ...tip, status: "rejected" })));
-    message.warning("All tasks have been rejected.");
+    setTips((prev) => prev.map((t) => ({ ...t, status: "rejected" })));
+    message.warning("All tasks rejected");
   };
 
   return (
     <div className="w-full bg-[#335343] rounded-t-xl">
-      {/* Header */}
       <div className="flex justify-between items-center px-6 py-4 text-white">
         <h2 className="text-xl font-semibold flex items-center gap-3">
-          <img src={img6} alt="" />
+          <img src={imgFrame280} alt="activity" className="w-6 h-6" />
           Activity to do
         </h2>
+
         <div className="flex items-center gap-4 text-white">
           <button
             title="Regenerate Tips"
             className="hover:opacity-80 transition"
+            onClick={() => message.info("Regenerate not implemented")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +100,10 @@ export default function FarmAdvisoryCard() {
               />
             </svg>
           </button>
-          <button title="Download">
+          <button
+            title="Download"
+            onClick={() => message.info("Download not implemented")}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -102,19 +122,21 @@ export default function FarmAdvisoryCard() {
         </div>
       </div>
 
-      {/* Tips Card */}
       <div className="bg-white text-[#1a1a1a] px-6 py-4">
         <p className="font-semibold text-[15px] mb-4">
           Farm-Wide Tips for Today
         </p>
         <div className="space-y-4">
-          {tips.map((tip, index) => (
+          {tips.map((tip) => (
             <div
-              key={index}
+              key={tip.id}
               className="flex justify-between items-start gap-4"
             >
               <div className="flex gap-3 items-start">
-                <div className="pt-[2px]">{tip.icon}</div>
+                <div className="pt-[2px]">
+                  <img src={tip.iconSrc} alt="icon" className="w-6 h-6" />
+                </div>
+
                 <p className="text-[14px] leading-snug">
                   {tip.text}
                   {tip.status === "accepted" && (
@@ -129,25 +151,44 @@ export default function FarmAdvisoryCard() {
                   )}
                 </p>
               </div>
-              {tip.badge && <div className="pt-[2px]">{tip.badge}</div>}
+
+              {tip.badgeSrc ? (
+                <div className="pt-[2px]">
+                  <img
+                    src={tip.badgeSrc}
+                    alt="badge"
+                    className="w-10 h-10 rounded"
+                  />
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Action Buttons */}
       <div className="bg-white flex justify-center gap-2 items-center py-4">
         <button
           onClick={handleAcceptAll}
-          className="text-white font-bold rounded-md px-4 py-2 hover:opacity-90"
+          className="text-white font-bold rounded-md px-4 py-2 hover:opacity-90 bg-green-600"
         >
-          <img src={img11} alt="" srcset="" />
+          <img
+            src={imgGroup531}
+            alt="accept"
+            className="inline-block w-5 h-5"
+          />
+          <span className="ml-2">Accept All</span>
         </button>
+
         <button
           onClick={handleRejectAll}
-          className=" text-white font-bold rounded-md px-4 py-2 hover:opacity-90"
+          className="text-white font-bold rounded-md px-4 py-2 hover:opacity-90 bg-red-500"
         >
-         <img src={img10} alt="" srcset="" />
+          <img
+            src={imgGroup530}
+            alt="reject"
+            className="inline-block w-5 h-5"
+          />
+          <span className="ml-2">Reject All</span>
         </button>
       </div>
     </div>

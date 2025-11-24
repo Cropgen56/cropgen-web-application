@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import SatelliteIndexScroll from "../components/smartadvisory/smartadvisorysidebar/SatelliteIndexScroll";
 import NDVIChartCard from "../components/smartadvisory/smartadvisorysidebar/Ndvigrapgh";
 import IrrigationStatusCard from "../components/smartadvisory/smartadvisorysidebar/IrrigationStatusCard";
-import CropAdvisoryCard from "../components/smartadvisory/smartadvisorysidebar/CropAdvisoryCard";
+import NutrientManagement from "../components/smartadvisory/smartadvisorysidebar/NutrientManagement";
 import WeatherCard from "../components/smartadvisory/smartadvisorysidebar/WeatherCard";
 import PestDiseaseCard from "../components/smartadvisory/smartadvisorysidebar/PestDiseaseCard";
 import FarmAdvisoryCard from "../components/smartadvisory/smartadvisorysidebar/Farmadvisory";
@@ -24,29 +30,53 @@ import PricingOverlay from "../components/pricing/PricingOverlay";
 import {
   checkFieldSubscriptionStatus,
   setCurrentField,
-  displayMembershipModal,
   hideMembershipModal,
-  selectHasSmartAdvisorySystem, // Updated import
+  selectHasSmartAdvisorySystem,
 } from "../redux/slices/membershipSlice";
 import {
   fetchSmartAdvisory,
   runSmartAdvisory,
 } from "../redux/slices/smartAdvisorySlice";
 
+import {
+  fetchHistoricalWeather,
+  fetchForecastData,
+  fetchAOIs,
+} from "../redux/slices/weatherSlice";
+
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const lastRunKeyFor = (fieldId) => `lastSmartAdvisoryRun_${fieldId}`;
+
+function getLastRunTimestamp(fieldId) {
+  try {
+    const v = localStorage.getItem(lastRunKeyFor(fieldId));
+    return v ? Number(v) : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+function setLastRunTimestamp(fieldId, ts = Date.now()) {
+  try {
+    localStorage.setItem(lastRunKeyFor(fieldId), String(ts));
+  } catch (e) {}
+}
 
 const SmartAdvisory = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state?.auth?.user);
-  const authToken = useSelector((state) => state?.auth?.token);
-  const fieldsRaw = useSelector((s) => s?.farmfield?.fields);
+  const navigate = useNavigate();
+  const isTablet = useIsTablet();
 
+  const user = useSelector((s) => s.auth?.user);
+  const authToken = useSelector((s) => s.auth?.token);
+  const fieldsRaw = useSelector((s) => s.farmfield?.fields ?? []);
+  const aois = useSelector((s) => s.weather?.aois ?? []);
   const showMembershipModal = useSelector(
-    (state) => state.membership.showMembershipModal
+    (s) => s.membership?.showMembershipModal
   );
   const hasSmartAdvisorySystem = useSelector(selectHasSmartAdvisorySystem);
   const fieldSubscriptions = useSelector(
-    (state) => state.membership.fieldSubscriptions
+    (s) => s.membership?.fieldSubscriptions ?? {}
   );
 
   const [reportdata, setReportData] = useState(null);
@@ -55,108 +85,124 @@ const SmartAdvisory = () => {
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
-  const isTablet = useIsTablet();
-  const navigate = useNavigate();
-  const userId = user?.id;
-
   const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
-
-  // AOIs from redux
-  const aoisRaw = useSelector((state) => state?.weather?.aois);
-  const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
-
-  // Selected field details
-  const selectedFieldDetails = useMemo(() => {
-    if (!selectedField) return null;
-    return selectedField;
-  }, [selectedField]);
-
-  // console.log("AOIs:", aois);
-  // console.log("Selected Field:", selectedFieldDetails);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
-    if (userId) {
-      dispatch(getFarmFields(userId));
-    }
-  }, [dispatch, userId]);
+    dispatch(fetchAOIs());
+    if (user?.id) dispatch(getFarmFields(user.id));
+  }, [dispatch, user?.id]);
 
+  // select field effect: set current field and check subscription if needed
   useEffect(() => {
-    if (selectedField && authToken) {
-      dispatch(setCurrentField(selectedField._id));
+    if (!selectedField || !authToken) return;
+    dispatch(setCurrentField(selectedField._id));
 
-      const fieldSub = fieldSubscriptions[selectedField._id];
-      const shouldCheck =
-        !fieldSub ||
-        (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) >
-            SUBSCRIPTION_CHECK_INTERVAL);
+    const fieldSub = fieldSubscriptions[selectedField._id];
+    const shouldCheck =
+      !fieldSub ||
+      (fieldSub.lastChecked &&
+        Date.now() - new Date(fieldSub.lastChecked).getTime() >
+          SUBSCRIPTION_CHECK_INTERVAL);
 
-      if (shouldCheck) {
-        dispatch(
-          checkFieldSubscriptionStatus({
-            fieldId: selectedField._id,
-            authToken,
-          })
-        );
-      }
+    if (shouldCheck) {
+      dispatch(
+        checkFieldSubscriptionStatus({ fieldId: selectedField._id, authToken })
+      );
     }
   }, [selectedField, authToken, dispatch, fieldSubscriptions]);
 
+  // interval to refresh subscription status while field is selected
   useEffect(() => {
     if (!selectedField || !authToken) return;
-
-    const interval = setInterval(() => {
+    const id = setInterval(() => {
       dispatch(
-        checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken,
-        })
+        checkFieldSubscriptionStatus({ fieldId: selectedField._id, authToken })
       );
     }, SUBSCRIPTION_CHECK_INTERVAL);
-
-    return () => clearInterval(interval);
+    return () => clearInterval(id);
   }, [selectedField, authToken, dispatch]);
 
+  // fetch advisory from DB on mount and when selected field changes
   useEffect(() => {
-    if (!selectedFieldDetails || !authToken || aois.length === 0) return;
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+    }
+    if (!selectedField) return;
+    dispatch(fetchSmartAdvisory({ fieldId: selectedField._id }))
+      .unwrap()
+      .catch((err) => {
+        console.debug("fetchSmartAdvisory failed:", err);
+      });
+  }, [selectedField, dispatch]);
 
-    const matchingAOI = aois.find((a) => a.name === selectedFieldDetails._id);
-    if (!matchingAOI || !matchingAOI.id) {
-      console.log("❌ AOI not found yet. Skipping fetch advisory call");
+  // run advisory generation at most once per week per field (requires AOI/geometry)
+  useEffect(() => {
+    if (!selectedField || !authToken) return;
+    const fieldId = selectedField._id;
+    const lastRunTs = getLastRunTimestamp(fieldId);
+    if (lastRunTs && Date.now() - lastRunTs < WEEK_MS) return;
+
+    const matchingAOI = aois.find((a) => a.name === fieldId && a.id);
+    if (!matchingAOI) {
+      // no geometry available — still rely on DB fetch only
       return;
     }
 
     const payload = {
-      fieldId: selectedFieldDetails._id,
+      fieldId,
       geometryId: matchingAOI.id,
       targetDate: new Date().toISOString().split("T")[0],
       language: "en",
       token: authToken,
     };
 
-    dispatch(fetchSmartAdvisory(payload))
+    dispatch(runSmartAdvisory(payload))
       .unwrap()
-      .then((res) => console.log("✔ FETCH SMART ADVISORY SUCCESS:", res))
-      .catch((err) => console.log("❌ FETCH SMART ADVISORY ERROR:", err));
-  }, [selectedFieldDetails, aois, authToken, dispatch]);
+      .then(() => {
+        setLastRunTimestamp(fieldId, Date.now());
+        // after generation, refresh from DB
+        dispatch(fetchSmartAdvisory({ fieldId })).catch(() => {});
+      })
+      .catch(() => {
+        // fail silently, will retry on next mount/field change
+      });
+  }, [selectedField, aois, authToken, dispatch]);
+
+  useEffect(() => {
+    if (!selectedField || !authToken) return;
+
+    const fieldId = selectedField._id;
+    const matchingAOI = aois.find((a) => a.name === fieldId && a.id);
+
+    const requestPayload = {
+      geometry_id: matchingAOI?.id,
+      start_date: selectedField?.sowingDate,
+      end_date: new Date().toISOString().split("T")[0],
+    };
+
+    const geometry_id = matchingAOI?.id;
+
+    dispatch(fetchHistoricalWeather(requestPayload));
+    dispatch(fetchForecastData({ geometry_id }));
+  }, [selectedField, aois, authToken, dispatch]);
 
   const handleSubscribe = useCallback(() => {
-    if (selectedField) {
-      const areaInHectares =
-        selectedField?.areaInHectares || selectedField?.acre * 0.404686 || 5;
-      const fieldData = {
-        id: selectedField._id,
-        name: selectedField.fieldName || selectedField.farmName,
-        areaInHectares,
-        cropName: selectedField.cropName,
-      };
-
-      setPricingFieldData(fieldData);
-      setShowPricingOverlay(true);
-      dispatch(hideMembershipModal());
-    } else {
+    if (!selectedField) {
       message.warning("Please select a field first");
+      return;
     }
+    const areaInHectares =
+      selectedField?.areaInHectares ??
+      (selectedField?.acre ? selectedField.acre * 0.404686 : 5);
+    setPricingFieldData({
+      id: selectedField._id,
+      name: selectedField.fieldName || selectedField.farmName,
+      areaInHectares,
+      cropName: selectedField.cropName,
+    });
+    setShowPricingOverlay(true);
+    dispatch(hideMembershipModal());
   }, [selectedField, dispatch]);
 
   const handleSkipMembership = useCallback(() => {
@@ -166,25 +212,22 @@ const SmartAdvisory = () => {
     );
   }, [dispatch]);
 
-  const handleCloseMembershipModal = useCallback(() => {
-    dispatch(hideMembershipModal());
-  }, [dispatch]);
+  const handleCloseMembershipModal = useCallback(
+    () => dispatch(hideMembershipModal()),
+    [dispatch]
+  );
 
   const handleClosePricing = useCallback(() => {
     setShowPricingOverlay(false);
     setPricingFieldData(null);
-
     if (selectedField && authToken) {
       dispatch(
-        checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken,
-        })
+        checkFieldSubscriptionStatus({ fieldId: selectedField._id, authToken })
       );
     }
   }, [selectedField, authToken, dispatch]);
 
-  if (fields.length === 0) {
+  if (!fields || fields.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
         <img
@@ -204,6 +247,8 @@ const SmartAdvisory = () => {
       </div>
     );
   }
+
+  console.log("test ", selectedField);
 
   return (
     <>
@@ -292,11 +337,10 @@ const SmartAdvisory = () => {
 
                   <div className="grid grid-cols-2 gap-4 w-full">
                     <div className="bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
-                      <IrrigationStatusCard
-                      />
+                      <IrrigationStatusCard />
                     </div>
                     <div className="bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
-                      <CropAdvisoryCard />
+                      <NutrientManagement />
                     </div>
                     <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
                       <WeatherCard />
@@ -349,16 +393,16 @@ const SmartAdvisory = () => {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-                    <CropAdvisoryCard />
+                    <NutrientManagement />
                     <WeatherCard />
                     <PestDiseaseCard />
                   </div>
 
                   <div className="flex flex-row gap-4 w-full">
-                    <div className="w-[32%] overflow-x-auto">
+                    {/* <div className="w-[32%] overflow-x-auto">
                       <Fertigation />
-                    </div>
-                    <div className="w-[65%] overflow-x-auto">
+                    </div> */}
+                    <div className="w-full overflow-x-auto">
                       <Soiltemp />
                     </div>
                   </div>

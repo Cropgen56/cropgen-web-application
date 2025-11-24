@@ -12,17 +12,16 @@ const SoilHealthChart = () => {
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
 
   // Use forecastData.current for latest values
-  const latestTemp2cm = forecastData.current?.soil_temperature_surface || "N/A"; // 2cm data (soil_temperature_surface is closest)
+  const latestTemp2cm = forecastData.current?.soil_temperature_surface || "N/A";
   const latestMoisture2cm =
     forecastData.current?.soil_moisture_surface || "N/A"; // 2cm data
-  const latestTemp5cm = forecastData.current?.soil_temperature_5cm || "N/A"; // 5cm data
-  const latestMoisture5cm = forecastData.current?.soil_moisture_5cm || "N/A"; // 5cm data
-  const latestTemp15cm = forecastData.current?.soil_temperature_15cm || "N/A"; // 15cm data
-  const latestMoisture15cm = forecastData.current?.soil_moisture_15cm || "N/A"; // 15cm data
+  const latestTemp5cm = forecastData.current?.soil_temperature_5cm || "N/A";
+  const latestMoisture5cm = forecastData.current?.soil_moisture_5cm || "N/A";
+  const latestTemp15cm = forecastData.current?.soil_temperature_15cm || "N/A";
+  const latestMoisture15cm = forecastData.current?.soil_moisture_15cm || "N/A";
 
   return (
     <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto bg-white p-4 rounded-2xl mt-3 ">
-
       <div className="flex items-center justify-end gap-2 md:gap-6 mt-4">
         <div className="flex items-center gap-1 md:gap-2 bg-[#344E41] border rounded-xl shadow-md p-2.5 w-42">
           <img

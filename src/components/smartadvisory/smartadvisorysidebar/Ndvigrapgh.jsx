@@ -41,7 +41,8 @@ const NDVIChartCard = () => {
           <div className="bg-[#365541] border border-gray-400 p-3 rounded-md flex gap-2 text-sm">
             <FiInfo className="mt-1 shrink-0" />
             <p>
-              NDVI values can also be used to map and classify vegetation types, and to detect changes in vegetation cover over time.
+              NDVI values can also be used to map and classify vegetation types,
+              and to detect changes in vegetation cover over time.
             </p>
           </div>
         </div>
@@ -56,17 +57,29 @@ const NDVIChartCard = () => {
                 <XAxis dataKey="date" stroke="#ccc" fontSize={12} />
                 <YAxis stroke="#ccc" fontSize={12} domain={[0, 1]} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: "#47664D", border: "none", color: "white" }}
+                  contentStyle={{
+                    backgroundColor: "#47664D",
+                    border: "none",
+                    color: "white",
+                  }}
                   labelStyle={{ color: "white" }}
                   formatter={(value) => value.toFixed(2)}
                 />
-                <Line type="monotone" dataKey="day1" stroke="#86D72F" dot={{ r: 3 }} strokeWidth={2} />
+                <Line
+                  type="monotone"
+                  dataKey="day1"
+                  stroke="#86D72F"
+                  dot={{ r: 3 }}
+                  strokeWidth={2}
+                />
               </LineChart>
             </ResponsiveContainer>
 
             {/* Legend & Download */}
             <div className="absolute top-0 right-0 flex items-center gap-4 text-sm pr-4 pt-2">
-              <span className="text-[#86D72F] font-semibold">● NDVI ( Day1 )</span>
+              <span className="text-[#86D72F] font-semibold">
+                ● NDVI ( Day1 )
+              </span>
               <MdDownload className="text-xl cursor-pointer" />
             </div>
           </div>
@@ -78,7 +91,10 @@ const NDVIChartCard = () => {
               <p className="font-semibold border-b border-[#3e5c4a]  mb-1 text-xs">
                 Low NDVI in Specific Areas
               </p>
-              <p className="pl-3">• Check for irrigation leaks, clogged drippers, or uneven fertilizer distribution.</p>
+              <p className="pl-3">
+                • Check for irrigation leaks, clogged drippers, or uneven
+                fertilizer distribution.
+              </p>
             </div>
 
             {/* Card 2 */}
@@ -86,7 +102,10 @@ const NDVIChartCard = () => {
               <p className="font-semibold border-b border-[#3e5c4a] pb-1 mb-1">
                 Sudden NDVI Drops
               </p>
-              <p className="pl-3">• Investigate pest outbreaks or extreme weather events like hailstorms or drought.</p>
+              <p className="pl-3">
+                • Investigate pest outbreaks or extreme weather events like
+                hailstorms or drought.
+              </p>
             </div>
 
             {/* Card 3 */}
@@ -94,10 +113,12 @@ const NDVIChartCard = () => {
               <p className="font-semibold border-b border-[#3e5c4a] pb-1 mb-1">
                 Consistently Low NDVI
               </p>
-              <p className="pl-3">• May indicate soil fertility issues. Conduct soil tests for corrective measures.</p>
+              <p className="pl-3">
+                • May indicate soil fertility issues. Conduct soil tests for
+                corrective measures.
+              </p>
             </div>
           </div>
-
         </div>
       </div>
     </div>

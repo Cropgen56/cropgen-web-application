@@ -11,12 +11,12 @@ import { getFarmFields } from "../redux/slices/farmSlice";
 import MapView from "../components/dashboard/mapview/MapView";
 import CropHealth from "../components/dashboard/crophealth/CropHealthCard";
 import ForeCast from "../components/dashboard/forecast/ForeCast";
-import PlantGrowthActivity from "../components/dashboard/plantgrowthactivity/PlantGrowthActivity";
+import PlantGrowthActivity from "../components/dashboard/PlantGrowthActivity";
 import Insights from "../components/dashboard/insights/Insights";
-import CropAdvisory from "../components/dashboard/cropadvisory/CropAdvisory";
+import CropAdvisory from "../components/dashboard/CropAdvisory";
 import "../styles/dashboard.css";
-import NdviGraph from "../components/dashboard/satellite-index/vegitation-index/VegetationIndex";
-import WaterIndex from "../components/dashboard/satellite-index/water-index/WaterIndex";
+import NdviGraph from "../components/dashboard/satellite-index/VegetationIndex";
+import WaterIndex from "../components/dashboard/satellite-index/WaterIndex";
 import { PlusIcon, X } from "lucide-react";
 import {
   fetchAOIs,
@@ -46,12 +46,39 @@ import {
 } from "../redux/slices/subscriptionSlice";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
-import { runSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
+import {
+  runSmartAdvisory,
+  fetchSmartAdvisory,
+} from "../redux/slices/smartAdvisorySlice";
 
+/* constants */
 const SELECTED_FIELD_KEY = "selectedFieldId";
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 const FORECAST_CACHE_TTL = 5 * 60 * 1000;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
+/* simple last-run timestamp helpers (per-field) */
+const lastRunKeyFor = (fieldId) => `lastSmartAdvisoryRun_${fieldId}`;
+function getLastRunTimestamp(fieldId) {
+  try {
+    const v = localStorage.getItem(lastRunKeyFor(fieldId));
+    return v ? Number(v) : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+function setLastRunTimestamp(fieldId, ts = Date.now()) {
+  try {
+    localStorage.setItem(lastRunKeyFor(fieldId), String(ts));
+  } catch (e) {}
+}
+function clearLastRunTimestamp(fieldId) {
+  try {
+    localStorage.removeItem(lastRunKeyFor(fieldId));
+  } catch (e) {}
+}
+
+/* utility to format coordinates */
 const formatCoordinates = (data) => {
   if (!Array.isArray(data) || data.length === 0) return [];
   const coords = data.map((p) => [p.lng, p.lat]);
@@ -116,7 +143,6 @@ const Dashboard = () => {
   });
 
   const [prevFieldsLength, setPrevFieldsLength] = useState(0);
-
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
@@ -133,18 +159,12 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!userId) return;
-
     dispatch(getFarmFields(userId));
-
     if (!isMountedRef.current) {
       dispatch(fetchAOIs())
         .unwrap()
-        .then(() => {
-          setAoisInitialized(true);
-        })
-        .catch(() => {
-          setAoisInitialized(true);
-        });
+        .then(() => setAoisInitialized(true))
+        .catch(() => setAoisInitialized(true));
       isMountedRef.current = true;
     }
   }, [dispatch, userId]);
@@ -186,18 +206,15 @@ const Dashboard = () => {
 
   const aoiNeedsCreation = useMemo(() => {
     if (!aoisInitialized || !selectedFieldDetails?._id) return null;
-
     const aoiName = selectedFieldDetails._id;
     const exists = aois.some((a) => a.name === aoiName);
     const attempted = attemptedAOIsRef.current.has(aoiName);
     const creating = aoiCreationRef.current.has(aoiName);
-
     return !exists && !attempted && !creating ? aoiName : null;
   }, [aoisInitialized, selectedFieldDetails, aois]);
 
   useEffect(() => {
     if (!aoiNeedsCreation || !selectedFieldDetails) return;
-
     const geometryCoords = formatCoordinates(selectedFieldDetails.field);
     if (geometryCoords.length === 0) return;
 
@@ -222,7 +239,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!selectedField) return;
-
     dispatch(setCurrentField(selectedField));
 
     if (authToken) {
@@ -279,7 +295,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!selectedFieldDetails || aois.length === 0) return;
-
     const matchingAOI = aois.find((a) => a.name === selectedFieldDetails._id);
     if (!matchingAOI || !matchingAOI.id) return;
 
@@ -303,19 +318,29 @@ const Dashboard = () => {
     }
   }, [isCheckingSubscription]);
 
+  /* fetch advisory from DB once when selected field or token changes */
+  useEffect(() => {
+    dispatch(fetchSmartAdvisory({ fieldId: selectedField }))
+      .unwrap()
+      .catch(() => {});
+  }, [dispatch]);
+
+  /* runSmartAdvisory at most once per field per week; refresh advisory from DB on success */
   useEffect(() => {
     if (!selectedFieldDetails || !authToken || aois.length === 0) return;
 
     const matchingAOI = aois.find((a) => a.name === selectedFieldDetails._id);
-    if (!matchingAOI || !matchingAOI.id) {
-      console.log("❌ AOI not found yet. Skipping advisory call");
-      return;
-    }
+    if (!matchingAOI || !matchingAOI.id) return;
 
     const geoId = matchingAOI.id;
+    const fieldId = selectedFieldDetails._id;
+
+    const lastRunTs = getLastRunTimestamp(fieldId);
+    const now = Date.now();
+    if (lastRunTs && now - lastRunTs < WEEK_MS) return;
 
     const payload = {
-      fieldId: selectedFieldDetails._id,
+      fieldId,
       geometryId: geoId,
       targetDate: new Date().toISOString().split("T")[0],
       language: "en",
@@ -324,8 +349,16 @@ const Dashboard = () => {
 
     dispatch(runSmartAdvisory(payload))
       .unwrap()
-      .then((res) => console.log("✔ RUN SMART ADVISORY SUCCESS:", res))
-      .catch((err) => console.log("❌ RUN SMART ADVISORY ERROR:", err));
+      .then(() => {
+        setLastRunTimestamp(fieldId, Date.now());
+        // fetch the advisory from DB after successful generation
+        dispatch(fetchSmartAdvisory({ fieldId, token: authToken })).catch(
+          () => {}
+        );
+      })
+      .catch(() => {
+        // on failure do nothing so it can retry on next mount/field change
+      });
   }, [selectedFieldDetails, aois, authToken, dispatch]);
 
   const handleFieldSelection = useCallback((fieldId) => {
@@ -395,10 +428,7 @@ const Dashboard = () => {
           await dispatch(
             checkFieldSubscriptionStatus({ fieldId: selectedField, authToken })
           ).unwrap();
-
-          setTimeout(() => {
-            setIsRefreshingSubscription(false);
-          }, 300);
+          setTimeout(() => setIsRefreshingSubscription(false), 300);
         } else {
           setIsRefreshingSubscription(false);
         }
@@ -453,44 +483,6 @@ const Dashboard = () => {
               userArea={pricingFieldData.areaInHectares}
               selectedField={pricingFieldData}
             />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showSelectFarmModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white/90 p-6 rounded-2xl shadow-2xl text-center max-w-sm w-[90%] border border-green-200 relative overflow-hidden"
-              initial={{ scale: 0.7, opacity: 0, y: 40 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.7, opacity: 0, y: 40 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <motion.div
-                initial={{ rotate: -5, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 80 }}
-              >
-                <h2 className="text-2xl font-extrabold text-green-700 mb-3 tracking-wide">
-                  Select a Farm
-                </h2>
-                <p className="text-gray-600 mb-6 text-base leading-relaxed">
-                  Please select a farm first to continue using the dashboard.
-                </p>
-              </motion.div>
-              <button
-                onClick={() => setShowSelectFarmModal(false)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all duration-500 ease-in-out cursor-pointer"
-              >
-                Go to Dashboard
-              </button>
-            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

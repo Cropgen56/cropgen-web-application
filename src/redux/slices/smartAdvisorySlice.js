@@ -26,18 +26,9 @@ export const runSmartAdvisory = createAsyncThunk(
 
 export const fetchSmartAdvisory = createAsyncThunk(
   "smartAdvisory/fetchSmartAdvisory",
-  async ({ fieldId, geometryId, targetDate, language, token }, thunkAPI) => {
+  async ({ fieldId }, thunkAPI) => {
     try {
-      const res = await axios.get(`${BASE_URL}/farm-adviosry/${fieldId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          geometryId,
-          targetDate,
-          language,
-        },
-      });
+      const res = await axios.get(`${BASE_URL}/farm-adviosry/${fieldId}`);
 
       return res.data;
     } catch (err) {
@@ -81,7 +72,7 @@ const smartAdvisorySlice = createSlice({
       })
       .addCase(fetchSmartAdvisory.fulfilled, (state, action) => {
         state.loading = false;
-        state.advisory = action.payload;
+        state.advisory = action.payload?.advisories[0];
       })
       .addCase(fetchSmartAdvisory.rejected, (state, action) => {
         state.loading = false;

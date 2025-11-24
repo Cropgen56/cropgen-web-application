@@ -6,28 +6,17 @@ import SoilAnalysisChart from "./SoilAnalysisChart.jsx";
 import SoilHealthChart from "./SoilHealthChart.jsx";
 // REMOVED: fetchSoilData import
 import CropHealthStatusBar from "./CropHealthStatusBar.jsx";
-import {
-  fetchCrops,
-  fetchCropHealthYield,
-} from "../../../redux/slices/cropSlice.js";
+import { fetchCrops } from "../../../redux/slices/cropSlice.js";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
 import { selectHasCropHealthAndYield } from "../../../redux/slices/membershipSlice.js";
 
 const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
   const cropDetials = selectedFieldsDetials?.[0];
-  const {
-    sowingDate,
-    field: corrdinatesPoint,
-    cropName,
-    bbch,
-    bbchDescription,
-  } = cropDetials || {};
+  const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
   const dispatch = useDispatch();
 
-  const { crops, cropHealthYield, healthYieldLoading } = useSelector(
-    (state) => state.crops
-  );
-  const { cropYield } = useSelector((state) => state.satellite);
+  const { crops } = useSelector((state) => state.crops);
+
   const hasCropHealthAndYield = useSelector(selectHasCropHealthAndYield);
 
   const advisory = useSelector((state) => state.smartAdvisory.advisory);
@@ -65,38 +54,13 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
     if (!corrdinatesPoint || corrdinatesPoint.length < 3) return null;
 
     const coordinates = corrdinatesPoint.map((p) => [p.lng, p.lat]);
-    coordinates.push(coordinates[0]); // Close the polygon
+    coordinates.push(coordinates[0]);
 
     return {
       type: "Polygon",
       coordinates: [coordinates],
     };
   }, [corrdinatesPoint]);
-
-  useEffect(() => {
-    if (cropDetials && cropName && sowingDate && buildGeometry) {
-      const currentDate = new Date().toISOString().split("T")[0];
-
-      const payload = {
-        cropName: cropName,
-        sowingDate: sowingDate,
-        currentDate: currentDate,
-        bbch: bbch?.toString() || "75",
-        bbchDescription: bbchDescription || "Stem elongation",
-        geometry: buildGeometry,
-      };
-
-      dispatch(fetchCropHealthYield(payload));
-    }
-  }, [
-    cropDetials,
-    cropName,
-    sowingDate,
-    buildGeometry,
-    bbch,
-    bbchDescription,
-    dispatch,
-  ]);
 
   const yieldData = useMemo(() => {
     if (advisory?.yield) {

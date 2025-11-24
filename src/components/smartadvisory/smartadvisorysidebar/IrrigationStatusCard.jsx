@@ -6,10 +6,9 @@ import { useSelector } from "react-redux";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const IrrigationStatusCard = ({ isTablet = false }) => {
-  const advisory = useSelector((state) => state.smartAdvisory.advisory);
+  const { advisory } = useSelector((state) => state.smartAdvisory);
 
-  const irrigationStage =
-    advisory?.advisories?.[0]?.smartAdvisory?.irrigationStage;
+  const irrigationStage = advisory?.smartAdvisory?.irrigationStage;
   const percentage = irrigationStage?.irrigationPercentage ?? 0;
   const recommendations = irrigationStage?.recommendations ?? [];
 

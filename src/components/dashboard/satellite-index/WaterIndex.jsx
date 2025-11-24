@@ -16,16 +16,16 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchWaterIndexData } from "../../../../redux/slices/satelliteSlice";
+import { fetchWaterIndexData } from "../../../redux/slices/satelliteSlice";
 import {
   getDaysAgo,
   getOneYearBefore,
   getTodayDate,
-} from "../../../../utility/formatDate";
-import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
+} from "../../../utility/formatDate";
+import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
-import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper";
-import { selectHasWaterIndices } from "../../../../redux/slices/membershipSlice";
+import IndexPremiumWrapper from "../../subscription/Indexpremiumwrapper";
+import { selectHasWaterIndices } from "../../../redux/slices/membershipSlice";
 
 const WATER_COLOR_MAIN = "#38bdf8";
 const WATER_COLOR_LIGHT = "#7dd3fc";

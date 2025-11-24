@@ -16,16 +16,16 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchIndexTimeSeriesSummary } from "../../../../redux/slices/satelliteSlice";
+import { fetchIndexTimeSeriesSummary } from "../../../redux/slices/satelliteSlice";
 import {
   getDaysAgo,
   getOneYearBefore,
   getTodayDate,
-} from "../../../../utility/formatDate";
-import LoadingSpinner from "../../../comman/loading/LoadingSpinner";
+} from "../../../utility/formatDate";
+import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
-import IndexPremiumWrapper from "../../../subscription/Indexpremiumwrapper";
-import { selectHasVegetationIndices } from "../../../../redux/slices/membershipSlice";
+import IndexPremiumWrapper from "../../subscription/Indexpremiumwrapper";
+import { selectHasVegetationIndices } from "../../../redux/slices/membershipSlice";
 
 const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
