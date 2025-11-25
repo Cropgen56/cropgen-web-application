@@ -214,44 +214,48 @@ const AddFarm = ({ selectedFarm }) => {
               onChange={handleFarmChange}
               placeholder="Enter farm name"
             />
-            
-            <CustomDropdown
+
+            <AutocompleteDropdown
               label="Crop Name"
               value={formData.cropName}
-              onChange={(value) => handleChange('cropName', value)}
-              options={crops?.map((crop) => crop.cropName) || []}
-              placeholder="Select Crop"
+              onChange={(value) => handleChange("cropName", value)}
+              options={
+                crops
+                  ?.map((crop) => crop.cropName)
+                  .sort((a, b) => a.localeCompare(b)) || []
+              }
+              placeholder="Search or select crop"
             />
 
             <FormInput
               label="Variety"
               value={formData.variety}
-              onChange={(value) => handleChange('variety', value)}
+              onChange={(value) => handleChange("variety", value)}
               placeholder="Enter crop variety"
             />
 
             <CustomDatePicker
               label="Sowing Date"
               value={formData.sowingDate}
-              onChange={(value) => handleChange('sowingDate', value)}
+              onChange={(value) => handleChange("sowingDate", value)}
               placeholder="Select sowing date"
               maxDate={new Date()}
             />
 
-            <CustomDropdown
+            <AutocompleteDropdown
               label="Type Of Irrigation"
               value={formData.typeOfIrrigation}
-              onChange={(value) => handleChange('typeOfIrrigation', value)}
-              options={["Open", "Drip", "Sprinkler"]}
-              placeholder="Select Irrigation Type"
+              onChange={(value) => handleChange("typeOfIrrigation", value)}
+              options={["open-irrigation", "drip-irrigation", "sprinkler"]}
+              placeholder="Search or select irrigation"
             />
 
-            <CustomDropdown
+            <AutocompleteDropdown
               label="Type Of Farming"
               value={formData.typeOfFarming}
-              onChange={(value) => handleChange('typeOfFarming', value)}
+              onChange={(value) => handleChange("typeOfFarming", value)}
               options={["Organic", "Inorganic", "Integrated"]}
-              placeholder="Select Farming Type"
+              placeholder="Search or select farming type"
             />
           </form>
         </div>
@@ -321,43 +325,47 @@ const AddFarm = ({ selectedFarm }) => {
                 placeholder="Enter farm name"
               />
 
-              <CustomDropdown
+              <AutocompleteDropdown
                 label="Crop Name"
                 value={formData.cropName}
-                onChange={(value) => handleChange('cropName', value)}
-                options={crops?.map((crop) => crop.cropName) || []}
-                placeholder="Select Crop"
+                onChange={(value) => handleChange("cropName", value)}
+                options={
+                  crops
+                    ?.map((crop) => crop.cropName)
+                    .sort((a, b) => a.localeCompare(b)) || []
+                }
+                placeholder="Search or select crop"
               />
 
               <FormInput
                 label="Variety"
                 value={formData.variety}
-                onChange={(value) => handleChange('variety', value)}
+                onChange={(value) => handleChange("variety", value)}
                 placeholder="Enter crop variety"
               />
 
               <CustomDatePicker
                 label="Sowing Date"
                 value={formData.sowingDate}
-                onChange={(value) => handleChange('sowingDate', value)}
+                onChange={(value) => handleChange("sowingDate", value)}
                 placeholder="Select sowing date"
                 maxDate={new Date()}
               />
 
-              <CustomDropdown
+              <AutocompleteDropdown
                 label="Type Of Irrigation"
                 value={formData.typeOfIrrigation}
-                onChange={(value) => handleChange('typeOfIrrigation', value)}
-                options={["Open", "Drip", "Sprinkler"]}
-                placeholder="Select Irrigation Type"
+                onChange={(value) => handleChange("typeOfIrrigation", value)}
+                options={["open-irrigation", "drip-irrigation", "sprinkler"]}
+                placeholder="Search or select irrigation"
               />
 
-              <CustomDropdown
+              <AutocompleteDropdown
                 label="Type Of Farming"
                 value={formData.typeOfFarming}
-                onChange={(value) => handleChange('typeOfFarming', value)}
+                onChange={(value) => handleChange("typeOfFarming", value)}
                 options={["Organic", "Inorganic", "Integrated"]}
-                placeholder="Select Farming Type"
+                placeholder="Search or select farming type"
               />
             </div>
           </div>
@@ -469,8 +477,18 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
   const datePickerRef = useRef(null);
 
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
@@ -479,7 +497,10 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
   // Close date picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+      if (
+        datePickerRef.current &&
+        !datePickerRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -492,7 +513,7 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
 
   const handleDateSelect = (day) => {
     const selectedDate = new Date(currentYear, currentMonth, day);
-    const formattedDate = selectedDate.toISOString().split('T')[0];
+    const formattedDate = selectedDate.toISOString().split("T")[0];
     onChange(formattedDate);
     setIsOpen(false);
   };
@@ -518,8 +539,8 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
   const formatDisplayDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -534,7 +555,7 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
     const totalDays = daysInMonth(currentMonth, currentYear);
     const startDay = firstDayOfMonth(currentMonth, currentYear);
     const days = [];
-    
+
     // Add empty cells for days before month starts
     for (let i = 0; i < startDay; i++) {
       days.push(<div key={`empty-${i}`} className="h-6 w-6"></div>);
@@ -542,13 +563,14 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
 
     // Add days of the month
     for (let day = 1; day <= totalDays; day++) {
-      const isSelected = value && 
+      const isSelected =
+        value &&
         new Date(value).getDate() === day &&
         new Date(value).getMonth() === currentMonth &&
         new Date(value).getFullYear() === currentYear;
-      
+
       const isDisabled = isDateDisabled(day);
-      const isToday = 
+      const isToday =
         new Date().getDate() === day &&
         new Date().getMonth() === currentMonth &&
         new Date().getFullYear() === currentYear;
@@ -562,13 +584,14 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
           className={`
             h-6 w-6 rounded text-xs flex items-center justify-center
             transition-all duration-150
-            ${isSelected 
-              ? 'bg-white text-[#344E41] font-bold' 
-              : isToday
-              ? 'bg-[#4a6b5a] text-white'
-              : isDisabled
-              ? 'text-gray-500 cursor-not-allowed'
-              : 'text-white hover:bg-[#2b3e33]'
+            ${
+              isSelected
+                ? "bg-white text-[#344E41] font-bold"
+                : isToday
+                ? "bg-[#4a6b5a] text-white"
+                : isDisabled
+                ? "text-gray-500 cursor-not-allowed"
+                : "text-white hover:bg-[#2b3e33]"
             }
           `}
         >
@@ -587,14 +610,9 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className={`
-            w-full px-3 py-2 bg-[#344E41] text-white rounded
-            border border-[#344e41] outline-none
-            flex items-center justify-between
-            hover:bg-[#2b3e33] transition-all duration-200
-            focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
-            ${!value ? 'text-gray-300' : 'text-white'}
-          `}
+          className={`w-full px-3 py-2 bg-[#344E41] text-white rounded border border-[#344e41] outline-none flex items-center justify-between hover:bg-[#2b3e33] transition-all duration-200 focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50 ${
+            !value ? "text-gray-300" : "text-white"
+          }`}
         >
           <span className="flex items-center gap-2">
             <Calendar size={14} />
@@ -604,7 +622,9 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
           </span>
           <ChevronDown
             size={18}
-            className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            className={`transition-transform duration-200 ${
+              isOpen ? "rotate-180" : ""
+            }`}
           />
         </button>
 
@@ -634,17 +654,18 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
 
             {/* Days of Week Headers */}
             <div className="grid grid-cols-7 gap-0.5 mb-1">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-                <div key={`${day}-${index}`} className="h-5 w-6 flex items-center justify-center text-xs text-gray-300">
+              {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                <div
+                  key={`${day}-${index}`}
+                  className="h-5 w-6 flex items-center justify-center text-xs text-gray-300"
+                >
                   {day}
                 </div>
               ))}
             </div>
 
             {/* Calendar Days */}
-            <div className="grid grid-cols-7 gap-0.5">
-              {renderCalendar()}
-            </div>
+            <div className="grid grid-cols-7 gap-0.5">{renderCalendar()}</div>
 
             {/* Today Button */}
             <div className="mt-2 pt-2 border-t border-[#2b3e33]">
@@ -668,16 +689,25 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
   );
 };
 
-// Custom Dropdown Component
-const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
+// Autocomplete Dropdown Component with Search
+const AutocompleteDropdown = ({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
+        setIsFocused(false);
       }
     };
 
@@ -687,69 +717,101 @@ const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
     };
   }, []);
 
-  const handleSelect = (option) => {
-    onChange(option);
-    setIsOpen(false);
-  };
-
   const formatOptionDisplay = (option) => {
-    // If it's a simple word like "Open", "Drip", just capitalize it
-    if (!option.includes("-") && !option.includes(" ")) {
-      return option;
-    }
-    // Format compound words (e.g., "open-irrigation" -> "Open Irrigation")
+    if (!option) return "";
     return option
       .split("-")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
+  };
+
+  const filteredOptions = options.filter((option) =>
+    formatOptionDisplay(option)
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  const handleInputChange = (e) => {
+    const inputValue = e.target.value;
+    setSearchTerm(inputValue);
+    onChange(inputValue);
+    setIsOpen(true);
+  };
+
+  const handleSelect = (option) => {
+    onChange(option);
+    setSearchTerm("");
+    setIsOpen(false);
+    setIsFocused(false);
+  };
+
+  const handleInputFocus = () => {
+    setIsFocused(true);
+    setIsOpen(true);
+  };
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+    if (!isOpen) {
+      inputRef.current?.focus();
+    }
   };
 
   return (
     <div className="flex flex-col gap-1" ref={dropdownRef}>
       <label className="font-semibold text-sm">{label}</label>
       <div className="relative">
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className={`
-            w-full px-3 py-2 bg-[#344E41] text-white rounded
-            border border-[#344e41] outline-none
-            flex items-center justify-between
-            hover:bg-[#2b3e33] transition-all duration-200
-            focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
-            ${!value ? 'text-gray-300' : 'text-white'}
-          `}
-        >
-          <span className="truncate">
-            {value ? formatOptionDisplay(value) : placeholder}
-          </span>
-          <ChevronDown
-            size={20}
-            className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
-              }`}
+        <div className="relative">
+          <input
+            ref={inputRef}
+            type="text"
+            value={
+              isFocused ? searchTerm : value ? formatOptionDisplay(value) : ""
+            }
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            placeholder={placeholder}
+            className="w-full px-3 py-2 bg-[#344E41] text-white rounded border border-[#344e41] outline-none placeholder-gray-300 hover:bg-[#2b3e33] transition-all duration-200 focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50 pr-10"
           />
-        </button>
+          <button
+            type="button"
+            onClick={toggleDropdown}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors"
+          >
+            <ChevronDown
+              size={20}
+              className={`transition-transform duration-200 ${
+                isOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+        </div>
 
-        {/* Dropdown Menu */}
         {isOpen && (
           <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-lg max-h-60 overflow-auto">
-            {options.length > 0 ? (
-              options.map((option, index) => (
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option, index) => (
                 <div
                   key={option}
                   onClick={() => handleSelect(option)}
                   className={`
                     px-3 py-2 cursor-pointer text-white
                     hover:bg-[#2b3e33] transition-colors duration-150
-                    ${value === option ? "bg-[#2b3e33]" : ""}
-                    ${index !== options.length - 1 ? "border-b border-[#2b3e33]" : ""}
+                    ${value === option ? "bg-[#2b3e33] font-semibold" : ""}
+                    ${
+                      index !== filteredOptions.length - 1
+                        ? "border-b border-[#2b3e33]"
+                        : ""
+                    }
                   `}
                 >
                   {formatOptionDisplay(option)}
                 </div>
               ))
             ) : (
-              <div className="px-3 py-2 text-gray-300">No options available</div>
+              <div className="px-3 py-2 text-gray-300">
+                {searchTerm ? "No matching options" : "No options available"}
+              </div>
             )}
           </div>
         )}

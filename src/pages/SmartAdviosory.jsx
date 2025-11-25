@@ -335,7 +335,7 @@ const SmartAdvisory = () => {
 
                   <NDVIChartCard />
 
-                  <div className="grid grid-cols-2 gap-4 w-full">
+                  <div className="flex flex-col gap-4 w-full">
                     <div className="bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
                       <IrrigationStatusCard />
                     </div>
@@ -348,9 +348,9 @@ const SmartAdvisory = () => {
                     <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
                       <PestDiseaseCard />
                     </div>
-                    <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-x-auto">
+                    {/* <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-x-auto">
                       <Fertigation />
-                    </div>
+                    </div> */}
                     <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-x-auto">
                       <Soiltemp />
                     </div>
@@ -391,9 +391,10 @@ const SmartAdvisory = () => {
                       <IrrigationStatusCard />
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-                    <NutrientManagement />
+                   
+                     <NutrientManagement />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 w-full">
+                  
                     <WeatherCard />
                     <PestDiseaseCard />
                   </div>

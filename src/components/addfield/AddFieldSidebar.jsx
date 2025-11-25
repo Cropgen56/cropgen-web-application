@@ -47,7 +47,6 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
       typeOfFarming,
     });
 
-    // Reset all fields
     setFarmName("");
     setCropName("");
     setVariety("");
@@ -61,7 +60,6 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   return (
     <>
       {isTabletView ? (
-        // 📱 Tablet View
         <div className="flex-1 flex flex-col justify-center items-center px-4 pb-4 text-[#344e41] z-[9999]">
           <div className="flex justify-center items-center p-2">
             <div className="w-full max-w-6xl bg-white shadow-lg rounded-xl p-6 mx-auto">
@@ -70,51 +68,45 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
               </h5>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* FARM NAME */}
                 <FormInput
                   label="Farm Name"
                   value={farmName}
                   onChange={setFarmName}
                   placeholder="Enter farm name"
                 />
-                {/* CROP NAME */}
-                <CustomDropdown
+                <AutocompleteDropdown
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
                   options={crops.map((crop) => crop.cropName).sort((a, b) => a.localeCompare(b))}
-                  placeholder="Select Crop Name"
+                  placeholder="Search or select crop"
                 />
-                {/* VARIETY */}
                 <FormInput
                   label="Variety"
                   value={variety}
                   onChange={setVariety}
                   placeholder="Enter crop variety"
                 />
-                {/* SOWING DATE */}
                 <CustomDatePicker
                   label="Sowing Date"
                   value={sowingDate}
                   onChange={setSowingDate}
                   placeholder="Select sowing date"
-                  maxDate={new Date()} // Prevent future dates
+                  maxDate={new Date()}
                 />
-                {/* TYPE OF IRRIGATION */}
-                <CustomDropdown
+                <AutocompleteDropdown
                   label="Type Of Irrigation"
                   value={typeOfIrrigation}
                   onChange={setTypeOfIrrigation}
                   options={["open-irrigation", "drip-irrigation", "sprinkler"]}
-                  placeholder="Select Irrigation Type"
+                  placeholder="Search or select irrigation"
                 />
-                {/* TYPE OF FARMING */}
-                <CustomDropdown
+                <AutocompleteDropdown
                   label="Type Of Farming"
                   value={typeOfFarming}
                   onChange={setTypeOfFarming}
                   options={["Organic", "Inorganic", "Integrated"]}
-                  placeholder="Select Farming Type"
+                  placeholder="Search or select farming type"
                 />
               </div>
 
@@ -130,7 +122,6 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
           </div>
         </div>
       ) : (
-        // 🖥️ Desktop View
         <div className="w-[22vw] m-0 p-0 h-full">
           <div className="flex flex-row justify-between items-center border-b border-[#344e41] p-2.5 cursor-pointer">
             <h2 className="flex items-center gap-1 text-base text-[#344e41]">
@@ -154,12 +145,12 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   onChange={setFarmName}
                   placeholder="Enter farm name"
                 />
-                <CustomDropdown
+                <AutocompleteDropdown
                   label="Crop Name"
                   value={cropName}
                   onChange={setCropName}
                   options={crops.map((crop) => crop.cropName).sort((a, b) => a.localeCompare(b))}
-                  placeholder="Select Crop Name"
+                  placeholder="Search or select crop"
                 />
                 <FormInput
                   label="Variety"
@@ -172,21 +163,21 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   value={sowingDate}
                   onChange={setSowingDate}
                   placeholder="Select sowing date"
-                  maxDate={new Date()} // Prevent future dates
+                  maxDate={new Date()}
                 />
-                <CustomDropdown
+                <AutocompleteDropdown
                   label="Type Of Irrigation"
                   value={typeOfIrrigation}
                   onChange={setTypeOfIrrigation}
                   options={["open-irrigation", "drip-irrigation", "sprinkler"]}
-                  placeholder="Select Irrigation Type"
+                  placeholder="Select irrigation"
                 />
-                <CustomDropdown
+                <AutocompleteDropdown
                   label="Type Of Farming"
                   value={typeOfFarming}
                   onChange={setTypeOfFarming}
                   options={["Organic", "Inorganic", "Integrated"]}
-                  placeholder="Select Farming Type"
+                  placeholder=" Select farming type"
                 />
               </div>
             </form>
@@ -206,7 +197,6 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   );
 };
 
-// Reusable form input
 const FormInput = ({
   label,
   value,
@@ -225,7 +215,7 @@ const FormInput = ({
     />
   </div>
 );
-// Custom Date Picker Component
+
 const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -240,7 +230,6 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
   const daysInMonth = (month, year) => new Date(year, month + 1, 0).getDate();
   const firstDayOfMonth = (month, year) => new Date(year, month, 1).getDay();
 
-  // Close date picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
@@ -299,12 +288,10 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
     const startDay = firstDayOfMonth(currentMonth, currentYear);
     const days = [];
     
-    // Add empty cells for days before month starts
     for (let i = 0; i < startDay; i++) {
       days.push(<div key={`empty-${i}`} className="h-6 w-6"></div>);
     }
 
-    // Add days of the month
     for (let day = 1; day <= totalDays; day++) {
       const isSelected = value && 
         new Date(value).getDate() === day &&
@@ -372,10 +359,8 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
           />
         </button>
 
-        {/* Date Picker Calendar - Compact */}
         {isOpen && (
           <div className="absolute z-50 w-56 mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-lg p-2">
-            {/* Month/Year Navigation */}
             <div className="flex items-center justify-between mb-2 text-white">
               <button
                 type="button"
@@ -396,7 +381,6 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
               </button>
             </div>
 
-            {/* Days of Week Headers */}
             <div className="grid grid-cols-7 gap-0.5 mb-1">
               {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
                 <div key={`${day}-${index}`} className="h-5 w-6 flex items-center justify-center text-xs text-gray-300">
@@ -405,12 +389,10 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
               ))}
             </div>
 
-            {/* Calendar Days */}
             <div className="grid grid-cols-7 gap-0.5">
               {renderCalendar()}
             </div>
 
-            {/* Today Button */}
             <div className="mt-2 pt-2 border-t border-[#2b3e33]">
               <button
                 type="button"
@@ -432,18 +414,18 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
   );
 };
 
-
-
-// Custom Dropdown Component
-const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
+const AutocompleteDropdown = ({ label, value, onChange, options, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
   const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
+        setIsFocused(false);
       }
     };
 
@@ -453,65 +435,97 @@ const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
     };
   }, []);
 
-  const handleSelect = (option) => {
-    onChange(option);
-    setIsOpen(false);
-  };
-
   const formatOptionDisplay = (option) => {
-    // Format the display text (e.g., "open-irrigation" -> "Open Irrigation")
     return option
       .split("-")
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
 
+  const filteredOptions = options.filter(option =>
+    formatOptionDisplay(option).toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleInputChange = (e) => {
+    const inputValue = e.target.value;
+    setSearchTerm(inputValue);
+    onChange(inputValue);
+    setIsOpen(true);
+  };
+
+  const handleSelect = (option) => {
+    onChange(option);
+    setSearchTerm("");
+    setIsOpen(false);
+    setIsFocused(false);
+  };
+
+  const handleInputFocus = () => {
+    setIsFocused(true);
+    setIsOpen(true);
+  };
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+    if (!isOpen) {
+      inputRef.current?.focus();
+    }
+  };
+
   return (
     <div className="flex flex-col gap-1" ref={dropdownRef}>
       <label className="font-semibold text-sm">{label}</label>
       <div className="relative">
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className={`
-            w-full px-3 py-2 bg-[#344E41] text-white rounded
-            border border-[#344e41] outline-none
-            flex items-center justify-between
-            hover:bg-[#2b3e33] transition-all duration-200
-            focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
-            ${!value ? 'text-gray-300' : 'text-white'}
-          `}
-        >
-          <span className="truncate">
-            {value ? formatOptionDisplay(value) : placeholder}
-          </span>
-          <ChevronDown
-            size={20}
-            className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""
-              }`}
+        <div className="relative">
+          <input
+            ref={inputRef}
+            type="text"
+            value={isFocused ? searchTerm : (value ? formatOptionDisplay(value) : "")}
+            onChange={handleInputChange}
+            onFocus={handleInputFocus}
+            placeholder={placeholder}
+            className={`
+              w-full px-3 py-2 bg-[#344E41] text-white rounded
+              border border-[#344e41] outline-none
+              placeholder-gray-300
+              hover:bg-[#2b3e33] transition-all duration-200
+              focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
+              pr-10
+            `}
           />
-        </button>
+          <button
+            type="button"
+            onClick={toggleDropdown}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-white hover:text-gray-300 transition-colors"
+          >
+            <ChevronDown
+              size={20}
+              className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+        </div>
 
-        {/* Dropdown Menu */}
         {isOpen && (
           <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-lg max-h-60 overflow-auto">
-            {options.length > 0 ? (
-              options.map((option, index) => (
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((option, index) => (
                 <div
                   key={option}
                   onClick={() => handleSelect(option)}
                   className={`
                     px-3 py-2 cursor-pointer text-white
                     hover:bg-[#2b3e33] transition-colors duration-150
-                    ${value === option ? "bg-[#2b3e33]" : ""}
-                    ${index !== options.length - 1 ? "border-b border-[#2b3e33]" : ""}
+                    ${value === option ? "bg-[#2b3e33] font-semibold" : ""}
+                    ${index !== filteredOptions.length - 1 ? "border-b border-[#2b3e33]" : ""}
                   `}
                 >
                   {formatOptionDisplay(option)}
                 </div>
               ))
             ) : (
-              <div className="px-3 py-2 text-gray-300">No options available</div>
+              <div className="px-3 py-2 text-gray-300">
+                {searchTerm ? "No matching options" : "No options available"}
+              </div>
             )}
           </div>
         )}

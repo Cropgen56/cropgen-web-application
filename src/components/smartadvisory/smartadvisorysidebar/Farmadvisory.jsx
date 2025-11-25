@@ -152,15 +152,6 @@ export default function FarmAdvisoryCard() {
                 </p>
               </div>
 
-              {tip.badgeSrc ? (
-                <div className="pt-[2px]">
-                  <img
-                    src={tip.badgeSrc}
-                    alt="badge"
-                    className="w-10 h-10 rounded"
-                  />
-                </div>
-              ) : null}
             </div>
           ))}
         </div>
