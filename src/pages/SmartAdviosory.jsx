@@ -10,23 +10,21 @@ import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import SmartAdvisorySidebar from "../components/smartadvisory/smartadvisorysidebar/SmartAdvisorySidebar";
 import { getFarmFields } from "../redux/slices/farmSlice";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import img1 from "../assets/image/Group 31.png";
 import { useNavigate } from "react-router-dom";
-import SatelliteIndexScroll from "../components/smartadvisory/smartadvisorysidebar/SatelliteIndexScroll";
 import NDVIChartCard from "../components/smartadvisory/smartadvisorysidebar/Ndvigrapgh";
 import IrrigationStatusCard from "../components/smartadvisory/smartadvisorysidebar/IrrigationStatusCard";
 import NutrientManagement from "../components/smartadvisory/smartadvisorysidebar/NutrientManagement";
 import WeatherCard from "../components/smartadvisory/smartadvisorysidebar/WeatherCard";
 import PestDiseaseCard from "../components/smartadvisory/smartadvisorysidebar/PestDiseaseCard";
 import FarmAdvisoryCard from "../components/smartadvisory/smartadvisorysidebar/Farmadvisory";
-import Fertigation from "../components/smartadvisory/smartadvisorysidebar/Fertigation";
 import Soiltemp from "../components/smartadvisory/smartadvisorysidebar/Soiltemp";
 import useIsTablet from "../components/smartadvisory/smartadvisorysidebar/Istablet";
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
+import SmartAdvisoryMap from "../components/smartadvisory/SmartAdvisoryMap";
 import {
   checkFieldSubscriptionStatus,
   setCurrentField,
@@ -37,7 +35,6 @@ import {
   fetchSmartAdvisory,
   runSmartAdvisory,
 } from "../redux/slices/smartAdvisorySlice";
-
 import {
   fetchHistoricalWeather,
   fetchForecastData,
@@ -56,6 +53,7 @@ function getLastRunTimestamp(fieldId) {
     return 0;
   }
 }
+
 function setLastRunTimestamp(fieldId, ts = Date.now()) {
   try {
     localStorage.setItem(lastRunKeyFor(fieldId), String(ts));
@@ -87,6 +85,14 @@ const SmartAdvisory = () => {
 
   const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
   const mountedRef = useRef(false);
+
+  // Prepare selected field details for the map component
+  const selectedFieldsDetials = useMemo(() => {
+    if (selectedField) {
+      return [selectedField];
+    }
+    return [];
+  }, [selectedField]);
 
   useEffect(() => {
     dispatch(fetchAOIs());
@@ -145,7 +151,6 @@ const SmartAdvisory = () => {
 
     const matchingAOI = aois.find((a) => a.name === fieldId && a.id);
     if (!matchingAOI) {
-      // no geometry available — still rely on DB fetch only
       return;
     }
 
@@ -161,12 +166,9 @@ const SmartAdvisory = () => {
       .unwrap()
       .then(() => {
         setLastRunTimestamp(fieldId, Date.now());
-        // after generation, refresh from DB
         dispatch(fetchSmartAdvisory({ fieldId })).catch(() => {});
       })
-      .catch(() => {
-        // fail silently, will retry on next mount/field change
-      });
+      .catch(() => {});
   }, [selectedField, aois, authToken, dispatch]);
 
   useEffect(() => {
@@ -248,8 +250,6 @@ const SmartAdvisory = () => {
     );
   }
 
-  console.log("test ", selectedField);
-
   return (
     <>
       <SubscriptionModal
@@ -312,25 +312,18 @@ const SmartAdvisory = () => {
               title="Smart Advisory System"
             >
               {isTablet ? (
+                // Tablet Layout
                 <div className="flex flex-col gap-4 w-full max-w-[1024px] mx-auto">
-                  <div className="w-full h-[300px] rounded-lg overflow-hidden shadow relative">
-                    <MapContainer
-                      center={[reportdata.lat, reportdata.lng]}
-                      zoom={15}
-                      className="w-full h-full z-0"
-                    >
-                      <TileLayer
-                        attribution="©️ Google Maps"
-                        url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
-                        subdomains={["mt0", "mt1", "mt2", "mt3"]}
-                      />
-                      <Marker position={[reportdata.lat, reportdata.lng]}>
-                        <Popup>{reportdata.field}</Popup>
-                      </Marker>
-                    </MapContainer>
-                    <div className="absolute bottom-1 left-2 right-2 z-[1000]">
-                      <SatelliteIndexScroll />
-                    </div>
+                  {/* Map Component */}
+                  <div className="w-full h-[350px] rounded-lg overflow-hidden shadow relative">
+                    <SmartAdvisoryMap
+                      fields={fields}
+                      selectedField={selectedField}
+                      setSelectedField={setSelectedField}
+                      selectedFieldsDetials={selectedFieldsDetials}
+                      showFieldDropdown={false}
+                      height="350px"
+                    />
                   </div>
 
                   <NDVIChartCard />
@@ -348,9 +341,6 @@ const SmartAdvisory = () => {
                     <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
                       <PestDiseaseCard />
                     </div>
-                    {/* <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-x-auto">
-                      <Fertigation />
-                    </div> */}
                     <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-x-auto">
                       <Soiltemp />
                     </div>
@@ -361,27 +351,20 @@ const SmartAdvisory = () => {
                   </div>
                 </div>
               ) : (
+                // Desktop Layout
                 <div className="flex flex-col gap-4 w-full">
                   <div className="flex flex-col lg:flex-row gap-4">
                     <div className="flex flex-col lg:w-[65%]">
-                      <div className="w-full h-[300px] rounded-lg overflow-hidden shadow relative">
-                        <MapContainer
-                          center={[reportdata.lat, reportdata.lng]}
-                          zoom={15}
-                          className="w-full h-full z-0"
-                        >
-                          <TileLayer
-                            attribution="©️ Google Maps"
-                            url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
-                            subdomains={["mt0", "mt1", "mt2", "mt3"]}
-                          />
-                          <Marker position={[reportdata.lat, reportdata.lng]}>
-                            <Popup>{reportdata.field}</Popup>
-                          </Marker>
-                        </MapContainer>
-                        <div className="absolute bottom-1 left-2 right-2 z-[1000]">
-                          <SatelliteIndexScroll />
-                        </div>
+                      {/* Map Component */}
+                      <div className="w-full h-[350px] rounded-lg overflow-hidden shadow relative">
+                        <SmartAdvisoryMap
+                          fields={fields}
+                          selectedField={selectedField}
+                          setSelectedField={setSelectedField}
+                          selectedFieldsDetials={selectedFieldsDetials}
+                          showFieldDropdown={false}
+                          height="350px"
+                        />
                       </div>
 
                       <NDVIChartCard />
@@ -391,18 +374,15 @@ const SmartAdvisory = () => {
                       <IrrigationStatusCard />
                     </div>
                   </div>
-                   
-                     <NutrientManagement />
+
+                  <NutrientManagement />
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 w-full">
-                  
                     <WeatherCard />
                     <PestDiseaseCard />
                   </div>
 
                   <div className="flex flex-row gap-4 w-full">
-                    {/* <div className="w-[32%] overflow-x-auto">
-                      <Fertigation />
-                    </div> */}
                     <div className="w-full overflow-x-auto">
                       <Soiltemp />
                     </div>
