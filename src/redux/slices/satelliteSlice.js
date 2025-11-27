@@ -160,12 +160,6 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
   "satellite/fetchIndexTimeSeriesSummary",
   async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
     try {
-      console.log({
-        startDate,
-        endDate,
-        geometry,
-        index: "NDVI",
-      });
       const input = { startDate, endDate, geometry, index };
       const cacheKey = generateCacheKey("indexTimeSeriesSummary", null, input);
       const cached = await get(cacheKey);

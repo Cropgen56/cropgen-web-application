@@ -1,8 +1,8 @@
-// operationSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   createOperationAPI,
-  getOperationsByFarmFieldAPI, deleteOperationAPI
+  getOperationsByFarmFieldAPI,
+  deleteOperationAPI,
 } from "../../api/operationApi";
 
 // Existing async thunk for creating operation
@@ -105,9 +105,6 @@ const operationSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Failed to delete operation";
       });
-
-
-
   },
 });
 

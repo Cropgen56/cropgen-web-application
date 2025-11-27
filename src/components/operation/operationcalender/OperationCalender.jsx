@@ -5,7 +5,10 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import moment from "moment";
 import EventForm from "../operationform/EventForm";
-import { getOperationsByFarmField, deleteOperation } from "../../../redux/slices/operationSlice";
+import {
+  getOperationsByFarmField,
+  deleteOperation,
+} from "../../../redux/slices/operationSlice";
 import { Operation } from "../../../assets/Icons";
 import { RiDeleteBin6Line } from "react-icons/ri";
 // import Days from "react-calendar/dist/cjs/MonthView/Days.js";
@@ -24,7 +27,6 @@ const FarmerScheduler = (selectedField) => {
   const [currentMonth, setCurrentMonth] = useState(moment());
 
   useEffect(() => {
-    console.log("Fetched operations:", operations);
     const mappedEvents = operations.map((operation) => {
       const startDateTime = moment(
         `${operation.operationDate} ${operation.operationTime}`,
@@ -139,7 +141,9 @@ const FarmerScheduler = (selectedField) => {
   const DeleteConfirmationModal = ({ onCancel, onConfirm }) => (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg text-center">
-        <h3 className="text-lg font-semibold mb-4 text-[#344e41]">Delete Operation?</h3>
+        <h3 className="text-lg font-semibold mb-4 text-[#344e41]">
+          Delete Operation?
+        </h3>
         <p className="text-sm text-gray-600 mb-6">
           Are you sure you want to delete this operation?
         </p>
@@ -160,8 +164,6 @@ const FarmerScheduler = (selectedField) => {
       </div>
     </div>
   );
-
-
 
   return (
     <div className="h-screen bg-[#344e41] text-white overflow-y-auto no-scrollbar p-4">
@@ -269,7 +271,9 @@ const FarmerScheduler = (selectedField) => {
                 <div
                   key={event.id}
                   onClick={() => {
-                    const selectedDate = moment(event.start).format("YYYY-MM-DD");
+                    const selectedDate = moment(event.start).format(
+                      "YYYY-MM-DD"
+                    );
                     const selectedTime = moment(event.start).format("HH:mm:ss");
 
                     setSelectedEvent({
@@ -298,7 +302,9 @@ const FarmerScheduler = (selectedField) => {
                   </div>
                   <div className="text-xs leading-tight">
                     <span className="font-semibold">Created:</span>{" "}
-                    {moment(event.extendedProps.createdAt).format("hh:mm A, MMM D")}
+                    {moment(event.extendedProps.createdAt).format(
+                      "hh:mm A, MMM D"
+                    )}
                   </div>
 
                   {/* Delete button (no functionality yet) */}
@@ -340,6 +346,3 @@ const FarmerScheduler = (selectedField) => {
 };
 
 export default FarmerScheduler;
-
-
-

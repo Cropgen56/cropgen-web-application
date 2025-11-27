@@ -371,7 +371,7 @@ export default function PricingOverlay({
               fieldName: selectedField?.name,
               planName: plan.name,
               features: plan.features || [],
-              daysLeft: plan.trialDays || 30, // Default to 30 days if not trial
+              daysLeft: plan.trialDays || 30,
               transactionId: response.razorpay_payment_id,
               subscriptionId: response.razorpay_subscription_id,
               isTrial: plan.isTrial,

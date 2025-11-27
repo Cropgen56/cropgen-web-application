@@ -1,5 +1,5 @@
 import axios from "axios";
-import api from "./index.js";
+import api from "./api.js";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:7070/v1";
 

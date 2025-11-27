@@ -35,7 +35,7 @@ const refreshLock = {
 
 export const refreshAccessToken = createAsyncThunk(
   "auth/refreshAccessToken",
-  async (_, { rejectWithValue, dispatch }) => {
+  async (_, { rejectWithValue }) => {
     try {
       await refreshLock.acquire();
       const response = await refreshToken();
@@ -43,7 +43,7 @@ export const refreshAccessToken = createAsyncThunk(
       if (!response.accessToken) {
         throw new Error("No access token in response");
       }
-      dispatch(decodeToken());
+
       refreshLock.release(null, response.accessToken);
       return response;
     } catch (error) {
@@ -54,7 +54,7 @@ export const refreshAccessToken = createAsyncThunk(
   {
     condition: (_, { getState }) => {
       const { auth } = getState();
-      return !auth.refreshPending && !auth.token;
+      return !auth.refreshPending;
     },
   }
 );

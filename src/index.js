@@ -10,14 +10,20 @@ import { Provider } from "react-redux";
 import store from "./redux/store";
 import ClarityScript from "./ClarityScript";
 import GtagScript from "./GtagScript";
+import AuthAutoRefresh from "./authroute/AuthAutoRefresh";
+import { attachStore } from "../src/api/api.js";
+
+attachStore(store);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <GoogleOAuthProvider clientId={process.env.REACT_APP_CLIENT_ID}>
     <Provider store={store}>
-      <ClarityScript />
-      <GtagScript />
-      <App />
+      <AuthAutoRefresh>
+        <ClarityScript />
+        <GtagScript />
+        <App />
+      </AuthAutoRefresh>
     </Provider>
   </GoogleOAuthProvider>
 );
