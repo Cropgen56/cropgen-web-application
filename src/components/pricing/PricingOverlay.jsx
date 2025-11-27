@@ -16,31 +16,12 @@ import {
   setPaymentSuccess,
 } from "../../redux/slices/subscriptionSlice.js";
 import { toast } from "react-toastify";
-import PlanCard from "./PlanCard.jsx";
+import PlanCard, { EnterprisePlanCard } from "./PlanCard.jsx";
 
 const USD_TO_INR = 83;
 const DEFAULT_AREA = 5;
 
 const FEATURE_DISPLAY_NAMES = {
-  // graphHistoricalData: "Graphs & Historical Data",
-  // satelliteCropMonitoring: "Satellite Crop Monitoring",
-  // weatherForecast: "Weather Forecast",
-  // soilMoistureTemp: "Soil Moisture & Temperature",
-  // growthStageTracking: "Growth Stage Tracking (BBCH)",
-  // advisory: "Fertilizer (NPK) Advisory",
-  // irrigationUpdates: "Irrigation Updates (ET-based)",
-  // pestDiseaseAlerts: "Pest & Disease Alerts",
-  // yieldPrediction: "Yield Prediction",
-  // harvestWindow: "Harvest Window Insights",
-  // insights: "Insights",
-  // soilFertilityAnalysis: "Soil Fertility Analysis",
-  // socCarbon: "SOC Analytics (Soil Organic Carbon)",
-  // advisoryControl: "Advisory Control",
-  // advisoryDelivery: "Advisory Delivery",
-  // weeklyReports: "Weekly Reports",
-  // operationsManagement: "Operations Management Dashboard",
-  // apiIntegration: "API/ERP Integration",
-  // enterpriseSupport: "Enterprise Support",
   satelliteImagery: "Satellite Imagery",
   cropHealthAndYield: "Crop Health & Yield Monitoring",
   soilAnalysisAndHealth: "Soil Analysis & Health",
@@ -270,10 +251,13 @@ export default function PricingOverlay({
     [subscriptions, billing, currency, userArea]
   );
 
+  // Create groups including Enterprise card
   const groups = useMemo(() => {
+    // Add a placeholder for Enterprise card
+    const allCards = [...adjusted, { isEnterprise: true, _id: "enterprise" }];
     const g = [];
-    for (let i = 0; i < adjusted.length; i += cardsPerGroup) {
-      g.push(adjusted.slice(i, i + cardsPerGroup));
+    for (let i = 0; i < allCards.length; i += cardsPerGroup) {
+      g.push(allCards.slice(i, i + cardsPerGroup));
     }
     return g;
   }, [adjusted, cardsPerGroup]);
@@ -499,9 +483,8 @@ export default function PricingOverlay({
               {/* Billing Toggle */}
               <div className="flex items-center gap-3">
                 <span
-                  className={`font-bold text-sm cursor-pointer transition-colors ${
-                    billing === "monthly" ? "text-white" : "text-gray-300"
-                  }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${billing === "monthly" ? "text-white" : "text-gray-300"
+                    }`}
                   onClick={() => setBilling("monthly")}
                 >
                   Monthly
@@ -513,17 +496,15 @@ export default function PricingOverlay({
                   className="relative flex items-center bg-gray-200 rounded-full w-14 h-7 cursor-pointer"
                 >
                   <div
-                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${
-                      billing === "monthly"
+                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${billing === "monthly"
                         ? "left-1 bg-[#344E41]"
                         : "left-7 bg-[#344E41]"
-                    }`}
+                      }`}
                   />
                 </div>
                 <span
-                  className={`font-bold text-sm cursor-pointer transition-colors ${
-                    billing === "yearly" ? "text-white" : "text-gray-300"
-                  }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${billing === "yearly" ? "text-white" : "text-gray-300"
+                    }`}
                   onClick={() => setBilling("yearly")}
                 >
                   Yearly
@@ -536,9 +517,8 @@ export default function PricingOverlay({
               {/* Currency Toggle */}
               <div className="flex items-center gap-3">
                 <span
-                  className={`font-bold text-sm cursor-pointer transition-colors ${
-                    currency === "USD" ? "text-white" : "text-gray-300"
-                  }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${currency === "USD" ? "text-white" : "text-gray-300"
+                    }`}
                   onClick={() => setCurrency("USD")}
                 >
                   Plan in $
@@ -550,17 +530,15 @@ export default function PricingOverlay({
                   className="relative flex items-center bg-gray-200 rounded-full w-14 h-7 cursor-pointer"
                 >
                   <div
-                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${
-                      currency === "USD"
+                    className={`absolute top-0.5 w-6 h-6 rounded-full transition-all ${currency === "USD"
                         ? "left-1 bg-[#344E41]"
                         : "left-7 bg-[#344E41]"
-                    }`}
+                      }`}
                   />
                 </div>
                 <span
-                  className={`font-bold text-sm cursor-pointer transition-colors ${
-                    currency === "INR" ? "text-white" : "text-gray-300"
-                  }`}
+                  className={`font-bold text-sm cursor-pointer transition-colors ${currency === "INR" ? "text-white" : "text-gray-300"
+                    }`}
                   onClick={() => setCurrency("INR")}
                 >
                   Plan in ₹
@@ -569,15 +547,19 @@ export default function PricingOverlay({
             </div>
 
             {/* Cards */}
-            <div className="flex justify-center gap-6">
-              {visibleGroup.map((p) => (
-                <PlanCard
-                  key={p._id}
-                  plan={p}
-                  selectedField={selectedField}
-                  onSubscribeClick={handleSubscribeClick}
-                />
-              ))}
+            <div className="flex justify-center gap-6 flex-wrap">
+              {visibleGroup.map((p) =>
+                p.isEnterprise ? (
+                  <EnterprisePlanCard key="enterprise" />
+                ) : (
+                  <PlanCard
+                    key={p._id}
+                    plan={p}
+                    selectedField={selectedField}
+                    onSubscribeClick={handleSubscribeClick}
+                  />
+                )
+              )}
             </div>
 
             {groups.length > 1 && (
@@ -599,6 +581,22 @@ export default function PricingOverlay({
                   <ChevronRight size={36} />
                 </button>
               </>
+            )}
+
+            {/* Pagination Dots */}
+            {groups.length > 1 && (
+              <div className="flex justify-center gap-2 mt-4">
+                {groups.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setGroupIndex(idx)}
+                    className={`w-2.5 h-2.5 rounded-full transition-all ${idx === groupIndex
+                        ? "bg-white scale-125"
+                        : "bg-white/40 hover:bg-white/60"
+                      }`}
+                  />
+                ))}
+              </div>
             )}
           </motion.div>
         </div>
