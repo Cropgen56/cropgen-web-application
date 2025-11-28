@@ -98,12 +98,10 @@ const CROP_GROWTH_DURATIONS = {
   Other: 13,
 };
 
-const generateCurveData = (interval, cropName, growthStages = []) => {
-  const totalWeeks =
-    CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other;
+const generateCurveData = (interval, cropName, growthStages = [], plantActivity = null) => {
+  const totalWeeks = CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other;
   const totalDays = totalWeeks * 7;
 
- 
   if (growthStages && growthStages.length > 0) {
     if (interval === "Days") {
       return growthStages.map((stage, i) => ({
@@ -116,7 +114,6 @@ const generateCurveData = (interval, cropName, growthStages = []) => {
       }));
     }
 
-    // Group by weeks if available
     const weeklyData = [];
     for (let week = 1; week <= totalWeeks; week++) {
       const weekStages = growthStages.filter(
@@ -143,20 +140,23 @@ const generateCurveData = (interval, cropName, growthStages = []) => {
     return weeklyData;
   }
 
-  // Fallback to generated data if no API data
-  if (interval === "Days") {
-    return Array.from({ length: totalDays }, (_, i) => ({
-      label: `Day ${i + 1}`,
-      height: Math.max(1, Math.sin(i / 10) * 3 + 4),
+  if (plantActivity) {
+    if (interval === "Days") {
+      return Array.from({ length: totalDays }, (_, i) => ({
+        label: `Day ${i + 1}`,
+        height: Math.max(1, Math.sin(i / 10) * 3 + 4),
+        index: i + 1,
+      }));
+    }
+
+    return Array.from({ length: totalWeeks }, (_, i) => ({
+      label: `Week ${i + 1}`,
+      height: 1 + i * 0.5,
       index: i + 1,
     }));
   }
 
-  return Array.from({ length: totalWeeks }, (_, i) => ({
-    label: `Week ${i + 1}`,
-    height: 1 + i * 0.5,
-    index: i + 1,
-  }));
+  return [];
 };
 
 const formatDayToWeekDay = (day) => {
@@ -165,16 +165,8 @@ const formatDayToWeekDay = (day) => {
   return `Week ${week}, Day ${dayOfWeek}`;
 };
 
-// Circular Loader Component
-const CircularLoader = ({ message = "Loading growth data..." }) => (
-  <div className="w-full h-[300px] bg-gray-100 rounded-2xl flex flex-col items-center justify-center">
-    <div className="w-12 h-12 border-4 border-gray-300 border-t-[#344E41] rounded-full animate-spin"></div>
-    <p className="mt-4 text-gray-600 text-sm font-medium">{message}</p>
-  </div>
-);
-
 // No Data Component
-const NoDataMessage = ({ message = "No growth data available" }) => (
+const NoDataMessage = ({ message = "No growth data available", subMessage = "Data will appear once available" }) => (
   <div className="w-full h-[300px] bg-gray-100 rounded-2xl flex flex-col items-center justify-center">
     <svg
       className="w-16 h-16 text-gray-400 mb-4"
@@ -190,37 +182,195 @@ const NoDataMessage = ({ message = "No growth data available" }) => (
       />
     </svg>
     <p className="text-gray-600 text-sm font-medium">{message}</p>
+    {subMessage && (
+      <p className="text-gray-400 text-xs mt-1">{subMessage}</p>
+    )}
+  </div>
+);
+
+// No Sowing Date Component
+const NoSowingDateMessage = () => (
+  <div className="w-full h-[300px] bg-gray-100 rounded-2xl flex flex-col items-center justify-center">
+    <svg
+      className="w-16 h-16 text-gray-400 mb-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>
+    <p className="text-gray-600 text-sm font-medium">
+      Sowing date not available
+    </p>
     <p className="text-gray-400 text-xs mt-1">
-      Data will appear once available
+      Please add sowing date to view growth data
     </p>
   </div>
 );
 
+// Error Component
+const ErrorMessage = ({ message = "Failed to load growth data" }) => (
+  <div className="w-full h-[300px] bg-gray-100 rounded-2xl flex flex-col items-center justify-center">
+    <svg
+      className="w-16 h-16 text-red-400 mb-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
+    </svg>
+    <p className="text-gray-600 text-sm font-medium">{message}</p>
+    <p className="text-gray-400 text-xs mt-1">
+      Please try again later
+    </p>
+  </div>
+);
+
+// Chart Component - Only renders when data is ready
+const GrowthChart = memo(({
+  data,
+  referenceLabel,
+  interval,
+  daysSinceSowing,
+  currentWeek,
+  plantActivity
+}) => {
+  const [tooltipPos, setTooltipPos] = useState(null);
+
+  if (!data || data.length === 0) {
+    return <NoDataMessage message="Growth data not available yet" />;
+  }
+
+  return (
+    <div className="w-full h-[300px] bg-gray-100 rounded-2xl relative">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart
+          data={data}
+          margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
+        >
+          <defs>
+            <linearGradient id="colorHeight" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={GRASS_COLOR_MAIN} stopOpacity={0.8} />
+              <stop offset="95%" stopColor={GRASS_COLOR_MAIN} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+
+          <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={false} />
+          <XAxis
+            dataKey="label"
+            axisLine={false}
+            tickLine={false}
+            tick={{
+              fill: "#333",
+              fontSize: "11px",
+              fontWeight: "600",
+            }}
+            interval={Math.max(0, Math.floor(data.length / 8))}
+          />
+          <YAxis hide />
+          <ReferenceLine
+            x={referenceLabel}
+            stroke={GRASS_COLOR_MAIN}
+            strokeWidth={2}
+          />
+
+          <ReferenceDot
+            x={referenceLabel}
+            y={data.find((d) => d.label === referenceLabel)?.height || 0}
+            r={3}
+            fill={GRASS_COLOR_MAIN}
+            isFront
+            label={({ viewBox }) => {
+              if (!viewBox) return null;
+              const { x, y } = viewBox;
+
+              if (!tooltipPos || tooltipPos.x !== x || tooltipPos.y !== y) {
+                requestAnimationFrame(() => {
+                  setTooltipPos({ x, y });
+                });
+              }
+              return null;
+            }}
+          />
+
+          <Area
+            type="monotone"
+            dataKey="height"
+            stroke={GRASS_COLOR_MAIN}
+            fill="url(#colorHeight)"
+            fillOpacity={1}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+
+      {tooltipPos && plantActivity && (
+        <div
+          className="absolute z-50 bg-[#344E41] text-white text-xs p-3 rounded shadow-xl max-w-[320px]"
+          style={{
+            left: Math.max(8, tooltipPos.x - 160),
+            top: Math.max(8, tooltipPos.y - 100),
+            transform: "translateZ(0)",
+          }}
+        >
+          <p className="font-bold text-sm mb-1">
+            {plantActivity.stageName || `BBCH ${plantActivity?.bbchStage ?? ""}`}
+          </p>
+          {plantActivity.bbchStage && (
+            <p className="text-xs text-gray-200 mb-1">
+              BBCH: {plantActivity.bbchStage}
+            </p>
+          )}
+          {plantActivity.description && (
+            <p className="text-xs text-gray-200 mb-1">
+              {plantActivity.description}
+            </p>
+          )}
+          <p className="italic text-gray-300 mt-1 text-xs">
+            {interval === "Days"
+              ? formatDayToWeekDay(daysSinceSowing)
+              : `Week ${currentWeek}`}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+});
+
+GrowthChart.displayName = "GrowthChart";
+
 const PlantGrowthActivity = memo(
   ({ selectedFieldsDetials = [], onSubscribe }) => {
     const advisoryState = useSelector((s) => s.smartAdvisory?.advisory || null);
-    const advisoryLoading = useSelector(
-      (s) => s.smartAdvisory?.loading || false
-    );
+    const advisoryLoading = useSelector((s) => s.smartAdvisory?.loading ?? true);
+    const advisoryError = useSelector((s) => s.smartAdvisory?.error || null);
     const hasCropGrowthMonitoring = useSelector(selectHasCropGrowthMonitoring);
 
     const field = selectedFieldsDetials[0] || {};
-    const cropName =
-      field?.cropName || advisoryState?.farmFieldId?.cropName || "Other";
+    const cropName = field?.cropName || advisoryState?.farmFieldId?.cropName || "Other";
 
-    const plantActivity =
-      advisoryState?.smartAdvisory?.plantGrowthActivity ||
-      advisoryState?.plantGrowthActivity ||
-      null;
+    const plantActivity = useMemo(() => {
+      return advisoryState?.smartAdvisory?.plantGrowthActivity ||
+        advisoryState?.plantGrowthActivity ||
+        null;
+    }, [advisoryState]);
 
-    // Get growth stages array if available from API
-    const growthStages =
-      advisoryState?.smartAdvisory?.growthStages ||
-      advisoryState?.growthStages ||
-      [];
+    const growthStages = useMemo(() => {
+      return advisoryState?.smartAdvisory?.growthStages ||
+        advisoryState?.growthStages ||
+        [];
+    }, [advisoryState]);
 
-    const sowingDateStr =
-      field?.sowingDate || advisoryState?.farmFieldId?.sowingDate || null;
+    const sowingDateStr = field?.sowingDate || advisoryState?.farmFieldId?.sowingDate || null;
     const targetDateStr = advisoryState?.targetDate || new Date().toISOString();
 
     const { daysSinceSowing, currentWeek } = useMemo(() => {
@@ -252,37 +402,72 @@ const PlantGrowthActivity = memo(
 
     const [interval, setInterval] = useState("Weeks");
 
-    // Generate data only if we have plant activity or growth stages
-    const data = useMemo(() => {
-      if (!plantActivity && growthStages.length === 0) {
+    // Determine the current state
+    const loadingState = useMemo(() => {
+      if (advisoryLoading) {
+        return "loading";
+      }
+
+      if (advisoryError) {
+        return "error";
+      }
+
+      if (!sowingDateStr) {
+        return "no-sowing-date";
+      }
+
+      const hasPlantActivity = plantActivity !== null && plantActivity !== undefined;
+      const hasGrowthStages = growthStages && growthStages.length > 0;
+
+      if (!hasPlantActivity && !hasGrowthStages) {
+        return "no-data";
+      }
+
+      return "ready";
+    }, [advisoryLoading, advisoryError, sowingDateStr, plantActivity, growthStages]);
+
+    const chartData = useMemo(() => {
+      if (loadingState !== "ready") {
         return [];
       }
-      return generateCurveData(interval, cropName, growthStages);
-    }, [interval, cropName, plantActivity, growthStages]);
+      return generateCurveData(interval, cropName, growthStages, plantActivity);
+    }, [loadingState, interval, cropName, growthStages, plantActivity]);
 
-    const referenceLabel =
-      interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
+    const referenceLabel = interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
 
-    const [tooltipPos, setTooltipPos] = useState(null);
+    const isLoading = loadingState === "loading";
 
-    // Check if data is loading
-    const isLoading = advisoryLoading;
+    // Render chart content based on loading state
+    const renderChartContent = () => {
+      switch (loadingState) {
+        case "loading":
+          return <PlantGrowthSkeleton />;
 
-    // Check if we have valid data to display
-    const hasData = plantActivity || growthStages.length > 0;
+        case "error":
+          return <ErrorMessage message={advisoryError || "Failed to load growth data"} />;
 
-    // No sowing date available
-    if (!sowingDateStr) {
-      return (
-        <div className="w-full flex justify-center mt-4">
-          <div className="relative w-full max-w-4xl rounded-2xl shadow-lg bg-white p-4 text-center">
-            <div className="text-gray-800 text-sm">
-              Sowing date not available for this field.
-            </div>
-          </div>
-        </div>
-      );
-    }
+        case "no-sowing-date":
+          return <NoSowingDateMessage />;
+
+        case "no-data":
+          return <NoDataMessage message="Growth data not available yet" />;
+
+        case "ready":
+          return (
+            <GrowthChart
+              data={chartData}
+              referenceLabel={referenceLabel}
+              interval={interval}
+              daysSinceSowing={daysSinceSowing}
+              currentWeek={currentWeek}
+              plantActivity={plantActivity}
+            />
+          );
+
+        default:
+          return <PlantGrowthSkeleton />;
+      }
+    };
 
     return (
       <PremiumContentWrapper
@@ -292,15 +477,24 @@ const PlantGrowthActivity = memo(
       >
         <div className="w-full flex mt-6">
           <div className="relative w-full rounded-2xl shadow-lg flex flex-col overflow-hidden p-3 md:p-5 bg-white">
+            {/* Header - Always visible */}
             <div className="w-full mb-4 flex items-start justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-[#344E41] m-0">
                   Plant Growth Activity
                 </h2>
-                <div className="text-sm font-bold text-[#344E41] mt-2">
-                  {cropName}
-                </div>
-                {hasData && (
+                
+                {/* Crop name - show skeleton placeholder while loading */}
+                {isLoading ? (
+                  <div className="h-5 w-24 bg-gray-200 rounded animate-pulse mt-2" />
+                ) : (
+                  <div className="text-sm font-bold text-[#344E41] mt-2">
+                    {cropName}
+                  </div>
+                )}
+
+                {/* Stage details - only show when data is ready */}
+                {loadingState === "ready" && plantActivity && (
                   <>
                     <div className="text-sm text-gray-700 mt-1">
                       {plantActivity?.stageName
@@ -314,144 +508,30 @@ const PlantGrowthActivity = memo(
                     )}
                   </>
                 )}
+
+                {/* Loading indicator for stage details */}
+                {isLoading && (
+                  <div className="mt-1 space-y-1">
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                    <div className="h-3 w-48 bg-gray-200 rounded animate-pulse" />
+                  </div>
+                )}
               </div>
 
+              {/* Interval selector */}
               <select
                 value={interval}
                 onChange={(e) => setInterval(e.target.value)}
-                className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer"
-                disabled={isLoading || !hasData}
+                className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loadingState !== "ready"}
               >
                 <option value="Days">Days</option>
                 <option value="Weeks">Weeks</option>
               </select>
             </div>
 
-
-            {isLoading && <CircularLoader message="Loading growth data..." />}
-
-
-            {!isLoading && !hasData && (
-              <NoDataMessage message="Growth data not available yet" />
-            )}
-
-       
-            {!isLoading && hasData && data.length > 0 && (
-              <div className="w-full h-[300px] bg-gray-100 rounded-2xl relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={data}
-                    margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="colorHeight"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor={GRASS_COLOR_MAIN}
-                          stopOpacity={0.8}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor={GRASS_COLOR_MAIN}
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-
-                    <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={false} />
-                    <XAxis
-                      dataKey="label"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{
-                        fill: "#333",
-                        fontSize: "11px",
-                        fontWeight: "600",
-                      }}
-                      interval={Math.max(0, Math.floor(data.length / 8))}
-                    />
-                    <YAxis hide />
-                    <ReferenceLine
-                      x={referenceLabel}
-                      stroke={GRASS_COLOR_MAIN}
-                      strokeWidth={2}
-                    />
-
-                    <ReferenceDot
-                      x={referenceLabel}
-                      y={
-                        data.find((d) => d.label === referenceLabel)?.height ||
-                        0
-                      }
-                      r={3}
-                      fill={GRASS_COLOR_MAIN}
-                      isFront
-                      label={({ viewBox }) => {
-                        if (!viewBox) return null;
-                        const { x, y } = viewBox;
-
-                        if (
-                          !tooltipPos ||
-                          tooltipPos.x !== x ||
-                          tooltipPos.y !== y
-                        ) {
-                          requestAnimationFrame(() => {
-                            setTooltipPos({ x, y });
-                          });
-                        }
-                        return null;
-                      }}
-                    />
-
-                    <Area
-                      type="monotone"
-                      dataKey="height"
-                      stroke={GRASS_COLOR_MAIN}
-                      fill="url(#colorHeight)"
-                      fillOpacity={1}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-
-                {/* Tooltip near the reference point */}
-                {tooltipPos && plantActivity && (
-                  <div
-                    className="absolute z-50 bg-[#344E41] text-white text-xs p-3 rounded shadow-xl max-w-[320px]"
-                    style={{
-                      left: Math.max(8, tooltipPos.x - 160),
-                      top: Math.max(8, tooltipPos.y - 100),
-                      transform: "translateZ(0)",
-                    }}
-                  >
-                    <p className="font-bold text-sm mb-1">
-                      {plantActivity.stageName ||
-                        `BBCH ${plantActivity?.bbchStage ?? ""}`}
-                    </p>
-                    {plantActivity.bbchStage && (
-                      <p className="text-xs text-gray-200 mb-1">
-                        BBCH: {plantActivity.bbchStage}
-                      </p>
-                    )}
-                    {plantActivity.description && (
-                      <p className="text-xs text-gray-200 mb-1">
-                        {plantActivity.description}
-                      </p>
-                    )}
-                    <p className="italic text-gray-300 mt-1 text-xs">
-                      {interval === "Days"
-                        ? formatDayToWeekDay(daysSinceSowing)
-                        : `Week ${currentWeek}`}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Chart Content Area - Shows skeleton/error/data based on state */}
+            {renderChartContent()}
           </div>
         </div>
       </PremiumContentWrapper>
