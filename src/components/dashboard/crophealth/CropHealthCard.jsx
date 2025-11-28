@@ -4,20 +4,19 @@ import Card from "react-bootstrap/Card";
 import * as turf from "@turf/turf";
 import SoilAnalysisChart from "./SoilAnalysisChart.jsx";
 import SoilHealthChart from "./SoilHealthChart.jsx";
-// REMOVED: fetchSoilData import
 import CropHealthStatusBar from "./CropHealthStatusBar.jsx";
 import { fetchCrops } from "../../../redux/slices/cropSlice.js";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
-import { selectHasCropHealthAndYield } from "../../../redux/slices/membershipSlice.js";
+// import { selectHasCropHealthAndYield } from "../../../redux/slices/membershipSlice.js";
 
-const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe }) => {
+const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe, hasCropHealthAndYield  }) => {
   const cropDetials = selectedFieldsDetials?.[0];
   const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
   const dispatch = useDispatch();
 
   const { crops } = useSelector((state) => state.crops);
 
-  const hasCropHealthAndYield = useSelector(selectHasCropHealthAndYield);
+  // const hasCropHealthAndYield = useSelector(selectHasCropHealthAndYield);
 
   const advisory = useSelector((state) => state.smartAdvisory.advisory);
   const advisoryLoading = useSelector((state) => state.smartAdvisory.loading);

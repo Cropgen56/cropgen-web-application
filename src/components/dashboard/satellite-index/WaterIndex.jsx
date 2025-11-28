@@ -30,7 +30,7 @@ import { selectHasWaterIndices } from "../../../redux/slices/membershipSlice";
 const WATER_COLOR_MAIN = "#38bdf8";
 const WATER_COLOR_LIGHT = "#7dd3fc";
 
-const WaterIndex = ({ selectedFieldsDetials, onSubscribe }) => {
+const WaterIndex = ({ selectedFieldsDetials, onSubscribe, hasWaterIndices }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { waterIndexData = null, loading } =
     useSelector((state) => state.satellite) || {};
@@ -39,7 +39,7 @@ const WaterIndex = ({ selectedFieldsDetials, onSubscribe }) => {
   const [index, setIndex] = useState("NDMI");
 
   // Get feature flag
-  const hasWaterIndices = useSelector(selectHasWaterIndices);
+  // const hasWaterIndices = useSelector(selectHasWaterIndices);
 
   const scrollRef = useRef(null);
   const isDragging = useRef(false);

@@ -21,13 +21,6 @@ import WeatherSkeleton from "../components/Skeleton/WeatherSkeleton";
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
-import {
-  checkFieldSubscriptionStatus,
-  setCurrentField,
-  displayMembershipModal,
-  hideMembershipModal,
-  selectHasWeatherAnalytics,
-} from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 
@@ -58,22 +51,15 @@ const Weather = () => {
 
   const loading = useSelector((state) => state?.weather?.loading);
 
-  const showMembershipModal = useSelector(
-    (state) => state.membership.showMembershipModal
-  );
-  const hasWeatherAnalytics = useSelector(selectHasWeatherAnalytics);
-  const fieldSubscriptions = useSelector(
-    (state) => state.membership.fieldSubscriptions
-  );
-
   const [isSidebarVisible] = useState(true);
   const [selectedField, setSelectedField] = useState(null);
+  const [showMembershipModalLocal, setShowMembershipModalLocal] =
+    useState(false);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
-  
   const [historicalData, setHistoricalData] = useState(null);
   const [dateRange, setDateRange] = useState(null);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -83,99 +69,55 @@ const Weather = () => {
     }
   }, [dispatch, user?.id]);
 
-useEffect(() => {
-  if (fields.length > 0 && !selectedField) {
-    setSelectedField(fields[fields.length - 1]);
-  }
-}, [fields, selectedField]);
-
   useEffect(() => {
-    if (selectedField && authToken) {
-      dispatch(setCurrentField(selectedField._id));
-
-      const fieldSub = fieldSubscriptions[selectedField._id];
-      const shouldCheck =
-        !fieldSub ||
-        (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) >
-          SUBSCRIPTION_CHECK_INTERVAL);
-
-      if (shouldCheck) {
-        dispatch(
-          checkFieldSubscriptionStatus({
-            fieldId: selectedField._id,
-            authToken,
-          })
-        );
-      }
+    if (fields.length > 0 && !selectedField) {
+      setSelectedField(fields[fields.length - 1]);
     }
-  }, [selectedField, authToken, dispatch, fieldSubscriptions]);
-
-  useEffect(() => {
-    if (!selectedField || !authToken) return;
-
-    const interval = setInterval(() => {
-      dispatch(
-        checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken,
-        })
-      );
-    }, SUBSCRIPTION_CHECK_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [selectedField, authToken, dispatch]);
+  }, [fields, selectedField]);
 
   const handleSubscribe = useCallback(() => {
-    if (selectedField) {
-      const areaInHectares =
-        selectedField?.areaInHectares ||
-        selectedField?.acre * 0.404686 ||
-        5;
-      const fieldData = {
-        id: selectedField._id,
-        name: selectedField.fieldName || selectedField.farmName,
-        areaInHectares,
-        cropName: selectedField.cropName,
-      };
-
-      setPricingFieldData(fieldData);
-      setShowPricingOverlay(true);
-      dispatch(hideMembershipModal());
-    } else {
+    if (!selectedField) {
       message.warning("Please select a field first");
+      return;
     }
-  }, [selectedField, dispatch]);
+    const areaInHectares =
+      selectedField?.areaInHectares || selectedField?.acre * 0.404686 || 5;
+    setPricingFieldData({
+      id: selectedField._id,
+      name: selectedField.fieldName || selectedField.farmName,
+      cropName: selectedField.cropName,
+      areaInHectares,
+    });
+    setShowPricingOverlay(true);
+    setShowMembershipModalLocal(false);
+  }, [selectedField]);
 
   const handleSkipMembership = useCallback(() => {
-    dispatch(hideMembershipModal());
+    setShowMembershipModalLocal(false);
     message.info(
       "You can activate premium anytime from the locked content sections"
     );
-  }, [dispatch]);
+  }, []);
 
   const handleCloseMembershipModal = useCallback(() => {
-    dispatch(hideMembershipModal());
-  }, [dispatch]);
+    setShowMembershipModalLocal(false);
+    message.info(
+      "You can activate premium anytime from the locked content sections"
+    );
+  }, []);
 
   const handleClosePricing = useCallback(() => {
     setShowPricingOverlay(false);
     setPricingFieldData(null);
-
-    if (selectedField && authToken) {
-      dispatch(
-        checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken,
-        })
-      );
-    }
-  }, [selectedField, authToken, dispatch]);
-
-  const handleHistoricalDataReceived = useCallback((data, startDate, endDate) => {
-    setHistoricalData(data);
-    setDateRange({ startDate, endDate });
   }, []);
+
+  const handleHistoricalDataReceived = useCallback(
+    (data, startDate, endDate) => {
+      setHistoricalData(data);
+      setDateRange({ startDate, endDate });
+    },
+    []
+  );
 
   const handleClearHistoricalData = useCallback(() => {
     setHistoricalData(null);
@@ -237,10 +179,16 @@ useEffect(() => {
     );
   }
 
+  const hasSubscription = selectedField?.subscription?.hasActiveSubscription;
+
+  const hasWeatherAnalytics =
+    hasSubscription &&
+    selectedField?.subscription?.plan?.features?.weatherAnalytics;
+
   return (
     <>
       <SubscriptionModal
-        isOpen={showMembershipModal}
+        isOpen={showMembershipModalLocal}
         onClose={handleCloseMembershipModal}
         onSubscribe={handleSubscribe}
         onSkip={handleSkipMembership}
@@ -272,6 +220,7 @@ useEffect(() => {
             fields={fields}
             setSelectedField={setSelectedField}
             selectedField={selectedField}
+            hasSubscription={hasSubscription}
           />
         )}
         <div className="w-full bg-[#5f7e6f] m-0 p-0 ml-[320px] h-screen overflow-y-auto overflow-x-hidden">
@@ -320,8 +269,8 @@ useEffect(() => {
                 historicalData={historicalData}
                 dateRange={dateRange}
               />
-             {/* </>  */}
-          </PremiumPageWrapper>
+              {/* </>  */}
+            </PremiumPageWrapper>
           )}
         </div>
       </div>

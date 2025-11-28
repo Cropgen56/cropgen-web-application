@@ -14,9 +14,9 @@ import {
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
 import { selectHasWeatherAnalytics } from "../../../redux/slices/membershipSlice";
 
-function ForeCast({ onSubscribe }) {
+function ForeCast({ onSubscribe, hasWeatherAnalytics }) {
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
-  const hasWeatherAnalytics = useSelector(selectHasWeatherAnalytics);
+  // const hasWeatherAnalytics = useSelector(selectHasWeatherAnalytics);
 
   const weatherData = {
     currentConditions: {

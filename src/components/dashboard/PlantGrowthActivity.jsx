@@ -125,9 +125,9 @@ const formatDayToWeekDay = (day) => {
 };
 
 const PlantGrowthActivity = memo(
-  ({ selectedFieldsDetials = [], onSubscribe }) => {
+  ({ selectedFieldsDetials = [], onSubscribe, hasCropGrowthMonitoring }) => {
     const advisoryState = useSelector((s) => s.smartAdvisory?.advisory || null);
-    const hasCropGrowthMonitoring = useSelector(selectHasCropGrowthMonitoring);
+    // const hasCropGrowthMonitoring = useSelector(selectHasCropGrowthMonitoring);
 
     const field = selectedFieldsDetials[0] || {};
     const cropName =

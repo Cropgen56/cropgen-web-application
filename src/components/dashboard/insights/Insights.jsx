@@ -34,8 +34,8 @@ const Insight = ({ icon, title, description }) => {
   );
 };
 
-const Insights = ({ onSubscribe }) => {
-  const hasAgronomicInsights = useSelector(selectHasAgronomicInsights);
+const Insights = ({ onSubscribe, hasAgronomicInsights }) => {
+  // const hasAgronomicInsights = useSelector(selectHasAgronomicInsights);
 
   const insights = [
     {

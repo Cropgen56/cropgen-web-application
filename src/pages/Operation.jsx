@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { message } from "antd";
 import { getFarmFields } from "../redux/slices/farmSlice";
-import { getOperationsByFarmField } from "../redux/slices/operationSlice";
 import OperationSidebar from "../components/operation/operationsidebar/OperationSidebar";
 import Calendar from "../components/operation/operationcalender/OperationCalender";
 import { useNavigate } from "react-router-dom";
@@ -11,13 +10,6 @@ import img1 from "../assets/image/Group 31.png";
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
-import {
-  checkFieldSubscriptionStatus,
-  setCurrentField,
-  displayMembershipModal,
-  hideMembershipModal,
-  selectHasFarmOperationsManagement
-} from "../redux/slices/membershipSlice";
 
 const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 
@@ -30,12 +22,10 @@ const Operation = () => {
 
   const userId = user?.id;
 
-  // Add membership selectors - Fixed selector name
-  const showMembershipModal = useSelector(state => state.membership.showMembershipModal);
-  const hasFarmOperationsManagement = useSelector(selectHasFarmOperationsManagement); // Fixed
-  const fieldSubscriptions = useSelector(state => state.membership.fieldSubscriptions);
-
   const [selectedField, setSelectedField] = useState(null);
+    const [showMembershipModalLocal, setShowMembershipModalLocal] =
+      useState(false);
+  
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
@@ -46,53 +36,15 @@ const Operation = () => {
   }, [dispatch, userId]);
 
   // Updated to select the last added field (most recent)
-  useEffect(() => {
-    if (fields?.length > 0 && !selectedField) {
-      // Select the last field in the array (most recently added)
-      setSelectedField(fields[fields.length - 1]._id);
-    }
-  }, [fields, selectedField]);
+useEffect(() => {
+  if (fields?.length > 0 && !selectedField) {
+    setSelectedField(fields[fields.length - 1]); // full object like weather
+  }
+}, [fields, selectedField]);
+  
+  
 
-  useEffect(() => {
-    if (selectedField && authToken) {
-      dispatch(setCurrentField(selectedField));
-
-      const fieldSub = fieldSubscriptions[selectedField];
-      const shouldCheck = !fieldSub ||
-        (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) > SUBSCRIPTION_CHECK_INTERVAL);
-
-      if (shouldCheck) {
-        dispatch(checkFieldSubscriptionStatus({
-          fieldId: selectedField,
-          authToken
-        }));
-      }
-    }
-  }, [selectedField, authToken, dispatch, fieldSubscriptions]);
-
-  useEffect(() => {
-    if (!selectedField || !authToken) return;
-
-    const interval = setInterval(() => {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField,
-        authToken
-      }));
-    }, SUBSCRIPTION_CHECK_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [selectedField, authToken, dispatch]);
-
-  useEffect(() => {
-    if (selectedField) {
-      dispatch(getOperationsByFarmField({ farmId: selectedField }));
-    }
-  }, [dispatch, selectedField]);
-
-  const selectedFieldDetails = useMemo(() => {
-    return fields.find((item) => item?._id === selectedField) || null;
-  }, [fields, selectedField]);
+const selectedFieldDetails = selectedField;
 
   const handleSubscribe = useCallback(() => {
     if (selectedFieldDetails) {
@@ -108,31 +60,24 @@ const Operation = () => {
 
       setPricingFieldData(fieldData);
       setShowPricingOverlay(true);
-      dispatch(hideMembershipModal());
+      setShowMembershipModalLocal(false);
     } else {
       message.warning("Please select a field first");
     }
-  }, [selectedFieldDetails, dispatch]);
+  }, [selectedFieldDetails]);
 
   const handleSkipMembership = useCallback(() => {
-    dispatch(hideMembershipModal());
+    setShowMembershipModalLocal(false);
     message.info("You can activate premium anytime from the locked content sections");
-  }, [dispatch]);
+  }, []);
 
   const handleCloseMembershipModal = useCallback(() => {
-    dispatch(hideMembershipModal());
-  }, [dispatch]);
+    setShowMembershipModalLocal(false);
+  }, []);
 
   const handleClosePricing = useCallback(() => {
     setShowPricingOverlay(false);
     setPricingFieldData(null);
-
-    if (selectedField && authToken) {
-      dispatch(checkFieldSubscriptionStatus({
-        fieldId: selectedField,
-        authToken
-      }));
-    }
   }, [selectedField, authToken, dispatch]);
 
   if (fields.length === 0) {
@@ -156,10 +101,15 @@ const Operation = () => {
     );
   }
 
+const hasSubscription = selectedField?.subscription?.hasActiveSubscription;
+const hasFarmOperationsManagement =
+  hasSubscription &&
+  selectedField?.subscription?.plan?.features?.farmOperationsManagement;
+  
   return (
     <>
       <SubscriptionModal
-        isOpen={showMembershipModal}
+        isOpen={showMembershipModalLocal}
         onClose={handleCloseMembershipModal}
         onSubscribe={handleSubscribe}
         onSkip={handleSkipMembership}
@@ -189,6 +139,7 @@ const Operation = () => {
         <OperationSidebar
           setSelectedField={setSelectedField}
           selectedField={selectedField}
+          hasSubscription={hasSubscription}
         />
         <div className="bg-[#5a7c6b]">
           <PremiumPageWrapper
@@ -196,7 +147,7 @@ const Operation = () => {
             onSubscribe={handleSubscribe}
             title="Farm Operations Management"
           >
-            <Calendar selectedField={selectedField} />
+            <Calendar selectedField={selectedField?._id} />
           </PremiumPageWrapper>
         </div>
       </div>

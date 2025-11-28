@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import PolygonPreview from "../../polygon/PolygonPreview";
-import {
-  checkFieldSubscriptionStatus,
-} from "../../../redux/slices/membershipSlice";
 
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates, isSubscribed }) => (
+const FieldInfo = ({
+  title,
+  area,
+  lat,
+  lon,
+  isSelected,
+  onClick,
+  coordinates,
+  isSubscribed,
+}) => (
   <div
     className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
       isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
@@ -39,31 +44,20 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates, is
   </div>
 );
 
-const WeatherSidebar = ({ setSelectedField, selectedField }) => {
-  const dispatch = useDispatch();
+const WeatherSidebar = ({ fields, setSelectedField, selectedField, hasSubscription }) => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const fields = useSelector((state) => state?.farmfield?.fields) || [];
-  
-  // Get auth token for membership check
-  const authToken = useSelector((state) => state.auth.token);
 
-  // Get all field subscriptions from store
-  const fieldSubscriptions = useSelector(
-    (state) => state.membership.fieldSubscriptions || {}
-  );
-
-  // Sort fields in descending order (last added first)
   const sortedFields = [...fields].reverse();
 
-  // Calculate the centroid of a field
+  const filteredFields = sortedFields.filter((field) =>
+    field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const calculateCentroid = (field) => {
     if (!field || field.length === 0) return { lat: 0, lon: 0 };
     const total = field.reduce(
-      (acc, point) => ({
-        lat: acc.lat + point.lat,
-        lng: acc.lng + point.lng,
-      }),
+      (acc, point) => ({ lat: acc.lat + point.lat, lng: acc.lng + point.lng }),
       { lat: 0, lng: 0 }
     );
     return {
@@ -72,54 +66,7 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
     };
   };
 
-  const formatArea = (acres) => {
-    const hectares = (acres * 0.404686).toFixed(2);
-    return `${hectares}h`;
-  };
-
-  const toggleSidebarVisibility = () => {
-    setIsSidebarVisible(!isSidebarVisible);
-  };
-
-  // Filter fields based on search query (from sorted fields)
-  const filteredFields = sortedFields.filter((field) =>
-    field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Check subscription status for each field
-  useEffect(() => {
-    if (fields.length > 0 && authToken) {
-      fields.forEach((field) => {
-        if (field._id) {
-          dispatch(
-            checkFieldSubscriptionStatus({
-              fieldId: field._id,
-              authToken,
-            })
-          );
-        }
-      });
-    }
-  }, [fields, authToken, dispatch]);
-
-  // Auto-select the last added field (first in the sorted list) when component mounts or fields change
-  useEffect(() => {
-    if (filteredFields.length > 0 && !selectedField) {
-      setSelectedField(filteredFields[0]);
-    }
-  }, [filteredFields.length]); // Only depend on length to avoid infinite loops
-
-  // Update selection when search query changes and current selection is filtered out
-  useEffect(() => {
-    if (filteredFields.length > 0 && selectedField) {
-      const isSelectedInFiltered = filteredFields.some(
-        (field) => field._id === selectedField._id
-      );
-      if (!isSelectedInFiltered) {
-        setSelectedField(filteredFields[0]);
-      }
-    }
-  }, [searchQuery]);
+  const formatArea = (acres) => `${(acres * 0.404686).toFixed(2)}h`;
 
   if (!isSidebarVisible) return null;
 
@@ -131,34 +78,12 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
             <Weather2 />
             <h2 className="text-[18px] font-bold text-[#344e41]">Weather</h2>
           </div>
-          <svg
-            width="30"
-            height="30"
-            viewBox="0 0 30 30"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            onClick={toggleSidebarVisibility}
-            style={{ cursor: "pointer" }}
+          <button
+            onClick={() => setIsSidebarVisible(false)}
+            className="text-[#344e41] font-bold"
           >
-            <g clipPath="url(#clip0_302_105)">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M10.3662 15.8835C10.1319 15.6491 10.0002 15.3312 10.0002 14.9998C10.0002 14.6683 10.1319 14.3504 10.3662 14.116L17.4375 7.04478C17.6732 6.81708 17.989 6.69109 18.3167 6.69393C18.6445 6.69678 18.958 6.82824 19.1898 7.06C19.4215 7.29176 19.553 7.60528 19.5558 7.93303C19.5587 8.26077 19.4327 8.57652 19.205 8.81228L13.0175 14.9998L19.205 21.1873C19.4327 21.423 19.5587 21.7388 19.5558 22.0665C19.553 22.3943 19.4215 22.7078 19.1898 22.9395C18.958 23.1713 18.6445 23.3028 18.3167 23.3056C17.989 23.3085 17.6732 23.1825 17.4375 22.9548L10.3662 15.8835Z"
-                fill="#344e41"
-              />
-            </g>
-            <defs>
-              <clipPath id="clip0_302_105">
-                <rect
-                  width="30"
-                  height="30"
-                  fill="white"
-                  transform="matrix(0 -1 1 0 0 30)"
-                />
-              </clipPath>
-            </defs>
-          </svg>
+            Close
+          </button>
         </div>
         <div className="relative flex items-center mx-auto w-full">
           <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg" />
@@ -171,16 +96,15 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
           />
         </div>
       </div>
+
       <div className="overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
-        <h2 className="text-[18px] font-bold text-[#344e41] p-2">
-          All Farms
-        </h2>
+        <h2 className="text-[18px] font-bold text-[#344e41] p-2">All Farms</h2>
         {filteredFields.length > 0 ? (
           filteredFields.map((field) => {
             const { lat, lon } = calculateCentroid(field.field);
-            const isSubscribed =
-              fieldSubscriptions[field._id]?.hasActiveSubscription || false;
-            
+            const isSelected = field._id === selectedField?._id;
+            const isSubscribed = field.subscription?.hasActiveSubscription === true;
+
             return (
               <FieldInfo
                 key={field._id}
@@ -189,16 +113,14 @@ const WeatherSidebar = ({ setSelectedField, selectedField }) => {
                 lat={lat}
                 lon={lon}
                 coordinates={field.field}
-                isSelected={field._id === selectedField?._id}
+                isSelected={isSelected}
                 onClick={() => setSelectedField(field)}
                 isSubscribed={isSubscribed}
               />
             );
           })
         ) : (
-          <p className="text-center text-sm text-gray-500 mt-4">
-            No fields found
-          </p>
+          <p className="text-center text-sm text-gray-500 mt-4">No fields found</p>
         )}
       </div>
     </div>
