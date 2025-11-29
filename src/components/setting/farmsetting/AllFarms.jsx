@@ -8,15 +8,14 @@ import {
   X,
   Sprout,
 } from "lucide-react";
+
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+
 import PolygonPreview from "../../polygon/PolygonPreview";
 import FarmSkeletonLoader from "../../Skeleton/FarmSkeletonLoader";
-import {
-  checkFieldSubscriptionStatus,
-  selectFieldSubscriptionStatus,
-} from "../../../redux/slices/membershipSlice";
+
 import mapLocation from "../../../assets/image/setting/map-location.svg";
 
 const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
@@ -24,7 +23,7 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
     onClick={() => onClick(farm)}
     className="relative flex flex-col bg-white rounded-xl shadow-md border border-[#344E41]/20 transition-all duration-300 ease-in-out hover:shadow-xl hover:border-[#344E41]/40 overflow-hidden cursor-pointer"
   >
-    {/* Header Section */}
+    {/* Header */}
     <div className="flex items-start justify-between px-4 py-3 bg-[#344E41]/5 border-b border-[#344E41]/10">
       <div className="text-left">
         <span className="block font-bold text-[#344E41] text-lg lg:text-xl leading-tight">
@@ -34,6 +33,7 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
           {Number(farm.acre || 0).toFixed(2)} ha
         </span>
       </div>
+
       <div
         className={`px-3 py-1.5 rounded-full text-xs font-bold ${
           isSubscribed
@@ -45,7 +45,7 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
       </div>
     </div>
 
-    {/* Map Preview Section */}
+    {/* Map Preview */}
     <div className="flex-grow flex flex-col justify-center bg-gradient-to-b from-white to-[#344E41]/5 py-3">
       <div className="w-full h-28 flex items-center justify-center px-3">
         {farm.field && farm.field.length > 0 ? (
@@ -57,7 +57,7 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
         )}
       </div>
 
-      {/* Crop Details */}
+      {/* Crop Info */}
       <div className="flex items-center gap-2 px-3 mt-4 bg-[#344E41]/5 mx-3 py-2 rounded-lg border border-[#344E41]/10">
         <Sprout className="w-5 h-5 text-[#344E41]" />
         <span className="text-sm text-[#344E41] font-semibold">
@@ -91,6 +91,7 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
     </div>
   </div>
 );
+
 const AddNewFarmCard = ({ onClick }) => (
   <div
     className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg shadow-sm border-1 border-[#000000] text-center cursor-pointer transition-all duration-500 ease-in-out hover:bg-emerald-50"
@@ -114,17 +115,6 @@ const AllFarms = ({ onAddFarmClick }) => {
   const user = useSelector((state) => state.auth.user);
   const userId = user?._id || user?.id;
 
-  // Get auth token for membership check
-  const authToken = useSelector((state) => state.auth.token);
-
-  // Get all field subscriptions from store
-  const fieldSubscriptions = useSelector(
-    (state) => state.membership.fieldSubscriptions || {}
-  );
-
-  // Get membership loading state
-  const membershipLoading = useSelector((state) => state.membership.loading);
-
   const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
@@ -132,22 +122,6 @@ const AllFarms = ({ onAddFarmClick }) => {
       dispatch(getFarmFields(userId));
     }
   }, [dispatch, status, userId]);
-
-  // Check subscription status for each farm
-  useEffect(() => {
-    if (farms.length > 0 && authToken) {
-      farms.forEach((farm) => {
-        if (farm._id) {
-          dispatch(
-            checkFieldSubscriptionStatus({
-              fieldId: farm._id,
-              authToken,
-            })
-          );
-        }
-      });
-    }
-  }, [farms, authToken, dispatch]);
 
   if (status === "loading") return <FarmSkeletonLoader />;
 
@@ -165,22 +139,21 @@ const AllFarms = ({ onAddFarmClick }) => {
       </p>
     );
 
-  // Filter farms based on tab
   const filteredFarms = farms.filter((farm) => {
-    const isSubscribed =
-      fieldSubscriptions[farm._id]?.hasActiveSubscription || false;
+    const isSubscribed = farm?.subscription?.hasActiveSubscription;
 
     if (activeTab === "subscribed") return isSubscribed;
     if (activeTab === "unsubscribed") return !isSubscribed;
     return true;
   });
 
-  const sortedFarms = [...filteredFarms].sort((a, b) => {
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
+  const sortedFarms = [...filteredFarms].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
 
   return (
     <div className="flex flex-col flex-grow gap-4 py-2 h-[calc(100vh-100px)]">
+      {/* Tabs */}
       <div className="flex justify-start bg-[#E6F8EF] rounded-xl gap-2 py-2 px-3 w-fit">
         {["all", "subscribed", "unsubscribed"].map((tab) => (
           <button
@@ -201,13 +174,15 @@ const AllFarms = ({ onAddFarmClick }) => {
         ))}
       </div>
 
+      {/* Farms List */}
       <div className="overflow-y-auto flex-grow pr-1 mb-2 scroll-smooth no-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
           <AddNewFarmCard onClick={() => navigate("/addfield")} />
+
           {sortedFarms.length > 0 ? (
             sortedFarms.map((farm, index) => {
               const isSubscribed =
-                fieldSubscriptions[farm._id]?.hasActiveSubscription || false;
+                farm?.subscription?.hasActiveSubscription || false;
 
               return (
                 <FarmCard

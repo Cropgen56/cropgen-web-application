@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
+
 import SoilReportSidebar from "../components/soilreport/soilreportsidebar/SoilReportSidebar";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -10,140 +11,92 @@ import Report from "../components/soilreport/soilreportsidebar/Report";
 import Reccomendations from "../components/soilreport/soilreportsidebar/Reccomendations";
 import Soilwaterindex from "../components/soilreport/soilreportsidebar/Soilwaterindex";
 import SOCreport from "../components/soilreport/soilreportsidebar/SOCreport";
+
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+
 import { getFarmFields } from "../redux/slices/farmSlice";
 import img1 from "../assets/image/Group 31.png";
+
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
-import {
-  checkFieldSubscriptionStatus,
-  setCurrentField,
-  displayMembershipModal,
-  hideMembershipModal,
-  selectHasSoilReportGeneration, // Correct import
-} from "../redux/slices/membershipSlice";
 import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
-
-const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 
 const SoilReport = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const user = useSelector((state) => state?.auth?.user);
-  const authToken = useSelector((state) => state?.auth?.token);
   const fields = useSelector((state) => state?.farmfield?.fields);
 
-  const showMembershipModal = useSelector(
-    (state) => state.membership.showMembershipModal
-  );
-  const hasSoilReportGeneration = useSelector(selectHasSoilReportGeneration);
-  const fieldSubscriptions = useSelector(
-    (state) => state.membership.fieldSubscriptions
-  );
+  const userId = user?.id;
 
-  const [selectedOperation, setSelectedOperation] = useState(null);
-  const [reportdata, setReportData] = useState(null);
-  const [isdownloading, setIsDownloading] = useState(false);
   const [selectedField, setSelectedField] = useState(null);
+  const [selectedOperation, setSelectedOperation] = useState(null);
+  const [reportData, setReportData] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
+  const [showMembershipModal, setShowMembershipModal] = useState(false);
 
   const reportRef = useRef();
   const restRef = useRef();
-  const userId = user?.id;
 
+  // Load farm fields
   useEffect(() => {
-    if (userId) {
-      dispatch(getFarmFields(userId));
-    }
+    if (userId) dispatch(getFarmFields(userId));
   }, [dispatch, userId]);
 
+  // Auto-select last added field
   useEffect(() => {
-    if (selectedField && authToken) {
-      dispatch(setCurrentField(selectedField._id));
-
-      const fieldSub = fieldSubscriptions[selectedField._id];
-      const shouldCheck =
-        !fieldSub ||
-        (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) >
-            SUBSCRIPTION_CHECK_INTERVAL);
-
-      if (shouldCheck) {
-        dispatch(
-          checkFieldSubscriptionStatus({
-            fieldId: selectedField._id,
-            authToken,
-          })
-        );
-      }
+    if (fields?.length > 0 && !selectedField) {
+      setSelectedField(fields[fields.length - 1]);
     }
-  }, [selectedField, authToken, dispatch, fieldSubscriptions]);
-
-  useEffect(() => {
-    if (!selectedField || !authToken) return;
-
-    const interval = setInterval(() => {
-      dispatch(
-        checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken,
-        })
-      );
-    }, SUBSCRIPTION_CHECK_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [selectedField, authToken, dispatch]);
+  }, [fields, selectedField]);
 
   const handleSubscribe = useCallback(() => {
-    if (selectedField) {
-      const areaInHectares =
-        selectedField?.areaInHectares || selectedField?.acre * 0.404686 || 5;
-      const fieldData = {
-        id: selectedField._id,
-        name: selectedField.fieldName || selectedField.farmName,
-        areaInHectares,
-        cropName: selectedField.cropName,
-      };
-
-      setPricingFieldData(fieldData);
-      setShowPricingOverlay(true);
-      dispatch(hideMembershipModal());
-    } else {
+    if (!selectedField) {
       message.warning("Please select a field first");
+      return;
     }
-  }, [selectedField, dispatch]);
 
-  const handleSkipMembership = useCallback(() => {
-    dispatch(hideMembershipModal());
-    message.info(
-      "You can activate premium anytime from the locked content sections"
-    );
-  }, [dispatch]);
+    const areaInHectares =
+      selectedField?.areaInHectares || selectedField?.acre * 0.404686 || 5;
 
-  const handleCloseMembershipModal = useCallback(() => {
-    dispatch(hideMembershipModal());
-  }, [dispatch]);
+    const fieldData = {
+      id: selectedField._id,
+      name: selectedField.fieldName || selectedField.farmName,
+      areaInHectares,
+      cropName: selectedField.cropName,
+    };
 
-  const handleClosePricing = useCallback(() => {
+    setPricingFieldData(fieldData);
+    setShowPricingOverlay(true);
+    setShowMembershipModal(false);
+  }, [selectedField]);
+
+  const handleSkipMembership = () => {
+    setShowMembershipModal(false);
+    message.info("You can activate premium anytime from the locked features");
+  };
+
+  const handleCloseMembershipModal = () => {
+    setShowMembershipModal(false);
+  };
+
+  const handleClosePricing = () => {
     setShowPricingOverlay(false);
     setPricingFieldData(null);
-
-    if (selectedField && authToken) {
-      dispatch(
-        checkFieldSubscriptionStatus({
-          fieldId: selectedField._id,
-          authToken,
-        })
-      );
-    }
-  }, [selectedField, authToken, dispatch]);
+  };
 
   const downloadPDF = async () => {
-    if (!hasSoilReportGeneration) {
+    const hasSoilReportPermission =
+      selectedField?.subscription?.hasActiveSubscription &&
+      selectedField?.subscription?.plan?.features?.soilReportGeneration;
+
+    if (!hasSoilReportPermission) {
       message.warning("Please subscribe to download soil reports");
       handleSubscribe();
       return;
@@ -166,9 +119,7 @@ const SoilReport = () => {
     const capturePage = async (element, pageNumber) => {
       const canvas = await html2canvas(element, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL("image/png");
-
       const scaledHeight = height * 0.95;
-
       pdf.addImage(imgData, "PNG", 0, 0, width, scaledHeight);
       pdf.setTextColor(100);
       pdf.setFontSize(10);
@@ -207,6 +158,10 @@ const SoilReport = () => {
     );
   }
 
+  const hasSubscription =
+    selectedField?.subscription?.hasActiveSubscription &&
+    selectedField?.subscription?.plan?.features?.soilReportGeneration;
+
   return (
     <>
       <SubscriptionModal
@@ -237,39 +192,37 @@ const SoilReport = () => {
       </AnimatePresence>
 
       <div className="h-screen w-full bg-[#5a7c6b] flex">
-        <div>
-          <SoilReportSidebar
-            selectedOperation={selectedOperation}
-            setSelectedOperation={setSelectedOperation}
-            setSelectedField={setSelectedField}
-            setReportData={setReportData}
-            downloadPDF={downloadPDF}
-          />
-        </div>
+        <SoilReportSidebar
+          selectedOperation={selectedOperation}
+          setSelectedOperation={setSelectedOperation}
+          setSelectedField={setSelectedField}
+          setReportData={setReportData}
+          downloadPDF={downloadPDF}
+        />
 
-        <div className="w-100 p-4 h-screen overflow-y-auto">
-          {!reportdata ? (
-            // <div className="flex items-center justify-center h-full w-full">
-            //   <div className="flex flex-col items-center text-center opacity-60">
-            //     <img
-            //       src={img1}
-            //       alt="placeholder"
-            //       className="w-[300px] h-[300px] mb-6 opacity-70"
-            //     />
-            //     <p className="text-2xl font-semibold text-white">
-            //       Select Field to Generate Soil Report
-            //     </p>
-            //   </div>
-            // </div>
-            <ComingSoonSection />
-          ) : (
-            <PremiumPageWrapper
-              isLocked={!hasSoilReportGeneration}
-              onSubscribe={handleSubscribe}
-              title="Soil Report Generation"
-            >
+        {!reportData ? (
+          // <div className="flex items-center justify-center h-full w-full">
+          //                <div className="flex flex-col items-center text-center opacity-60">
+          //                 <img
+          //                   src={img1}
+          //                   alt="placeholder"
+          //                   className="w-[300px] h-[300px] mb-6 opacity-70"
+          //                 />
+          //                 <p className="text-2xl font-semibold text-white">
+          //                   Select Field to Generate Soil Report
+          //                 </p>
+          //               </div>
+          //             </div>
+          <ComingSoonSection />
+        ) : (
+          <PremiumPageWrapper
+            isLocked={!hasSubscription}
+            onSubscribe={handleSubscribe}
+            title="Soil Report Generation"
+          >
+            <div className="w-100 p-4 h-screen overflow-y-auto">
               <MapContainer
-                center={[reportdata.lat, reportdata.lng]}
+                center={[reportData.lat, reportData.lng]}
                 zoom={15}
                 style={{ height: "400px", width: "100%" }}
               >
@@ -278,48 +231,34 @@ const SoilReport = () => {
                   url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
                   subdomains={["mt0", "mt1", "mt2", "mt3"]}
                 />
-                <Marker position={[reportdata.lat, reportdata.lng]}>
-                  <Popup>{reportdata.field}</Popup>
+                <Marker position={[reportData.lat, reportData.lng]}>
+                  <Popup>{reportData.field}</Popup>
                 </Marker>
               </MapContainer>
 
               <div
                 ref={reportRef}
-                className={`${isdownloading ? "bg-white text-black p-4" : ""}`}
+                className={`${isDownloading ? "bg-white text-black p-4" : ""}`}
               >
-                <div className="mt-4">
-                  <Report data={reportdata} isdownloading={isdownloading} />
-                </div>
+                <Report data={reportData} isDownloading={isDownloading} />
               </div>
 
               <div
                 ref={restRef}
-                className={`${isdownloading ? "bg-white text-black p-4" : ""}`}
+                className={`${isDownloading ? "bg-white text-black p-4" : ""}`}
               >
-                <div className="mt-4">
-                  <SOCreport isdownloading={isdownloading} />
-                </div>
-
+                <SOCreport isDownloading={isDownloading} />
                 <div className="mt-10 rounded-lg shadow-md flex justify-between gap-4">
                   <Soilwaterindex
-                    isdownloading={isdownloading}
+                    isDownloading={isDownloading}
                     selectedFieldsDetials={[selectedOperation]}
                   />
                 </div>
-
-                <div className="mt-4">
-                  <Reccomendations isdownloading={isdownloading} />
-                </div>
-
-                <div
-                  className={`mt-5 p-4 rounded-lg shadow-md ${
-                    isdownloading ? "text-black" : "text-green-100"
-                  }`}
-                ></div>
+                <Reccomendations isDownloading={isDownloading} />
               </div>
-            </PremiumPageWrapper>
-          )}
-        </div>
+            </div>
+          </PremiumPageWrapper>
+        )}
       </div>
     </>
   );

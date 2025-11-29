@@ -31,14 +31,14 @@ const categories = [
   { key: "monitoring", label: "Monitoring" },
 ];
 
-const CropAdvisory = ({ selectedFieldsDetials = [], onSubscribe }) => {
+const CropAdvisory = ({ selectedFieldsDetials = [], onSubscribe, hasWeeklyAdvisoryReports }) => {
   const dispatch = useDispatch();
 
   // source data
   const { advisory: smartAdvisory, loading } = useSelector(
     (s) => s.smartAdvisory || {}
   );
-  const hasWeeklyAdvisoryReports = useSelector(selectHasWeeklyAdvisoryReports);
+  // const hasWeeklyAdvisoryReports = useSelector(selectHasWeeklyAdvisoryReports);
 
   // horizontal scroll refs/drag state
   const scrollRef = useRef(null);

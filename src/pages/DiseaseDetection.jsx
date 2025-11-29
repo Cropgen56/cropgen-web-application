@@ -2,143 +2,86 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { message } from "antd";
-import UploadCropImage from "../components/diseasedetection/uploadcropimage/UploadCropImage";
-import Sidebardiseasedetection from "../components/diseasedetection/sidebar/Sidebardiseasedetection";
 import { useNavigate } from "react-router-dom";
+
 import img1 from "../assets/image/Group 31.png";
 import { getFarmFields } from "../redux/slices/farmSlice";
+
+import Sidebardiseasedetection from "../components/diseasedetection/sidebar/Sidebardiseasedetection";
+import UploadCropImage from "../components/diseasedetection/uploadcropimage/UploadCropImage";
+
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
-import {
-  checkFieldSubscriptionStatus,
-  setCurrentField,
-  displayMembershipModal,
-  hideMembershipModal,
-  selectHasDiseaseDetectionAlerts,
-} from "../redux/slices/membershipSlice";
-import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
 
-const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
+import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
 
 const DiseaseDetection = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const user = useSelector((state) => state?.auth?.user);
-  const authToken = useSelector((state) => state?.auth?.token);
   const fields = useSelector((state) => state?.farmfield?.fields);
+
   const userId = user?.id;
 
-  const showMembershipModal = useSelector(
-    (state) => state.membership.showMembershipModal
-  );
-  const hasDiseaseDetectionAlerts = useSelector(selectHasDiseaseDetectionAlerts);
-  const fieldSubscriptions = useSelector(
-    (state) => state.membership.fieldSubscriptions
-  );
-
   const [selectedField, setSelectedField] = useState(null);
+  const [showMembershipModalLocal, setShowMembershipModalLocal] =
+    useState(false);
+
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
+  // Load fields
   useEffect(() => {
-    if (userId) {
-      dispatch(getFarmFields(userId));
-    }
+    if (userId) dispatch(getFarmFields(userId));
   }, [dispatch, userId]);
 
+  // Auto-select last added farm
   useEffect(() => {
     if (fields?.length > 0 && !selectedField) {
-      setSelectedField(fields[0]._id);
+      setSelectedField(fields[fields.length - 1]);
     }
   }, [fields, selectedField]);
 
-  useEffect(() => {
-    if (selectedField && authToken) {
-      dispatch(setCurrentField(selectedField));
-
-      const fieldSub = fieldSubscriptions[selectedField];
-      const shouldCheck =
-        !fieldSub ||
-        (fieldSub.lastChecked &&
-          new Date() - new Date(fieldSub.lastChecked) >
-            SUBSCRIPTION_CHECK_INTERVAL);
-
-      if (shouldCheck) {
-        dispatch(
-          checkFieldSubscriptionStatus({
-            fieldId: selectedField,
-            authToken,
-          })
-        );
-      }
-    }
-  }, [selectedField, authToken, dispatch, fieldSubscriptions]);
-
-  useEffect(() => {
-    if (!selectedField || !authToken) return;
-
-    const interval = setInterval(() => {
-      dispatch(
-        checkFieldSubscriptionStatus({
-          fieldId: selectedField,
-          authToken,
-        })
-      );
-    }, SUBSCRIPTION_CHECK_INTERVAL);
-
-    return () => clearInterval(interval);
-  }, [selectedField, authToken, dispatch]);
-
-  const selectedFieldDetails = useMemo(() => {
-    return fields.find((item) => item?._id === selectedField) || null;
-  }, [fields, selectedField]);
+  const selectedFieldDetails = selectedField;
 
   const handleSubscribe = useCallback(() => {
-    if (selectedFieldDetails) {
-      const areaInHectares =
-        selectedFieldDetails?.areaInHectares ||
-        selectedFieldDetails?.acre * 0.404686 ||
-        5;
-      const fieldData = {
-        id: selectedFieldDetails._id,
-        name: selectedFieldDetails.fieldName || selectedFieldDetails.farmName,
-        areaInHectares,
-        cropName: selectedFieldDetails.cropName,
-      };
-
-      setPricingFieldData(fieldData);
-      setShowPricingOverlay(true);
-      dispatch(hideMembershipModal());
-    } else {
+    if (!selectedFieldDetails) {
       message.warning("Please select a field first");
+      return;
     }
-  }, [selectedFieldDetails, dispatch]);
 
-  const handleSkipMembership = useCallback(() => {
-    dispatch(hideMembershipModal());
-    message.info(
-      "You can activate premium anytime from the locked content sections"
-    );
-  }, [dispatch]);
+    const areaInHectares =
+      selectedFieldDetails?.areaInHectares ||
+      selectedFieldDetails?.acre * 0.404686 ||
+      5;
 
-  const handleCloseMembershipModal = useCallback(() => {
-    dispatch(hideMembershipModal());
-  }, [dispatch]);
+    const fieldData = {
+      id: selectedFieldDetails._id,
+      name: selectedFieldDetails.fieldName || selectedFieldDetails.farmName,
+      areaInHectares,
+      cropName: selectedFieldDetails.cropName,
+    };
 
-  const handleClosePricing = useCallback(() => {
+    setPricingFieldData(fieldData);
+    setShowPricingOverlay(true);
+    setShowMembershipModalLocal(false);
+  }, [selectedFieldDetails]);
+
+  const handleSkipMembership = () => {
+    setShowMembershipModalLocal(false);
+    message.info("You can activate premium anytime from the locked features");
+  };
+
+  const handleCloseMembershipModal = () => {
+    setShowMembershipModalLocal(false);
+  };
+
+  const handleClosePricing = () => {
     setShowPricingOverlay(false);
     setPricingFieldData(null);
-
-    if (selectedField && authToken) {
-      dispatch(
-        checkFieldSubscriptionStatus({
-          fieldId: selectedField,
-          authToken,
-        })
-      );
-    }
-  }, [selectedField, authToken, dispatch]);
+  };
 
   if (fields.length === 0) {
     return (
@@ -149,8 +92,9 @@ const DiseaseDetection = () => {
           className="w-[400px] h-[400px] mb-6 opacity-70"
         />
         <h2 className="text-2xl font-semibold text-white">
-          Add Farm to See the Disease Detection.
+          Add Farm to use Disease Detection
         </h2>
+
         <button
           onClick={() => navigate("/addfield")}
           className="mt-6 px-5 py-2 rounded-lg bg-white text-[#5a7c6b] font-medium hover:bg-gray-200 transition"
@@ -161,14 +105,22 @@ const DiseaseDetection = () => {
     );
   }
 
+  const hasSubscription = selectedField?.subscription?.hasActiveSubscription;
+
+  const hasDiseaseDetectionPermission =
+    hasSubscription &&
+    selectedField?.subscription?.plan?.features?.diseaseDetectionAlerts;
+
   return (
     <>
       <SubscriptionModal
-        isOpen={showMembershipModal}
+        isOpen={showMembershipModalLocal}
         onClose={handleCloseMembershipModal}
         onSubscribe={handleSubscribe}
         onSkip={handleSkipMembership}
-        fieldName={selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName}
+        fieldName={
+          selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName
+        }
       />
 
       <AnimatePresence>
@@ -196,16 +148,16 @@ const DiseaseDetection = () => {
           setSelectedField={setSelectedField}
           fields={fields}
         />
+
         {/* <PremiumPageWrapper
-          isLocked={!hasDiseaseDetectionAlerts}
+          isLocked={!hasDiseaseDetectionPermission}
           onSubscribe={handleSubscribe}
-          title="Disease Detection & Alerts"
-        > */}
+          title="Disease Detection"
+        >
+          <UploadCropImage selectedField={selectedField?._id} />
+        </PremiumPageWrapper> */}
 
         <ComingSoonSection />
-        {/* <UploadCropImage selectedField={selectedField} /> */}
-        
-        {/* </PremiumPageWrapper> */}
       </div>
     </>
   );

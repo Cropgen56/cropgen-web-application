@@ -27,7 +27,7 @@ import { Info } from "lucide-react";
 import IndexPremiumWrapper from "../../subscription/Indexpremiumwrapper";
 import { selectHasVegetationIndices } from "../../../redux/slices/membershipSlice";
 
-const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
+const NdviGraph = ({ selectedFieldsDetials, onSubscribe, hasVegetationIndices }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { indexTimeSeriesSummary = null, loading } =
     useSelector((state) => state.satellite) || {};
@@ -36,7 +36,7 @@ const NdviGraph = ({ selectedFieldsDetials, onSubscribe }) => {
   const [index, setIndex] = useState("NDVI");
 
   // Get feature flag
-  const hasVegetationIndices = useSelector(selectHasVegetationIndices);
+  // const hasVegetationIndices = useSelector(selectHasVegetationIndices);
 
   const scrollRef = useRef(null);
   const isDragging = useRef(false);

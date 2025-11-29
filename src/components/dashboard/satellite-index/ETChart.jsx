@@ -6,11 +6,11 @@ import { selectHasEvapotranspirationMonitoring } from "../../../redux/slices/mem
 
 const CLOUD_COLOR_MAIN = "#87CEEB";
 
-const EvapotranspirationChart = ({ onSubscribe }) => {
+const EvapotranspirationChart = ({ onSubscribe, hasEvapotranspiration }) => {
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
-  const hasEvapotranspirationMonitoring = useSelector(
-    selectHasEvapotranspirationMonitoring
-  );
+  // const hasEvapotranspirationMonitoring = useSelector(
+  //   selectHasEvapotranspirationMonitoring
+  // );
 
   const dateData = forecastData.forecast?.time || [];
   const evapotranspirationData =
@@ -84,7 +84,7 @@ const EvapotranspirationChart = ({ onSubscribe }) => {
 
   return (
     <PremiumContentWrapper
-      isLocked={!hasEvapotranspirationMonitoring}
+      isLocked={!hasEvapotranspiration}
       onSubscribe={onSubscribe}
       title="Evapotranspiration Monitoring"
     >

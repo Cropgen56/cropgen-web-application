@@ -7,7 +7,10 @@ import React, {
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
-import { getFarmFields } from "../redux/slices/farmSlice";
+import {
+  getFarmFields,
+  updateFieldSubscription,
+} from "../redux/slices/farmSlice";
 import MapView from "../components/dashboard/mapview/MapView";
 import CropHealth from "../components/dashboard/crophealth/CropHealthCard";
 import ForeCast from "../components/dashboard/forecast/ForeCast";
@@ -29,16 +32,6 @@ import { message } from "antd";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PaymentSuccessModal from "../components/subscription/PaymentSuccessModal";
 import {
-  checkFieldSubscriptionStatus,
-  setCurrentField,
-  displayMembershipModal,
-  hideMembershipModal,
-  setNewFieldAdded,
-  selectCurrentFieldHasSubscription,
-  selectIsCheckingSubscription,
-  optimisticSubscriptionUpdate,
-} from "../redux/slices/membershipSlice";
-import {
   setPaymentSuccess,
   clearPaymentSuccess,
   selectPaymentSuccess,
@@ -53,11 +46,10 @@ import {
 
 /* constants */
 const SELECTED_FIELD_KEY = "selectedFieldId";
-const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
 const FORECAST_CACHE_TTL = 5 * 60 * 1000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-/* simple last-run timestamp helpers (per-field) */
+/* last-run helpers */
 const lastRunKeyFor = (fieldId) => `lastSmartAdvisoryRun_${fieldId}`;
 function getLastRunTimestamp(fieldId) {
   try {
@@ -70,11 +62,6 @@ function getLastRunTimestamp(fieldId) {
 function setLastRunTimestamp(fieldId, ts = Date.now()) {
   try {
     localStorage.setItem(lastRunKeyFor(fieldId), String(ts));
-  } catch (e) {}
-}
-function clearLastRunTimestamp(fieldId) {
-  try {
-    localStorage.removeItem(lastRunKeyFor(fieldId));
   } catch (e) {}
 }
 
@@ -93,17 +80,20 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const [showSelectFarmModal, setShowSelectFarmModal] = useState(false);
+
+  // local flag used to show subscription modal (replaces membershipSlice show flag)
+  const [showMembershipModalLocal, setShowMembershipModalLocal] =
+    useState(false);
+
+  // used to show loading while we do optimistic update after payment
   const [isRefreshingSubscription, setIsRefreshingSubscription] =
     useState(false);
+
   const [aoisInitialized, setAoisInitialized] = useState(false);
 
   const aoiCreationRef = useRef(new Set());
   const attemptedAOIsRef = useRef(new Set());
   const forecastFetchRef = useRef(new Map());
-  const subscriptionCheckRef = useRef({
-    lastCheckedForField: null,
-    intervalId: null,
-  });
   const isMountedRef = useRef(false);
 
   const user = useSelector((s) => s?.auth?.user);
@@ -117,15 +107,7 @@ const Dashboard = () => {
   const forecastData = useSelector((s) => s?.weather?.forecastData) || {};
   const userId = user?.id;
 
-  const showMembershipModal = useSelector(
-    (s) => s.membership.showMembershipModal
-  );
-  const newFieldAdded = useSelector((s) => s.membership.newFieldAdded);
-  const currentFieldHasSubscription = useSelector(
-    selectCurrentFieldHasSubscription
-  );
-  const isCheckingSubscription = useSelector(selectIsCheckingSubscription);
-
+  // subscription success modal state from subscriptionSlice (unchanged)
   const paymentSuccess = useSelector(selectPaymentSuccess);
   const showPaymentSuccessModalRedux = useSelector(
     selectShowPaymentSuccessModal
@@ -150,6 +132,11 @@ const Dashboard = () => {
     return fields.find((f) => f?._id === selectedField) || null;
   }, [fields, selectedField]);
 
+  useEffect(() => {
+    console.log("Fields:", fields);
+    console.log("Selected Field:", selectedField);
+  }, [fields, selectedField]);
+
   const { forecast, units } = forecastData || {};
 
   useEffect(() => {
@@ -157,6 +144,7 @@ const Dashboard = () => {
     return () => clearTimeout(t);
   }, []);
 
+  // fetch fields + AOIs on mount
   useEffect(() => {
     if (!userId) return;
     dispatch(getFarmFields(userId));
@@ -169,6 +157,7 @@ const Dashboard = () => {
     }
   }, [dispatch, userId]);
 
+  // select newest field automatically if none selected (same logic)
   useEffect(() => {
     if (!Array.isArray(fields) || fields.length === 0) {
       setPrevFieldsLength(0);
@@ -237,61 +226,6 @@ const Dashboard = () => {
       });
   }, [aoiNeedsCreation, dispatch, selectedFieldDetails]);
 
-  useEffect(() => {
-    if (!selectedField) return;
-    dispatch(setCurrentField(selectedField));
-
-    if (authToken) {
-      if (subscriptionCheckRef.current.lastCheckedForField !== selectedField) {
-        subscriptionCheckRef.current.lastCheckedForField = selectedField;
-        dispatch(
-          checkFieldSubscriptionStatus({ fieldId: selectedField, authToken })
-        );
-      }
-
-      if (!subscriptionCheckRef.current.intervalId) {
-        const id = setInterval(() => {
-          dispatch(
-            checkFieldSubscriptionStatus({ fieldId: selectedField, authToken })
-          );
-        }, SUBSCRIPTION_CHECK_INTERVAL);
-        subscriptionCheckRef.current.intervalId = id;
-      }
-    }
-  }, [selectedField, authToken, dispatch]);
-
-  useEffect(() => {
-    return () => {
-      if (subscriptionCheckRef.current.intervalId) {
-        clearInterval(subscriptionCheckRef.current.intervalId);
-        subscriptionCheckRef.current.intervalId = null;
-        subscriptionCheckRef.current.lastCheckedForField = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (newFieldAdded && fields.length > 0 && !currentFieldHasSubscription) {
-      const timer = setTimeout(() => {
-        dispatch(displayMembershipModal());
-        dispatch(setNewFieldAdded(false));
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [newFieldAdded, fields.length, currentFieldHasSubscription, dispatch]);
-
-  useEffect(() => {
-    const skip = localStorage.getItem("skipAddFieldPreview");
-    if (!skip && fields.length === 0) setShowAddFieldInfo(true);
-  }, [fields.length]);
-
-  useEffect(() => {
-    if (fields.length > 0 && !selectedField) {
-      setShowSelectFarmModal(true);
-    } else {
-      setShowSelectFarmModal(false);
-    }
-  }, [fields, selectedField]);
 
   useEffect(() => {
     if (!selectedFieldDetails || aois.length === 0) return;
@@ -307,23 +241,13 @@ const Dashboard = () => {
     dispatch(fetchForecastData({ geometry_id: geoId }));
   }, [selectedFieldDetails, aois, dispatch]);
 
-  useEffect(() => {
-    if (isCheckingSubscription) {
-      setIsRefreshingSubscription(true);
-    } else {
-      const timer = setTimeout(() => {
-        setIsRefreshingSubscription(false);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [isCheckingSubscription]);
-
   /* fetch advisory from DB once when selected field or token changes */
   useEffect(() => {
+    if (!selectedField) return;
     dispatch(fetchSmartAdvisory({ fieldId: selectedField }))
       .unwrap()
       .catch(() => {});
-  }, [dispatch]);
+  }, [dispatch, selectedField]);
 
   /* runSmartAdvisory at most once per field per week; refresh advisory from DB on success */
   useEffect(() => {
@@ -379,26 +303,27 @@ const Dashboard = () => {
 
     const fieldData = {
       id: selectedFieldDetails._id,
-      name: selectedFieldDetails.farmName,
+      name: selectedFieldDetails.fieldName || selectedFieldDetails.farmName,
       areaInHectares,
       cropName: selectedFieldDetails.cropName,
     };
 
     setPricingFieldData(fieldData);
     setShowPricingOverlay(true);
-    dispatch(hideMembershipModal());
-  }, [selectedFieldDetails, dispatch]);
+
+    setShowMembershipModalLocal(false);
+  }, [selectedFieldDetails]);
 
   const handleSkipMembership = useCallback(() => {
-    dispatch(hideMembershipModal());
+    setShowMembershipModalLocal(false);
     message.info(
       "You can activate premium anytime from the locked content sections"
     );
-  }, [dispatch]);
+  }, []);
 
   const handleCloseMembershipModal = useCallback(() => {
-    dispatch(hideMembershipModal());
-  }, [dispatch]);
+    setShowMembershipModalLocal(false);
+  }, []);
 
   const handlePaymentSuccess = useCallback(
     async (successData) => {
@@ -406,32 +331,29 @@ const Dashboard = () => {
         setShowPricingOverlay(false);
         setPricingFieldData(null);
 
-        if (selectedField && successData.subscription) {
-          dispatch(
-            optimisticSubscriptionUpdate({
-              fieldId: selectedField,
-              subscription: successData.subscription,
-            })
-          );
+        const subscription = successData?.subscription;
+        const fieldId = selectedField;
+
+        if (fieldId && subscription) {
+          setIsRefreshingSubscription(true);
+          dispatch(updateFieldSubscription({ fieldId, subscription }));
         }
 
         dispatch(
           setPaymentSuccess({
             ...successData,
-            fieldName: successData.fieldName || selectedFieldDetails?.farmName,
+            fieldName:
+              successData.fieldName ||
+              selectedFieldDetails?.farmName ||
+              selectedFieldDetails?.fieldName,
           })
         );
 
-        setIsRefreshingSubscription(true);
-
-        if (selectedField && authToken) {
-          await dispatch(
-            checkFieldSubscriptionStatus({ fieldId: selectedField, authToken })
-          ).unwrap();
-          setTimeout(() => setIsRefreshingSubscription(false), 300);
-        } else {
-          setIsRefreshingSubscription(false);
+        if (userId) {
+          await dispatch(getFarmFields(userId)).unwrap();
         }
+
+        setTimeout(() => setIsRefreshingSubscription(false), 300);
       } catch (error) {
         setIsRefreshingSubscription(false);
         message.error(
@@ -439,21 +361,54 @@ const Dashboard = () => {
         );
       }
     },
-    [dispatch, selectedField, authToken, selectedFieldDetails]
+    [dispatch, selectedField, selectedFieldDetails, userId]
   );
 
   const handleCloseReduxPaymentSuccess = useCallback(() => {
     dispatch(clearPaymentSuccess());
   }, [dispatch]);
 
+
+  const hasCropHealthAndYield =
+    selectedFieldDetails?.subscription?.hasActiveSubscription &&
+    selectedFieldDetails?.subscription?.plan?.features?.soilAnalysisAndHealth;
+  
+  const hasWeatherAnalytics =
+    selectedFieldDetails?.subscription?.hasActiveSubscription &&
+    selectedFieldDetails?.subscription?.plan?.features?.weatherAnalytics;
+  
+  const hasVegetationIndices =
+    selectedFieldDetails?.subscription?.hasActiveSubscription &&
+    selectedFieldDetails?.subscription?.plan?.features?.vegetationIndices;
+  
+  const hasWaterIndices =
+    selectedFieldDetails?.subscription?.hasActiveSubscription &&
+    selectedFieldDetails?.subscription?.plan?.features?.waterIndices;
+  
+  const hasEvapotranspiration =
+    selectedFieldDetails?.subscription?.hasActiveSubscription &&
+    selectedFieldDetails?.subscription?.plan?.features?.evapotranspirationMonitoring;
+  
+  const hasAgronomicInsights =
+    selectedFieldDetails?.subscription?.hasActiveSubscription &&
+    selectedFieldDetails?.subscription?.plan?.features?.agronomicInsights;
+  
+  const hasWeeklyAdvisoryReports =
+    selectedFieldDetails?.subscription?.hasActiveSubscription &&
+    selectedFieldDetails?.subscription?.plan?.features?.weeklyAdvisoryReports;
+  
+  const hasCropGrowthMonitoring =
+    selectedFieldDetails?.subscription?.hasActiveSubscription &&
+    selectedFieldDetails?.subscription?.plan?.features?.cropGrowthMonitoring;
+
   return (
     <div className="dashboard min-h-screen w-full overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden float-end p-1.5 lg:p-3">
       <SubscriptionModal
-        isOpen={showMembershipModal}
+        isOpen={showMembershipModalLocal}
         onClose={handleCloseMembershipModal}
         onSubscribe={handleSubscribe}
         onSkip={handleSkipMembership}
-        fieldName={selectedFieldDetails?.farmName}
+        fieldName={selectedFieldDetails?.fieldName}
       />
 
       <AnimatePresence>
@@ -470,14 +425,6 @@ const Dashboard = () => {
               onClose={() => {
                 setShowPricingOverlay(false);
                 setPricingFieldData(null);
-                if (selectedField && authToken) {
-                  dispatch(
-                    checkFieldSubscriptionStatus({
-                      fieldId: selectedField,
-                      authToken,
-                    })
-                  );
-                }
               }}
               onPaymentSuccess={handlePaymentSuccess}
               userArea={pricingFieldData.areaInHectares}
@@ -490,7 +437,11 @@ const Dashboard = () => {
       <PaymentSuccessModal
         isOpen={showPaymentSuccessModalRedux}
         onClose={handleCloseReduxPaymentSuccess}
-        fieldName={paymentSuccess?.fieldName || selectedFieldDetails?.farmName}
+        fieldName={
+          paymentSuccess?.fieldName ||
+          selectedFieldDetails?.fieldName ||
+          selectedFieldDetails?.farmName
+        }
         planName={paymentSuccess?.planName}
         features={paymentSuccess?.features || []}
         daysLeft={paymentSuccess?.daysLeft}
@@ -535,23 +486,28 @@ const Dashboard = () => {
 
       {fields.length > 0 && !isRefreshingSubscription && (
         <>
-          <CropHealth
-            selectedFieldsDetials={
-              selectedFieldDetails ? [selectedFieldDetails] : []
-            }
-            fields={fields}
-            onSubscribe={handleSubscribe}
-            usePremiumWrapper={true}
-          />
+          {selectedFieldDetails && (
+            <CropHealth
+              selectedFieldsDetials={
+                selectedFieldDetails ? [selectedFieldDetails] : []
+              }
+              fields={fields}
+              onSubscribe={handleSubscribe}
+              hasCropHealthAndYield={hasCropHealthAndYield}
+            />
+          )}
 
-          <ForeCast onSubscribe={handleSubscribe} />
+          <ForeCast
+            hasWeatherAnalytics={hasWeatherAnalytics}
+            onSubscribe={handleSubscribe}
+          />
 
           <NdviGraph
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
             onSubscribe={handleSubscribe}
-            usePremiumWrapper={true}
+            hasVegetationIndices={hasVegetationIndices}
           />
 
           <WaterIndex
@@ -559,23 +515,27 @@ const Dashboard = () => {
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
             onSubscribe={handleSubscribe}
-            usePremiumWrapper={true}
+            hasWaterIndices={hasWaterIndices}
           />
 
           <EvapotranspirationDashboard
             forecast={forecast}
             units={units}
             onSubscribe={handleSubscribe}
+            hasEvapotranspiration={hasEvapotranspiration}
           />
 
-          <Insights onSubscribe={handleSubscribe} />
+          <Insights
+            onSubscribe={handleSubscribe}
+            hasAgronomicInsights={hasAgronomicInsights}
+          />
 
           <CropAdvisory
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
             onSubscribe={handleSubscribe}
-            usePremiumWrapper={true}
+            hasWeeklyAdvisoryReports={hasWeeklyAdvisoryReports}
           />
 
           <PlantGrowthActivity
@@ -583,7 +543,7 @@ const Dashboard = () => {
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
             onSubscribe={handleSubscribe}
-            usePremiumWrapper={true}
+            hasCropGrowthMonitoring={hasCropGrowthMonitoring}
           />
         </>
       )}

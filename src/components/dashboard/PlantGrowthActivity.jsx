@@ -103,12 +103,14 @@ const generateCurveData = (interval, cropName, growthStages = []) => {
     CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other;
   const totalDays = totalWeeks * 7;
 
- 
   if (growthStages && growthStages.length > 0) {
     if (interval === "Days") {
       return growthStages.map((stage, i) => ({
         label: `Day ${stage.day || i + 1}`,
-        height: stage.height || stage.growthValue || Math.max(1, Math.sin(i / 10) * 3 + 4),
+        height:
+          stage.height ||
+          stage.growthValue ||
+          Math.max(1, Math.sin(i / 10) * 3 + 4),
         index: stage.day || i + 1,
         stageName: stage.stageName,
         bbchStage: stage.bbchStage,
@@ -327,15 +329,12 @@ const PlantGrowthActivity = memo(
               </select>
             </div>
 
-
             {isLoading && <CircularLoader message="Loading growth data..." />}
-
 
             {!isLoading && !hasData && (
               <NoDataMessage message="Growth data not available yet" />
             )}
 
-       
             {!isLoading && hasData && data.length > 0 && (
               <div className="w-full h-[300px] bg-gray-100 rounded-2xl relative">
                 <ResponsiveContainer width="100%" height="100%">

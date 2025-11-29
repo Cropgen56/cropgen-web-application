@@ -1,18 +1,11 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
-import SmartAdvisorySidebar from "../components/smartadvisory/smartadvisorysidebar/SmartAdvisorySidebar";
-import { getFarmFields } from "../redux/slices/farmSlice";
-import "leaflet/dist/leaflet.css";
-import img1 from "../assets/image/Group 31.png";
 import { useNavigate } from "react-router-dom";
+
+import SmartAdvisorySidebar from "../components/smartadvisory/smartadvisorysidebar/SmartAdvisorySidebar";
+import SmartAdvisoryMap from "../components/smartadvisory/SmartAdvisoryMap";
 import NDVIChartCard from "../components/smartadvisory/smartadvisorysidebar/Ndvigrapgh";
 import IrrigationStatusCard from "../components/smartadvisory/smartadvisorysidebar/IrrigationStatusCard";
 import NutrientManagement from "../components/smartadvisory/smartadvisorysidebar/NutrientManagement";
@@ -20,45 +13,16 @@ import WeatherCard from "../components/smartadvisory/smartadvisorysidebar/Weathe
 import PestDiseaseCard from "../components/smartadvisory/smartadvisorysidebar/PestDiseaseCard";
 import FarmAdvisoryCard from "../components/smartadvisory/smartadvisorysidebar/Farmadvisory";
 import Soiltemp from "../components/smartadvisory/smartadvisorysidebar/Soiltemp";
-import useIsTablet from "../components/smartadvisory/smartadvisorysidebar/Istablet";
+
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
-import SmartAdvisoryMap from "../components/smartadvisory/SmartAdvisoryMap";
-import {
-  checkFieldSubscriptionStatus,
-  setCurrentField,
-  hideMembershipModal,
-  selectHasSmartAdvisorySystem,
-} from "../redux/slices/membershipSlice";
-import {
-  fetchSmartAdvisory,
-  runSmartAdvisory,
-} from "../redux/slices/smartAdvisorySlice";
-import {
-  fetchHistoricalWeather,
-  fetchForecastData,
-  fetchAOIs,
-} from "../redux/slices/weatherSlice";
 
-const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const lastRunKeyFor = (fieldId) => `lastSmartAdvisoryRun_${fieldId}`;
+import { getFarmFields } from "../redux/slices/farmSlice";
+import useIsTablet from "../components/smartadvisory/smartadvisorysidebar/Istablet";
 
-function getLastRunTimestamp(fieldId) {
-  try {
-    const v = localStorage.getItem(lastRunKeyFor(fieldId));
-    return v ? Number(v) : 0;
-  } catch (e) {
-    return 0;
-  }
-}
-
-function setLastRunTimestamp(fieldId, ts = Date.now()) {
-  try {
-    localStorage.setItem(lastRunKeyFor(fieldId), String(ts));
-  } catch (e) {}
-}
+import "leaflet/dist/leaflet.css";
+import img1 from "../assets/image/Group 31.png";
 
 const SmartAdvisory = () => {
   const dispatch = useDispatch();
@@ -66,129 +30,33 @@ const SmartAdvisory = () => {
   const isTablet = useIsTablet();
 
   const user = useSelector((s) => s.auth?.user);
-  const authToken = useSelector((s) => s.auth?.token);
   const fieldsRaw = useSelector((s) => s.farmfield?.fields ?? []);
-  const aois = useSelector((s) => s.weather?.aois ?? []);
-  const showMembershipModal = useSelector(
-    (s) => s.membership?.showMembershipModal
-  );
-  const hasSmartAdvisorySystem = useSelector(selectHasSmartAdvisorySystem);
-  const fieldSubscriptions = useSelector(
-    (s) => s.membership?.fieldSubscriptions ?? {}
-  );
 
-  const [reportdata, setReportData] = useState(null);
   const [selectedField, setSelectedField] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
   const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
-  const mountedRef = useRef(false);
+  const selectedFieldsDetials = useMemo(
+    () => (selectedField ? [selectedField] : []),
+    [selectedField]
+  );
 
-  // Prepare selected field details for the map component
-  const selectedFieldsDetials = useMemo(() => {
-    if (selectedField) {
-      return [selectedField];
-    }
-    return [];
-  }, [selectedField]);
-
+  // Fetch fields on mount
   useEffect(() => {
-    dispatch(fetchAOIs());
     if (user?.id) dispatch(getFarmFields(user.id));
   }, [dispatch, user?.id]);
 
-  // select field effect: set current field and check subscription if needed
+  // Auto-select the last field
   useEffect(() => {
-    if (!selectedField || !authToken) return;
-    dispatch(setCurrentField(selectedField._id));
-
-    const fieldSub = fieldSubscriptions[selectedField._id];
-    const shouldCheck =
-      !fieldSub ||
-      (fieldSub.lastChecked &&
-        Date.now() - new Date(fieldSub.lastChecked).getTime() >
-          SUBSCRIPTION_CHECK_INTERVAL);
-
-    if (shouldCheck) {
-      dispatch(
-        checkFieldSubscriptionStatus({ fieldId: selectedField._id, authToken })
-      );
+    if (fields?.length > 0 && !selectedField) {
+      setSelectedField(fields[fields.length - 1]);
     }
-  }, [selectedField, authToken, dispatch, fieldSubscriptions]);
+  }, [fields, selectedField]);
 
-  // interval to refresh subscription status while field is selected
-  useEffect(() => {
-    if (!selectedField || !authToken) return;
-    const id = setInterval(() => {
-      dispatch(
-        checkFieldSubscriptionStatus({ fieldId: selectedField._id, authToken })
-      );
-    }, SUBSCRIPTION_CHECK_INTERVAL);
-    return () => clearInterval(id);
-  }, [selectedField, authToken, dispatch]);
-
-  // fetch advisory from DB on mount and when selected field changes
-  useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-    }
-    if (!selectedField) return;
-    dispatch(fetchSmartAdvisory({ fieldId: selectedField._id }))
-      .unwrap()
-      .catch((err) => {
-        console.debug("fetchSmartAdvisory failed:", err);
-      });
-  }, [selectedField, dispatch]);
-
-  // run advisory generation at most once per week per field (requires AOI/geometry)
-  useEffect(() => {
-    if (!selectedField || !authToken) return;
-    const fieldId = selectedField._id;
-    const lastRunTs = getLastRunTimestamp(fieldId);
-    if (lastRunTs && Date.now() - lastRunTs < WEEK_MS) return;
-
-    const matchingAOI = aois.find((a) => a.name === fieldId && a.id);
-    if (!matchingAOI) {
-      return;
-    }
-
-    const payload = {
-      fieldId,
-      geometryId: matchingAOI.id,
-      targetDate: new Date().toISOString().split("T")[0],
-      language: "en",
-      token: authToken,
-    };
-
-    dispatch(runSmartAdvisory(payload))
-      .unwrap()
-      .then(() => {
-        setLastRunTimestamp(fieldId, Date.now());
-        dispatch(fetchSmartAdvisory({ fieldId })).catch(() => {});
-      })
-      .catch(() => {});
-  }, [selectedField, aois, authToken, dispatch]);
-
-  useEffect(() => {
-    if (!selectedField || !authToken) return;
-
-    const fieldId = selectedField._id;
-    const matchingAOI = aois.find((a) => a.name === fieldId && a.id);
-
-    const requestPayload = {
-      geometry_id: matchingAOI?.id,
-      start_date: selectedField?.sowingDate,
-      end_date: new Date().toISOString().split("T")[0],
-    };
-
-    const geometry_id = matchingAOI?.id;
-
-    dispatch(fetchHistoricalWeather(requestPayload));
-    dispatch(fetchForecastData({ geometry_id }));
-  }, [selectedField, aois, authToken, dispatch]);
-
+  // Handlers
   const handleSubscribe = useCallback(() => {
     if (!selectedField) {
       message.warning("Please select a field first");
@@ -204,30 +72,24 @@ const SmartAdvisory = () => {
       cropName: selectedField.cropName,
     });
     setShowPricingOverlay(true);
-    dispatch(hideMembershipModal());
-  }, [selectedField, dispatch]);
+    setShowMembershipModal(false);
+  }, [selectedField]);
 
   const handleSkipMembership = useCallback(() => {
-    dispatch(hideMembershipModal());
+    setShowMembershipModal(false);
     message.info(
       "You can activate premium anytime from the locked content sections"
     );
-  }, [dispatch]);
+  }, []);
 
   const handleCloseMembershipModal = useCallback(
-    () => dispatch(hideMembershipModal()),
-    [dispatch]
+    () => setShowMembershipModal(false),
+    []
   );
-
   const handleClosePricing = useCallback(() => {
     setShowPricingOverlay(false);
     setPricingFieldData(null);
-    if (selectedField && authToken) {
-      dispatch(
-        checkFieldSubscriptionStatus({ fieldId: selectedField._id, authToken })
-      );
-    }
-  }, [selectedField, authToken, dispatch]);
+  }, []);
 
   if (!fields || fields.length === 0) {
     return (
@@ -249,6 +111,11 @@ const SmartAdvisory = () => {
       </div>
     );
   }
+
+  const hasSubscription = selectedField?.subscription?.hasActiveSubscription;
+  const hasSmartAdvisorySystem =
+    hasSubscription &&
+    selectedField?.subscription?.plan?.features?.smartAdvisorySystem;
 
   return (
     <>
@@ -283,7 +150,6 @@ const SmartAdvisory = () => {
         {isSidebarVisible && (
           <div className="min-w-[280px] h-full border-r border-gray-700 bg-white text-black">
             <SmartAdvisorySidebar
-              setReportData={setReportData}
               setSelectedField={setSelectedField}
               setIsSidebarVisible={setIsSidebarVisible}
             />
@@ -296,8 +162,8 @@ const SmartAdvisory = () => {
               <button
                 className="bg-[#344e41] text-white px-4 py-2 rounded-md text-sm shadow"
                 onClick={() => {
+                  setSelectedField(null); // <-- reset selectedField
                   setIsSidebarVisible(true);
-                  setReportData(null);
                 }}
               >
                 Select Another Farm
@@ -305,16 +171,14 @@ const SmartAdvisory = () => {
             </div>
           )}
 
-          {reportdata ? (
+          {selectedField ? (
             <PremiumPageWrapper
               isLocked={!hasSmartAdvisorySystem}
               onSubscribe={handleSubscribe}
               title="Smart Advisory System"
             >
               {isTablet ? (
-                // Tablet Layout
                 <div className="flex flex-col gap-4 w-full max-w-[1024px] mx-auto">
-                  {/* Map Component */}
                   <div className="w-full h-[350px] rounded-lg overflow-hidden shadow relative">
                     <SmartAdvisoryMap
                       fields={fields}
@@ -325,9 +189,7 @@ const SmartAdvisory = () => {
                       height="350px"
                     />
                   </div>
-
                   <NDVIChartCard />
-
                   <div className="flex flex-col gap-4 w-full">
                     <div className="bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
                       <IrrigationStatusCard />
@@ -345,17 +207,14 @@ const SmartAdvisory = () => {
                       <Soiltemp />
                     </div>
                   </div>
-
                   <div className="w-full bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
                     <FarmAdvisoryCard />
                   </div>
                 </div>
               ) : (
-                // Desktop Layout
                 <div className="flex flex-col gap-4 w-full">
                   <div className="flex flex-col lg:flex-row gap-4">
                     <div className="flex flex-col lg:w-[65%]">
-                      {/* Map Component */}
                       <div className="w-full h-[350px] rounded-lg overflow-hidden shadow relative">
                         <SmartAdvisoryMap
                           fields={fields}
@@ -366,28 +225,22 @@ const SmartAdvisory = () => {
                           height="350px"
                         />
                       </div>
-
                       <NDVIChartCard />
                     </div>
-
                     <div className="lg:w-[35%]">
                       <IrrigationStatusCard />
                     </div>
                   </div>
-
                   <NutrientManagement />
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 w-full">
                     <WeatherCard />
                     <PestDiseaseCard />
                   </div>
-
                   <div className="flex flex-row gap-4 w-full">
                     <div className="w-full overflow-x-auto">
                       <Soiltemp />
                     </div>
                   </div>
-
                   <div className="w-full">
                     <FarmAdvisoryCard />
                   </div>
@@ -399,7 +252,7 @@ const SmartAdvisory = () => {
               <div className="flex flex-col items-center text-center opacity-60">
                 <img src={img1} alt="" />
                 <p className="text-2xl font-semibold">
-                  Select Field For Generate Smart Advisory
+                  Select Field to Generate Smart Advisory
                 </p>
               </div>
             </div>
