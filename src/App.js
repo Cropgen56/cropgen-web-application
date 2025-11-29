@@ -1,7 +1,6 @@
 import React from "react";
 import { useEffect } from "react";
 import AppRoutes from "./routes/AppRoutes";
-import { useSelector } from "react-redux";
 // import { Toaster } from "react-hot-toast";
 
 const App = () => {
@@ -36,10 +35,6 @@ const App = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
-
-  const token = useSelector((state) => state.auth.token);
-
-  // console.log(token);
 
   return (
     <>

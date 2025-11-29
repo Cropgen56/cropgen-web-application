@@ -1,30 +1,54 @@
-import api from "./api.js";
+import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("authToken");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
+
+
 export const createOperationAPI = async ({ farmId, operationData }) => {
-  const response = await api.post(`${API_URL}/api/operation/${farmId}/create`, {
-    supervisorName: operationData.supervisorName,
-    operationType: operationData.operationType,
-    progress: operationData.progress,
-    chemicalUsed: operationData.chemicalUsed,
-    chemicalQuantity: operationData.chemicalQuantity,
-    labourMale: Number(operationData.labourMale),
-    labourFemale: Number(operationData.labourFemale),
-    estimatedCost: Number(operationData.estimatedCost),
-    comments: operationData.comments,
-    operationDate: operationData.operationDate,
-    operationTime: operationData.operationTime,
-  });
+  const response = await axios.post(
+    `${API_URL}/api/operation/${farmId}/create`,
+    {
+      supervisorName: operationData.supervisorName,
+      operationType: operationData.operationType,
+      progress: operationData.progress,
+      chemicalUsed: operationData.chemicalUsed,
+      chemicalQuantity: operationData.chemicalQuantity,
+      labourMale: Number(operationData.labourMale),
+      labourFemale: Number(operationData.labourFemale),
+      estimatedCost: Number(operationData.estimatedCost),
+      comments: operationData.comments,
+      operationDate: operationData.operationDate,
+      operationTime: operationData.operationTime,
+    },
+    getAuthHeaders()
+  );
   return response.data;
 };
+
 
 export const getOperationsByFarmFieldAPI = async ({ farmId }) => {
-  const response = await api.get(`${API_URL}/api/operation/${farmId}/get`);
+  const response = await axios.get(
+    `${API_URL}/api/operation/${farmId}/get`,
+    getAuthHeaders() // 
+  );
   return response.data;
 };
 
+
 export const deleteOperationAPI = async (operationId) => {
-  const response = await api.delete(`${API_URL}/api/operation/${operationId}`);
+  const response = await axios.delete(
+    `${API_URL}/api/operation/${operationId}`,
+    getAuthHeaders()
+  );
   return response.data;
 };
+

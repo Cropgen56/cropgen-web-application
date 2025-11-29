@@ -1,6 +1,8 @@
-import api from "./api";
+import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
+
+const token = localStorage.getItem("authToken") || null;
 
 // Add field API
 export const addFieldAPI = async ({
@@ -15,7 +17,7 @@ export const addFieldAPI = async ({
   typeOfFarming,
 }) => {
   try {
-    const response = await api.post(
+    const response = await axios.post(
       `${API_URL}/api/field/add-field/${userId}`,
       {
         latlng,
@@ -26,6 +28,11 @@ export const addFieldAPI = async ({
         farmName,
         acre,
         typeOfFarming,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
     return response.data;
@@ -38,7 +45,14 @@ export const addFieldAPI = async ({
 // Get field API
 export const getFieldAPI = async (userId) => {
   try {
-    const response = await api.get(`${API_URL}/api/field/get-field/${userId}`);
+    const response = await axios.get(
+      `${API_URL}/api/field/get-field/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching field data:", error);
@@ -46,12 +60,18 @@ export const getFieldAPI = async (userId) => {
   }
 };
 
+
 // Update field API
 export const updateFieldAPI = async (fieldId, updatedData) => {
   try {
-    const response = await api.patch(
+    const response = await axios.patch(
       `${API_URL}/api/field/update-field/${fieldId}`,
-      updatedData
+      updatedData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {
@@ -60,11 +80,17 @@ export const updateFieldAPI = async (fieldId, updatedData) => {
   }
 };
 
+
 // Delete field API
 export const deleteFieldAPI = async (fieldId) => {
   try {
-    const response = await api.delete(
-      `${API_URL}/api/field/delete-field/${fieldId}`
+    const response = await axios.delete(
+      `${API_URL}/api/field/delete-field/${fieldId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
     return response.data;
   } catch (error) {

@@ -26,7 +26,8 @@ const AppRoutes = () => {
           path="/"
           element={
             <ProtectedRoute>
-              <MainLayout />
+              {" "}
+              <MainLayout />{" "}
             </ProtectedRoute>
           }
         >
