@@ -12,7 +12,6 @@ const api = axios.create({
   timeout: 30000,
 });
 
-// Attach Bearer token to every request
 api.interceptors.request.use(
   (config) => {
     const state = store?.getState();
