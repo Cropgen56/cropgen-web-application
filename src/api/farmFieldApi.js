@@ -2,9 +2,6 @@ import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const token = localStorage.getItem("authToken") || null;
-
-// Add field API
 export const addFieldAPI = async ({
   latlng,
   userId,
@@ -60,7 +57,6 @@ export const getFieldAPI = async (userId) => {
   }
 };
 
-
 // Update field API
 export const updateFieldAPI = async (fieldId, updatedData) => {
   try {
@@ -79,7 +75,6 @@ export const updateFieldAPI = async (fieldId, updatedData) => {
     throw error;
   }
 };
-
 
 // Delete field API
 export const deleteFieldAPI = async (fieldId) => {
