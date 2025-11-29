@@ -2,7 +2,6 @@ import api from "./api";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-// Add field API
 export const addFieldAPI = async ({
   latlng,
   userId,
