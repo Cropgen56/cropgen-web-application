@@ -3,7 +3,6 @@ import axios from "axios";
 import { get, set } from "idb-keyval";
 import { getSixMonthsBeforeDate } from "../../utility/formatDate";
 
-// Helper function to compare arrays (used for polygon closure)
 function arraysEqual(a, b) {
   return a.length === b.length && a.every((val, index) => val === b[index]);
 }
@@ -72,8 +71,13 @@ export const fetchSatelliteDates = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/availability/`,
-        payload
+        `${process.env.REACT_APP_SATELLITE_API}/v4/api/availability/`,
+        payload,
+        {
+          headers: {
+            "x-api-key": process.env.REACT_APP_SATELLITE_API,
+          },
+        }
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -120,7 +124,12 @@ export const fetchIndexData = createAsyncThunk(
 
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/calculate/index`,
-        payload
+        payload,
+        {
+          headers: {
+            "x-api-key": process.env.REACT_APP_SATELLITE_API,
+          },
+        }
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -200,6 +209,11 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
           provider: "both",
           satellite: "s2",
           max_items: 200,
+        },
+        {
+          headers: {
+            "x-api-key": process.env.REACT_APP_SATELLITE_API,
+          },
         }
       );
 
@@ -256,6 +270,11 @@ export const fetchWaterIndexData = createAsyncThunk(
           provider: "both",
           satellite: "s2",
           max_items: 200,
+        },
+        {
+          headers: {
+            "x-api-key": process.env.REACT_APP_SATELLITE_API,
+          },
         }
       );
 
