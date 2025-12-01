@@ -137,7 +137,7 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelecte
   const selectedFieldObj = fields.find((f) => f._id === selectedFieldId);
 
   return (
-    <div className="w-[20vw] m-0 p-0 bg-white shadow-md flex flex-col h-screen relative overflow-y-auto">
+    <div className="w-[22vw] m-0 p-0 bg-white shadow-md flex flex-col h-screen relative overflow-y-auto">
       <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -222,6 +222,7 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelecte
 
           {!reportGenerated ? (
             <button
+            disabled={true}
               onClick={() => {
                 setReportData({
                   field: selectedFieldObj.farmName || "",
