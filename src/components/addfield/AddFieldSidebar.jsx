@@ -287,19 +287,19 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
     const totalDays = daysInMonth(currentMonth, currentYear);
     const startDay = firstDayOfMonth(currentMonth, currentYear);
     const days = [];
-    
+
     for (let i = 0; i < startDay; i++) {
       days.push(<div key={`empty-${i}`} className="h-6 w-6"></div>);
     }
 
     for (let day = 1; day <= totalDays; day++) {
-      const isSelected = value && 
+      const isSelected = value &&
         new Date(value).getDate() === day &&
         new Date(value).getMonth() === currentMonth &&
         new Date(value).getFullYear() === currentYear;
-      
+
       const isDisabled = isDateDisabled(day);
-      const isToday = 
+      const isToday =
         new Date().getDate() === day &&
         new Date().getMonth() === currentMonth &&
         new Date().getFullYear() === currentYear;
@@ -313,13 +313,13 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
           className={`
             h-6 w-6 rounded text-xs flex items-center justify-center
             transition-all duration-150
-            ${isSelected 
-              ? 'bg-white text-[#344E41] font-bold' 
+            ${isSelected
+              ? 'bg-white text-[#344E41] font-bold'
               : isToday
-              ? 'bg-[#4a6b5a] text-white'
-              : isDisabled
-              ? 'text-gray-500 cursor-not-allowed'
-              : 'text-white hover:bg-[#2b3e33]'
+                ? 'bg-[#4a6b5a] text-white'
+                : isDisabled
+                  ? 'text-gray-500 cursor-not-allowed'
+                  : 'text-white hover:bg-[#2b3e33]'
             }
           `}
         >
@@ -332,7 +332,7 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
   };
 
   return (
-    <div className="flex flex-col gap-1" ref={datePickerRef}>
+    <div className="flex flex-col gap-1 relative" ref={datePickerRef}>
       <label className="font-semibold text-sm">{label}</label>
       <div className="relative">
         <button
@@ -360,7 +360,7 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 w-56 mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-lg p-2">
+          <div className="absolute z-[10000] w-56 mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl p-2">
             <div className="flex items-center justify-between mb-2 text-white">
               <button
                 type="button"
@@ -473,7 +473,7 @@ const AutocompleteDropdown = ({ label, value, onChange, options, placeholder }) 
   };
 
   return (
-    <div className="flex flex-col gap-1" ref={dropdownRef}>
+    <div className="flex flex-col gap-1 relative" ref={dropdownRef}>
       <label className="font-semibold text-sm">{label}</label>
       <div className="relative">
         <div className="relative">
@@ -506,7 +506,7 @@ const AutocompleteDropdown = ({ label, value, onChange, options, placeholder }) 
         </div>
 
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-lg max-h-60 overflow-auto">
+          <div className="absolute z-[10000] w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl max-h-60 overflow-auto">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((option, index) => (
                 <div

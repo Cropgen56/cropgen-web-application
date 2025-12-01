@@ -132,10 +132,6 @@ const Dashboard = () => {
     return fields.find((f) => f?._id === selectedField) || null;
   }, [fields, selectedField]);
 
-  useEffect(() => {
-    console.log("Fields:", fields);
-    console.log("Selected Field:", selectedField);
-  }, [fields, selectedField]);
 
   const { forecast, units } = forecastData || {};
 

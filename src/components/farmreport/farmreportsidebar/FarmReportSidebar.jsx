@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import PolygonPreview from "../../polygon/PolygonPreview";
 import { ArrowDownToLine, LoaderCircle } from "lucide-react";
-import {
-  checkFieldSubscriptionStatus,
-} from "../../../redux/slices/membershipSlice";
 
 const FieldInfo = ({
   title,
@@ -55,22 +52,13 @@ const FarmReportSidebar = ({
   setSelectedField,
   selectedField,
   downloadPDF,
-  currentFieldHasSubscription,
+  hasSubscription,
 }) => {
-  const dispatch = useDispatch();
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
   const fields = useSelector((state) => state?.farmfield?.fields) || [];
-
-  // Get auth token for membership check
-  const authToken = useSelector((state) => state.auth.token);
-
-  // Get all field subscriptions from store
-  const fieldSubscriptions = useSelector(
-    (state) => state.membership.fieldSubscriptions || {}
-  );
 
   // Sort fields in descending order (latest first)
   const sortedFields = [...fields].sort((a, b) => {
@@ -110,22 +98,6 @@ const FarmReportSidebar = ({
   const filteredFields = sortedFields.filter((field) =>
     field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  // Check subscription status for each field
-  useEffect(() => {
-    if (fields.length > 0 && authToken) {
-      fields.forEach((field) => {
-        if (field._id) {
-          dispatch(
-            checkFieldSubscriptionStatus({
-              fieldId: field._id,
-              authToken,
-            })
-          );
-        }
-      });
-    }
-  }, [fields, authToken, dispatch]);
 
   // handling download
   const handleDownload = async () => {
@@ -191,8 +163,9 @@ const FarmReportSidebar = ({
         {filteredFields.length > 0 ? (
           filteredFields.map((field) => {
             const { lat, lon } = calculateCentroid(field.field);
+            // Get subscription status directly from field object
             const isSubscribed =
-              fieldSubscriptions[field._id]?.hasActiveSubscription || false;
+              field?.subscription?.hasActiveSubscription || false;
 
             return (
               <FieldInfo
@@ -202,9 +175,9 @@ const FarmReportSidebar = ({
                 lat={lat}
                 lon={lon}
                 coordinates={field.field}
-                isSelected={field._id === selectedField}
+                isSelected={selectedField?._id === field._id}
                 isSubscribed={isSubscribed}
-                onClick={() => setSelectedField(field._id)}
+                onClick={() => setSelectedField(field)} // Pass full field object
               />
             );
           })
@@ -214,23 +187,23 @@ const FarmReportSidebar = ({
           </p>
         )}
       </div>
-      <div className="mt-auto sticky bottom-0 bg-white p-3  z-10">
-        {/* {currentFieldHasSubscription ? ( */}
-          <button
-            onClick={handleDownload}
-            className="w-full flex items-center justify-center gap-2 bg-[#344e41] text-white py-2 rounded-md hover:bg-[#2d4036] transition-all duration-300"
-          >
-            {loading && <LoaderCircle className="animate-spin" size={18} />}
+      <div className="mt-auto sticky bottom-0 bg-white p-3 z-10">
+        {/* {hasSubscription ? ( */}
+        <button
+          disabled={true}
+          onClick={handleDownload}
+          className="w-full flex items-center justify-center gap-2 bg-[#344e41] text-white py-2 rounded-md hover:bg-[#2d4036] transition-all duration-300"
+        >
+          {loading && <LoaderCircle className="animate-spin" size={18} />}
 
-            {loading ?
-              (
-              "Downloading.."
-            ) : (
-              <>
-                <ArrowDownToLine size={18} /> Download Farm Report
-              </>
-            )}
-          </button>
+          {loading ? (
+            "Downloading.."
+          ) : (
+            <>
+              <ArrowDownToLine size={18} /> Download Farm Report
+            </>
+          )}
+        </button>
         {/* ) : null}  */}
       </div>
     </div>
