@@ -71,7 +71,7 @@ export const fetchSatelliteDates = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${process.env.REACT_APP_SATELLITE_API}/v4/api/availability/`,
+        `https://server.cropgenapp.com/v4/api/availability/`,
         payload,
         {
           headers: {
@@ -123,7 +123,7 @@ export const fetchIndexData = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/calculate/index`,
+        `https://server.cropgenapp.com/v4/api/calculate/index`,
         payload,
         {
           headers: {
