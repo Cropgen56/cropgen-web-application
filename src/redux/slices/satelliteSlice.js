@@ -25,6 +25,7 @@ const generateCacheKey = (prefix, farmId, input) => {
 const initialState = {
   satelliteDates: null,
   indexData: null,
+  indexDataByType: {}, // NEW: stores data per index type for FarmReportMap
   weatherData: null,
   indexTimeSeriesSummary: null,
   waterIndexData: null,
@@ -32,13 +33,14 @@ const initialState = {
   loading: {
     satelliteDates: false,
     indexData: false,
+    indexDataByType: {}, // NEW: loading state per index type
     weatherData: false,
     indexTimeSeriesSummary: false,
     waterIndexData: false,
   },
 };
 
-// ========== Thunks (kept five) ==========
+// ========== Thunks ==========
 
 // 1) fetchSatelliteDates
 export const fetchSatelliteDates = createAsyncThunk(
@@ -71,11 +73,11 @@ export const fetchSatelliteDates = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${process.env.REACT_APP_SATELLITE_API}/v4/api/availability/`,
+        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/availability/`,
         payload,
         {
           headers: {
-            "x-api-key": process.env.REACT_APP_SATELLITE_API,
+            "x-api-key": "CROPGEN_230498adklfjadsljf",
           },
         }
       );
@@ -88,7 +90,7 @@ export const fetchSatelliteDates = createAsyncThunk(
   }
 );
 
-// 2) fetchIndexData
+// 2) fetchIndexData (for single index - used in FarmMap)
 export const fetchIndexData = createAsyncThunk(
   "satellite/fetchIndexData",
   async ({ endDate, geometry, index }, { rejectWithValue }) => {
@@ -127,7 +129,7 @@ export const fetchIndexData = createAsyncThunk(
         payload,
         {
           headers: {
-            "x-api-key": process.env.REACT_APP_SATELLITE_API,
+            "x-api-key": "CROPGEN_230498adklfjadsljf",
           },
         }
       );
@@ -140,7 +142,62 @@ export const fetchIndexData = createAsyncThunk(
   }
 );
 
-// 3) fetchWeatherData
+// 3) fetchIndexDataForMap (NEW - for multiple indexes in FarmReportMap)
+export const fetchIndexDataForMap = createAsyncThunk(
+  "satellite/fetchIndexDataForMap",
+  async ({ endDate, geometry, index }, { rejectWithValue }) => {
+    try {
+      const input = { endDate, geometry, index };
+      const cacheKey = generateCacheKey("indexDataForMap", null, input);
+      const cached = await get(cacheKey);
+      const now = Date.now();
+
+      if (cached && now - cached.timestamp < CACHE_TTL) {
+        return { index, data: cached.data };
+      }
+
+      if (!endDate || !geometry || !index) {
+        return rejectWithValue({ index, error: "Missing required parameters" });
+      }
+
+      const payload = {
+        geometry: {
+          type: "Polygon",
+          coordinates: geometry,
+        },
+        date: endDate,
+        index_name: index,
+        provider: "both",
+        satellite: "s2",
+        width: 800,
+        height: 800,
+        supersample: 1,
+        smooth: false,
+        gaussian_sigma: 1,
+      };
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/calculate/index`,
+        payload,
+        {
+          headers: {
+            "x-api-key": "CROPGEN_230498adklfjadsljf",
+          },
+        }
+      );
+
+      await set(cacheKey, { data: response.data, timestamp: now });
+      return { index, data: response.data };
+    } catch (error) {
+      return rejectWithValue({
+        index,
+        error: error.response?.data || error.message,
+      });
+    }
+  }
+);
+
+// 4) fetchWeatherData
 export const fetchWeatherData = createAsyncThunk(
   "satellite/fetchWeatherData",
   async (_, { rejectWithValue }) => {
@@ -153,7 +210,6 @@ export const fetchWeatherData = createAsyncThunk(
         return cached.data;
       }
 
-      // Replace with your actual weather API endpoint
       const response = await axios.get("https://api.weather.com/data");
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -164,7 +220,7 @@ export const fetchWeatherData = createAsyncThunk(
   }
 );
 
-// 4) fetchIndexTimeSeriesSummary
+// 5) fetchIndexTimeSeriesSummary
 export const fetchIndexTimeSeriesSummary = createAsyncThunk(
   "satellite/fetchIndexTimeSeriesSummary",
   async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
@@ -212,7 +268,7 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
         },
         {
           headers: {
-            "x-api-key": process.env.REACT_APP_SATELLITE_API,
+            "x-api-key": "CROPGEN_230498adklfjadsljf",
           },
         }
       );
@@ -225,7 +281,7 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
   }
 );
 
-// 5) fetchWaterIndexData
+// 6) fetchWaterIndexData
 export const fetchWaterIndexData = createAsyncThunk(
   "satellite/fetchWaterIndexData",
   async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
@@ -273,7 +329,7 @@ export const fetchWaterIndexData = createAsyncThunk(
         },
         {
           headers: {
-            "x-api-key": process.env.REACT_APP_SATELLITE_API,
+            "x-api-key": "CROPGEN_230498adklfjadsljf",
           },
         }
       );
@@ -296,6 +352,10 @@ const satelliteSlice = createSlice({
     },
     removeSelectedIndexData: (state) => {
       state.indexData = null;
+    },
+    clearIndexDataByType: (state) => {
+      state.indexDataByType = {};
+      state.loading.indexDataByType = {};
     },
     resetSatelliteState: () => initialState,
   },
@@ -327,6 +387,25 @@ const satelliteSlice = createSlice({
       .addCase(fetchIndexData.rejected, (state, action) => {
         state.loading.indexData = false;
         state.error = action.payload;
+      })
+
+      // fetchIndexDataForMap (NEW)
+      .addCase(fetchIndexDataForMap.pending, (state, action) => {
+        const index = action.meta.arg.index;
+        state.loading.indexDataByType[index] = true;
+        state.error = null;
+      })
+      .addCase(fetchIndexDataForMap.fulfilled, (state, action) => {
+        const { index, data } = action.payload;
+        state.loading.indexDataByType[index] = false;
+        state.indexDataByType[index] = data;
+      })
+      .addCase(fetchIndexDataForMap.rejected, (state, action) => {
+        const index = action.meta.arg?.index;
+        if (index) {
+          state.loading.indexDataByType[index] = false;
+        }
+        state.error = action.payload?.error || action.payload;
       })
 
       // fetchWeatherData
@@ -376,6 +455,7 @@ const satelliteSlice = createSlice({
 export const {
   setSelectedIndex,
   removeSelectedIndexData,
+  clearIndexDataByType,
   resetSatelliteState,
 } = satelliteSlice.actions;
 
