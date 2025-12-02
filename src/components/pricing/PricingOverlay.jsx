@@ -22,25 +22,6 @@ const USD_TO_INR = 83;
 const DEFAULT_AREA = 5;
 
 const FEATURE_DISPLAY_NAMES = {
-  // graphHistoricalData: "Graphs & Historical Data",
-  // satelliteCropMonitoring: "Satellite Crop Monitoring",
-  // weatherForecast: "Weather Forecast",
-  // soilMoistureTemp: "Soil Moisture & Temperature",
-  // growthStageTracking: "Growth Stage Tracking (BBCH)",
-  // advisory: "Fertilizer (NPK) Advisory",
-  // irrigationUpdates: "Irrigation Updates (ET-based)",
-  // pestDiseaseAlerts: "Pest & Disease Alerts",
-  // yieldPrediction: "Yield Prediction",
-  // harvestWindow: "Harvest Window Insights",
-  // insights: "Insights",
-  // soilFertilityAnalysis: "Soil Fertility Analysis",
-  // socCarbon: "SOC Analytics (Soil Organic Carbon)",
-  // advisoryControl: "Advisory Control",
-  // advisoryDelivery: "Advisory Delivery",
-  // weeklyReports: "Weekly Reports",
-  // operationsManagement: "Operations Management Dashboard",
-  // apiIntegration: "API/ERP Integration",
-  // enterpriseSupport: "Enterprise Support",
   satelliteImagery: "Satellite Imagery",
   cropHealthAndYield: "Crop Health & Yield Monitoring",
   soilAnalysisAndHealth: "Soil Analysis & Health",
@@ -58,12 +39,23 @@ const FEATURE_DISPLAY_NAMES = {
   other: "Other ..",
 };
 
+const ENTERPRISE_PLAN = {
+  _id: "enterprise",
+  name: "Enterprise",
+  tagline: "Complete solution for large-scale agricultural operations",
+  isEnterprise: true,
+  features: Object.values(FEATURE_DISPLAY_NAMES),
+  missing: [],
+  recommended: false,
+  active: true,
+};
+
 function transformApiData(apiData, billing, currency, userArea) {
   if (!apiData || !Array.isArray(apiData)) return [];
 
   const areaInHectares = userArea || DEFAULT_AREA;
 
-  return apiData
+  const transformedPlans = apiData
     .map((plan) => {
       const pricingByCurrencyAndCycle = {};
 
@@ -191,9 +183,14 @@ function transformApiData(apiData, billing, currency, userArea) {
         isTrial,
         areaInHectares,
         trialDays: plan.trialDays,
+        isEnterprise: false,
       };
     })
     .filter((plan) => plan.active !== false);
+
+  transformedPlans.push(ENTERPRISE_PLAN);
+
+  return transformedPlans;
 }
 
 export default function PricingOverlay({
@@ -223,7 +220,6 @@ export default function PricingOverlay({
 
   const containerRef = useRef(null);
 
-  // Load Razorpay SDK once
   useEffect(() => {
     if (!window.Razorpay) {
       const script = document.createElement("script");
@@ -280,8 +276,11 @@ export default function PricingOverlay({
 
   const visibleGroup = groups[groupIndex] || [];
 
-  // Handle Subscribe
   const handleSubscribeClick = async ({ plan }) => {
+    if (plan.isEnterprise) {
+      return;
+    }
+
     if (!token) {
       toast.error("Please log in to subscribe.");
       return;
@@ -301,7 +300,6 @@ export default function PricingOverlay({
       if (!res.success) throw new Error(res.message);
 
       if (plan.isTrial) {
-        // Handle trial success
         const successData = {
           fieldName: selectedField?.name,
           planName: plan.name,
@@ -321,7 +319,6 @@ export default function PricingOverlay({
         return;
       }
 
-      // Store subscription record ID for verification
       setSubscriptionRecordId(res.data.subscriptionRecordId);
       setCheckoutPlan({ plan, razorpayData: res.data });
       setShowCheckout(true);
@@ -330,7 +327,6 @@ export default function PricingOverlay({
     }
   };
 
-  // Open Razorpay
   useEffect(() => {
     if (!showCheckout || !checkoutPlan || !window.Razorpay) return;
 
@@ -366,7 +362,6 @@ export default function PricingOverlay({
           ).unwrap();
 
           if (verifyRes.success) {
-            // Prepare success data
             const successData = {
               fieldName: selectedField?.name,
               planName: plan.name,
@@ -377,27 +372,20 @@ export default function PricingOverlay({
               isTrial: plan.isTrial,
             };
 
-            // Call the success callback if provided
             if (onPaymentSuccess) {
               onPaymentSuccess(successData);
               onClose?.();
             } else {
-              // Fallback: Store in sessionStorage for page reload scenario
               sessionStorage.setItem(
                 "paymentSuccess",
                 JSON.stringify(successData)
               );
-
-              // Also dispatch to Redux
               dispatch(setPaymentSuccess(successData));
-
-              // Close the overlay
               onClose?.();
             }
 
             toast.success("Subscription activated successfully!");
 
-            // Optional: Navigate to analytics after a short delay
             setTimeout(() => {
               navigate("/cropgen-analytics");
             }, 2000);
@@ -442,7 +430,6 @@ export default function PricingOverlay({
     subscriptionRecordId,
   ]);
 
-  // Render
   if (subLoading) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#344E41]/50">
@@ -475,7 +462,6 @@ export default function PricingOverlay({
 
   return (
     <>
-      {/* Pricing Overlay */}
       {!showCheckout && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#344E41]/50">
           <motion.div
@@ -496,7 +482,6 @@ export default function PricingOverlay({
             </h2>
 
             <div className="flex justify-center gap-6 mb-6 flex-wrap">
-              {/* Billing Toggle */}
               <div className="flex items-center gap-3">
                 <span
                   className={`font-bold text-sm cursor-pointer transition-colors ${
@@ -533,7 +518,6 @@ export default function PricingOverlay({
                 </span>
               </div>
 
-              {/* Currency Toggle */}
               <div className="flex items-center gap-3">
                 <span
                   className={`font-bold text-sm cursor-pointer transition-colors ${
@@ -568,7 +552,6 @@ export default function PricingOverlay({
               </div>
             </div>
 
-            {/* Cards */}
             <div className="flex justify-center gap-6">
               {visibleGroup.map((p) => (
                 <PlanCard
@@ -604,7 +587,6 @@ export default function PricingOverlay({
         </div>
       )}
 
-      {/* Razorpay Loader */}
       {showCheckout && (
         <div className="fixed inset-0 z-[99999] bg-black/30 flex items-center justify-center">
           <div className="bg-white rounded-xl p-8 shadow-2xl text-center">
