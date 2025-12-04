@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import ReactECharts from "echarts-for-react";
 import { useSelector } from "react-redux";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
@@ -7,10 +7,8 @@ import { selectHasEvapotranspirationMonitoring } from "../../../redux/slices/mem
 const CLOUD_COLOR_MAIN = "#87CEEB";
 
 const EvapotranspirationChart = ({ onSubscribe, hasEvapotranspiration }) => {
+  const chartRef = useRef(null);
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
-  // const hasEvapotranspirationMonitoring = useSelector(
-  //   selectHasEvapotranspirationMonitoring
-  // );
 
   const dateData = forecastData.forecast?.time || [];
   const evapotranspirationData =
@@ -129,11 +127,13 @@ const EvapotranspirationChart = ({ onSubscribe, hasEvapotranspiration }) => {
               </div>
             </div>
 
-            <div className="flex-1 lg:ml-3 bg-white rounded-xl p-1">
+            <div className="flex-1 lg:ml-3 bg-white rounded-xl p-1 echarts-container">
               <ReactECharts
+                ref={chartRef}
                 option={option}
-                className="w-full"
+                className="w-full echarts-for-react"
                 style={{ width: "100%", height: "220px" }}
+                opts={{ renderer: "canvas" }}
               />
             </div>
           </div>

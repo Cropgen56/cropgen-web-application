@@ -5,7 +5,7 @@ import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
 import useLogout from "../../utility/logout";
 import img1 from "../../assets/image/Frame 63.png";
-import {AnimatePresence, motion} from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion";
 import {
   AddFieldIcon,
   CropAnalysisIcon,
@@ -20,7 +20,7 @@ import {
   Hammer,
 } from "../../assets/Icons";
 import "./Sidebar.css";
-import { decodeToken, logoutUser } from "../../redux/slices/authSlice";
+import { decodeToken, logoutUser, getUserData } from "../../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 
@@ -53,11 +53,23 @@ const Sidebar = ({ onToggleCollapse }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const logout = useLogout();
+  
+  // Get user data from Redux store
   const user = useSelector((state) => state?.auth?.user);
+  const token = useSelector((state) => state.auth.token);
+  const status = useSelector((state) => state.auth.status);
+  const { userDetails } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(decodeToken());
   }, [dispatch]);
+
+  // Fetch user data when token is available
+  useEffect(() => {
+    if (token && status === "idle" && !userDetails) {
+      dispatch(getUserData(token));
+    }
+  }, [token, status, userDetails, dispatch]);
 
   const isInitialized = useRef(false);
 
@@ -145,6 +157,12 @@ const Sidebar = ({ onToggleCollapse }) => {
 
   const spacing = Math.floor(100 / collapsedNavItems.length);
 
+  // Get display name and email - prioritize userDetails, fallback to user
+  const displayFirstName = userDetails?.firstName || user?.firstName || "";
+  const displayLastName = userDetails?.lastName || user?.lastName || "";
+  const displayEmail = userDetails?.email || user?.email || "";
+  const displayFullName = `${displayFirstName} ${displayLastName}`.trim() || "User";
+
   // Render full sidebar content
   const renderFullSidebar = () => (
     <>
@@ -163,9 +181,11 @@ const Sidebar = ({ onToggleCollapse }) => {
         <img src={profile} className="profile-image" alt="User profile" />
         <Card.Body className="text-center">
           <Card.Title className="profile-user-name">
-            {user?.firstName} {user?.lastName}
+            {displayFullName}
           </Card.Title>
-          <Card.Text className="profile-user-email">{user?.email}</Card.Text>
+          <Card.Text className="profile-user-email">
+            {displayEmail}
+          </Card.Text>
         </Card.Body>
       </Card>
 
@@ -212,45 +232,45 @@ const Sidebar = ({ onToggleCollapse }) => {
     </nav>
   );
 
-// Keep the modal as just motion elements
-const LogoutModal = ({ onClose, onLogout }) => (
-  <motion.div
-    key="logout-modal"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 0.25 }}
-    className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]"
-  >
+  // Keep the modal as just motion elements
+  const LogoutModal = ({ onClose, onLogout }) => (
     <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.8, opacity: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className="bg-white p-6 rounded-xl shadow-lg w-80 text-center"
+      key="logout-modal"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]"
     >
-      <h2 className="text-lg font-semibold">Confirm Logout</h2>
-      <p className="text-gray-600 text-sm mt-2">
-        Are you sure you want to logout?
-      </p>
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="bg-white p-6 rounded-xl shadow-lg w-80 text-center"
+      >
+        <h2 className="text-lg font-semibold">Confirm Logout</h2>
+        <p className="text-gray-600 text-sm mt-2">
+          Are you sure you want to logout?
+        </p>
 
-      <div className="flex gap-3 mt-4">
-        <button
-          onClick={onClose}
-          className="flex-1 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={onLogout}
-          className="flex-1 py-2 rounded-lg bg-[#075a53] text-white hover:bg-[#064d48] transition-all"
-        >
-          Logout
-        </button>
-      </div>
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onLogout}
+            className="flex-1 py-2 rounded-lg bg-[#075a53] text-white hover:bg-[#064d48] transition-all"
+          >
+            Logout
+          </button>
+        </div>
+      </motion.div>
     </motion.div>
-  </motion.div>
-);
+  );
 
   if (window.innerWidth < 850) {
     return (
@@ -265,20 +285,21 @@ const LogoutModal = ({ onClose, onLogout }) => (
           className="offcanvas overlay-sidebar"
         >
           <Offcanvas.Body className="p-0 m-0">
-<AnimatePresence>
-  {isLogoutModalOpen && (
-    <LogoutModal
-      onClose={() => setIsLogoutModalOpen(false)}
-      onLogout={handleLogout}
-    />
-  )}
-</AnimatePresence>
-
+            {renderFullSidebar()}
+            <AnimatePresence>
+              {isLogoutModalOpen && (
+                <LogoutModal
+                  onClose={() => setIsLogoutModalOpen(false)}
+                  onLogout={handleLogout}
+                />
+              )}
+            </AnimatePresence>
           </Offcanvas.Body>
         </Offcanvas>
       </div>
     );
   }
+  
   return (
     <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
       <Offcanvas
@@ -291,14 +312,14 @@ const LogoutModal = ({ onClose, onLogout }) => (
           {isCollapsed ? renderCollapsedNav() : renderFullSidebar()}
         </Offcanvas.Body>
       </Offcanvas>
-<AnimatePresence>
-  {isLogoutModalOpen && (
-    <LogoutModal
-      onClose={() => setIsLogoutModalOpen(false)}
-      onLogout={handleLogout}
-    />
-  )}
-</AnimatePresence>
+      <AnimatePresence>
+        {isLogoutModalOpen && (
+          <LogoutModal
+            onClose={() => setIsLogoutModalOpen(false)}
+            onLogout={handleLogout}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
