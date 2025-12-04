@@ -1,248 +1,303 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+// FarmReport.jsx
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
+import { ArrowDownToLine, LoaderCircle, ChevronLeft } from "lucide-react";
 
 import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmReportSidebar";
-import CropHealth from "../components/dashboard/crophealth/CropHealthCard";
-import ForeCast from "../components/dashboard/forecast/ForeCast";
-import PlantGrowthActivity from "../components/dashboard/PlantGrowthActivity";
-import Insights from "../components/dashboard/insights/Insights";
-import CropAdvisory from "../components/dashboard/CropAdvisory";
-import NdviGraph from "../components/dashboard/satellite-index/VegetationIndex";
-import WaterIndex from "../components/dashboard/satellite-index/WaterIndex";
-import EvapotranspirationDashboard from "../components/dashboard/satellite-index/ETChart";
-
+import FarmReportContent from "../components/farmreport/farmreportsidebar/FarmReportContent";
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
+import PaymentSuccessModal from "../components/subscription/PaymentSuccessModal";
+import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
 
-import { getFarmFields } from "../redux/slices/farmSlice";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import {
+  getFarmFields,
+  updateFieldSubscription,
+} from "../redux/slices/farmSlice";
+import {
+  setPaymentSuccess,
+  clearPaymentSuccess,
+  selectPaymentSuccess,
+  selectShowPaymentSuccessModal,
+} from "../redux/slices/subscriptionSlice";
+import {
+  fetchAOIs,
+  createAOI,
+  fetchForecastData,
+} from "../redux/slices/weatherSlice";
+import { clearIndexDataByType } from "../redux/slices/satelliteSlice";
 
+import useFarmReportPDF from "../components/farmreport/useFarmReportPDF";
 import img1 from "../assets/image/Group 31.png";
-import FarmReportMap from "../components/farmreport/farmreportsidebar/FarmReportMap";
-import { fetchIndexData } from "../redux/slices/satelliteSlice";
-import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
+
+const FORECAST_CACHE_TTL = 5 * 60 * 1000;
+
+const formatCoordinates = (data) => {
+  if (!Array.isArray(data) || data.length === 0) return [];
+  const coords = data.map((p) => [p.lng, p.lat]);
+  const first = coords[0];
+  const last = coords[coords.length - 1];
+  if (first[0] !== last[0] || first[1] !== last[1]) coords.push(first);
+  return coords;
+};
 
 const FarmReport = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const user = useSelector((state) => state?.auth?.user);
-  const authToken = useSelector((state) => state?.auth?.token);
-  const fields = useSelector((state) => state?.farmfield?.fields);
+  const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
+  const fieldsLoading = useSelector((state) => state?.farmfield?.loading);
+  const aoisRaw = useSelector((s) => s?.weather?.aois);
+  const forecastData = useSelector((s) => s?.weather?.forecastData) || {};
+  const paymentSuccess = useSelector(selectPaymentSuccess);
+  const showPaymentSuccessModalRedux = useSelector(selectShowPaymentSuccessModal);
 
   const userId = user?.id;
+  const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
+  const aois = useMemo(() => aoisRaw ?? [], [aoisRaw]);
 
   const [selectedField, setSelectedField] = useState(null);
-  const [showMembershipModalLocal, setShowMembershipModalLocal] = useState(false);
+  const [hasManuallySelected, setHasManuallySelected] = useState(false);
+  const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
+  const [isRefreshingSubscription, setIsRefreshingSubscription] = useState(false);
+  const [aoisInitialized, setAoisInitialized] = useState(false);
+  const [isFieldDataReady, setIsFieldDataReady] = useState(false);
 
   const mainReportRef = useRef();
-  const [isDownloading, setIsDownloading] = useState(false);
+  const mapRef = useRef(null);
+  const aoiCreationRef = useRef(new Set());
+  const attemptedAOIsRef = useRef(new Set());
+  const forecastFetchRef = useRef(new Map());
+  const isMountedRef = useRef(false);
+  const prevSelectedFieldIdRef = useRef(null);
 
+  const selectedFieldDetails = useMemo(
+    () => (selectedField ? selectedField : null),
+    [selectedField]
+  );
 
+  const { isDownloading, downloadProgress, isPreparedForPDF, downloadFarmReportPDF } =
+    useFarmReportPDF(selectedFieldDetails);
+
+  // Feature access computation
+  const featureAccess = useMemo(() => {
+    const hasSubscription = selectedFieldDetails?.subscription?.hasActiveSubscription;
+    const planFeatures = selectedFieldDetails?.subscription?.plan?.features;
+
+    const hasFeature = (feature) =>
+      hasSubscription && (!planFeatures || planFeatures?.[feature]);
+
+    return {
+      hasFarmReportAccess:
+        hasSubscription &&
+        (!planFeatures ||
+          planFeatures?.satelliteImagery ||
+          planFeatures?.cropHealthAndYield ||
+          planFeatures?.vegetationIndices ||
+          planFeatures?.weatherAnalytics),
+      hasCropHealthAndYield: hasFeature("cropHealthAndYield"),
+      hasWeatherAnalytics: hasFeature("weatherAnalytics"),
+      hasVegetationIndices: hasFeature("vegetationIndices"),
+      hasWaterIndices: hasFeature("waterIndices"),
+      hasEvapotranspiration: hasFeature("evapotranspirationMonitoring"),
+      hasAgronomicInsights: hasFeature("agronomicInsights"),
+      hasWeeklyAdvisoryReports: hasFeature("weeklyAdvisoryReports"),
+      hasCropGrowthMonitoring: hasFeature("cropGrowthMonitoring"),
+      hasSubscription,
+    };
+  }, [selectedFieldDetails]);
+
+  const showSidebar = useMemo(() => !hasManuallySelected, [hasManuallySelected]);
+
+  // Clear satellite data when field changes
   useEffect(() => {
-    if (userId) {
-      dispatch(getFarmFields(userId));
+    const currentFieldId = selectedFieldDetails?._id;
+
+    if (
+      prevSelectedFieldIdRef.current &&
+      prevSelectedFieldIdRef.current !== currentFieldId
+    ) {
+      dispatch(clearIndexDataByType());
+    }
+
+    prevSelectedFieldIdRef.current = currentFieldId;
+  }, [selectedFieldDetails, dispatch]);
+
+  // Fetch fields and AOIs on mount
+  useEffect(() => {
+    if (!userId) return;
+
+    dispatch(getFarmFields(userId)).unwrap().catch(console.error);
+
+    if (!isMountedRef.current) {
+      dispatch(fetchAOIs())
+        .unwrap()
+        .then(() => setAoisInitialized(true))
+        .catch(() => setAoisInitialized(true));
+      isMountedRef.current = true;
     }
   }, [dispatch, userId]);
 
+  // Set field data ready state
   useEffect(() => {
-    if (fields?.length > 0 && !selectedField) {
-      setSelectedField(fields[fields.length - 1]);
-    }
-  }, [fields, selectedField]);
-
-
-  const selectedFieldDetails = selectedField;
-
-  useEffect(() => {
-    const field = selectedFieldDetails?.field;
-    if (!field || field.length < 3) return;
-
-    // Convert to [lng, lat] and ensure polygon is closed
-    let coords = field.map(({ lat, lng }) => [lng, lat]);
-    const first = coords[0];
-    const last = coords[coords.length - 1];
-    if (first[0] !== last[0] || first[1] !== last[1]) {
-      coords.push(first);
-    }
-
-    const today = new Date().toISOString().split("T")[0];
-    const indexes = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
-
-    indexes.forEach((index) => {
-      dispatch(fetchIndexData({ endDate: today, geometry: [coords], index }));
-    });
-  }, [selectedFieldDetails, dispatch]);
-
-  // Handlers for subscription modal & pricing
-  const handleSubscribe = useCallback(() => {
-    if (selectedFieldDetails) {
-      const areaInHectares =
-        selectedFieldDetails?.areaInHectares ||
-        selectedFieldDetails?.acre * 0.404686 ||
-        5;
-      const fieldData = {
-        id: selectedFieldDetails._id,
-        name: selectedFieldDetails.fieldName || selectedFieldDetails.farmName,
-        areaInHectares,
-        cropName: selectedFieldDetails.cropName,
-      };
-
-      setPricingFieldData(fieldData);
-      setShowPricingOverlay(true);
-      setShowMembershipModalLocal(false);
-    } else {
-      message.warning("Please select a field first");
-    }
+    setIsFieldDataReady(
+      selectedFieldDetails?.field && selectedFieldDetails.field.length >= 3
+    );
   }, [selectedFieldDetails]);
 
-  const handleSkipMembership = useCallback(() => {
-    setShowMembershipModalLocal(false);
-    message.info(
-      "You can activate premium anytime from the locked content sections"
-    );
-  }, []);
+  // AOI creation logic
+  const aoiNeedsCreation = useMemo(() => {
+    if (!aoisInitialized || !selectedFieldDetails?._id) return null;
+    const aoiName = selectedFieldDetails._id;
+    const exists = aois.some((a) => a.name === aoiName);
+    const attempted = attemptedAOIsRef.current.has(aoiName);
+    const creating = aoiCreationRef.current.has(aoiName);
+    return !exists && !attempted && !creating ? aoiName : null;
+  }, [aoisInitialized, selectedFieldDetails, aois]);
 
-  const handleCloseMembershipModal = useCallback(() => {
-    setShowMembershipModalLocal(false);
-  }, []);
+  useEffect(() => {
+    if (!aoiNeedsCreation || !selectedFieldDetails) return;
+    const geometryCoords = formatCoordinates(selectedFieldDetails.field);
+    if (geometryCoords.length === 0) return;
 
-  const handleClosePricing = useCallback(() => {
-    setShowPricingOverlay(false);
-    setPricingFieldData(null);
-  }, []);
+    aoiCreationRef.current.add(aoiNeedsCreation);
+    attemptedAOIsRef.current.add(aoiNeedsCreation);
 
-  const downloadFarmReportPDF = async () => {
-    const input = mainReportRef.current;
-    if (!input) {
-      message.error("Report area not found!");
+    dispatch(
+      createAOI({
+        name: aoiNeedsCreation,
+        geometry: { type: "Polygon", coordinates: [geometryCoords] },
+      })
+    )
+      .unwrap()
+      .catch(() => attemptedAOIsRef.current.delete(aoiNeedsCreation))
+      .finally(() => {
+        setTimeout(() => aoiCreationRef.current.delete(aoiNeedsCreation), 1000);
+      });
+  }, [aoiNeedsCreation, dispatch, selectedFieldDetails]);
+
+  // Fetch forecast data
+  useEffect(() => {
+    if (!selectedFieldDetails || aois.length === 0) return;
+    const matchingAOI = aois.find((a) => a.name === selectedFieldDetails._id);
+    if (!matchingAOI?.id) return;
+
+    const geoId = matchingAOI.id;
+    const lastTs = forecastFetchRef.current.get(geoId) || 0;
+    if (Date.now() - lastTs < FORECAST_CACHE_TTL) return;
+
+    forecastFetchRef.current.set(geoId, Date.now());
+    dispatch(fetchForecastData({ geometry_id: geoId }));
+  }, [selectedFieldDetails, aois, dispatch]);
+
+  // Handlers
+  const handleFieldSelect = useCallback(
+    (field) => {
+      dispatch(clearIndexDataByType());
+      setSelectedField(field);
+      setHasManuallySelected(true);
+      setIsFieldDataReady(false);
+    },
+    [dispatch]
+  );
+
+  const handleBackToFieldSelection = useCallback(() => {
+    dispatch(clearIndexDataByType());
+    setSelectedField(null);
+    setHasManuallySelected(false);
+    setIsFieldDataReady(false);
+  }, [dispatch]);
+
+  const handleSubscribe = useCallback(() => {
+    if (!selectedFieldDetails) {
+      message.warning("Please select a field first");
       return;
     }
 
-    setIsDownloading(true);
+    const areaInHectares =
+      selectedFieldDetails?.areaInHectares ||
+      selectedFieldDetails?.acre * 0.404686 ||
+      5;
 
-    const sections = input.querySelectorAll(".farm-section");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const width = pdf.internal.pageSize.getWidth();
-    const height = pdf.internal.pageSize.getHeight();
+    setPricingFieldData({
+      id: selectedFieldDetails._id,
+      name: selectedFieldDetails.fieldName || selectedFieldDetails.farmName,
+      areaInHectares,
+      cropName: selectedFieldDetails.cropName,
+    });
+    setShowPricingOverlay(true);
+    setShowMembershipModal(false);
+  }, [selectedFieldDetails]);
 
-    let page = 1;
+  const handlePaymentSuccess = useCallback(
+    async (successData) => {
+      try {
+        setShowPricingOverlay(false);
+        setPricingFieldData(null);
 
-    for (let i = 0; i < sections.length; i++) {
-      const sec = sections[i];
+        const subscription = successData?.subscription;
+        const fieldId = selectedFieldDetails?._id;
 
-      if (sec.classList.contains("exclude-map")) continue;
+        if (fieldId && subscription) {
+          setIsRefreshingSubscription(true);
+          dispatch(updateFieldSubscription({ fieldId, subscription }));
+        }
 
-      const clone = sec.cloneNode(true);
-      clone.style.position = "absolute";
-      clone.style.top = "0";
-      clone.style.left = "-9999px";
-      clone.style.width = sec.offsetWidth + "px";
-      clone.style.background = "#fff";
+        dispatch(
+          setPaymentSuccess({
+            ...successData,
+            fieldName:
+              successData.fieldName ||
+              selectedFieldDetails?.farmName ||
+              selectedFieldDetails?.fieldName,
+          })
+        );
 
-      const ndviWrapper = clone.querySelector("#ndvi-chart-wrapper");
-      let original = {};
+        if (userId) {
+          await dispatch(getFarmFields(userId)).unwrap();
+        }
 
-      if (ndviWrapper) {
-        original = {
-          width: ndviWrapper.style.width,
-          overflow: ndviWrapper.style.overflow,
-        };
-
-        ndviWrapper.style.overflow = "visible";
-        ndviWrapper.style.width = ndviWrapper.scrollWidth + "px";
-
-        ndviWrapper
-          .querySelector("svg")
-          ?.setAttribute("width", ndviWrapper.scrollWidth);
+        setTimeout(() => setIsRefreshingSubscription(false), 300);
+      } catch {
+        setIsRefreshingSubscription(false);
+        message.error("Failed to update subscription status. Please refresh.");
       }
+    },
+    [dispatch, selectedFieldDetails, userId]
+  );
 
-      document.body.appendChild(clone);
+  const handleDownloadPDF = useCallback(() => {
+    downloadFarmReportPDF(mainReportRef);
+  }, [downloadFarmReportPDF]);
 
-      if (ndviWrapper) {
-        ndviWrapper.style.width = original.width;
-        ndviWrapper.style.overflow = original.overflow;
-      }
+  // Loading state
+  if (fieldsLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#344E41]">
+        <LoadingSpinner />
+        <p className="text-white mt-4 text-lg">Loading your fields...</p>
+      </div>
+    );
+  }
 
-      clone.querySelectorAll("canvas, img, svg").forEach((el) => {
-        el.classList.add("force-visible");
-      });
-
-      clone.querySelectorAll(".leaflet-tile").forEach((tile) => {
-        tile.setAttribute("crossorigin", "anonymous");
-        tile.setAttribute("referrerpolicy", "no-referrer");
-      });
-
-      clone.querySelectorAll("img").forEach((img) => {
-        img.crossOrigin = "anonymous";
-        img.referrerPolicy = "no-referrer";
-      });
-
-      await new Promise((res) => setTimeout(res, 500));
-
-      const imgs = clone.querySelectorAll("img");
-      await Promise.all(
-        [...imgs].map((img) => {
-          if (img.complete) return;
-          return new Promise((res) => (img.onload = res));
-        })
-      );
-
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        scrollY: 0,
-        backgroundColor: "#ffffff",
-        windowWidth: document.body.scrollWidth,
-        windowHeight: clone.scrollHeight,
-      });
-
-      document.body.removeChild(clone);
-
-      const imgData = canvas.toDataURL("image/png");
-      const imgHeight = (canvas.height * width) / canvas.width;
-
-      if (i !== 0) pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, 0, width, imgHeight);
-
-      pdf.setFontSize(9);
-      pdf.text(`Page ${page}`, width - 20, height - 10);
-      page++;
-    }
-
-    pdf.save("farm-report.pdf");
-    setIsDownloading(false);
-  };
-
-
+  // No fields state
   if (fields?.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
-        <img
-          src={img1}
-          alt="No Fields"
-          className="w-[400px] h-[400px] mb-6 opacity-60"
-        />
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#344E41] px-4">
+        <img src={img1} alt="No Fields" className="w-[350px] h-[350px] mb-6 opacity-60" />
         <h2 className="text-2xl font-semibold text-white">
           Add Farm to See the Farm Report
         </h2>
         <button
           onClick={() => navigate("/addfield")}
-          className="mt-6 px-5 py-2 rounded-lg bg-white text-[#5a7c6b] font-medium hover:bg-gray-200 transition"
+          className="mt-6 px-5 py-2 rounded-lg bg-white text-[#344E41] font-medium hover:bg-gray-200 transition"
         >
           Add Field
         </button>
@@ -250,86 +305,18 @@ const FarmReport = () => {
     );
   }
 
-  // Check subscription from field data
-  const hasSubscription = selectedField?.subscription?.hasActiveSubscription;
-
-
-  const planFeatures = selectedField?.subscription?.plan?.features;
-
-
-  const hasFeatureAccess = (featureName) => {
-    if (!hasSubscription) return false;
-
-    if (hasSubscription && !planFeatures) {
-      return true;
-    }
-    // Check specific feature
-    return planFeatures?.[featureName] === true;
-  };
-  const hasFarmReportAccess = hasSubscription && (
-    !planFeatures ||
-    (
-      planFeatures?.satelliteImagery ||
-      planFeatures?.cropHealthAndYield ||
-      planFeatures?.vegetationIndices ||
-      planFeatures?.weatherAnalytics
-    )
-  );
-
-  // The main report content component
-  const ReportContent = () => (
-    <div
-      className="w-full h-screen overflow-y-auto bg-[#5a7c6b] p-4"
-      ref={mainReportRef}
-    >
-      <ComingSoonSection />
-
-      {/* {selectedFieldDetails && (
-        <>
-          <div className="farm-section">
-            <FarmReportMap selectedFieldsDetials={[selectedFieldDetails]} />
-
-            <CropHealth
-              selectedFieldsDetials={[selectedFieldDetails]}
-              fields={fields}
-            />
-          </div>
-          <div className="farm-section">
-            <ForeCast forecastData={{}} />
-
-            <NdviGraph
-              selectedFieldsDetials={[selectedFieldDetails]}
-            />
-            <WaterIndex
-              selectedFieldsDetials={[selectedFieldDetails]}
-            />
-            <EvapotranspirationDashboard forecast={{}} units={{}} />
-          </div>
-
-          <div className="farm-section">
-            <Insights />
-            <CropAdvisory
-              selectedFieldsDetials={[selectedFieldDetails]}
-            />
-            <PlantGrowthActivity
-              selectedFieldsDetials={[selectedFieldDetails]}
-            />
-          </div>
-        </>
-      )} */}
-    </div>
-  );
-
   return (
     <>
+      {/* Modals */}
       <SubscriptionModal
-        isOpen={showMembershipModalLocal}
-        onClose={handleCloseMembershipModal}
+        isOpen={showMembershipModal}
+        onClose={() => setShowMembershipModal(false)}
         onSubscribe={handleSubscribe}
-        onSkip={handleSkipMembership}
-        fieldName={
-          selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName
-        }
+        onSkip={() => {
+          setShowMembershipModal(false);
+          message.info("You can activate premium anytime from locked sections");
+        }}
+        fieldName={selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName}
       />
 
       <AnimatePresence>
@@ -343,7 +330,11 @@ const FarmReport = () => {
             className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8"
           >
             <PricingOverlay
-              onClose={handleClosePricing}
+              onClose={() => {
+                setShowPricingOverlay(false);
+                setPricingFieldData(null);
+              }}
+              onPaymentSuccess={handlePaymentSuccess}
               userArea={pricingFieldData.areaInHectares}
               selectedField={pricingFieldData}
             />
@@ -351,29 +342,189 @@ const FarmReport = () => {
         )}
       </AnimatePresence>
 
-      <div className="w-full h-full m-0 p-0 d-flex">
-        <FarmReportSidebar
-          fields={fields}
-          selectedField={selectedField}
-          setSelectedField={setSelectedField}
-          downloadPDF={downloadFarmReportPDF}
-          hasSubscription={hasSubscription}
-        />
+      <PaymentSuccessModal
+        isOpen={showPaymentSuccessModalRedux}
+        onClose={() => dispatch(clearPaymentSuccess())}
+        fieldName={
+          paymentSuccess?.fieldName ||
+          selectedFieldDetails?.fieldName ||
+          selectedFieldDetails?.farmName
+        }
+        planName={paymentSuccess?.planName}
+        features={paymentSuccess?.features || []}
+        daysLeft={paymentSuccess?.daysLeft}
+        transactionId={paymentSuccess?.transactionId}
+      />
 
-        <div className="bg-[#5a7c6b] w-full">
+      {/* Loading Overlays */}
+      <AnimatePresence>
+        {isRefreshingSubscription && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-[2px] flex items-center justify-center"
+          >
+            <LoadingSpinner />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          {hasFarmReportAccess ? (
-
-            <ReportContent />
-          ) : (
-
-            <PremiumPageWrapper
-              isLocked={!hasFarmReportAccess}
-              onSubscribe={handleSubscribe}
-              title="Farm Report"
+      <AnimatePresence>
+        {isDownloading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-md w-full mx-4"
             >
-              <ReportContent />
-            </PremiumPageWrapper>
+              <div className="relative">
+                <LoaderCircle
+                  className="animate-spin text-[#344E41]"
+                  size={64}
+                  strokeWidth={2}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-[#344E41]">
+                    {Math.round(downloadProgress)}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  Generating PDF Report
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {downloadProgress < 30
+                    ? "Processing images..."
+                    : downloadProgress < 60
+                    ? "Rendering charts..."
+                    : downloadProgress < 85
+                    ? "Building sections..."
+                    : "Finalizing..."}
+                </p>
+              </div>
+
+              <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                <motion.div
+                  className="bg-gradient-to-r from-[#344E41] to-[#5a7c6b] h-2.5 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${downloadProgress}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Layout */}
+      <div className="flex h-screen overflow-hidden bg-[#344E41] text-white">
+        <AnimatePresence>
+          {showSidebar && (
+            <motion.div
+              initial={{ x: -280, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -280, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="min-w-[280px] h-full border-r border-[#5a7c6b] bg-[#2d4339]"
+            >
+              <FarmReportSidebar
+                setSelectedField={handleFieldSelect}
+                setIsSidebarVisible={() => {}}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex-1 p-2 h-screen overflow-y-auto bg-[#344E41]">
+          {hasManuallySelected && selectedFieldDetails ? (
+            <>
+              {/* Header */}
+              <div className="mb-2 flex items-center gap-2 flex-wrap bg-[#2d4339] rounded-lg p-2">
+                <button
+                  className="bg-[#5a7c6b] text-white px-3 py-1.5 rounded-md text-sm shadow hover:bg-[#4a6b5a] transition-colors flex items-center gap-1"
+                  onClick={handleBackToFieldSelection}
+                >
+                  <ChevronLeft size={16} />
+                  Back
+                </button>
+
+                <button
+                  disabled={!featureAccess.hasSubscription || isDownloading}
+                  onClick={handleDownloadPDF}
+                  className={`px-3 py-1.5 rounded-md text-sm shadow transition-all flex items-center gap-1 ${
+                    featureAccess.hasSubscription
+                      ? "bg-[#5a7c6b] text-white hover:bg-[#4a6b5a]"
+                      : "bg-gray-500 text-gray-300 cursor-not-allowed"
+                  }`}
+                >
+                  {isDownloading ? (
+                    <>
+                      <LoaderCircle className="animate-spin" size={14} />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowDownToLine size={14} />
+                      PDF
+                    </>
+                  )}
+                </button>
+
+                {!featureAccess.hasSubscription && (
+                  <span className="text-xs text-white/70">
+                    Subscribe to download
+                  </span>
+                )}
+
+                <div className="ml-auto text-white text-sm font-medium bg-[#5a7c6b] px-2 py-1 rounded-md">
+                  📍{" "}
+                  {selectedFieldDetails?.fieldName ||
+                    selectedFieldDetails?.farmName ||
+                    "Field"}
+                </div>
+              </div>
+
+              {/* Report Content */}
+              <PremiumPageWrapper
+                isLocked={!featureAccess.hasFarmReportAccess}
+                onSubscribe={handleSubscribe}
+                title="Farm Report"
+              >
+                <div ref={mainReportRef}>
+                  {!isRefreshingSubscription && (
+                    <FarmReportContent
+                      selectedFieldDetails={selectedFieldDetails}
+                      fields={fields}
+                      mapRef={mapRef}
+                      isFieldDataReady={isFieldDataReady}
+                      isPreparedForPDF={isPreparedForPDF}
+                      forecastData={forecastData}
+                      featureAccess={featureAccess}
+                      onSubscribe={handleSubscribe}
+                    />
+                  )}
+                </div>
+              </PremiumPageWrapper>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full w-full">
+              <div className="flex flex-col items-center text-center opacity-80">
+                <img src={img1} alt="" className="w-[250px] h-[250px] mb-4" />
+                <p className="text-xl font-semibold text-white">
+                  Select a Field to Generate Report
+                </p>
+                <p className="text-sm mt-2 text-white/70">Choose from the sidebar</p>
+              </div>
+            </div>
           )}
         </div>
       </div>
