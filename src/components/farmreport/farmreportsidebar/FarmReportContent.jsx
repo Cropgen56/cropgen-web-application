@@ -153,6 +153,7 @@ const FarmReportContent = ({
             selectedFieldsDetials={[selectedFieldDetails]}
             onSubscribe={onSubscribe}
             hasWeeklyAdvisoryReports={hasWeeklyAdvisoryReports}
+            isPreparedForPDF={isPreparedForPDF} 
           />
         </div>
 

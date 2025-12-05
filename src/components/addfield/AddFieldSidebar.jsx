@@ -60,14 +60,14 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   return (
     <>
       {isTabletView ? (
-        <div className="flex-1 flex flex-col justify-center items-center px-4 pb-4 text-[#344e41] z-[9999]">
-          <div className="flex justify-center items-center p-2">
-            <div className="w-full max-w-6xl bg-white shadow-lg rounded-xl p-6 mx-auto">
-              <h5 className="text-[#344e41] mb-6 text-center text-lg font-bold ">
+        <div className="flex-1 flex flex-col justify-start items-center px-2 sm:px-4 pb-4 text-[#344e41] z-[9999] h-full overflow-y-auto">
+          <div className="flex justify-center items-start p-1 sm:p-2 w-full min-h-min">
+            <div className="w-full max-w-6xl bg-white shadow-lg rounded-xl p-3 sm:p-4 md:p-6 mx-auto">
+              <h5 className="text-[#344e41] mb-3 sm:mb-4 md:mb-6 text-center text-base sm:text-lg font-bold">
                 Crop Details
               </h5>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 <FormInput
                   label="Farm Name"
                   value={farmName}
@@ -110,9 +110,9 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                 />
               </div>
 
-              <div className="mt-6">
+              <div className="mt-3 sm:mt-4 md:mt-6">
                 <button
-                  className="w-full h-11 bg-[#344e41] hover:bg-[#2b3e33] text-white font-semibold mt-4 rounded-md transition-all duration-300"
+                  className="w-full h-9 sm:h-10 md:h-11 bg-[#344e41] hover:bg-[#2b3e33] text-white font-semibold text-sm sm:text-base rounded-md transition-all duration-300"
                   onClick={handleAddField}
                 >
                   Add Field
@@ -122,8 +122,8 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
           </div>
         </div>
       ) : (
-        <div className="w-[22vw] m-0 p-0 h-full">
-          <div className="flex flex-row justify-between items-center border-b border-[#344e41] p-2.5 cursor-pointer">
+        <div className="w-[22vw] min-w-[220px] m-0 p-0 h-full overflow-hidden flex flex-col">
+          <div className="flex flex-row justify-between items-center border-b border-[#344e41] p-2.5 cursor-pointer flex-shrink-0">
             <h2 className="flex items-center gap-1 text-base text-[#344e41]">
               All Fields
             </h2>
@@ -135,8 +135,8 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
             />
           </div>
 
-          <div className="flex flex-col justify-between h-[calc(100vh-64px)]">
-            <form className="p-3 text-[#344e41]">
+          <div className="flex flex-col flex-1 overflow-hidden">
+            <form className="p-3 text-[#344e41] flex-1 overflow-y-auto">
               <h5 className="text-[#344e41] mb-3">Crop Details</h5>
               <div className="flex flex-col gap-2">
                 <FormInput
@@ -182,7 +182,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
               </div>
             </form>
 
-            <footer className="flex justify-center">
+            <footer className="flex justify-center p-3 flex-shrink-0 border-t border-gray-200">
               <button
                 className="border-none outline-none rounded-md bg-[#344e41] text-white font-semibold w-3/4 h-9 transition-all duration-400 ease-in-out hover:bg-[#2b3e33]"
                 onClick={handleAddField}
@@ -205,13 +205,13 @@ const FormInput = ({
   type = "text",
 }) => (
   <div className="flex flex-col gap-1">
-    <label className="font-semibold text-sm">{label}</label>
+    <label className="font-semibold text-xs sm:text-sm">{label}</label>
     <input
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="border border-[#344e41] w-full outline-none rounded px-3 py-2 bg-[#344E41] text-white placeholder-gray-300 focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50"
+      className="border border-[#344e41] w-full outline-none rounded px-2 sm:px-3 py-1.5 sm:py-2 text-sm bg-[#344E41] text-white placeholder-gray-300 focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50"
     />
   </div>
 );
@@ -333,13 +333,13 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
 
   return (
     <div className="flex flex-col gap-1 relative" ref={datePickerRef}>
-      <label className="font-semibold text-sm">{label}</label>
+      <label className="font-semibold text-xs sm:text-sm">{label}</label>
       <div className="relative">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={`
-            w-full px-3 py-2 bg-[#344E41] text-white rounded
+            w-full px-2 sm:px-3 py-1.5 sm:py-2 bg-[#344E41] text-white rounded
             border border-[#344e41] outline-none
             flex items-center justify-between
             hover:bg-[#2b3e33] transition-all duration-200
@@ -347,9 +347,9 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
             ${!value ? 'text-gray-300' : 'text-white'}
           `}
         >
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-1 sm:gap-2">
             <Calendar size={14} />
-            <span className="truncate text-sm">
+            <span className="truncate text-xs sm:text-sm">
               {value ? formatDisplayDate(value) : placeholder}
             </span>
           </span>
@@ -474,7 +474,7 @@ const AutocompleteDropdown = ({ label, value, onChange, options, placeholder }) 
 
   return (
     <div className="flex flex-col gap-1 relative" ref={dropdownRef}>
-      <label className="font-semibold text-sm">{label}</label>
+      <label className="font-semibold text-xs sm:text-sm">{label}</label>
       <div className="relative">
         <div className="relative">
           <input
@@ -485,9 +485,9 @@ const AutocompleteDropdown = ({ label, value, onChange, options, placeholder }) 
             onFocus={handleInputFocus}
             placeholder={placeholder}
             className={`
-              w-full px-3 py-2 bg-[#344E41] text-white rounded
+              w-full px-2 sm:px-3 py-1.5 sm:py-2 bg-[#344E41] text-white rounded
               border border-[#344e41] outline-none
-              placeholder-gray-300
+              placeholder-gray-300 text-sm
               hover:bg-[#2b3e33] transition-all duration-200
               focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
               pr-10
@@ -506,14 +506,14 @@ const AutocompleteDropdown = ({ label, value, onChange, options, placeholder }) 
         </div>
 
         {isOpen && (
-          <div className="absolute z-[10000] w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl max-h-60 overflow-auto">
+          <div className="absolute z-[10000] w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl max-h-48 sm:max-h-60 overflow-auto">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((option, index) => (
                 <div
                   key={option}
                   onClick={() => handleSelect(option)}
                   className={`
-                    px-3 py-2 cursor-pointer text-white
+                    px-2 sm:px-3 py-1.5 sm:py-2 cursor-pointer text-white text-sm
                     hover:bg-[#2b3e33] transition-colors duration-150
                     ${value === option ? "bg-[#2b3e33] font-semibold" : ""}
                     ${index !== filteredOptions.length - 1 ? "border-b border-[#2b3e33]" : ""}
@@ -523,7 +523,7 @@ const AutocompleteDropdown = ({ label, value, onChange, options, placeholder }) 
                 </div>
               ))
             ) : (
-              <div className="px-3 py-2 text-gray-300">
+              <div className="px-2 sm:px-3 py-1.5 sm:py-2 text-gray-300 text-sm">
                 {searchTerm ? "No matching options" : "No options available"}
               </div>
             )}

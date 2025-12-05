@@ -11,8 +11,21 @@ import IndexPremiumWrapper from "../subscription/Indexpremiumwrapper";
 import { selectHasWeeklyAdvisoryReports } from "../../redux/slices/membershipSlice";
 
 /* small presentational card */
-const AdvisoryCard = React.memo(({ category, activityText }) => (
-  <div className="flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px] bg-[#344E41]/90 border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto no-scrollbar">
+const AdvisoryCard = React.memo(({ category, activityText, isPreparedForPDF }) => (
+  <div 
+    className={`
+      ${isPreparedForPDF 
+        ? 'w-full h-auto min-h-[140px]' 
+        : 'flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px]'
+      } 
+      bg-[#344E41]/90 border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto no-scrollbar
+    `}
+    style={isPreparedForPDF ? {
+      breakInside: 'avoid',
+      pageBreakInside: 'avoid',
+      WebkitColumnBreakInside: 'avoid',
+    } : {}}
+  >
     <h3 className="text-sm lg:text-base font-bold text-white mb-1 md:mb-0.5">
       {category}
     </h3>
@@ -31,7 +44,12 @@ const categories = [
   { key: "monitoring", label: "Monitoring" },
 ];
 
-const CropAdvisory = ({ selectedFieldsDetials = [], onSubscribe, hasWeeklyAdvisoryReports }) => {
+const CropAdvisory = ({ 
+  selectedFieldsDetials = [], 
+  onSubscribe, 
+  hasWeeklyAdvisoryReports,
+  isPreparedForPDF = false 
+}) => {
   const dispatch = useDispatch();
 
   // source data
@@ -97,12 +115,21 @@ const CropAdvisory = ({ selectedFieldsDetials = [], onSubscribe, hasWeeklyAdviso
   }, []);
 
   useEffect(() => {
+    // Don't attach drag handlers in PDF mode
+    if (isPreparedForPDF) return;
     const cleanup = attachDragHandlers();
     return () => cleanup && cleanup();
-  }, [attachDragHandlers]);
+  }, [attachDragHandlers, isPreparedForPDF]);
 
   return (
-    <div className="flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 md:h-auto lg:h-auto p-3 overflow-hidden">
+    <div 
+      className={`
+        flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 
+        ${isPreparedForPDF ? 'h-auto' : 'md:h-auto lg:h-auto'} 
+        p-3 overflow-hidden crop-advisory-section
+      `}
+      data-section="advisory"
+    >
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-900">
           Weekly Crop Advisory
@@ -119,13 +146,27 @@ const CropAdvisory = ({ selectedFieldsDetials = [], onSubscribe, hasWeeklyAdviso
         ) : advisoryMapped ? (
           <div
             ref={scrollRef}
-            className="flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none"
+            className={`
+              advisory-cards-container
+              ${isPreparedForPDF 
+                ? 'grid grid-cols-2 gap-4 w-full pdf-advisory-grid' 
+                : 'flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none'
+              }
+            `}
+            style={isPreparedForPDF ? {
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '16px',
+              width: '100%',
+              overflow: 'visible',
+            } : {}}
           >
             {categories.map((category) => (
               <AdvisoryCard
                 key={category.key}
                 category={category.label}
                 activityText={advisoryMapped[category.key]}
+                isPreparedForPDF={isPreparedForPDF}
               />
             ))}
           </div>

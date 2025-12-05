@@ -13,13 +13,21 @@
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
+  transition: transform 0.2s ease;
+}
+
+.collapse-button:hover {
+  transform: scale(1.1);
+}
+
+.collapse-button:hover svg {
+  animation: hammer-swing 0.5s ease-in-out;
 }
 
 .collapse-button img {
   width: 1.5rem !important;
   height: 1.3rem !important;
 }
-
 
 .company-logo {
   margin-right: 2px;
@@ -30,6 +38,14 @@
 .title-text {
   font-size: 1.2rem;
   color: #f8f8f8;
+}
+
+.title-container {
+  transition: opacity 0.2s ease;
+}
+
+.title-container:hover {
+  opacity: 0.85;
 }
 
 .offcanvas {
@@ -58,6 +74,12 @@
   margin: 20px auto;
   background-color: #5a7c6b !important;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 .profile-image {
@@ -66,16 +88,13 @@
   gap: 0px;
   margin: auto;
   z-index: 1000;
+  transition: transform 0.2s ease;
 }
 
-/* .active {
-  padding: 2px 0 3px 5px;
-  font-size: 0.9rem !important;
-  font-weight: 200;
-  line-height: 18.15px;
-  text-align: left;
-  color: #f8f8f8 !important;
-} */
+.card:hover .profile-image {
+  transform: scale(1.05);
+  animation: profile-pulse 0.6s ease-in-out;
+}
 
 .profile-user-name {
   font-size: 25px;
@@ -113,10 +132,61 @@ nav li {
   line-height: 2rem;
   color: #f5f5f5 !important;
   cursor: pointer;
-
   display: flex !important;
   align-items: center;
   gap: 10px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+nav li:hover {
+  background-color: rgba(163, 177, 138, 0.2);
+  transform: translateX(4px);
+}
+
+nav li svg {
+  transition: transform 0.2s ease;
+}
+
+nav li:hover svg {
+  transform: scale(1.15);
+  animation: icon-bounce 0.4s ease;
+}
+
+/* Individual icon animations for each nav item */
+nav li:nth-child(1):hover svg {
+  animation: icon-pulse 0.5s ease;
+}
+
+nav li:nth-child(2):hover svg {
+  animation: icon-rotate-bounce 0.5s ease;
+}
+
+nav li:nth-child(3):hover svg {
+  animation: icon-wobble 0.5s ease;
+}
+
+nav li:nth-child(4):hover svg {
+  animation: icon-shake 0.4s ease;
+}
+
+nav li:nth-child(5):hover svg {
+  animation: icon-heartbeat 0.5s ease;
+}
+
+nav li:nth-child(6):hover svg {
+  animation: icon-flash 0.5s ease;
+}
+
+nav li:nth-child(7):hover svg {
+  animation: icon-swing 0.5s ease;
+}
+
+nav li:nth-child(8):hover svg {
+  animation: icon-tada 0.5s ease;
+}
+
+nav li:nth-child(9):hover svg {
+  animation: icon-spin 0.5s ease;
 }
 
 nav a {
@@ -137,6 +207,21 @@ nav a {
   color: #fff;
   cursor: pointer;
   padding-left: 15px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.footer-text:hover {
+  color: #ff7b7b;
+  transform: translateX(4px);
+}
+
+.footer-text svg {
+  transition: transform 0.2s ease;
+}
+
+.footer-text:hover svg {
+  transform: scale(1.15);
+  animation: logout-shake 0.5s ease;
 }
 
 .logout-icon {
@@ -163,10 +248,8 @@ nav a {
   top: 0;
   height: 100vh;
   width: 60px;
-  /* Adjust as needed */
   z-index: 1000;
   background: var(--sidebar-bg-color);
-  /* Use your sidebar background color */
 }
 
 .collapsed-sidebar .sidebar-nav {
@@ -180,6 +263,71 @@ nav a {
   justify-content: space-around;
   align-items: center;
   padding: 20px 0;
+}
+
+/* Collapsed nav hover effects only */
+.collapsed-nav-list li {
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.collapsed-nav-list li:hover {
+  transform: scale(1.1);
+  background-color: rgba(163, 177, 138, 0.25);
+  border-radius: 8px;
+}
+
+.collapsed-nav-list li svg {
+  transition: transform 0.2s ease;
+}
+
+.collapsed-nav-list li:hover svg {
+  transform: scale(1.1);
+  animation: icon-bounce 0.4s ease;
+}
+
+/* Individual animations for collapsed nav */
+.collapsed-nav-list > div:nth-child(1) li:hover svg {
+  animation: hammer-swing 0.5s ease;
+}
+
+.collapsed-nav-list > div:nth-child(2) li:hover svg {
+  animation: icon-pulse 0.5s ease;
+}
+
+.collapsed-nav-list > div:nth-child(3) li:hover svg {
+  animation: icon-rotate-bounce 0.5s ease;
+}
+
+.collapsed-nav-list > div:nth-child(4) li:hover svg {
+  animation: icon-wobble 0.5s ease;
+}
+
+.collapsed-nav-list > div:nth-child(5) li:hover svg {
+  animation: icon-shake 0.4s ease;
+}
+
+.collapsed-nav-list > div:nth-child(6) li:hover svg {
+  animation: icon-heartbeat 0.5s ease;
+}
+
+.collapsed-nav-list > div:nth-child(7) li:hover svg {
+  animation: icon-flash 0.5s ease;
+}
+
+.collapsed-nav-list > div:nth-child(8) li:hover svg {
+  animation: icon-swing 0.5s ease;
+}
+
+.collapsed-nav-list > div:nth-child(9) li:hover svg {
+  animation: icon-tada 0.5s ease;
+}
+
+.collapsed-nav-list > div:nth-child(10) li:hover svg {
+  animation: icon-spin 0.5s ease;
+}
+
+.collapsed-nav-list > div:nth-child(11) li:hover svg {
+  animation: logout-shake 0.5s ease;
 }
 
 .offcanvas.overlay-sidebar {
@@ -200,9 +348,260 @@ nav a {
 .modal-backdrop {
   z-index: 1050;
 }
+
 @media (max-width: 849px) {
   .main-content {
     margin-left: 60px;
+  }
+}
 
+/* ===== ICON ANIMATIONS ===== */
+
+/* Bounce animation */
+@keyframes icon-bounce {
+  0%, 100% {
+    transform: scale(1.15) translateY(0);
+  }
+  50% {
+    transform: scale(1.15) translateY(-3px);
+  }
+}
+
+/* Pulse animation */
+@keyframes icon-pulse {
+  0% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  75% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1.15);
+  }
+}
+
+/* Rotate bounce animation */
+@keyframes icon-rotate-bounce {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(-10deg);
+  }
+  75% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  100% {
+    transform: scale(1.15) rotate(0deg);
+  }
+}
+
+/* Wobble animation */
+@keyframes icon-wobble {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  15% {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  30% {
+    transform: scale(1.15) rotate(3deg);
+  }
+  45% {
+    transform: scale(1.1) rotate(-3deg);
+  }
+  60% {
+    transform: scale(1.15) rotate(2deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(-1deg);
+  }
+  100% {
+    transform: scale(1.15) rotate(0deg);
+  }
+}
+
+/* Shake animation */
+@keyframes icon-shake {
+  0%, 100% {
+    transform: scale(1.15) translateX(0);
+  }
+  20% {
+    transform: scale(1.15) translateX(-2px);
+  }
+  40% {
+    transform: scale(1.15) translateX(2px);
+  }
+  60% {
+    transform: scale(1.15) translateX(-2px);
+  }
+  80% {
+    transform: scale(1.15) translateX(2px);
+  }
+}
+
+/* Heartbeat animation */
+@keyframes icon-heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.3);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.3);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1.15);
+  }
+}
+
+/* Flash animation */
+@keyframes icon-flash {
+  0%, 50%, 100% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  25%, 75% {
+    opacity: 0.5;
+    transform: scale(1.25);
+  }
+}
+
+/* Swing animation */
+@keyframes icon-swing {
+  0% {
+    transform: scale(1.15) rotate(0deg);
+  }
+  20% {
+    transform: scale(1.15) rotate(15deg);
+  }
+  40% {
+    transform: scale(1.15) rotate(-10deg);
+  }
+  60% {
+    transform: scale(1.15) rotate(5deg);
+  }
+  80% {
+    transform: scale(1.15) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1.15) rotate(0deg);
+  }
+}
+
+/* Tada animation */
+@keyframes icon-tada {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  10%, 20% {
+    transform: scale(0.9) rotate(-3deg);
+  }
+  30%, 50%, 70%, 90% {
+    transform: scale(1.2) rotate(3deg);
+  }
+  40%, 60%, 80% {
+    transform: scale(1.2) rotate(-3deg);
+  }
+  100% {
+    transform: scale(1.15) rotate(0deg);
+  }
+}
+
+/* Spin animation */
+@keyframes icon-spin {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    transform: scale(1.15) rotate(360deg);
+  }
+}
+
+/* Hammer swing animation */
+@keyframes hammer-swing {
+  0% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-20deg);
+  }
+  40% {
+    transform: rotate(15deg);
+  }
+  60% {
+    transform: rotate(-10deg);
+  }
+  80% {
+    transform: rotate(5deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Logout shake animation */
+@keyframes logout-shake {
+  0%, 100% {
+    transform: scale(1.15) rotate(0deg);
+  }
+  10% {
+    transform: scale(1.15) rotate(-10deg);
+  }
+  20% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  30% {
+    transform: scale(1.15) rotate(-10deg);
+  }
+  40% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  50% {
+    transform: scale(1.15) rotate(-5deg);
+  }
+  60% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  70% {
+    transform: scale(1.15) rotate(-2deg);
+  }
+  80% {
+    transform: scale(1.2) rotate(2deg);
+  }
+  90% {
+    transform: scale(1.15) rotate(0deg);
+  }
+}
+
+/* Profile pulse animation */
+@keyframes profile-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(163, 177, 138, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(163, 177, 138, 0);
+  }
+  100% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 0 rgba(163, 177, 138, 0);
   }
 }

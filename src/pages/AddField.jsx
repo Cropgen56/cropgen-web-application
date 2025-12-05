@@ -17,6 +17,7 @@ const AddField = () => {
   const [markers, setMarkers] = useState([]);
   const [isAddingMarkers, setIsAddingMarkers] = useState(false);
   const [isTabletView, setIsTabletView] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [pendingRedirect, setPendingRedirect] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -32,6 +33,7 @@ const AddField = () => {
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
+      setIsMobileView(width < 640);
       setIsTabletView(width < 1024);
     };
     handleResize();
@@ -128,8 +130,19 @@ const AddField = () => {
     return acresToHectares(areaInAcres);
   };
 
+  // Get dynamic heights based on screen size
+  const getMapHeight = () => {
+    if (isMobileView) return "35vh";
+    return "40vh";
+  };
+
+  const getSidebarHeight = () => {
+    if (isMobileView) return "65vh";
+    return "60vh";
+  };
+
   return (
-    <div className="relative w-full h-screen">
+    <div className="relative w-full h-screen overflow-hidden">
       <AnimatePresence>
         {showOverlay && (
           <motion.div
@@ -138,7 +151,7 @@ const AddField = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8 no-scrollbar"
+            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-8 no-scrollbar overflow-y-auto"
           >
             <PricingOverlay
               onClose={handleClosePricing}
@@ -150,12 +163,14 @@ const AddField = () => {
       </AnimatePresence>
 
       {isTabletView ? (
-        // Tablet Layout
-        <div className="w-full h-screen flex flex-col relative">
+        // Tablet & Mobile Layout
+        <div className="w-full h-screen flex flex-col relative overflow-hidden">
+          {/* Map Container */}
           <div
-            className={`relative w-full z-0 ${
-              showOverlay ? "h-screen z-[30]" : "h-[40vh] z-0"
+            className={`relative w-full flex-shrink-0 ${
+              showOverlay ? "h-screen z-[30]" : "z-0"
             }`}
+            style={{ height: showOverlay ? "100vh" : getMapHeight() }}
           >
             <AddFieldMap
               markers={markers}
@@ -167,26 +182,28 @@ const AddField = () => {
               onToggleSidebar={toggleSidebar}
               showUploadOverlay={showOverlay}
             />
-            ={" "}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-4 z-50 pointer-events-auto">
-              <button className="bg-[#344E41] text-white px-4 py-1 rounded">
+
+            {/* Action Buttons */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-4 z-50 pointer-events-auto">
+              <button className="bg-[#344E41] text-white px-2 sm:px-4 py-1 rounded text-xs sm:text-sm">
                 Calendar
               </button>
               <button
                 onClick={clearMarkers}
-                className="bg-[#344E41] text-white px-4 py-1 rounded"
+                className="bg-[#344E41] text-white px-2 sm:px-4 py-1 rounded text-xs sm:text-sm"
               >
                 Undo
               </button>
               <button
                 onClick={toggleAddMarkers}
-                className="bg-[#344E41] text-white px-4 py-1 rounded"
+                className="bg-[#344E41] text-white px-2 sm:px-4 py-1 rounded text-xs sm:text-sm"
               >
                 {isAddingMarkers ? "Stop" : "Add Field"}
               </button>
             </div>
           </div>
 
+          {/* Sidebar Container */}
           <AnimatePresence>
             {isSidebarVisible && (
               <motion.div
@@ -194,9 +211,10 @@ const AddField = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className={`w-full h-[60vh] p-4 flex justify-center items-center overflow-y-auto bg-white pointer-events-auto ${
+                className={`w-full flex-grow p-2 sm:p-4 flex justify-center items-start overflow-y-auto bg-white pointer-events-auto ${
                   showOverlay ? "z-10" : "z-20"
                 }`}
+                style={{ height: getSidebarHeight() }}
               >
                 <AddFieldSidebar
                   saveFarm={saveFarm}
@@ -209,7 +227,8 @@ const AddField = () => {
           </AnimatePresence>
         </div>
       ) : (
-        <div className="w-full h-screen flex">
+        // Desktop Layout
+        <div className="w-full h-screen flex overflow-hidden">
           <AddFieldSidebar
             saveFarm={saveFarm}
             markers={markers}

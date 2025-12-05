@@ -218,7 +218,7 @@ const SmartAdvisory = () => {
                         height="350px"
                       />
                     </div>
-                    <NDVIChartCard />
+                    <NDVIChartCard selectedField={selectedField} />
                     <div className="flex flex-col gap-4 w-full">
                       <div className="bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
                         <IrrigationStatusCard />
@@ -254,7 +254,7 @@ const SmartAdvisory = () => {
                             height="350px"
                           />
                         </div>
-                        <NDVIChartCard />
+                        <NDVIChartCard selectedField={selectedField} />
                       </div>
                       <div className="lg:w-[35%]">
                         <IrrigationStatusCard />
