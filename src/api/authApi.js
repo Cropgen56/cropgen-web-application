@@ -49,6 +49,16 @@ export const getUser = async (token) => {
   return response.data;
 };
 
+// Get user profile API
+export const getUserProfile = async (token) => {
+  const response = await axios.get(`https://server.cropgenapp.com/v1/api/auth/profile`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
 // Update user API
 export const updateUser = async ({ id, token, updateData }) => {
   const response = await axios.patch(

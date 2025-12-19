@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import profileImage from "../../../assets/image/pngimages/profile.png";
 import EditIcon from "../../../assets/edit-icon.svg";
-import { getUserData, updateUserData } from "../../../redux/slices/authSlice";
+import { getUserProfileData, updateUserData } from "../../../redux/slices/authSlice";
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { message } from "antd";
 import PersonalInfoSkeleton from "../../Skeleton/PersonalInfoSkeleton";
@@ -12,9 +12,9 @@ const PersonalInfo = ({ setShowSidebar }) => {
   const dispatch = useDispatch();
   // const token = localStorage.getItem("auth_Token");
   const token = useSelector((state) => state.auth.token);
-  const status = useSelector((state) => state.auth.status);
+  const profileStatus = useSelector((state) => state.auth.profileStatus);
   const userId = useSelector((state) => state?.auth?.user?.id);
-  const { userDetails, loading } = useSelector((state) => state.auth);
+  const { userProfile, loading } = useSelector((state) => state.auth);
   const fields = useSelector((state) => state?.farmfield?.fields);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -24,18 +24,18 @@ const PersonalInfo = ({ setShowSidebar }) => {
   });
   const [updateStatus, setUpdateStatus] = useState(null);
 
-  // Initialize form data with user details
+  // Initialize form data with user profile details
   useEffect(() => {
-    if (userDetails) {
+    if (userProfile) {
       setFormData({
-        firstName: userDetails.firstName || "",
-        lastName: userDetails.lastName || "",
-        email: userDetails.email || "",
-        phone: userDetails.phone || "",
-        organization: userDetails.organization?.organizationName || "No Organization",
+        firstName: userProfile.firstName || "",
+        lastName: userProfile.lastName || "",
+        email: userProfile.email || "",
+        phone: userProfile.phone || "",
+        organization: userProfile.organization?.organizationName || "No Organization",
       });
     }
-  }, [userDetails]);
+  }, [userProfile]);
 
   // Reset update status after a short delay
   useEffect(() => {
@@ -45,12 +45,12 @@ const PersonalInfo = ({ setShowSidebar }) => {
     }
   }, [updateStatus]);
 
-  // Fetch user data when token changes or on initial load
-useEffect(() => {
-  if (token && status === "idle" && !userDetails) {
-    dispatch(getUserData(token));
-  }
-}, [token, status, userDetails]);
+  // Fetch user profile data when token changes or on initial load
+  useEffect(() => {
+    if (token && profileStatus === "idle" && !userProfile) {
+      dispatch(getUserProfileData(token));
+    }
+  }, [token, profileStatus, userProfile, dispatch]);
 
   // Fetch farm fields when userId changes
   useEffect(() => {
@@ -91,6 +91,10 @@ useEffect(() => {
       await dispatch(
         updateUserData({ id: userId, updateData: updatePayload, token })
       ).unwrap();
+      
+      // Refresh user profile data after successful update
+      dispatch(getUserProfileData(token));
+      
       message.success("Profile updated successfully!");
       setUpdateStatus({
         success: true,
@@ -105,7 +109,7 @@ useEffect(() => {
     }
   };
 
-  if (loading) {
+  if (loading || profileStatus === "loading") {
     return <PersonalInfoSkeleton/>;
   }
 
@@ -127,13 +131,21 @@ useEffect(() => {
       <div className="py-2 flex flex-col flex-grow gap-2">
         <div className="flex items-center gap-2 lg:gap-4 flex-row px-2 lg:px-4 pb-4 border-b border-black/40">
           <div>
-            <img src={profileImage} alt="User profile" className="w-20 h-20 rounded-full object-cover" />
+            <img 
+              src={userProfile?.avatar || profileImage} 
+              alt="User profile" 
+              className="w-20 h-20 rounded-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = profileImage;
+              }}
+            />
           </div>
           <div className="flex flex-col items-start gap-2">
             <h3 className="text-xl font-bold text-[#344E41] capitalize" >
-              {userDetails?.firstName} {userDetails?.lastName}
+              {userProfile?.firstName} {userProfile?.lastName}
             </h3>
-            <p className="text-sm font-medium text-[#344E41] capitalize mb-0">{userDetails?.role}</p>
+            <p className="text-sm font-medium text-[#344E41] capitalize mb-0">{userProfile?.role}</p>
             <div className="flex flex-wrap gap-2 md:gap-4 lg:gap-4 text-sm text-[#344E41]">
               <p className="mb-0">Total Farms Marked: {fields?.length}</p>
               <p className="mb-0">Total Crops Added: {fields?.length}</p>

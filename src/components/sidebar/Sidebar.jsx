@@ -20,7 +20,7 @@ import {
   Hammer,
 } from "../../assets/Icons";
 import "./Sidebar.css";
-import { decodeToken, logoutUser, getUserData } from "../../redux/slices/authSlice";
+import { decodeToken, logoutUser, getUserProfileData } from "../../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 
@@ -58,18 +58,19 @@ const Sidebar = ({ onToggleCollapse }) => {
   const user = useSelector((state) => state?.auth?.user);
   const token = useSelector((state) => state.auth.token);
   const status = useSelector((state) => state.auth.status);
-  const { userDetails } = useSelector((state) => state.auth);
+  const profileStatus = useSelector((state) => state.auth.profileStatus);
+  const { userDetails, userProfile } = useSelector((state) => state.auth);
 
   useEffect(() => {
     dispatch(decodeToken());
   }, [dispatch]);
 
-  // Fetch user data when token is available
+  // Fetch user profile data when token is available
   useEffect(() => {
-    if (token && status === "idle" && !userDetails) {
-      dispatch(getUserData(token));
+    if (token && profileStatus === "idle" && !userProfile) {
+      dispatch(getUserProfileData(token));
     }
-  }, [token, status, userDetails, dispatch]);
+  }, [token, profileStatus, userProfile, dispatch]);
 
   const isInitialized = useRef(false);
 
@@ -157,11 +158,12 @@ const Sidebar = ({ onToggleCollapse }) => {
 
   const spacing = Math.floor(100 / collapsedNavItems.length);
 
-  // Get display name and email - prioritize userDetails, fallback to user
-  const displayFirstName = userDetails?.firstName || user?.firstName || "";
-  const displayLastName = userDetails?.lastName || user?.lastName || "";
-  const displayEmail = userDetails?.email || user?.email || "";
+  // Get display name and email - prioritize userProfile, then userDetails, fallback to user
+  const displayFirstName = userProfile?.firstName || userDetails?.firstName || user?.firstName || "";
+  const displayLastName = userProfile?.lastName || userDetails?.lastName || user?.lastName || "";
+  const displayEmail = userProfile?.email || userDetails?.email || user?.email || "";
   const displayFullName = `${displayFirstName} ${displayLastName}`.trim() || "User";
+  const displayAvatar = userProfile?.avatar || null;
 
   // Render full sidebar content
   const renderFullSidebar = () => (
@@ -178,7 +180,15 @@ const Sidebar = ({ onToggleCollapse }) => {
         onClick={() => handleNavigation("/setting")}
         className="profile-card"
       >
-        <img src={profile} className="profile-image" alt="User profile" />
+        <img 
+          src={displayAvatar || profile} 
+          className="profile-image" 
+          alt="User profile" 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = profile;
+          }}
+        />
         <Card.Body className="text-center">
           <Card.Title className="profile-user-name">
             {displayFullName}

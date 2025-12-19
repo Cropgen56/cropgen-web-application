@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   getUser,
+  getUserProfile,
   updateUser,
   sendOtp,
   verifyOtp,
@@ -68,6 +69,20 @@ export const getUserData = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Failed to fetch user data"
+      );
+    }
+  }
+);
+
+export const getUserProfileData = createAsyncThunk(
+  "auth/getUserProfile",
+  async (token, { rejectWithValue }) => {
+    try {
+      const response = await getUserProfile(token);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to fetch user profile"
       );
     }
   }
@@ -150,8 +165,10 @@ const initialState = {
   user: null,
   token: null,
   userDetails: null,
+  userProfile: null,
   role: null,
   status: "idle",
+  profileStatus: "idle",
   error: null,
   onboardingRequired: false,
   isAuthenticated: false,
@@ -166,8 +183,10 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.userDetails = null;
+      state.userProfile = null;
       state.role = null;
       state.status = "idle";
+      state.profileStatus = "idle";
       state.error = null;
       state.onboardingRequired = false;
       state.isAuthenticated = false;
@@ -248,6 +267,19 @@ const authSlice = createSlice({
       })
       .addCase(getUserData.rejected, (state, action) => {
         state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(getUserProfileData.pending, (state) => {
+        state.profileStatus = "loading";
+        state.error = null;
+      })
+      .addCase(getUserProfileData.fulfilled, (state, action) => {
+        state.profileStatus = "succeeded";
+        state.userProfile = action.payload.user || null;
+        state.error = null;
+      })
+      .addCase(getUserProfileData.rejected, (state, action) => {
+        state.profileStatus = "failed";
         state.error = action.payload;
       })
       .addCase(updateUserData.pending, (state) => {
