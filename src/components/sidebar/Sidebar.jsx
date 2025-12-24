@@ -176,7 +176,7 @@ const Sidebar = ({ onToggleCollapse }) => {
       </div>
 
       <Card
-        style={{ width: "13rem" }}
+        style={{ width: "13rem", paddingTop: "10px" }}
         onClick={() => handleNavigation("/setting")}
         className="profile-card"
       >

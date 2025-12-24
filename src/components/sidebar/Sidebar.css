@@ -139,7 +139,7 @@ nav li {
 }
 
 nav li:hover {
-  background-color: rgba(163, 177, 138, 0.2);
+  /* background-color: rgba(163, 177, 138, 0.2); */
   transform: translateX(4px);
 }
 
@@ -272,7 +272,7 @@ nav a {
 
 .collapsed-nav-list li:hover {
   transform: scale(1.1);
-  background-color: rgba(163, 177, 138, 0.25);
+  /* background-color: rgba(163, 177, 138, 0.25); */
   border-radius: 8px;
 }
 
