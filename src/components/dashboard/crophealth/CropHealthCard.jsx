@@ -86,7 +86,7 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe, hasCropHealthA
           Crop Health
         </h2>
 
-        <div className="relative z-10 flex gap-16 mt-10 w-full">
+        <div className="relative z-10 flex gap-8 mt-10 w-full">
           <div className="flex flex-col items-center bg-white rounded-xl w-[160px] h-[160px] overflow-hidden flex-shrink-0 mx-auto md:mx-0 shadow-sm border border-gray-200">
             <img
               src={cropInfo?.cropImage || "https://via.placeholder.com/160"}
@@ -157,7 +157,7 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe, hasCropHealthA
       >
         <div className="flex flex-col lg:flex-row items-center justify-between mt-6 px-2 md:px-4 gap-6 lg:gap-12 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
           <div className="w-full lg:w-1/2">
-            <h2 className="text-left text-[1.3rem] font-semibold text-[#344E41] mb-2 ml-10">
+            <h2 className="text-left text-[1.3rem] font-semibold text-[#344E41] mb-2 ml-6">
               Soil Analysis (Based on BBCH Growth Stage)
             </h2>
             <SoilAnalysisChart selectedFieldsDetials={selectedFieldsDetials} />

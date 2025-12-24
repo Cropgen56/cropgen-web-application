@@ -106,7 +106,7 @@ function ForeCast({ onSubscribe, hasWeatherAnalytics }) {
                   Weekly Weather
                 </h3>
 
-                <div className="flex overflow-x-auto no-scrollbar gap-4 py-2 w-full">
+                <div className="flex overflow-x-auto no-scrollbar gap-2 py-2 w-full">
                   {weekForecast.map((day, index) => {
                     const icon = getWeatherIcon(day.temp, day.cloudCover);
                     const isToday = day.datetime === today;
