@@ -213,17 +213,6 @@ const FileUploadOverlay = ({
     return parsedGeojsons.length > 0;
   };
 
-  // const handleAddField = () => {
-  //   if (!selectedFiles || selectedFiles.length === 0) {
-  //     message.error("Please select at least one file to proceed.");
-  //     return;
-  //   }
-  //   setShowUploadOverlay(false);
-  //   message.success(`${selectedFiles.length} file(s) added. Polygons are displayed on the map.`);
-
-  //   // Do NOT call fitBounds here — AddFieldMap effect will center once.
-  // };
-
   const closeOverlay = () => {
     setShowUploadOverlay(false);
     if (isTabletView) {

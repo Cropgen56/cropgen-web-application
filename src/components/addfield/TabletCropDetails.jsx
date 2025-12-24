@@ -18,9 +18,6 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
     setIsSidebarVisible(!isSidebarVisible);
   };
 
-  // const fields = [
-  //   { title: "Field 1", area: "0.12h", lat: "24.154", lon: "56.165" },
-  // ];
 
   const handleAddField = () => {
     const today = new Date();

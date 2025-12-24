@@ -192,20 +192,8 @@ const AddFieldMap = ({
       const searchControl = new GeoSearchControl({
         provider,
         style: "bar",
-        // showMarker: true,
-        // retainZoomLevel: false,
         autoComplete: true,
         autoCompleteDelay: 250,
-        // classNames: {
-        //   container: "bg-white rounded shadow-md",
-        //   form: "w-full",
-        //   input:
-        //     " w-full p-2 border-b border-gray-300 text-sm text-black bg-white",
-        //   results:
-        //     "z-[2000] bg-white border border-gray-300 rounded max-h-[200px] overflow-y-auto w-full",
-        //   result:
-        //     "p-2 cursor-pointer text-gray-800 text-sm hover:bg-gray-100 hover:text-black transition ease-in-out duration-400",
-        // },
         resultFormat: ({ result }) => result.label,
       });
 
