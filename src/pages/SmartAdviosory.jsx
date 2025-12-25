@@ -175,7 +175,7 @@ const SmartAdvisory = () => {
           )}
         </AnimatePresence>
 
-        <div className="flex-1 p-4 h-screen overflow-y-auto relative">
+        <div className="flex-1 px-3 py-4 h-screen overflow-y-auto relative">
           {hasManuallySelected && selectedField ? (
             <>
               <div className="mb-4">

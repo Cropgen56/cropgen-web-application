@@ -235,7 +235,7 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelecte
                 dispatch(fetchSatelliteDates(selectedFieldObj.field));
                 setReportGenerated(true);
               }}
-              className="bg-[#344e41] hover:bg-[#2b3e33] transition-all duration-200 rounded-md px-3 py-2 text-gray-200 mt-10"
+              className="bg-[#344e41] hover:bg-[#2b3e33] transition-all duration-200 rounded-md px-3 py-2 text-gray-200 mt-10 cursor-pointer"
             >
               Generate Report
             </button>
@@ -243,7 +243,7 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelecte
             <div className="w-full flex justify-center p-4">
               <button
                 onClick={downloadPDF}
-                className="bg-[#344e41] hover:bg-[#2b3e33] transition-all duration-200 rounded-md px-10 py-2 text-gray-200 mt-4"
+                className="bg-[#344e41] hover:bg-[#2b3e33] cursor-pointer transition-all duration-200 rounded-md px-10 py-2 text-gray-200 mt-4"
               >
                 Download Report
               </button>

@@ -11,8 +11,7 @@ import {
 } from "../../../redux/slices/operationSlice";
 import { Operation } from "../../../assets/Icons";
 import { RiDeleteBin6Line } from "react-icons/ri";
-// import Days from "react-calendar/dist/cjs/MonthView/Days.js";
-// import { query } from "esri-leaflet";
+import { MoveLeft, MoveRight } from "lucide-react";
 
 const FarmerScheduler = (selectedField) => {
   const dispatch = useDispatch();
@@ -173,7 +172,7 @@ const FarmerScheduler = (selectedField) => {
           onClick={() => handleNavigate("prev")}
           className="bg-white text-[#344e41] px-4 py-1 rounded-md text-lg font-bold shadow"
         >
-          ←
+          <MoveLeft color="#344E41" size={24} />
         </button>
         <div className="text-2xl font-bold text-white">
           {currentMonth.format("MMMM YYYY")}
@@ -182,7 +181,7 @@ const FarmerScheduler = (selectedField) => {
           onClick={() => handleNavigate("next")}
           className="bg-white text-[#344e41] px-4 py-1 rounded-md text-lg font-bold shadow"
         >
-          →
+          <MoveRight color="#344E41" size={24} />
         </button>
       </div>
 
@@ -235,27 +234,27 @@ const FarmerScheduler = (selectedField) => {
       {/* Monthly Operations */}
       <div className="mt-10 px-4">
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
             <Operation className="text-white text-6xl" />
-            <h2 className="text-3xl font-bold text-white">
+            <h2 className="text-xl lg:text-3xl font-bold text-white">
               This Month's Operations
             </h2>
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-3 items-center">
             <button
               onClick={() => handleMonthChange("prev")}
-              className="bg-white text-[#344e41] px-3 py-1 rounded-md font-semibold shadow"
+              className="bg-white text-[#344e41] px-2 lg:px-3 py-1 rounded-md font-semibold shadow"
             >
-              ←
+             <MoveLeft color="#344E41" size={20} />
             </button>
-            <div className="text-white font-medium text-xl">
+            <div className="text-white font-medium text-md lg:text-xl">
               {currentMonth.format("MMMM YYYY")}
             </div>
             <button
               onClick={() => handleMonthChange("next")}
-              className="bg-white text-[#344e41] px-3 py-1 rounded-md font-semibold shadow"
+              className="bg-white text-[#344e41] px-2 lg:px-3 py-1 rounded-md font-semibold shadow"
             >
-              →
+             <MoveRight color="#344E41" size={20} />
             </button>
           </div>
         </div>

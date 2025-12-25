@@ -18,7 +18,7 @@ export default function FarmSetting({ setShowSidebar }) {
   };
 
   return (
-    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md h-[98%] flex flex-col box-border overflow-hidden overflow-y-hidden font-inter">
+    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md h-[1000px] lg:h-[98%] flex flex-col box-border overflow-hidden overflow-y-hidden font-inter">
       <div className="px-4 py-2 text-[#344E41] border-b border-black/40">
         <div className="flex items-center justify-between">
           <h5 className="font-bold">Farm Settings</h5>

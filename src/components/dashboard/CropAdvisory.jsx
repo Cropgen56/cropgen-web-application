@@ -124,7 +124,7 @@ const CropAdvisory = ({
   return (
     <div 
       className={`
-        flex flex-col gap-4 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 
+        flex flex-col gap-3 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 
         ${isPreparedForPDF ? 'h-auto' : 'md:h-auto lg:h-auto'} 
         p-3 overflow-hidden crop-advisory-section
       `}

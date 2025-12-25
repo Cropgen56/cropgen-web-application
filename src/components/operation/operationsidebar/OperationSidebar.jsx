@@ -3,6 +3,7 @@ import { Operation2 } from "../../../assets/Icons";
 import { CiSearch } from "react-icons/ci";
 import { useSelector } from "react-redux";
 import PolygonPreview from "../../polygon/PolygonPreview";
+import { ChevronLeft } from "lucide-react";
 
 const FieldInfo = ({ 
   title, 
@@ -102,7 +103,8 @@ const OperationSidebar = ({
             onClick={() => setIsSidebarVisible(false)}
             className="text-[#344e41] font-bold"
           >
-            Close
+            {/* Close */}
+            <ChevronLeft color="#344E41" />
           </button>
         </div>
 

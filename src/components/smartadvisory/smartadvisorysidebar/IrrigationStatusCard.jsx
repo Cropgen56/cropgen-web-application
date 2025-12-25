@@ -40,7 +40,7 @@ const IrrigationStatusCard = ({ isTablet = false }) => {
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-[2px]">
-        <h2 className={`${isTablet ? "text-[7px]" : "text-xl"} font-semibold`}>
+        <h2 className={`${isTablet ? "text-[7px]" : "text-[22px]"} font-semibold`}>
           Irrigation Status
         </h2>
         <img

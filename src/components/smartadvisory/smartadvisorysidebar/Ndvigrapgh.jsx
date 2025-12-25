@@ -178,14 +178,14 @@ const NDVIChartCard = ({ selectedField }) => {
   }
 
   return (
-    <div className="w-full bg-[#2C4C3B] rounded-lg p-4 text-white">
+    <div className="w-full bg-[#2C4C3B] rounded-lg px-3 py-4 text-white">
       {/* Header Row */}
       <div className="flex flex-col md:flex-row justify-between gap-6">
         {/* Left: NDVI Info */}
-        <div className="w-full md:w-1/3 flex flex-col gap-3">
+        <div className="w-full md:w-[35%] flex flex-col gap-3">
           {/* Index Selector */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-4xl font-bold text-[#86D72F]">{index}</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#86D72F]">{index}</h2>
             <select
               value={index}
               onChange={handleIndexChange}
@@ -243,7 +243,7 @@ const NDVIChartCard = ({ selectedField }) => {
         </div>
 
         {/* Right: Chart and Info Cards */}
-        <div className="w-full md:w-2/3 flex flex-col gap-2">
+        <div className="w-full md:w-[65%] flex flex-col justify-between">
           {/* Chart */}
           <div className="relative w-full">
             {isLoading ? (
@@ -265,13 +265,13 @@ const NDVIChartCard = ({ selectedField }) => {
             ) : (
               <div
                 ref={scrollRef}
-                className="overflow-x-auto cursor-grab active:cursor-grabbing"
+                className="overflow-x-auto cursor-grab active:cursor-grabbing no-scrollbar"
               >
                 <div style={{ minWidth: Math.max(chartData.length * 40, 500) }}>
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart
                       data={chartData}
-                      margin={{ top: 20, right: 30, left: 10, bottom: 5 }}
+                      margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                     >
                       <CartesianGrid stroke="#3a5947" strokeDasharray="3 3" />
                       <XAxis

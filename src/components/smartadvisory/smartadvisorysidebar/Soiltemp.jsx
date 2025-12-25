@@ -163,7 +163,7 @@ const Soiltemp = () => {
     <div className="bg-[#2d473b] text-white rounded-xl shadow-lg w-full h-full flex flex-col p-6 md:p-8">
       <div className="w-full flex justify-between items-start mb-6">
         <div className="flex-1">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">
+          <h2 className="text-[22px] font-bold mb-4">
             Soil Moisture & Temperature
           </h2>
 

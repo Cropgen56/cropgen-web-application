@@ -27,7 +27,7 @@ const WeatherCard = ({ isTablet = false }) => {
   return (
     <div className="bg-[#344e41] rounded-lg p-4 text-white w-full shadow-sm flex flex-col justify-between">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg md:text-xl font-semibold">Weather</h2>
+        <h2 className="text-lg md:text-[22px] font-semibold">Weather</h2>
       </div>
 
       <div className="bg-white rounded-md mt-3 p-2">

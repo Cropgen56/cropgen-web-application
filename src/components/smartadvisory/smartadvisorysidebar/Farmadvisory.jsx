@@ -74,7 +74,7 @@ export default function FarmAdvisoryCard() {
   return (
     <div className="w-full bg-[#335343] rounded-t-xl">
       <div className="flex justify-between items-center px-6 py-4 text-white">
-        <h2 className="text-xl font-semibold flex items-center gap-3">
+        <h2 className="text-[22px] font-semibold flex items-center gap-3">
           <img src={imgFrame280} alt="activity" className="w-6 h-6" />
           Activity to do
         </h2>

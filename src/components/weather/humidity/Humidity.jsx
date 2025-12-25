@@ -9,7 +9,7 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
 
   if (!forecastData && !historicalData) return <div>Loading...</div>;
 
-  const dates = (dataSource.time || []).map(dateStr => {
+  const dates = (dataSource.time || []).map((dateStr) => {
     const d = new Date(dateStr);
     return `${d.getDate()} ${d.toLocaleString("default", { month: "short" })}`;
   });
@@ -17,8 +17,10 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
   const humidityData = dataSource.relative_humidity || [];
 
   const currentHumidity = isHistorical
-    ? (humidityData.length > 0 ? humidityData[humidityData.length - 1] : "-")
-    : (current.relative_humidity ?? "-");
+    ? humidityData.length > 0
+      ? humidityData[humidityData.length - 1]
+      : "-"
+    : current.relative_humidity ?? "-";
 
   const options = {
     grid: {
@@ -36,9 +38,12 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
       axisLabel: {
         color: "#000",
         interval: 0,
-        rotate: 0,
-        fontSize: 11,
-        margin: 10,
+        // rotate: 0,
+        // fontSize: 11,
+        // margin: 10,
+        rotate: 30,
+        margin: 15,
+        fontSize: 12,
       },
       splitLine: {
         show: true,
@@ -73,8 +78,8 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
     tooltip: {
       trigger: "axis",
       formatter: (params) => {
-        const humidity = params.find(p => p.seriesName === "Humidity");
-        return `${params[0].name}<br/>Humidity: ${humidity?.value ?? '-'}%`;
+        const humidity = params.find((p) => p.seriesName === "Humidity");
+        return `${params[0].name}<br/>Humidity: ${humidity?.value ?? "-"}%`;
       },
     },
   };
@@ -84,14 +89,19 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
       <div className="p-4">
         <h2 className="flex justify-start items-center text-[20px] font-bold text-[#344E41] mb-3">
           <span className="text-[20px] font-bold">
-            Humidity % {isHistorical && <span className="text-sm text-gray-500">(Historical)</span>}
+            Humidity %{" "}
+            {isHistorical && (
+              <span className="text-sm text-gray-500">(Historical)</span>
+            )}
           </span>
         </h2>
         <div className="mb-3 text-[#344E41]">
           <p>{isHistorical ? "Avg Humidity" : "Current Humidity"}</p>
           <h2 className="text-[30px] font-bold">{currentHumidity}%</h2>
           {isHistorical && dateRange && (
-            <p className="text-sm text-gray-500">{dateRange.startDate} to {dateRange.endDate}</p>
+            <p className="text-sm text-gray-500">
+              {dateRange.startDate} to {dateRange.endDate}
+            </p>
           )}
         </div>
         <div className="w-full">

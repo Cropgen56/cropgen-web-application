@@ -219,13 +219,13 @@ const Sidebar = ({ onToggleCollapse }) => {
       </nav>
 
       <div
-        className="offcanvas-footer cursor-pointer mt-5"
+        className="offcanvas-footer cursor-pointer mt-4"
         onClick={() => setIsLogoutModalOpen(true)}
       >
-        <p className="footer-text flex items-center gap-2">
+        <div className="footer-text flex items-center gap-2">
           <Logout />
           <span>Logout</span>
-        </p>
+        </div>
       </div>
     </>
   );
@@ -267,13 +267,13 @@ const Sidebar = ({ onToggleCollapse }) => {
         <div className="flex gap-3 mt-4">
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all"
+            className="flex-1 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 ease-in-out"
           >
             Cancel
           </button>
           <button
             onClick={onLogout}
-            className="flex-1 py-2 rounded-lg bg-[#075a53] text-white hover:bg-[#064d48] transition-all"
+            className="flex-1 py-2 rounded-lg bg-[#D43C2A] text-white hover:bg-[#C71B06] transition-all duration-300 ease-in-out"
           >
             Logout
           </button>

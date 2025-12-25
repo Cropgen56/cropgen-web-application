@@ -190,7 +190,7 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
           <LeftArrow />
         </button>
 
-        <div className="flex gap-2 overflow-x-auto w-full justify-between py-[5px] scrollbar-hide scroll-smooth">
+        <div className="flex gap-2 overflow-x-auto w-full justify-between py-[5px] no-scrollbar scroll-smooth">
           {loading.satelliteDates
             ? Array.from({ length: visibleCount }).map((_, idx) => (
                 <div

@@ -71,7 +71,7 @@
 
 /* card profile css style */
 .card {
-  margin: 20px auto;
+  margin: 14px auto;
   background-color: #5a7c6b !important;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -126,7 +126,7 @@ nav ul {
 }
 
 nav li {
-  margin: 10px 0px;
+  margin: 8px 0px;
   font-size: 0.85rem;
   font-weight: 400;
   line-height: 2rem;

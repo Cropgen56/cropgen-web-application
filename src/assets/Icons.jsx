@@ -121,8 +121,8 @@ export const Weather = () => {
 export const Operation = () => {
   return (
     <svg
-      width="25"
-      height="25"
+      width="35"
+      height="35"
       viewBox="0 0 35 35"
       className="me-2"
       fill="none"

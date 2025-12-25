@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import PolygonPreview from "../../polygon/PolygonPreview";
+import { ChevronLeft } from "lucide-react";
 
 const FieldInfo = ({
   title,
@@ -82,7 +83,7 @@ const WeatherSidebar = ({ fields, setSelectedField, selectedField, hasSubscripti
             onClick={() => setIsSidebarVisible(false)}
             className="text-[#344e41] font-bold"
           >
-            Close
+            <ChevronLeft color="#344E41" />
           </button>
         </div>
         <div className="relative flex items-center mx-auto w-full">
