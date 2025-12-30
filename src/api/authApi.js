@@ -51,11 +51,14 @@ export const getUser = async (token) => {
 
 // Get user profile API
 export const getUserProfile = async (token) => {
-  const response = await axios.get(`https://server.cropgenapp.com/v1/api/auth/profile`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await axios.get(
+    `https://server.cropgenapp.com/v1/api/auth/profile`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   return response.data;
 };
 
@@ -122,6 +125,20 @@ export const completeUserProfile = async ({
     { terms, organizationCode },
     {
       withCredentials: true,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+// Get presigned URL for avatar upload
+export const getAvatarPresignedUrl = async (token, fileType) => {
+  const response = await axios.post(
+    `${API_URL}/api/auth/avatar-presign`,
+    { fileType },
+    {
       headers: {
         Authorization: `Bearer ${token}`,
       },

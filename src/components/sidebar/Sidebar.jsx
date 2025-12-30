@@ -20,7 +20,11 @@ import {
   Hammer,
 } from "../../assets/Icons";
 import "./Sidebar.css";
-import { decodeToken, logoutUser, getUserProfileData } from "../../redux/slices/authSlice";
+import {
+  decodeToken,
+  logoutUser,
+  getUserProfileData,
+} from "../../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 
@@ -53,7 +57,7 @@ const Sidebar = ({ onToggleCollapse }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const logout = useLogout();
-  
+
   // Get user data from Redux store
   const user = useSelector((state) => state?.auth?.user);
   const token = useSelector((state) => state.auth.token);
@@ -61,11 +65,15 @@ const Sidebar = ({ onToggleCollapse }) => {
   const profileStatus = useSelector((state) => state.auth.profileStatus);
   const { userDetails, userProfile } = useSelector((state) => state.auth);
 
+  // S3 bucket URL for avatar
+  const S3_BUCKET_URL =
+    process.env.REACT_APP_S3_BUCKET_URL ||
+    "https://your-bucket-name.s3.amazonaws.com";
+
   useEffect(() => {
     dispatch(decodeToken());
   }, [dispatch]);
 
-  // Fetch user profile data when token is available
   useEffect(() => {
     if (token && profileStatus === "idle" && !userProfile) {
       dispatch(getUserProfileData(token));
@@ -146,88 +154,107 @@ const Sidebar = ({ onToggleCollapse }) => {
       <li
         key={path}
         onClick={() => handleNavigation(path)}
-        className={`cursor-pointer`}
+        className="cursor-pointer"
       >
         <Icon />
       </li>
     )),
-    <li key="logout-icon" className="cursor-pointer" onClick={() => setIsLogoutModalOpen(true)}>
+    <li
+      key="logout-icon"
+      className="cursor-pointer"
+      onClick={() => setIsLogoutModalOpen(true)}
+    >
       <Logout />
     </li>,
   ];
 
   const spacing = Math.floor(100 / collapsedNavItems.length);
 
-  // Get display name and email - prioritize userProfile, then userDetails, fallback to user
-  const displayFirstName = userProfile?.firstName || userDetails?.firstName || user?.firstName || "";
-  const displayLastName = userProfile?.lastName || userDetails?.lastName || user?.lastName || "";
-  const displayEmail = userProfile?.email || userDetails?.email || user?.email || "";
-  const displayFullName = `${displayFirstName} ${displayLastName}`.trim() || "User";
-  const displayAvatar = userProfile?.avatar || null;
 
-  // Render full sidebar content
+  const displayFirstName =
+    userProfile?.firstName || userDetails?.firstName || user?.firstName || "";
+  const displayLastName =
+    userProfile?.lastName || userDetails?.lastName || user?.lastName || "";
+  const displayEmail =
+    userProfile?.email || userDetails?.email || user?.email || "";
+  const displayFullName =
+    `${displayFirstName} ${displayLastName}`.trim() || "User";
+
+  // Get avatar URL
+  const getAvatarUrl = () => {
+    const avatar = userProfile?.avatar;
+    if (!avatar) return profile;
+    if (avatar.startsWith("http")) return avatar;
+    return `${S3_BUCKET_URL}/${avatar}`;
+  };
+
+
   const renderFullSidebar = () => (
-    <>
+    <div className="sidebar-content-wrapper">
+
       <div
-        className="title-container flex items-center justify-center"
+        className="title-container flex items-center justify-center cursor-pointer"
         onClick={() => handleNavigation("/")}
       >
         <img src={img1} alt="CropGen Logo" className="w-[170px]" />
       </div>
 
+  
       <Card
         style={{ width: "13rem", paddingTop: "10px" }}
         onClick={() => handleNavigation("/setting")}
         className="profile-card"
       >
-        <img 
-          src={displayAvatar || profile} 
-          className="profile-image" 
-          alt="User profile" 
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = profile;
-          }}
-        />
-        <Card.Body className="text-center">
-          <Card.Title className="profile-user-name">
+      
+        <div className="avatar-container">
+          <div className="avatar-wrapper">
+            <img
+              src={getAvatarUrl()}
+              alt="User profile"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = profile;
+              }}
+            />
+          </div>
+        </div>
+        <Card.Body className="text-center pt-2 pb-3">
+          <Card.Title className="profile-user-name mb-1">
             {displayFullName}
           </Card.Title>
-          <Card.Text className="profile-user-email">
+          <Card.Text className="profile-user-email mb-0">
             {displayEmail}
           </Card.Text>
         </Card.Body>
       </Card>
 
-      <nav className="sidebar-nav">
-        <ul>
-          {NAV_ITEMS.map(({ path, label, Icon }) => (
-            <li
-              key={path}
-              onClick={() => handleNavigation(path)}
-              className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ease-in-out ${
-                location.pathname === path
-                  ? "px-1.5 pt-[2px] pb-[3px] text-[0.9rem] font-extralight leading-[18.15px] text-left"
-                  : ""
-              }`}
-            >
-              <Icon />
-              {label}
-            </li>
-          ))}
-        </ul>
-      </nav>
+
+      <div className="sidebar-nav-wrapper">
+        <nav className="sidebar-nav">
+          <ul>
+            {NAV_ITEMS.map(({ path, label, Icon }) => (
+              <li
+                key={path}
+                onClick={() => handleNavigation(path)}
+              >
+                <Icon />
+                <span>{label}</span>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
 
       <div
-        className="offcanvas-footer cursor-pointer mt-4"
+        className="offcanvas-footer cursor-pointer"
         onClick={() => setIsLogoutModalOpen(true)}
       >
-        <div className="footer-text flex items-center gap-2">
+        <div className="footer-text">
           <Logout />
           <span>Logout</span>
         </div>
       </div>
-    </>
+    </div>
   );
 
   const renderCollapsedNav = () => (
@@ -242,7 +269,7 @@ const Sidebar = ({ onToggleCollapse }) => {
     </nav>
   );
 
-  // Keep the modal as just motion elements
+  // Logout Modal Component
   const LogoutModal = ({ onClose, onLogout }) => (
     <motion.div
       key="logout-modal"
@@ -250,7 +277,8 @@ const Sidebar = ({ onToggleCollapse }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]"
+      onClick={onClose}
     >
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -258,8 +286,9 @@ const Sidebar = ({ onToggleCollapse }) => {
         exit={{ scale: 0.8, opacity: 0 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
         className="bg-white p-6 rounded-xl shadow-lg w-80 text-center"
+        onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold">Confirm Logout</h2>
+        <h2 className="text-lg font-semibold text-gray-800">Confirm Logout</h2>
         <p className="text-gray-600 text-sm mt-2">
           Are you sure you want to logout?
         </p>
@@ -267,13 +296,13 @@ const Sidebar = ({ onToggleCollapse }) => {
         <div className="flex gap-3 mt-4">
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 ease-in-out"
+            className="flex-1 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-300 ease-in-out font-medium"
           >
             Cancel
           </button>
           <button
             onClick={onLogout}
-            className="flex-1 py-2 rounded-lg bg-[#D43C2A] text-white hover:bg-[#C71B06] transition-all duration-300 ease-in-out"
+            className="flex-1 py-2 rounded-lg bg-[#D43C2A] text-white hover:bg-[#C71B06] transition-all duration-300 ease-in-out font-medium"
           >
             Logout
           </button>
@@ -309,7 +338,7 @@ const Sidebar = ({ onToggleCollapse }) => {
       </div>
     );
   }
-  
+
   return (
     <div className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
       <Offcanvas

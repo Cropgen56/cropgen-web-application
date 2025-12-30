@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 import {
   getUser,
   getUserProfile,
@@ -10,6 +11,8 @@ import {
   logoutUserApi,
 } from "../../api/authApi";
 import { decodeJWT } from "../../utility/decodetoken";
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:7070/v1";
 
 // Add a refresh lock utility
 const refreshLock = {
@@ -150,13 +153,72 @@ export const completeProfile = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk(
-  "auth/verifyotp",
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
       const response = await logoutUserApi();
       return response;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "OTP verification failed");
+      return rejectWithValue(error.response?.data || "Logout failed");
+    }
+  }
+);
+
+// Upload Avatar Thunk
+export const uploadAvatar = createAsyncThunk(
+  "auth/uploadAvatar",
+  async ({ file, onProgress }, { getState, rejectWithValue }) => {
+    try {
+      const { token } = getState().auth;
+
+      if (!token) return rejectWithValue("No token found");
+
+      // Get presigned URL from backend
+      const presignRes = await axios.post(
+        `${API_URL}/api/auth/avatar-presign`,
+        { fileType: file.type },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const { uploadUrl } = presignRes.data.data;
+      const key = uploadUrl.split(".com/")[1].split("?")[0];
+
+      // Upload to S3 using XMLHttpRequest for progress tracking
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener("progress", (event) => {
+          if (event.lengthComputable && onProgress) {
+            const progress = Math.round((event.loaded / event.total) * 100);
+            onProgress(progress);
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        });
+
+        xhr.addEventListener("error", () => reject(new Error("Upload failed")));
+
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.send(file);
+      });
+
+      return { key };
+    } catch (error) {
+      console.error("Upload Avatar Error:", error);
+      return rejectWithValue(
+        error.response?.data?.message || "Avatar upload failed"
+      );
     }
   }
 );
@@ -173,6 +235,8 @@ const initialState = {
   onboardingRequired: false,
   isAuthenticated: false,
   refreshPending: false,
+  avatarUploading: false,
+  avatarUploadProgress: 0,
 };
 
 const authSlice = createSlice({
@@ -191,6 +255,8 @@ const authSlice = createSlice({
       state.onboardingRequired = false;
       state.isAuthenticated = false;
       state.refreshPending = false;
+      state.avatarUploading = false;
+      state.avatarUploadProgress = 0;
     },
     decodeToken: (state) => {
       if (state.token) {
@@ -227,6 +293,9 @@ const authSlice = createSlice({
     resetAuthState: () => initialState,
     clearError: (state) => {
       state.error = null;
+    },
+    setAvatarUploadProgress: (state, action) => {
+      state.avatarUploadProgress = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -344,6 +413,35 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+      // Upload Avatar cases
+      .addCase(uploadAvatar.pending, (state) => {
+        state.avatarUploading = true;
+        state.avatarUploadProgress = 0;
+        state.error = null;
+      })
+      .addCase(uploadAvatar.fulfilled, (state, action) => {
+        state.avatarUploading = false;
+        state.avatarUploadProgress = 100;
+        // Update userProfile avatar
+        if (state.userProfile) {
+          state.userProfile = {
+            ...state.userProfile,
+            avatar: action.payload.key,
+          };
+        }
+        // Update user avatar if exists
+        if (state.user) {
+          state.user = {
+            ...state.user,
+            avatar: action.payload.key,
+          };
+        }
+      })
+      .addCase(uploadAvatar.rejected, (state, action) => {
+        state.avatarUploading = false;
+        state.avatarUploadProgress = 0;
+        state.error = action.payload;
+      })
       .addMatcher(
         (action) =>
           action.type.endsWith("/fulfilled") ||
@@ -361,6 +459,7 @@ export const {
   resetAuthState,
   setGoogleLoginData,
   clearError,
+  setAvatarUploadProgress,
 } = authSlice.actions;
 
 export default authSlice.reducer;

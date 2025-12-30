@@ -60,7 +60,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
   return (
     <>
       {isTabletView ? (
-        <div className="flex-1 flex flex-col justify-start items-center px-2 sm:px-4 pb-4 text-[#344e41] z-[9999] h-full overflow-y-auto">
+        <div className="flex-1 flex flex-col justify-start items-center px-2 sm:px-4 pb-4 text-[#344e41] z-[9999] h-full overflow-y-auto no-scrollbar">
           <div className="flex justify-center items-start p-1 sm:p-2 w-full min-h-min">
             <div className="w-full max-w-6xl bg-white shadow-lg rounded-xl p-3 sm:p-4 md:p-6 mx-auto">
               <h5 className="text-[#344e41] mb-3 sm:mb-4 md:mb-6 text-center text-base sm:text-lg font-bold">
@@ -136,9 +136,9 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
           </div>
 
           <div className="flex flex-col flex-1 overflow-hidden">
-            <form className="p-3 text-[#344e41] flex-1 overflow-y-auto">
+            <form className="p-3 text-[#344e41] flex-1 overflow-y-auto no-scrollbar">
               <h5 className="text-[#344e41] mb-3">Crop Details</h5>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 no-scrollbar">
                 <FormInput
                   label="Farm Name"
                   value={farmName}

@@ -1,25 +1,28 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { get, set } from "idb-keyval";
-import { getSixMonthsBeforeDate } from "../../utility/formatDate";
+import { get, set, del, keys } from "idb-keyval";
 
 function arraysEqual(a, b) {
   return a.length === b.length && a.every((val, index) => val === b[index]);
 }
 
-// Cache TTLs
+const getSixMonthsBeforeDate = () => {
+  const date = new Date();
+  date.setMonth(date.getMonth() - 6);
+  return date.toISOString().split("T")[0];
+};
+
+const getTodayDate = () => new Date().toISOString().split("T")[0];
+
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
 
-const generateCacheKey = (prefix, farmId, input) => {
-  if (farmId) {
-    return `api_cache_${prefix}_${farmId}`;
-  }
+const generateCacheKey = (prefix, input) => {
   const inputStr = JSON.stringify(input);
   const hash = inputStr.split("").reduce((a, b) => {
     a = (a << 5) - a + b.charCodeAt(0);
     return a & a;
   }, 0);
-  return `api_cache_${prefix}_${hash}`;
+  return `api_cache_${prefix}_${Math.abs(hash)}`;
 };
 
 const initialState = {
@@ -38,29 +41,44 @@ const initialState = {
     indexTimeSeriesSummary: false,
     waterIndexData: false,
   },
+  currentDateRange: {
+    startDate: null,
+    endDate: null,
+  },
 };
 
 // ========== Thunks ==========
 
-// 1) fetchSatelliteDates
 export const fetchSatelliteDates = createAsyncThunk(
   "satellite/fetchSatelliteDates",
-  async ({ geometry }, { rejectWithValue }) => {
+  async ({ geometry, startDate, endDate }, { rejectWithValue }) => {
     try {
-      const cacheKey = generateCacheKey("satelliteDates", null, geometry);
+      const today = endDate || getTodayDate();
+      const sixMonthsBefore = startDate || getSixMonthsBeforeDate();
+
+      if (!geometry || geometry.length === 0) {
+        return rejectWithValue("Geometry is missing");
+      }
+
+      const cacheInput = {
+        geometry: geometry,
+        startDate: sixMonthsBefore,
+        endDate: today,
+      };
+      const cacheKey = generateCacheKey("satelliteDates", cacheInput);
+
       const cached = await get(cacheKey);
       const now = Date.now();
 
       if (cached && now - cached.timestamp < CACHE_TTL) {
-        return cached.data;
+        if (
+          cached.metadata?.startDate === sixMonthsBefore &&
+          cached.metadata?.endDate === today
+        ) {
+          return cached.data;
+        }
       }
 
-      if (!geometry) {
-        return rejectWithValue("Geometry is missing");
-      }
-
-      const today = new Date().toISOString().split("T")[0];
-      const sixMonthsBefore = getSixMonthsBeforeDate();
       const payload = {
         geometry: {
           type: "Polygon",
@@ -82,7 +100,15 @@ export const fetchSatelliteDates = createAsyncThunk(
         }
       );
 
-      await set(cacheKey, { data: response.data, timestamp: now });
+      await set(cacheKey, {
+        data: response.data,
+        timestamp: now,
+        metadata: {
+          startDate: sixMonthsBefore,
+          endDate: today,
+        },
+      });
+
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -90,13 +116,12 @@ export const fetchSatelliteDates = createAsyncThunk(
   }
 );
 
-// 2) fetchIndexData (for single index - used in FarmMap)
 export const fetchIndexData = createAsyncThunk(
   "satellite/fetchIndexData",
   async ({ endDate, geometry, index }, { rejectWithValue }) => {
     try {
       const input = { endDate, geometry, index };
-      const cacheKey = generateCacheKey("indexData", null, input);
+      const cacheKey = generateCacheKey("indexData", input);
       const cached = await get(cacheKey);
       const now = Date.now();
 
@@ -142,13 +167,12 @@ export const fetchIndexData = createAsyncThunk(
   }
 );
 
-// 3) fetchIndexDataForMap (NEW - for multiple indexes in FarmReportMap)
 export const fetchIndexDataForMap = createAsyncThunk(
   "satellite/fetchIndexDataForMap",
   async ({ endDate, geometry, index }, { rejectWithValue }) => {
     try {
       const input = { endDate, geometry, index };
-      const cacheKey = generateCacheKey("indexDataForMap", null, input);
+      const cacheKey = generateCacheKey("indexDataForMap", input);
       const cached = await get(cacheKey);
       const now = Date.now();
 
@@ -197,7 +221,6 @@ export const fetchIndexDataForMap = createAsyncThunk(
   }
 );
 
-// 4) fetchWeatherData
 export const fetchWeatherData = createAsyncThunk(
   "satellite/fetchWeatherData",
   async (_, { rejectWithValue }) => {
@@ -220,13 +243,12 @@ export const fetchWeatherData = createAsyncThunk(
   }
 );
 
-// 5) fetchIndexTimeSeriesSummary
 export const fetchIndexTimeSeriesSummary = createAsyncThunk(
   "satellite/fetchIndexTimeSeriesSummary",
   async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
     try {
       const input = { startDate, endDate, geometry, index };
-      const cacheKey = generateCacheKey("indexTimeSeriesSummary", null, input);
+      const cacheKey = generateCacheKey("indexTimeSeriesSummary", input);
       const cached = await get(cacheKey);
       const now = Date.now();
 
@@ -281,13 +303,12 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
   }
 );
 
-// 6) fetchWaterIndexData
 export const fetchWaterIndexData = createAsyncThunk(
   "satellite/fetchWaterIndexData",
   async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
     try {
       const input = { startDate, endDate, geometry, index };
-      const cacheKey = generateCacheKey("fetchWaterIndexData", null, input);
+      const cacheKey = generateCacheKey("fetchWaterIndexData", input);
       const cached = await get(cacheKey);
       const now = Date.now();
 
@@ -342,6 +363,22 @@ export const fetchWaterIndexData = createAsyncThunk(
   }
 );
 
+export const clearSatelliteDatesCache = createAsyncThunk(
+  "satellite/clearSatelliteDatesCache",
+  async () => {
+    try {
+      const allKeys = await keys();
+      const satelliteKeys = allKeys.filter((key) =>
+        key.toString().includes("satelliteDates")
+      );
+      await Promise.all(satelliteKeys.map((key) => del(key)));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+);
+
 // ========== Slice ==========
 const satelliteSlice = createSlice({
   name: "satellite",
@@ -358,10 +395,13 @@ const satelliteSlice = createSlice({
       state.loading.indexDataByType = {};
     },
     resetSatelliteState: () => initialState,
+    clearSatelliteDates: (state) => {
+      state.satelliteDates = null;
+      state.currentDateRange = { startDate: null, endDate: null };
+    },
   },
   extraReducers: (builder) => {
     builder
-      // fetchSatelliteDates
       .addCase(fetchSatelliteDates.pending, (state) => {
         state.loading.satelliteDates = true;
         state.error = null;
@@ -369,13 +409,16 @@ const satelliteSlice = createSlice({
       .addCase(fetchSatelliteDates.fulfilled, (state, action) => {
         state.loading.satelliteDates = false;
         state.satelliteDates = action.payload;
+        state.currentDateRange = {
+          startDate: action.meta.arg.startDate,
+          endDate: action.meta.arg.endDate,
+        };
       })
       .addCase(fetchSatelliteDates.rejected, (state, action) => {
         state.loading.satelliteDates = false;
         state.error = action.payload;
       })
 
-      // fetchIndexData
       .addCase(fetchIndexData.pending, (state) => {
         state.loading.indexData = true;
         state.error = null;
@@ -389,7 +432,6 @@ const satelliteSlice = createSlice({
         state.error = action.payload;
       })
 
-      // fetchIndexDataForMap (NEW)
       .addCase(fetchIndexDataForMap.pending, (state, action) => {
         const index = action.meta.arg.index;
         state.loading.indexDataByType[index] = true;
@@ -408,7 +450,6 @@ const satelliteSlice = createSlice({
         state.error = action.payload?.error || action.payload;
       })
 
-      // fetchWeatherData
       .addCase(fetchWeatherData.pending, (state) => {
         state.loading.weatherData = true;
         state.error = null;
@@ -422,7 +463,6 @@ const satelliteSlice = createSlice({
         state.error = action.payload;
       })
 
-      // fetchIndexTimeSeriesSummary
       .addCase(fetchIndexTimeSeriesSummary.pending, (state) => {
         state.loading.indexTimeSeriesSummary = true;
         state.error = null;
@@ -436,7 +476,6 @@ const satelliteSlice = createSlice({
         state.error = action.payload;
       })
 
-      // fetchWaterIndexData
       .addCase(fetchWaterIndexData.pending, (state) => {
         state.loading.waterIndexData = true;
         state.error = null;
@@ -448,6 +487,10 @@ const satelliteSlice = createSlice({
       .addCase(fetchWaterIndexData.rejected, (state, action) => {
         state.loading.waterIndexData = false;
         state.error = action.payload;
+      })
+
+      .addCase(clearSatelliteDatesCache.fulfilled, (state) => {
+        state.satelliteDates = null;
       });
   },
 });
@@ -457,6 +500,7 @@ export const {
   removeSelectedIndexData,
   clearIndexDataByType,
   resetSatelliteState,
+  clearSatelliteDates,
 } = satelliteSlice.actions;
 
 export default satelliteSlice.reducer;
