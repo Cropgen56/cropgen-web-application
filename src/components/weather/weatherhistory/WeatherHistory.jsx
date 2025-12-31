@@ -110,7 +110,7 @@ const WeatherHistory = ({
   };
 
   return (
-    <Card className="mt-3 mx-2 rounded-lg shadow-md bg-white">
+    <Card className="mt-3 mx-2 rounded-lg shadow-md bg-white z-[500]">
       <Card.Body className="flex flex-col">
         <h2 className="w-heading text-[20px] font-bold text-[#344e41]">
           Weather History

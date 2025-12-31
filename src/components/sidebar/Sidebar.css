@@ -38,7 +38,7 @@
 
 .title-container {
   transition: transform 0.2s ease;
-  padding: 15px 0;
+  padding: 8px 0 5px 0; /* Reduced padding - moved upward */
   flex-shrink: 0;
 }
 
@@ -88,7 +88,7 @@
 
 /* ===== PROFILE CARD STYLES ===== */
 .card {
-  margin: 14px auto;
+  margin: 5px auto 10px auto; /* Reduced top margin significantly */
   background-color: #5a7c6b !important;
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -112,12 +112,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 10px 0;
+  padding: 8px 0; /* Reduced padding */
 }
 
 .avatar-wrapper {
-  width: 80px;
-  height: 80px;
+  width: 70px; /* Slightly smaller */
+  height: 70px; /* Slightly smaller */
   border-radius: 50%;
   overflow: hidden;
   border: 3px solid #ffffff;
@@ -136,8 +136,8 @@
 }
 
 .profile-image {
-  width: 80px !important;
-  height: 80px !important;
+  width: 70px !important; /* Slightly smaller */
+  height: 70px !important; /* Slightly smaller */
   margin: auto;
   z-index: 1000;
   transition: transform 0.2s ease;
@@ -148,19 +148,24 @@
 }
 
 .profile-user-name {
-  font-size: 1.1rem !important;
+  font-size: 1rem !important; /* Slightly smaller */
   font-weight: 700 !important;
-  line-height: 1.4;
+  line-height: 1.3;
   color: #f8f8f8 !important;
-  margin-top: 8px;
+  margin-top: 4px; /* Reduced margin */
 }
 
 .profile-user-email {
-  font-size: 0.85rem;
+  font-size: 0.8rem; /* Slightly smaller */
   font-weight: 300;
-  line-height: 1.3;
+  line-height: 1.2;
   color: #d9d9d9 !important;
   word-break: break-all;
+}
+
+/* Card body padding reduction */
+.profile-card .card-body {
+  padding: 0.5rem 0.75rem 0.75rem 0.75rem !important; /* Reduced padding */
 }
 
 /* ===== SCROLLABLE NAVIGATION SECTION - NO SCROLLBAR ===== */
@@ -169,7 +174,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0 10px;
-  margin-bottom: 10px;
+  margin-bottom: 5px; /* Reduced margin */
   /* Hide scrollbar for all browsers */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -194,17 +199,17 @@ nav ul {
 
 /* ===== BOLD NAVIGATION ITEMS WITH VISIBLE LIFT EFFECT ===== */
 nav li {
-  margin: 6px 0px;
+  margin: 4px 0px; /* Reduced margin */
   font-size: 0.9rem;
   font-weight: 700 !important;
-  line-height: 2rem;
+  line-height: 1.8rem; /* Slightly reduced */
   color: #f5f5f5 !important;
   cursor: pointer;
   display: flex !important;
   align-items: center;
   gap: 10px;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
-  padding: 6px 8px;
+  padding: 5px 8px; /* Reduced vertical padding */
   border-radius: 8px;
 }
 
@@ -228,10 +233,10 @@ nav a {
   font-weight: 700 !important;
 }
 
-/* ===== FIXED LOGOUT FOOTER ===== */
+/* ===== FIXED LOGOUT FOOTER - REDUCED PADDING ===== */
 .offcanvas-footer {
   flex-shrink: 0;
-  padding: 15px 10px;
+  padding: 8px 10px; /* Reduced from 15px to 8px */
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background-color: #344e41;
   margin-top: auto;
@@ -245,7 +250,7 @@ nav a {
   font-weight: 700 !important;
   color: #fff;
   cursor: pointer;
-  padding: 8px 8px;
+  padding: 6px 8px; /* Reduced from 8px to 6px */
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   border-radius: 8px;
 }
@@ -304,7 +309,7 @@ nav a {
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
-  padding: 20px 0;
+  padding: 15px 0; /* Reduced from 20px */
 }
 
 /* Collapsed nav hover effects - more visible lift */
@@ -359,15 +364,31 @@ nav a {
 /* ===== RESPONSIVE ADJUSTMENTS ===== */
 @media (max-width: 768px) {
   .profile-user-name {
-    font-size: 1rem !important;
+    font-size: 0.95rem !important;
   }
   
   .profile-user-email {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
   
   nav li {
     font-size: 0.85rem;
+  }
+  
+  .title-container {
+    padding: 6px 0 4px 0;
+  }
+  
+  .card {
+    margin: 4px auto 8px auto;
+  }
+  
+  .offcanvas-footer {
+    padding: 6px 10px;
+  }
+  
+  .footer-text {
+    padding: 5px 8px;
   }
 }
 

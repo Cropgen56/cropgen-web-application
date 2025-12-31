@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import profileImage from "../../../assets/image/pngimages/profile.png";
-import EditIcon from "../../../assets/edit-icon.svg";
 import {
   getUserProfileData,
   updateUserData,
@@ -21,18 +20,14 @@ const PersonalInfo = ({ setShowSidebar }) => {
   const token = useSelector((state) => state.auth.token);
   const profileStatus = useSelector((state) => state.auth.profileStatus);
   const userId = useSelector((state) => state?.auth?.user?.id);
-  const { userProfile, loading, avatarUploading, avatarUploadProgress } =
+  const { userProfile, loading, avatarUploading } =
     useSelector((state) => state.auth);
   const fields = useSelector((state) => state?.farmfield?.fields);
 
-  // File input ref
   const fileInputRef = useRef(null);
 
-  // Avatar states
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-
-  // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -41,23 +36,19 @@ const PersonalInfo = ({ setShowSidebar }) => {
     email: "",
     phone: "",
     organization: "",
-    language: "English",
   });
 
-  // Store original data to restore on cancel
   const [originalData, setOriginalData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     organization: "",
-    language: "English",
   });
 
   const [updateStatus, setUpdateStatus] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Initialize form data with user profile details
   useEffect(() => {
     if (userProfile) {
       const profileData = {
@@ -67,16 +58,13 @@ const PersonalInfo = ({ setShowSidebar }) => {
         phone: userProfile.phone || "",
         organization:
           userProfile.organization?.organizationName || "No Organization",
-        language: "English",
       };
       setFormData(profileData);
       setOriginalData(profileData);
-      // Reset preview when userProfile changes
       setPreviewUrl(null);
     }
   }, [userProfile]);
 
-  // Reset update status after a short delay
   useEffect(() => {
     if (updateStatus) {
       const timer = setTimeout(() => setUpdateStatus(null), 1000);
@@ -84,33 +72,28 @@ const PersonalInfo = ({ setShowSidebar }) => {
     }
   }, [updateStatus]);
 
-  // Fetch user profile data when token changes or on initial load
   useEffect(() => {
     if (token && profileStatus === "idle" && !userProfile) {
       dispatch(getUserProfileData(token));
     }
   }, [token, profileStatus, userProfile, dispatch]);
 
-  // Fetch farm fields when userId changes
   useEffect(() => {
     if (userId) {
       dispatch(getFarmFields(userId));
     }
   }, [dispatch, userId]);
 
-  // Handle avatar click to trigger file input
   const handleAvatarClick = () => {
     if (!avatarUploading) {
       fileInputRef.current?.click();
     }
   };
 
-  // Handle file selection for avatar upload
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!validTypes.includes(file.type)) {
       message.error(
@@ -119,21 +102,18 @@ const PersonalInfo = ({ setShowSidebar }) => {
       return;
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       message.error("Image size should be less than 5MB");
       return;
     }
 
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result);
     };
     reader.readAsDataURL(file);
 
-    // Upload avatar
     try {
       setUploadProgress(0);
       await dispatch(
@@ -144,8 +124,6 @@ const PersonalInfo = ({ setShowSidebar }) => {
       ).unwrap();
 
       message.success("Profile photo updated successfully!");
-
-      // Refresh user profile to get updated avatar URL
       dispatch(getUserProfileData(token));
     } catch (error) {
       setPreviewUrl(null);
@@ -153,34 +131,24 @@ const PersonalInfo = ({ setShowSidebar }) => {
       message.error(error || "Failed to upload avatar");
     }
 
-    // Reset file input
     e.target.value = "";
   };
 
-  // Handle input changes for form fields
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  // Handle language change
-  const handleLanguageChange = (e) => {
-    setFormData((prev) => ({ ...prev, language: e.target.value }));
-  };
-
-  // Enable edit mode
   const handleEnableEdit = () => {
     setOriginalData({ ...formData });
     setIsEditing(true);
   };
 
-  // Cancel edit mode and restore original data
   const handleCancelEdit = () => {
     setFormData({ ...originalData });
     setIsEditing(false);
   };
 
-  // Handle form submission to update user data
   const handleSubmit = async (e) => {
     e.preventDefault();
     setUpdateStatus(null);
@@ -202,7 +170,6 @@ const PersonalInfo = ({ setShowSidebar }) => {
         updateUserData({ id: userId, updateData: updatePayload, token })
       ).unwrap();
 
-      // Refresh user profile data after successful update
       dispatch(getUserProfileData(token));
 
       message.success("Profile updated successfully!");
@@ -211,7 +178,6 @@ const PersonalInfo = ({ setShowSidebar }) => {
         message: "Profile updated successfully!",
       });
 
-      // Exit edit mode after successful save
       setIsEditing(false);
     } catch (err) {
       setUpdateStatus({
@@ -224,18 +190,61 @@ const PersonalInfo = ({ setShowSidebar }) => {
     }
   };
 
-  // Get the avatar URL to display
   const getAvatarUrl = () => {
     if (previewUrl) return previewUrl;
     if (userProfile?.avatar) {
-      // If avatar is already a full URL, use it directly
       if (userProfile.avatar.startsWith("http")) {
         return userProfile.avatar;
       }
-      // Construct S3 URL from the key
       return `${S3_BUCKET_URL}/${userProfile.avatar}`;
     }
     return profileImage;
+  };
+
+  const InputField = ({
+    id,
+    label,
+    type = "text",
+    value,
+    onChange,
+    disabled = false,
+    readOnly = false,
+    placeholder,
+  }) => {
+    const isEditable = isEditing && !readOnly;
+    const showEditIcon = isEditing && !readOnly;
+
+    return (
+      <div className="flex flex-col w-full gap-1">
+        <label
+          htmlFor={id}
+          className="text-[15px] text-[#344E41] text-left font-medium"
+        >
+          {label}
+        </label>
+        <div className="relative w-full">
+          <input
+            type={type}
+            id={id}
+            placeholder={placeholder || label}
+            value={value}
+            onChange={onChange}
+            disabled={disabled || !isEditable}
+            readOnly={readOnly}
+            className={`px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full transition-all duration-300 ${readOnly || !isEditing
+                ? "bg-gray-50 cursor-not-allowed text-gray-600"
+                : "bg-white cursor-text pr-8"
+              }`}
+          />
+          {showEditIcon && (
+            <Pencil
+              size={14}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#344E41] pointer-events-none"
+            />
+          )}
+        </div>
+      </div>
+    );
   };
 
   if (loading || profileStatus === "loading") {
@@ -257,9 +266,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
 
       <div className="py-2 flex flex-col flex-grow gap-2">
         <div className="flex items-center gap-2 lg:gap-4 flex-row px-2 lg:px-4 pb-4 border-b border-black/40">
-          {/* Avatar Section with Upload */}
           <div className="relative group">
-            {/* Hidden file input */}
             <input
               type="file"
               ref={fileInputRef}
@@ -268,14 +275,12 @@ const PersonalInfo = ({ setShowSidebar }) => {
               className="hidden"
             />
 
-            {/* Avatar container */}
             <div
               onClick={handleAvatarClick}
               className={`relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#344E41] group-hover:border-[#588157] transition-all duration-300 ${avatarUploading ? "cursor-wait" : "cursor-pointer"
                 }`}
             >
               {avatarUploading ? (
-                // Upload progress indicator
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
                   <Loader2 className="w-6 h-6 animate-spin text-[#344E41]" />
                   <span className="text-xs text-[#344E41] mt-1">
@@ -293,7 +298,6 @@ const PersonalInfo = ({ setShowSidebar }) => {
                       e.target.src = profileImage;
                     }}
                   />
-                  {/* Hover overlay */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <Camera className="w-6 h-6 text-white" />
                   </div>
@@ -301,7 +305,6 @@ const PersonalInfo = ({ setShowSidebar }) => {
               )}
             </div>
 
-            {/* Edit badge */}
             <button
               onClick={handleAvatarClick}
               disabled={avatarUploading}
@@ -326,173 +329,53 @@ const PersonalInfo = ({ setShowSidebar }) => {
         </div>
 
         <form className="flex flex-col flex-grow gap-2" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2 p-2">
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col w-full gap-1">
-                <label
-                  htmlFor="firstName"
-                  className="text-[15px] text-[#344E41] text-left font-medium"
-                >
-                  First Name
-                </label>
-                <div className="relative w-full">
-                  <input
-                    type="text"
-                    id="firstName"
-                    placeholder="First Name"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full transition-all duration-300 ${!isEditing
-                        ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                        : "bg-white cursor-text"
-                      }`}
-                  />
-                  <img
-                    src={EditIcon}
-                    alt="Edit"
-                    className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-[clamp(10px,1.5vw,12px)] h-[clamp(10px,1.5vw,12px)] ${!isEditing ? "opacity-30" : "opacity-100 cursor-pointer"
-                      }`}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col w-full gap-1">
-                <label
-                  htmlFor="lastName"
-                  className="text-[15px] text-[#344E41] text-left font-medium"
-                >
-                  Last Name
-                </label>
-                <div className="relative w-full">
-                  <input
-                    type="text"
-                    id="lastName"
-                    placeholder="Last Name"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full transition-all duration-300 ${!isEditing
-                        ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                        : "bg-white cursor-text"
-                      }`}
-                  />
-                  <img
-                    src={EditIcon}
-                    alt="Edit"
-                    className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-[clamp(10px,1.5vw,12px)] h-[clamp(10px,1.5vw,12px)] ${!isEditing ? "opacity-30" : "opacity-100 cursor-pointer"
-                      }`}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col w-full gap-1">
-                <label
-                  htmlFor="email"
-                  className="text-[15px] text-[#344E41] text-left font-medium"
-                >
-                  Email
-                </label>
-                <div className="relative w-full">
-                  <input
-                    type="email"
-                    id="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    className="px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full bg-gray-50 cursor-not-allowed text-gray-600"
-                    readOnly
-                    disabled
-                  />
-                  <img
-                    src={EditIcon}
-                    alt="Edit"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-[clamp(10px,1.5vw,12px)] h-[clamp(10px,1.5vw,12px)] opacity-30"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col w-full gap-1">
-                <label
-                  htmlFor="phone"
-                  className="text-[15px] text-[#344E41] text-left font-medium"
-                >
-                  Phone
-                </label>
-                <div className="relative w-full">
-                  <input
-                    type="text"
-                    id="phone"
-                    placeholder="Phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    className={`px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full transition-all duration-300 ${!isEditing
-                        ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                        : "bg-white cursor-text"
-                      }`}
-                  />
-                  <img
-                    src={EditIcon}
-                    alt="Edit"
-                    className={`absolute right-2 top-1/2 transform -translate-y-1/2 w-[clamp(10px,1.5vw,12px)] h-[clamp(10px,1.5vw,12px)] ${!isEditing ? "opacity-30" : "opacity-100 cursor-pointer"
-                      }`}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col w-full gap-1">
-                <label
-                  htmlFor="organization"
-                  className="text-[15px] text-[#344E41] text-left font-medium"
-                >
-                  Organization
-                </label>
-                <div className="relative w-full">
-                  <input
-                    type="text"
-                    id="organization"
-                    placeholder="No Organization"
-                    value={formData.organization}
-                    className="px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full bg-gray-50 cursor-not-allowed text-gray-600"
-                    readOnly
-                    disabled
-                  />
-                  <img
-                    src={EditIcon}
-                    alt="Edit"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-[clamp(10px,1.5vw,12px)] h-[clamp(10px,1.5vw,12px)] opacity-30"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col w-full gap-1">
-                <label
-                  htmlFor="language"
-                  className="text-[15px] text-[#344E41] text-left font-medium"
-                >
-                  Change Language
-                </label>
-                <div className="relative w-full">
-                  <select
-                    id="language"
-                    value={formData.language}
-                    onChange={handleLanguageChange}
-                    disabled={!isEditing}
-                    className={`px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full transition-all duration-300 ${!isEditing
-                        ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                        : "bg-white cursor-pointer"
-                      }`}
-                  >
-                    <option value="English">English</option>
-                    <option value="Spanish">Spanish</option>
-                    <option value="French">French</option>
-                  </select>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2">
+            <InputField
+              id="firstName"
+              label="First Name"
+              value={formData.firstName}
+              onChange={handleInputChange}
+              placeholder="First Name"
+            />
+
+            <InputField
+              id="lastName"
+              label="Last Name"
+              value={formData.lastName}
+              onChange={handleInputChange}
+              placeholder="Last Name"
+            />
+
+            <InputField
+              id="email"
+              label="Email"
+              type="email"
+              value={formData.email}
+              readOnly
+              placeholder="Email"
+            />
+
+            <InputField
+              id="phone"
+              label="Phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              placeholder="Phone"
+            />
+
+            <div className="md:col-span-2">
+              <InputField
+                id="organization"
+                label="Organization"
+                value={formData.organization}
+                readOnly
+                placeholder="No Organization"
+              />
             </div>
           </div>
 
-
           <div className="flex justify-center items-center gap-4 mt-4">
             {!isEditing ? (
-       
               <button
                 type="button"
                 onClick={handleEnableEdit}
@@ -502,7 +385,6 @@ const PersonalInfo = ({ setShowSidebar }) => {
                 Edit Your Details
               </button>
             ) : (
-   
               <>
                 <button
                   type="button"
@@ -534,7 +416,6 @@ const PersonalInfo = ({ setShowSidebar }) => {
             )}
           </div>
 
-      
           {isEditing && (
             <div className="flex justify-center mt-2">
               <span className="text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">

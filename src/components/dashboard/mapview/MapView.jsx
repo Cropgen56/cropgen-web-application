@@ -69,31 +69,15 @@ const MoveMapToField = ({ lat, lng, bounds }) => {
   return null;
 };
 
-// Updated Subscription Status Dot Component - Now shows both green and red
+// Subscription Status Dot Component
 const SubscriptionDot = ({ isSubscribed }) => {
-  return (
-    <span 
-      className={`w-2 h-2 rounded-full flex-shrink-0 ${
-        isSubscribed ? "bg-[#28C878]" : "bg-[#EC1C24]"
-      }`}
-      title={isSubscribed ? "Subscribed" : "Unsubscribed"}
-    />
-  );
-};
+  if (!isSubscribed) return null;
 
-// Subscription Legend Indicator Component
-const SubscriptionLegendIndicator = () => {
   return (
-    <div className="flex items-center gap-3 px-2 py-1.5 bg-[#2a3d33] rounded-md border-t border-white/10">
-      <div className="flex items-center gap-1.5">
-        <span className="w-2 h-2 rounded-full bg-[#28C878]" />
-        <span className="text-[10px] text-gray-300">Subscribed</span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        <span className="w-2 h-2 rounded-full bg-[#EC1C24]" />
-        <span className="text-[10px] text-gray-300">Unsubscribed</span>
-      </div>
-    </div>
+    <span
+      className="w-2 h-2 rounded-full bg-[#28C878] flex-shrink-0"
+      title="Subscribed"
+    />
   );
 };
 
@@ -208,9 +192,8 @@ const FarmMap = ({
 
   return (
     <div
-      className={`flex flex-col items-center w-full relative ${
-        fields.length === 0 ? "h-full" : "h-[400px] md:h-[500px] lg:h-[95%]"
-      }`}
+      className={`flex flex-col items-center w-full relative ${fields.length === 0 ? "h-full" : "h-[400px] md:h-[500px] lg:h-[95%]"
+        }`}
     >
       <MapContainer
         center={
@@ -219,9 +202,8 @@ const FarmMap = ({
         zoom={18}
         attributionControl={false}
         zoomControl={true}
-        className={`w-full h-full overflow-hidden ${
-          fields.length === 0 ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"
-        }`}
+        className={`w-full h-full overflow-hidden ${fields.length === 0 ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"
+          }`}
         ref={mapRef}
         maxZoom={20}
       >
@@ -306,39 +288,32 @@ const FarmMap = ({
                     </span>
                   </div>
                 </Listbox.Button>
-                
-                {/* Updated Listbox Options with subscription dots and legend */}
+
+                {/* Updated Listbox Options with subscription dots */}
                 <Listbox.Options
                   className="absolute mt-1 w-full bg-[#344e41] rounded-lg shadow-lg 
                      text-white z-50 border border-green-900 
-                     max-h-[350px] overflow-hidden no-scrollbar"
+                     max-h-[300px] overflow-y-auto no-scrollbar"
                 >
-                  {/* Scrollable field options */}
-                  <div className="max-h-[280px] overflow-y-auto no-scrollbar">
-                    {sortedFields.map((field) => {
-                      const isSubscribed = field.subscription?.hasActiveSubscription === true;
-                      
-                      return (
-                        <Listbox.Option
-                          key={field._id}
-                          value={field._id}
-                          className={({ active }) =>
-                            `cursor-pointer select-none px-3 py-2 rounded ${
-                              active ? "bg-[#5a7c6b]" : ""
-                            }`
-                          }
-                        >
-                          <div className="flex items-center gap-2">
-                            <SubscriptionDot isSubscribed={isSubscribed} />
-                            <span className="truncate">{field.fieldName}</span>
-                          </div>
-                        </Listbox.Option>
-                      );
-                    })}
-                  </div>
-                  
-                  {/* Subscription Legend Indicator at the bottom */}
-                  <SubscriptionLegendIndicator />
+                  {sortedFields.map((field) => {
+                    const isSubscribed = field.subscription?.hasActiveSubscription === true;
+
+                    return (
+                      <Listbox.Option
+                        key={field._id}
+                        value={field._id}
+                        className={({ active }) =>
+                          `cursor-pointer select-none px-3 py-2 rounded ${active ? "bg-[#5a7c6b]" : ""
+                          }`
+                        }
+                      >
+                        <div className="flex items-center gap-2">
+                          <SubscriptionDot isSubscribed={isSubscribed} />
+                          <span className="truncate">{field.fieldName}</span>
+                        </div>
+                      </Listbox.Option>
+                    );
+                  })}
                 </Listbox.Options>
               </div>
             </Listbox>
@@ -356,56 +331,38 @@ const FarmMap = ({
             🗺️ Legend
           </strong>
           {showLegend && indexData?.legend && (
-            <div className="absolute top-12 right-0 bg-[#344e41] text-white rounded-lg shadow-lg max-w-[300px] max-h-[350px] overflow-hidden z-[3000] animate-slideIn no-scrollbar">
+            <div className="absolute top-12 right-0 bg-[#344e41] text-white rounded-lg shadow-lg max-w-[300px] max-h-[300px] overflow-y-auto z-[3000] animate-slideIn no-scrollbar">
               {/* Legend Header with Subscription Status */}
               <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
                 <span className="font-semibold text-sm">Index Legend</span>
                 <div className="flex items-center gap-1.5">
                   <SubscriptionDot isSubscribed={isSelectedFieldSubscribed} />
                   <span className="text-xs text-gray-300">
-                    {isSelectedFieldSubscribed ? "Active" : "Inactive"}
+                    {isSelectedFieldSubscribed ? "Active" : ""}
                   </span>
                 </div>
               </div>
-              
-              {/* Scrollable legend items */}
-              <div className="max-h-[250px] overflow-y-auto no-scrollbar">
-                <ul className="divide-y divide-white/10 list-none p-2 no-scrollbar">
-                  {indexData.legend.map((item) => (
-                    <li
-                      key={item.label}
-                      className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#5a7c6b] transition-colors duration-200 rounded"
-                    >
-                      <span
-                        className="w-[30px] h-[20px] rounded border border-black/10"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
-                      <span className="flex-1 whitespace-nowrap font-medium">
-                        {item.label}
-                      </span>
-                      <span className="text-gray-200 font-normal whitespace-nowrap">
-                        {item.hectares?.toFixed(2) || "0.00"} ha (
-                        {item.percent?.toFixed(2) || "0.00"}%)
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              {/* Subscription Status Legend at the bottom */}
-              <div className="border-t border-white/10 px-3 py-2 bg-[#2a3d33]">
-                <p className="text-[10px] text-gray-400 mb-1.5">Subscription Status</p>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#28C878]" />
-                    <span className="text-xs text-gray-300">Subscribed</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#EC1C24]" />
-                    <span className="text-xs text-gray-300">Unsubscribed</span>
-                  </div>
-                </div>
-              </div>
+
+              <ul className="divide-y divide-white/10 list-none p-2 no-scrollbar">
+                {indexData.legend.map((item) => (
+                  <li
+                    key={item.label}
+                    className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#5a7c6b] transition-colors duration-200 rounded"
+                  >
+                    <span
+                      className="w-[30px] h-[20px] rounded border border-black/10"
+                      style={{ backgroundColor: item.color }}
+                    ></span>
+                    <span className="flex-1 whitespace-nowrap font-medium">
+                      {item.label}
+                    </span>
+                    <span className="text-gray-200 font-normal whitespace-nowrap">
+                      {item.hectares?.toFixed(2) || "0.00"} ha (
+                      {item.percent?.toFixed(2) || "0.00"}%)
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </div>
