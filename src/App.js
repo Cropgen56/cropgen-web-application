@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 // import { Toaster } from "react-hot-toast";
 
 const App = () => {
-  const token = useSelector((state) => state.auth.token);
+  // const token = useSelector((state) => state.auth.token);
 
   // console.log(token);
 
