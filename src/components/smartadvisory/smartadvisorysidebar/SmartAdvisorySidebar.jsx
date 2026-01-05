@@ -16,7 +16,7 @@ const FieldInfo = ({
   isSubscribed,
 }) => (
   <div
-    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
+    className={`flex items-center gap-2.5 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
       isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
     }`}
     onClick={onClick}
@@ -76,7 +76,7 @@ const SmartAdvisorySidebar = ({ setSelectedField, setIsSidebarVisible }) => {
   const formatArea = (acres) => `${(acres * 0.404686).toFixed(2)}h`;
 
   return (
-    <div className="min-w-[250px] bg-white shadow-md flex flex-col h-full">
+    <div className="sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">
       {/* Header */}
       <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
         <div className="flex justify-between items-center">

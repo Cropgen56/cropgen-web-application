@@ -8,7 +8,7 @@ import { fetchSatelliteDates } from "../../../redux/slices/satelliteSlice";
 
 const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates, isSubscribed }) => (
   <div
-    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
+    className={`flex items-center gap-2.5 border-b border-[#344e41] py-2 px-2 cursor-pointer ${
       isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
     }`}
     onClick={onClick}
@@ -68,7 +68,9 @@ const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
           <ChevronDown size={20} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
         </button>
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded-md shadow-lg max-h-60 overflow-auto">
+          // <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded-md shadow-lg max-h-60 overflow-auto">
+            <div className="absolute z-50 w-full bottom-full mb-1 bg-[#344E41] border border-[#2b3e33] rounded-md shadow-lg max-h-60 overflow-auto">
+
             {options.length > 0 ? (
               options.map((option, index) => (
                 <div
@@ -137,7 +139,7 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelecte
   const selectedFieldObj = fields.find((f) => f._id === selectedFieldId);
 
   return (
-    <div className="min-w-[280px] m-0 p-0 bg-white shadow-md flex flex-col h-screen relative overflow-y-auto">
+    <div className="sm:min-w-[250px] sm:max-w-[20vw] m-0 p-0 bg-white shadow-md flex flex-col h-screen relative overflow-y-auto">
       <div className="flex flex-col border-b border-[#344e41] gap-2 px-2 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -171,7 +173,7 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelecte
       </div>
 
       <h2 className="px-4 pt-2 text-[18px] font-bold text-[#344e41]">All Farms</h2>
-      <div className="flex flex-col overflow-y-auto max-h-[225px] no-scrollbar">
+      <div className="flex flex-col overflow-y-auto no-scrollbar">
         {filteredFields.map((field) => {
           const { lat, lon } = calculateCentroid(field.field);
           const isSelected = selectedFieldId === field._id;

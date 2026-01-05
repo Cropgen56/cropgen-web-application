@@ -165,7 +165,7 @@ const SmartAdvisory = () => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -280, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="min-w-[280px] h-full border-r border-gray-700 bg-white text-black"
+              className="min-w-[250px] h-full border-r border-gray-700 bg-white text-black"
             >
               <SmartAdvisorySidebar
                 setSelectedField={handleFieldSelect}

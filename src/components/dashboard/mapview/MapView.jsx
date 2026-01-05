@@ -71,12 +71,12 @@ const MoveMapToField = ({ lat, lng, bounds }) => {
 
 // Subscription Status Dot Component
 const SubscriptionDot = ({ isSubscribed }) => {
-  if (!isSubscribed) return null;
-
   return (
     <span
-      className="w-2 h-2 rounded-full bg-[#28C878] flex-shrink-0"
-      title="Subscribed"
+      className={`w-2 h-2 rounded-full flex-shrink-0 ${
+        isSubscribed ? "bg-[#28C878]" : "bg-[#E63946]"
+      }`}
+      title={isSubscribed ? "Subscribed" : "Not Subscribed"}
     />
   );
 };
@@ -303,7 +303,7 @@ const FarmMap = ({
                         key={field._id}
                         value={field._id}
                         className={({ active }) =>
-                          `cursor-pointer select-none px-3 py-2 rounded ${active ? "bg-[#5a7c6b]" : ""
+                          `cursor-pointer select-none px-3 py-2 rounded transition-all duration-500 ease-in-out ${active ? "bg-[#5a7c6b]" : ""
                           }`
                         }
                       >
@@ -347,7 +347,7 @@ const FarmMap = ({
                 {indexData.legend.map((item) => (
                   <li
                     key={item.label}
-                    className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#5a7c6b] transition-colors duration-200 rounded"
+                    className="flex items-center gap-3 p-2 cursor-pointer hover:bg-[#5a7c6b] transition-all duration-500 ease-in-out rounded"
                   >
                     <span
                       className="w-[30px] h-[20px] rounded border border-black/10"
