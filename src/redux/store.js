@@ -6,9 +6,8 @@ import satelliteSlice from "./slices/satelliteSlice";
 import operationSlice from "./slices/operationSlice";
 import cropReducer from "./slices/cropSlice";
 import subscriptionSlice from "./slices/subscriptionSlice";
-import membershipReducer from './slices/membershipSlice';
-import smartAdvisoryReducer from './slices/smartAdvisorySlice';
-
+import membershipReducer from "./slices/membershipSlice";
+import smartAdvisoryReducer from "./slices/smartAdvisorySlice";
 
 // Configure the Redux store
 export const store = configureStore({
@@ -27,7 +26,8 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ["auth/setCredentials", "auth/logout"],
-        ignoredPaths: ["auth.token", "auth.refreshToken"],
+        // ignoredPaths: ["auth.token", "auth.refreshToken"],
+        ignoredPaths: ["auth.token"],
       },
     }),
   devTools: process.env.NODE_ENV !== "production",

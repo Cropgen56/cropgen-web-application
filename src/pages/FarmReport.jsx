@@ -434,7 +434,7 @@ const FarmReport = () => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -280, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="min-w-[280px] h-full border-r border-[#5a7c6b] bg-[#2d4339]"
+              className="sm:min-w-[250px] sm:max-w-[20vw] h-full border-r border-[#5a7c6b] bg-[#2d4339]"
             >
               <FarmReportSidebar
                 setSelectedField={handleFieldSelect}

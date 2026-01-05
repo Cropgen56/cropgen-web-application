@@ -122,7 +122,7 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
           </div>
         </div>
       ) : (
-        <div className="w-[22vw] min-w-[220px] m-0 p-0 h-full overflow-hidden flex flex-col">
+        <div className="sm:min-w-[250px] sm:max-w-[20vw] m-0 p-0 h-full overflow-hidden flex flex-col">
           <div className="flex flex-row justify-between items-center border-b border-[#344e41] p-2.5 cursor-pointer flex-shrink-0">
             <h2 className="flex items-center gap-1 text-base text-[#344e41]">
               All Fields
@@ -360,7 +360,8 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
         </button>
 
         {isOpen && (
-          <div className="absolute z-[10000] w-56 mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl p-2">
+          // <div className="absolute z-[10000] w-56 mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl p-2">
+            <div className="fixed z-[10000] bottom-6 w-56 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl p-2">
             <div className="flex items-center justify-between mb-2 text-white">
               <button
                 type="button"
@@ -412,7 +413,7 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
       </div>
     </div>
   );
-};
+};    
 
 const AutocompleteDropdown = ({ label, value, onChange, options, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -507,6 +508,8 @@ const AutocompleteDropdown = ({ label, value, onChange, options, placeholder }) 
 
         {isOpen && (
           <div className="absolute z-[10000] w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl max-h-48 sm:max-h-60 overflow-auto">
+            {/* // <div className="absolute z-50 w-full bottom-full mb-1 bg-[#344E41] border border-[#2b3e33] rounded-md shadow-lg max-h-60 overflow-auto"> */}
+
             {filteredOptions.length > 0 ? (
               filteredOptions.map((option, index) => (
                 <div
