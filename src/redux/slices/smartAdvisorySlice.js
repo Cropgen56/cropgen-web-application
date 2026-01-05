@@ -28,7 +28,7 @@ export const fetchSmartAdvisory = createAsyncThunk(
   "smartAdvisory/fetchSmartAdvisory",
   async ({ fieldId }, thunkAPI) => {
     try {
-      const res = await axios.get(`${BASE_URL}/farm-adviosry/${fieldId}`);
+      const res = await axios.get(`${BASE_URL}/farm-advisory/${fieldId}`);
 
       return res.data;
     } catch (err) {
