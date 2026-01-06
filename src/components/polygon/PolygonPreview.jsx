@@ -2,8 +2,8 @@ import React from "react";
 
 const PolygonPreview = ({
     coordinates = [],
-    width = 80,
-    height = 80,
+    width = 60,
+    height = 60,
     isSelected = false
 }) => {
     if (!coordinates.length) return null;

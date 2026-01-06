@@ -48,10 +48,19 @@ const AddFieldMap = ({
   const [, setIsFullMap] = useState(false);
   const mapRef = useRef(null);
 
+  const requestLocation = () => {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 8000,
+      });
+    });
+  };
+
   // Map Controller - only sets ref, no side effects
   const MapController = () => {
     const map = useMap();
-    
+
     useEffect(() => {
       if (!mapRef.current) {
         mapRef.current = map;
@@ -59,34 +68,52 @@ const AddFieldMap = ({
         setIsMapReady(true);
       }
     }, [map]);
-    
+
     return null;
   };
 
   // Handle initial location fetch - runs once
+  // useEffect(() => {
+  //   if (initialLocationSet) return;
+
+  //   navigator.geolocation.getCurrentPosition(
+  //     (pos) => {
+  //       const { latitude, longitude } = pos.coords;
+  //       setSelectedLocation({
+  //         lat: latitude,
+  //         lng: longitude,
+  //         name: "Your Location",
+  //       });
+  //       setLocationBlocked(false);
+  //       setInitialLocationSet(true);
+  //     },
+  //     (err) => {
+  //       console.error("Geolocation error:", err);
+  //       setLocationBlocked(true);
+  //       setInitialLocationSet(true);
+  //     },
+  //     { enableHighAccuracy: true, timeout: 8000 }
+  //   );
+  // }, [initialLocationSet]);
   useEffect(() => {
     if (initialLocationSet) return;
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
+    requestLocation()
+      .then((pos) => {
         setSelectedLocation({
-          lat: latitude,
-          lng: longitude,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
           name: "Your Location",
         });
         setLocationBlocked(false);
-        setInitialLocationSet(true);
-      },
-      (err) => {
-        console.error("Geolocation error:", err);
+      })
+      .catch(() => {
         setLocationBlocked(true);
+      })
+      .finally(() => {
         setInitialLocationSet(true);
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
+      });
   }, [initialLocationSet]);
-
 
   useEffect(() => {
     if (
@@ -97,11 +124,9 @@ const AddFieldMap = ({
       selectedLocation.name === "Your Location"
     ) {
       // Use setView instead of flyTo to avoid animation jitter on initial load
-      mapRef.current.setView(
-        [selectedLocation.lat, selectedLocation.lng],
-        17,
-        { animate: false }
-      );
+      mapRef.current.setView([selectedLocation.lat, selectedLocation.lng], 17, {
+        animate: false,
+      });
     }
   }, [isMapReady, initialLocationSet, locationBlocked, selectedLocation]);
 
@@ -334,7 +359,7 @@ const AddFieldMap = ({
           </motion.div>
         </motion.div>
       )}
-      
+
       <div className="min-h-screen w-full flex flex-col items-center relative overflow-hidden">
         <div
           className={`w-full m-0 p-0 z-[1000] relative ${
@@ -346,7 +371,13 @@ const AddFieldMap = ({
             zoom={17}
             zoomControl={true}
             className={`w-full m-0 p-0 relative 
-              ${isTabletView ? (showUploadOverlay ? "h-screen" : "h-[40vh]") : "h-screen"}
+              ${
+                isTabletView
+                  ? showUploadOverlay
+                    ? "h-screen"
+                    : "h-[40vh]"
+                  : "h-screen"
+              }
               pointer-events-auto z-0`}
             // Disable animations on initial load
             fadeAnimation={false}
@@ -367,8 +398,7 @@ const AddFieldMap = ({
                 icon={yellowMarkerIcon}
               >
                 <Popup>
-                  Marker at [{marker.lat.toFixed(4)},{" "}
-                  {marker.lng.toFixed(4)}]
+                  Marker at [{marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}]
                 </Popup>
               </Marker>
             ))}

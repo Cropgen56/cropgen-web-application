@@ -15,7 +15,7 @@ const FieldInfo = ({
   isSubscribed,
 }) => (
   <div
-    className={`flex items-center gap-2.5 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
+    className={`flex items-center gap-1.5 md:gap-2.5 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
       isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
     }`}
     onClick={onClick}
@@ -26,7 +26,7 @@ const FieldInfo = ({
         <h4
           className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}
         >
-          {title}
+          {title.length > 8 ? `${title.slice(0, 8)}...` : title}
         </h4>
         <div
           className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
@@ -80,7 +80,7 @@ const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
   return (
     <div className="sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">
       {/* Header */}
-      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
+      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Weather2 />

@@ -5,18 +5,18 @@ import { useSelector } from "react-redux";
 import PolygonPreview from "../../polygon/PolygonPreview";
 import { ChevronLeft } from "lucide-react";
 
-const FieldInfo = ({ 
-  title, 
-  area, 
-  lat, 
-  lon, 
-  isSelected, 
-  onClick, 
-  coordinates, 
-  isSubscribed 
+const FieldInfo = ({
+  title,
+  area,
+  lat,
+  lon,
+  isSelected,
+  onClick,
+  coordinates,
+  isSubscribed,
 }) => (
   <div
-    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
+    className={`flex items-center gap-1.5 md:gap-2.5 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
       isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
     }`}
     onClick={onClick}
@@ -24,12 +24,12 @@ const FieldInfo = ({
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
     <div className="flex-grow">
       <div className="flex items-center justify-between mb-1">
-        <h4 
+        <h4
           className={`text-base ${
             isSelected ? "text-white" : "text-[#344e41]"
           }`}
         >
-          {title}
+          {title.length > 8 ? `${title.slice(0, 8)}...` : title}
         </h4>
 
         <div
@@ -53,10 +53,7 @@ const FieldInfo = ({
   </div>
 );
 
-const OperationSidebar = ({
-  setSelectedField,
-  selectedField
-}) => {
+const OperationSidebar = ({ setSelectedField, selectedField }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
@@ -73,14 +70,14 @@ const OperationSidebar = ({
     const total = field.reduce(
       (acc, point) => ({
         lat: acc.lat + point.lat,
-        lng: acc.lng + point.lng
+        lng: acc.lng + point.lng,
       }),
       { lat: 0, lng: 0 }
     );
 
     return {
       lat: (total.lat / field.length).toFixed(3),
-      lon: (total.lng / field.length).toFixed(3)
+      lon: (total.lng / field.length).toFixed(3),
     };
   };
 
@@ -90,9 +87,8 @@ const OperationSidebar = ({
 
   return (
     <div className="w-full sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">
-
       {/* Header */}
-      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
+      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Operation2 />

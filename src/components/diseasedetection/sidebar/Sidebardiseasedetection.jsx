@@ -15,7 +15,7 @@ const FieldInfo = ({
   isSubscribed,
 }) => (
   <div
-    className={`flex items-center gap-4 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
+    className={`flex items-center gap-1.5 md:gap-2.5 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
       isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
     }`}
     onClick={onClick}
@@ -29,7 +29,7 @@ const FieldInfo = ({
             isSelected ? "text-white" : "text-[#344e41]"
           }`}
         >
-          {title}
+          {title.length > 8 ? `${title.slice(0, 8)}...` : title}
         </h4>
 
         {/* SUBSCRIPTION BADGE */}
@@ -91,9 +91,9 @@ const DiseaseSidebar = ({ setSelectedField, selectedField }) => {
   return (
     <div className="w-full sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">
       {/* HEADER */}
-      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-4">
+      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-3">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center">
             <DieaseDetactiondark />
             <h2 className="text-[18px] font-bold text-[#344e41]">
               Disease Detection
