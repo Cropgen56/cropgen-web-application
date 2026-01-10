@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import {
-  getUser,
   getUserProfile,
   updateUser,
   sendOtp,
@@ -62,21 +61,6 @@ export const refreshAccessToken = createAsyncThunk(
     },
   }
 );
-
-export const getUserData = createAsyncThunk(
-  "auth/getUser",
-  async (token, { rejectWithValue }) => {
-    try {
-      const response = await getUser(token);
-      return response;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to fetch user data"
-      );
-    }
-  }
-);
-
 export const getUserProfileData = createAsyncThunk(
   "auth/getUserProfile",
   async (token, { rejectWithValue }) => {
@@ -324,19 +308,6 @@ const authSlice = createSlice({
         state.user = null;
         state.role = null;
         state.onboardingRequired = false;
-      })
-      .addCase(getUserData.pending, (state) => {
-        state.status = "loading";
-        state.error = null;
-      })
-      .addCase(getUserData.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.userDetails = action.payload.user || null;
-        state.error = null;
-      })
-      .addCase(getUserData.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload;
       })
       .addCase(getUserProfileData.pending, (state) => {
         state.profileStatus = "loading";

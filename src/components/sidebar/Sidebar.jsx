@@ -75,10 +75,11 @@ const Sidebar = ({ onToggleCollapse }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (token && profileStatus === "idle" && !userProfile) {
-      dispatch(getUserProfileData(token));
-    }
-  }, [token, profileStatus, userProfile, dispatch]);
+  if (token) {
+    dispatch(getUserProfileData(token));
+  }
+  }, [token]);
+
 
   const isInitialized = useRef(false);
 

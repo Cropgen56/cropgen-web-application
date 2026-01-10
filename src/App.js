@@ -1,17 +1,23 @@
-import React from "react";
+import React,{useEffect} from "react";
 import AppRoutes from "./routes/AppRoutes";
 import { useSelector } from "react-redux";
-// import { Toaster } from "react-hot-toast";
+import { initActivityTracker } from "./utility/activityTracker";
+
 
 const App = () => {
-  // const token = useSelector((state) => state.auth.token);
+  const token = useSelector((state) => state.auth.token);
 
-  // console.log(token);
+  console.log(token)
+   useEffect(() => {
+    if (token) {
+      initActivityTracker(token);
+    }
+  }, [token]);
+
 
   return (
     <>
       <AppRoutes />
-      {/* <Toaster position="top-right" autoClose={1500} theme="light" /> */}
     </>
   );
 };

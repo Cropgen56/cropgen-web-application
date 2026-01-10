@@ -39,20 +39,10 @@ export const logoutUserApi = async () => {
   }
 };
 
-// Get user API
-export const getUser = async (token) => {
-  const response = await axios.get(`${API_URL}/api/auth/user`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
-};
-
 // Get user profile API
 export const getUserProfile = async (token) => {
   const response = await axios.get(
-    `https://server.cropgenapp.com/v1/api/auth/profile`,
+    `${API_URL}/api/auth/profile`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -73,23 +63,6 @@ export const updateUser = async ({ id, token, updateData }) => {
       },
     }
   );
-  return response.data;
-};
-
-// Forgot password
-export const forgotPassword = async (email) => {
-  const response = await axios.post(`${API_URL}/api/auth/forgot-password`, {
-    email,
-  });
-  return response.data;
-};
-
-// Reset password
-export const resetPassword = async (token, newPassword) => {
-  const response = await axios.post(`${API_URL}/api/auth/reset-password`, {
-    token,
-    newPassword,
-  });
   return response.data;
 };
 
