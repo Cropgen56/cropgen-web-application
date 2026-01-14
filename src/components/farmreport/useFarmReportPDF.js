@@ -85,6 +85,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         const canvas = document.createElement("canvas");
         const targetWidth = 280 * scale;
         const targetHeight = 84 * scale;
+
         canvas.width = targetWidth;
         canvas.height = targetHeight;
 
@@ -104,6 +105,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
 
         const x = (targetWidth - drawWidth) / 2;
         const y = (targetHeight - drawHeight) / 2;
+
         ctx.drawImage(img, x, y, drawWidth, drawHeight);
 
         try {
@@ -127,8 +129,8 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         mapContainers.forEach((mapContainer) => {
           const canvases = mapContainer.querySelectorAll("canvas");
           const svgs = mapContainer.querySelectorAll("svg");
-
           const rect = mapContainer.getBoundingClientRect();
+
           const compositeCanvas = document.createElement("canvas");
           compositeCanvas.width = rect.width * 2;
           compositeCanvas.height = rect.height * 2;
@@ -345,6 +347,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
       month: "short",
       day: "numeric",
     });
+
     pdf.setFontSize(7);
     const dateWidth = pdf.getTextWidth(currentDate);
     pdf.text(currentDate, pdfWidth - dateWidth - 25, 9);
@@ -365,7 +368,6 @@ const useFarmReportPDF = (selectedFieldDetails) => {
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(7);
     pdf.setFont("helvetica", "normal");
-
     pdf.text("© 2025 CropGen | Precision Agriculture", 10, pdfHeight - 4);
 
     const contactText = "www.cropgenapp.com";
@@ -461,7 +463,9 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         "N/A";
 
       const cropName =
-        selectedFieldDetails?.cropName || selectedFieldDetails?.crop || "N/A";
+        selectedFieldDetails?.cropName ||
+        selectedFieldDetails?.crop ||
+        "N/A";
 
       const variety =
         selectedFieldDetails?.variety ||
@@ -473,6 +477,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         selectedFieldDetails?.sowingDate ||
         selectedFieldDetails?.date ||
         selectedFieldDetails?.createdAt;
+
       const formattedDate = sowingDate
         ? new Date(sowingDate).toLocaleDateString("en-US", {
             year: "numeric",
@@ -498,8 +503,8 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         (selectedFieldDetails?.acre
           ? selectedFieldDetails.acre * 0.404686
           : null);
-      const areaText =
-        typeof area === "number" ? `${area.toFixed(2)} ha` : "N/A";
+
+      const areaText = typeof area === "number" ? `${area.toFixed(2)} ha` : "N/A";
 
       const cardMargin = 20;
       const cardWidth = pdfWidth - cardMargin * 2;
@@ -553,18 +558,14 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         cardMargin + cardWidth - 8,
         row3Y + rowHeight - 5
       );
-
       pdf.line(pdfWidth / 2, cardY + 8, pdfWidth / 2, cardY + cardHeight - 8);
 
       drawField("FARM ID", farmId, col1X, row1Y);
       drawField("CROP", cropName, col2X, row1Y);
-
       drawField("VARIETY", variety, col1X, row2Y);
       drawField("SOWING DATE", formattedDate, col2X, row2Y);
-
       drawField("IRRIGATION TYPE", irrigationType, col1X, row3Y);
       drawField("FARMING TYPE", farmingType, col2X, row3Y);
-
       drawField("TOTAL AREA", areaText, col1X, row4Y);
 
       if (selectedFieldDetails?.acre) {
@@ -624,7 +625,6 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         pdfHeight - 20,
         { align: "center" }
       );
-
       pdf.text(
         "© 2025 CropGen. All rights reserved.",
         pdfWidth / 2,
@@ -638,8 +638,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
   // Calculate how many pages a section will need
   const calculateSectionPages = useCallback(
     (imgHeight, currentY, maxContentHeight, contentStartY) => {
-      const availableOnCurrentPage =
-        maxContentHeight - (currentY - contentStartY);
+      const availableOnCurrentPage = maxContentHeight - (currentY - contentStartY);
 
       if (imgHeight <= availableOnCurrentPage) {
         return { pagesNeeded: 0, newY: currentY + imgHeight };
@@ -676,7 +675,9 @@ const useFarmReportPDF = (selectedFieldDetails) => {
     }
 
     // Try to get title from heading inside section
-    const heading = sectionElement?.querySelector("h1, h2, h3, h4, .section-title");
+    const heading = sectionElement?.querySelector(
+      "h1, h2, h3, h4, .section-title"
+    );
     if (heading?.textContent) {
       return heading.textContent.trim();
     }
@@ -702,8 +703,8 @@ const useFarmReportPDF = (selectedFieldDetails) => {
 
       try {
         const logoBase64 = await getLogoBase64();
-
         const sections = input.querySelectorAll(".farm-section");
+
         const pdf = new jsPDF("p", "mm", "a4");
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -730,7 +731,6 @@ const useFarmReportPDF = (selectedFieldDetails) => {
 
         for (let i = 0; i < sections.length; i++) {
           const sec = sections[i];
-
           if (sec.classList.contains("exclude-from-pdf")) continue;
 
           await new Promise((res) => setTimeout(res, 200));
@@ -803,6 +803,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         // Create first content page
         let currentPage = 2;
         createNewPage(pdf, currentPage, totalPages, fieldName);
+
         let currentY = contentStartY;
         let isFirstSectionOnPage = true;
 
@@ -866,8 +867,8 @@ const useFarmReportPDF = (selectedFieldDetails) => {
               const partCanvas = document.createElement("canvas");
               partCanvas.width = canvas.width;
               partCanvas.height = Math.ceil(sourceHeight);
-              const partCtx = partCanvas.getContext("2d");
 
+              const partCtx = partCanvas.getContext("2d");
               partCtx.drawImage(
                 canvas,
                 0,
@@ -907,6 +908,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
 
               isFirstPart = false;
             }
+
             isFirstSectionOnPage = false;
           }
 

@@ -15,16 +15,19 @@ import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 
 import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
+import FieldDropdown from "../components/comman/FieldDropdown";
 
 const DiseaseDetection = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const user = useSelector((state) => state?.auth?.user);
-  const fields = useSelector((state) => state?.farmfield?.fields);
+  const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
+  const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
 
   const userId = user?.id;
 
+  const [isSidebarVisible] = useState(true);
   const [selectedField, setSelectedField] = useState(null);
   const [showMembershipModalLocal, setShowMembershipModalLocal] =
     useState(false);
@@ -69,19 +72,19 @@ const DiseaseDetection = () => {
     setShowMembershipModalLocal(false);
   }, [selectedFieldDetails]);
 
-  const handleSkipMembership = () => {
+  const handleSkipMembership = useCallback(() => {
     setShowMembershipModalLocal(false);
     message.info("You can activate premium anytime from the locked features");
-  };
+  }, []);
 
-  const handleCloseMembershipModal = () => {
+  const handleCloseMembershipModal = useCallback(() => {
     setShowMembershipModalLocal(false);
-  };
+  }, []);
 
-  const handleClosePricing = () => {
+  const handleClosePricing = useCallback(() => {
     setShowPricingOverlay(false);
     setPricingFieldData(null);
-  };
+  }, []);
 
   if (fields.length === 0) {
     return (
@@ -142,22 +145,40 @@ const DiseaseDetection = () => {
         )}
       </AnimatePresence>
 
-      <div className="bg-[#5f7e6f] h-screen flex flex-col md:flex-row">
-        <Sidebardiseasedetection
-          selectedField={selectedField}
-          setSelectedField={setSelectedField}
-          fields={fields}
-        />
+      <div className="m-0 p-0 w-full flex flex-row">
+        {/* Desktop Sidebar - Hidden on tablet/mobile */}
+        {isSidebarVisible && (
+          <div className="hidden lg:block">
+            <Sidebardiseasedetection
+              selectedField={selectedField}
+              setSelectedField={setSelectedField}
+              fields={fields}
+              hasSubscription={hasSubscription}
+            />
+          </div>
+        )}
 
-        {/* <PremiumPageWrapper
-          isLocked={!hasDiseaseDetectionPermission}
-          onSubscribe={handleSubscribe}
-          title="Disease Detection"
-        >
-          <UploadCropImage selectedField={selectedField?._id} />
-        </PremiumPageWrapper> */}
+        {/* Main Content */}
+        <div className="w-full bg-[#5f7e6f] m-0 p-0 lg:ml-[320px] h-screen overflow-y-auto overflow-x-hidden">
+          {/* Tablet/Mobile Dropdown - Hidden on desktop */}
+          <div className="lg:hidden p-3">
+            <FieldDropdown
+              fields={fields}
+              selectedField={selectedField}
+              setSelectedField={setSelectedField}
+            />
+          </div>
 
-        <ComingSoonSection />
+          {/* <PremiumPageWrapper
+            isLocked={!hasDiseaseDetectionPermission}
+            onSubscribe={handleSubscribe}
+            title="Disease Detection"
+          >
+            <UploadCropImage selectedField={selectedField?._id} />
+          </PremiumPageWrapper> */}
+
+          <ComingSoonSection />
+        </div>
       </div>
     </>
   );

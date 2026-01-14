@@ -120,6 +120,7 @@ const FarmReport = () => {
   useEffect(() => {
     const currentFieldId = selectedFieldDetails?._id;
 
+
     if (
       prevSelectedFieldIdRef.current &&
       prevSelectedFieldIdRef.current !== currentFieldId
@@ -133,7 +134,6 @@ const FarmReport = () => {
   // Fetch fields and AOIs on mount
   useEffect(() => {
     if (!userId) return;
-
     dispatch(getFarmFields(userId)).unwrap().catch(console.error);
 
     if (!isMountedRef.current) {
@@ -189,6 +189,8 @@ const FarmReport = () => {
     const matchingAOI = aois.find((a) => a.name === selectedFieldDetails._id);
     if (!matchingAOI?.id) return;
 
+
+
     const geoId = matchingAOI.id;
     const lastTs = forecastFetchRef.current.get(geoId) || 0;
     if (Date.now() - lastTs < FORECAST_CACHE_TTL) return;
@@ -242,6 +244,7 @@ const FarmReport = () => {
         setShowPricingOverlay(false);
         setPricingFieldData(null);
 
+
         const subscription = successData?.subscription;
         const fieldId = selectedFieldDetails?._id;
 
@@ -280,31 +283,15 @@ const FarmReport = () => {
   // Loading state
   if (fieldsLoading) {
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#344E41]">
-        <LoadingSpinner />
-        <p className="text-white mt-4 text-lg">Loading your fields...</p>
-      </div>
-    );
-  }
 
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#344E41]"> <LoadingSpinner /> <p className="text-white mt-4 text-lg">Loading your fields...</p> </div>);
+  }
   // No fields state
   if (fields?.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#344E41] px-4">
-        <img src={img1} alt="No Fields" className="w-[350px] h-[350px] mb-6 opacity-60" />
-        <h2 className="text-2xl font-semibold text-white">
-          Add Farm to See the Farm Report
-        </h2>
-        <button
-          onClick={() => navigate("/addfield")}
-          className="mt-6 px-5 py-2 rounded-lg bg-white text-[#344E41] font-medium hover:bg-gray-200 transition"
-        >
-          Add Field
-        </button>
-      </div>
-    );
-  }
 
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#344E41] px-4"> <img src={img1} alt="No Fields" className="w-[350px] h-[350px] mb-6 opacity-60" /> <h2 className="text-2xl font-semibold text-white"> Add Farm to See the Farm Report </h2> <button onClick={() => navigate("/addfield")} className="mt-6 px-5 py-2 rounded-lg bg-white text-[#344E41] font-medium hover:bg-gray-200 transition" > Add Field </button> </div>);
+  }
   return (
     <>
       {/* Modals */}
@@ -319,29 +306,8 @@ const FarmReport = () => {
         fieldName={selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName}
       />
 
-      <AnimatePresence>
-        {showPricingOverlay && pricingFieldData && (
-          <motion.div
-            key="pricing-overlay"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8"
-          >
-            <PricingOverlay
-              onClose={() => {
-                setShowPricingOverlay(false);
-                setPricingFieldData(null);
-              }}
-              onPaymentSuccess={handlePaymentSuccess}
-              userArea={pricingFieldData.areaInHectares}
-              selectedField={pricingFieldData}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
+      <AnimatePresence> {showPricingOverlay && pricingFieldData && (<motion.div key="pricing-overlay" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }} className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8" > <PricingOverlay onClose={() => { setShowPricingOverlay(false); setPricingFieldData(null); }} onPaymentSuccess={handlePaymentSuccess} userArea={pricingFieldData.areaInHectares} selectedField={pricingFieldData} /> </motion.div>)} </AnimatePresence>
       <PaymentSuccessModal
         isOpen={showPaymentSuccessModalRedux}
         onClose={() => dispatch(clearPaymentSuccess())}
@@ -370,79 +336,40 @@ const FarmReport = () => {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {isDownloading && (
+      <AnimatePresence> {isDownloading && (<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center" > <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-md w-full mx-4" > <div className="relative"> <LoaderCircle className="animate-spin text-[#344E41]" size={64} strokeWidth={2} /> <div className="absolute inset-0 flex items-center justify-center"> <span className="text-sm font-semibold text-[#344E41]"> {Math.round(downloadProgress)}% </span> </div> </div>
+
+
+        <div className="text-center">
+          <h3 className="text-xl font-bold text-gray-800 mb-2">
+            Generating PDF Report
+          </h3>
+          <p className="text-sm text-gray-600">
+            {downloadProgress < 30
+              ? "Processing images..."
+              : downloadProgress < 60
+                ? "Rendering charts..."
+                : downloadProgress < 85
+                  ? "Building sections..."
+                  : "Finalizing..."}
+          </p>
+        </div>
+
+        <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md flex items-center justify-center"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-md w-full mx-4"
-            >
-              <div className="relative">
-                <LoaderCircle
-                  className="animate-spin text-[#344E41]"
-                  size={64}
-                  strokeWidth={2}
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-[#344E41]">
-                    {Math.round(downloadProgress)}%
-                  </span>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  Generating PDF Report
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {downloadProgress < 30
-                    ? "Processing images..."
-                    : downloadProgress < 60
-                    ? "Rendering charts..."
-                    : downloadProgress < 85
-                    ? "Building sections..."
-                    : "Finalizing..."}
-                </p>
-              </div>
-
-              <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                <motion.div
-                  className="bg-gradient-to-r from-[#344E41] to-[#5a7c6b] h-2.5 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${downloadProgress}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+            className="bg-gradient-to-r from-[#344E41] to-[#5a7c6b] h-2.5 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${downloadProgress}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+      </motion.div>
+      </motion.div>
+      )}
       </AnimatePresence>
-
       {/* Main Layout */}
-      <div className="flex h-screen overflow-hidden bg-[#344E41] text-white">
-        <AnimatePresence>
-          {showSidebar && (
-            <motion.div
-              initial={{ x: -280, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -280, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="sm:min-w-[250px] sm:max-w-[20vw] h-full border-r border-[#5a7c6b] bg-[#2d4339]"
-            >
-              <FarmReportSidebar
-                setSelectedField={handleFieldSelect}
-                setIsSidebarVisible={() => {}}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+
+      <div className="flex h-screen overflow-hidden bg-[#344E41] text-white"> <AnimatePresence> {showSidebar && (<motion.div initial={{ x: -280, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -280, opacity: 0 }} transition={{ duration: 0.3, ease: "easeInOut" }} className="sm:min-w-[250px] sm:max-w-[20vw] h-full border-r border-[#5a7c6b] bg-[#2d4339]" > <FarmReportSidebar setSelectedField={handleFieldSelect} setIsSidebarVisible={() => { }} /> </motion.div>)} </AnimatePresence>
+
 
         <div className="flex-1 p-2 h-screen overflow-y-auto bg-[#344E41]">
           {hasManuallySelected && selectedFieldDetails ? (
@@ -460,11 +387,10 @@ const FarmReport = () => {
                 <button
                   disabled={!featureAccess.hasSubscription || isDownloading}
                   onClick={handleDownloadPDF}
-                  className={`px-3 py-1.5 rounded-md text-sm shadow transition-all flex items-center gap-1 ${
-                    featureAccess.hasSubscription
+                  className={`px-3 py-1.5 rounded-md text-sm shadow transition-all flex items-center gap-1 ${featureAccess.hasSubscription
                       ? "bg-[#5a7c6b] text-white hover:bg-[#4a6b5a]"
                       : "bg-gray-500 text-gray-300 cursor-not-allowed"
-                  }`}
+                    }`}
                 >
                   {isDownloading ? (
                     <>
@@ -527,9 +453,6 @@ const FarmReport = () => {
             </div>
           )}
         </div>
-      </div>
-    </>
-  );
+      </div> </>);
 };
-
-export default FarmReport;
+export default FarmReport; 
