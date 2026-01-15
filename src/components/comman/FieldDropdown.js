@@ -15,7 +15,7 @@ const FieldDropdown = ({ fields, selectedField, setSelectedField }) => {
   };
 
   return (
-    <div className="w-[150px] relative">
+    <div className="w-[180px] relative z-[9000]">
       {/* Selected Field Header - Similar to SmartAdvisory button style */}
       <button
         onClick={() => setIsOpen(!isOpen)}
