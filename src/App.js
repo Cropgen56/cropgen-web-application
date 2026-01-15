@@ -6,8 +6,7 @@ import { initActivityTracker } from "./utility/activityTracker";
 
 const App = () => {
   const token = useSelector((state) => state.auth.token);
-
-  console.log(token)
+  
    useEffect(() => {
     if (token) {
       initActivityTracker(token);
