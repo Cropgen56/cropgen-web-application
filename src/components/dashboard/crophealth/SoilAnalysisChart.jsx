@@ -142,7 +142,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
 
           {smartAdvisory?.npkManagement?.recommendation && (
             <div className="mt-4 sm:mt-6 bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-300">
-              <span className="block text-sm sm:text-base font-medium text-gray-800">
+              <span className="block text-[10px] sm:text-[12px] font-medium text-gray-800">
                 <strong>Recommendations:</strong>{" "}
                 {smartAdvisory.npkManagement.recommendation}
               </span>

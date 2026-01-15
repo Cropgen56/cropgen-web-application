@@ -247,6 +247,27 @@ const parseApiBounds = (apiBounds) => {
 
   return null;
 };
+const MapCaptureMode = ({ isPDFMode }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (isPDFMode) {
+      // Disable all interactions during PDF capture
+      map.dragging.disable();
+      map.touchZoom.disable();
+      map.doubleClickZoom.disable();
+      map.scrollWheelZoom.disable();
+      map.boxZoom.disable();
+      map.keyboard.disable();
+      
+      // Force a redraw without animation
+      map.invalidateSize({ animate: false });
+    }
+  }, [isPDFMode, map]);
+
+  return null;
+};
+
 
 // Color Palette Legend Component for PDF
 const ColorPaletteLegend = ({ legend, indexName }) => {
@@ -621,8 +642,10 @@ const FarmReportMap = React.forwardRef(
                   minZoom={10}
                   attributionControl={false}
                   zoomControl={false}
+                  preferCanvas={true} 
                 >
                   <MapResizer />
+                   <MapCaptureMode isPDFMode={hidePolygonForPDF} />
 
                   <TileLayer
                     attribution="© Google Maps"

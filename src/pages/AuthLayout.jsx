@@ -88,18 +88,20 @@ const AuthLayout = () => {
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, {});
+  }, []);
 
   return (
     <div className="relative w-full h-screen overflow-hidden font-poppins">
       {!isSmallTablet ? (
         <div className="flex flex-row w-full h-full">
           <div className="w-1/2 relative h-full bg-[#344E41]">
-            <div className="absolute top-4 left-4 lg:top-6 lg:left-6 flex items-center gap-2">
+            {/* Desktop Logo - Original size, moved up */}
+            <div className="absolute top-2 left-4 lg:top-3 lg:left-6 flex items-center gap-2 z-50">
               <img src={logo} alt="Logo" className="h-12 lg:h-16 w-auto" />
             </div>
             <div className="flex flex-col gap-4 justify-center items-center h-full w-full">
-              <div className="lg:mt-24 mt-32 mx-6 lg:mx-0 text-center">
+              {/* Increased top margin for more gap from logo */}
+              <div className="lg:mt-36 mt-44 mx-6 lg:mx-0 text-center">
                 <h2 className="text-xl lg:text-3xl font-bold text-white [text-shadow:0px_4px_4px_#00000040]">
                   Your Smart Farming Assistant
                 </h2>
@@ -186,10 +188,12 @@ const AuthLayout = () => {
                       : "25vh",
             }}
           >
+            {/* Animated section - Moved down for more gap */}
             <div className="flex-[0.4] flex justify-start items-center px-2 relative">
               <div
-                className="absolute top-[44%] pointer-events-none"
+                className="absolute pointer-events-none"
                 style={{
+                  top: "62%", // Moved down more
                   width: `${responsiveSizes.sphereSize}px`,
                   height: `${responsiveSizes.sphereSize}px`
                 }}
@@ -273,10 +277,12 @@ const AuthLayout = () => {
             </div>
 
             <div className="flex-[0.6] flex flex-col justify-center items-end text-right pr-4 sm:pr-0 sm:items-center sm:text-center px-2">
-              <div className="absolute top-1 sm:top-2 right-2 flex items-center gap-2">
+              {/* Mobile/Tablet Logo - Original size, moved up */}
+              <div className="absolute top-1 sm:top-2 right-2 flex items-center gap-2 z-50">
                 <img src={logo} alt="Logo" className="h-12 lg:h-16 w-auto" />
               </div>
-              <div className="mt-12 sm:mt-16 ml-2 sm:mx-8 transition-all duration-300 ease-in-out">
+              {/* Increased top margin for more gap */}
+              <div className="mt-24 sm:mt-28 ml-2 sm:mx-8 transition-all duration-300 ease-in-out">
                 <h2 className="text-base sm:text-3xl font-bold text-white text-center [text-shadow:0px_4px_4px_#00000040]">
                   Your Smart Farming Assistant
                 </h2>

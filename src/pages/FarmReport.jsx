@@ -13,6 +13,7 @@ import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 import PaymentSuccessModal from "../components/subscription/PaymentSuccessModal";
 import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
+import FieldDropdown from "../components/comman/FieldDropdown";
 
 import {
   getFarmFields,
@@ -70,6 +71,11 @@ const FarmReport = () => {
   const [aoisInitialized, setAoisInitialized] = useState(false);
   const [isFieldDataReady, setIsFieldDataReady] = useState(false);
 
+  // Mobile/Tablet detection state
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(
+    window.innerWidth < 1024
+  );
+
   const mainReportRef = useRef();
   const mapRef = useRef(null);
   const aoiCreationRef = useRef(new Set());
@@ -85,6 +91,15 @@ const FarmReport = () => {
 
   const { isDownloading, downloadProgress, isPreparedForPDF, downloadFarmReportPDF } =
     useFarmReportPDF(selectedFieldDetails);
+
+  // Handle window resize for responsive detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileOrTablet(window.innerWidth < 1024);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Feature access computation
   const featureAccess = useMemo(() => {
@@ -133,7 +148,6 @@ const FarmReport = () => {
   // Fetch fields and AOIs on mount
   useEffect(() => {
     if (!userId) return;
-
     dispatch(getFarmFields(userId)).unwrap().catch(console.error);
 
     if (!isMountedRef.current) {
@@ -144,6 +158,13 @@ const FarmReport = () => {
       isMountedRef.current = true;
     }
   }, [dispatch, userId]);
+
+  // Auto-select latest field for mobile/tablet only
+  useEffect(() => {
+    if (isMobileOrTablet && fields.length > 0 && !selectedField) {
+      setSelectedField(fields[fields.length - 1]);
+    }
+  }, [fields, selectedField, isMobileOrTablet]);
 
   // Set field data ready state
   useEffect(() => {
@@ -277,6 +298,79 @@ const FarmReport = () => {
     downloadFarmReportPDF(mainReportRef);
   }, [downloadFarmReportPDF]);
 
+  // Render the header with back button and PDF download
+  const renderHeader = () => (
+    <div className="mb-2 flex items-center gap-2 flex-wrap bg-[#2d4339] rounded-lg p-2">
+      {/* Only show back button on desktop */}
+      {!isMobileOrTablet && (
+        <button
+          className="bg-[#5a7c6b] text-white px-3 py-1.5 rounded-md text-sm shadow hover:bg-[#4a6b5a] transition-colors flex items-center gap-1"
+          onClick={handleBackToFieldSelection}
+        >
+          <ChevronLeft size={16} />
+          Back
+        </button>
+      )}
+
+      <button
+        disabled={!featureAccess.hasSubscription || isDownloading}
+        onClick={handleDownloadPDF}
+        className={`px-3 py-1.5 rounded-md text-sm shadow transition-all flex items-center gap-1 ${
+          featureAccess.hasSubscription
+            ? "bg-[#5a7c6b] text-white hover:bg-[#4a6b5a]"
+            : "bg-gray-500 text-gray-300 cursor-not-allowed"
+        }`}
+      >
+        {isDownloading ? (
+          <>
+            <LoaderCircle className="animate-spin" size={14} />
+            Generating...
+          </>
+        ) : (
+          <>
+            <ArrowDownToLine size={14} />
+            PDF
+          </>
+        )}
+      </button>
+
+      {!featureAccess.hasSubscription && (
+        <span className="text-xs text-white/70">Subscribe to download</span>
+      )}
+
+      <div className="ml-auto text-white text-sm font-medium bg-[#5a7c6b] px-2 py-1 rounded-md">
+        📍{" "}
+        {selectedFieldDetails?.fieldName ||
+          selectedFieldDetails?.farmName ||
+          "Field"}
+      </div>
+    </div>
+  );
+
+  // Render the report content
+  const renderReportContent = () => (
+    <PremiumPageWrapper
+      isLocked={!featureAccess.hasFarmReportAccess}
+      onSubscribe={handleSubscribe}
+      title="Farm Report"
+    >
+      <div ref={mainReportRef}>
+        {!isRefreshingSubscription && (
+          <FarmReportContent
+            selectedFieldDetails={selectedFieldDetails}
+            fields={fields}
+            mapRef={mapRef}
+            isFieldDataReady={isFieldDataReady}
+            isPreparedForPDF={isPreparedForPDF}
+            forecastData={forecastData}
+            featureAccess={featureAccess}
+            onSubscribe={handleSubscribe}
+          />
+        )}
+      </div>
+    </PremiumPageWrapper>
+  );
+
   // Loading state
   if (fieldsLoading) {
     return (
@@ -291,7 +385,11 @@ const FarmReport = () => {
   if (fields?.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-[#344E41] px-4">
-        <img src={img1} alt="No Fields" className="w-[350px] h-[350px] mb-6 opacity-60" />
+        <img
+          src={img1}
+          alt="No Fields"
+          className="w-[350px] h-[350px] mb-6 opacity-60"
+        />
         <h2 className="text-2xl font-semibold text-white">
           Add Farm to See the Farm Report
         </h2>
@@ -427,102 +525,71 @@ const FarmReport = () => {
 
       {/* Main Layout */}
       <div className="flex h-screen overflow-hidden bg-[#344E41] text-white">
-        <AnimatePresence>
-          {showSidebar && (
-            <motion.div
-              initial={{ x: -280, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -280, opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="sm:min-w-[250px] sm:max-w-[20vw] h-full border-r border-[#5a7c6b] bg-[#2d4339]"
-            >
-              <FarmReportSidebar
-                setSelectedField={handleFieldSelect}
-                setIsSidebarVisible={() => {}}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* ===== DESKTOP VIEW ===== */}
+        <div className="hidden lg:flex w-full h-full">
+          {/* Desktop Sidebar with Animation */}
+          <AnimatePresence>
+            {showSidebar && (
+              <motion.div
+                initial={{ x: -280, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -280, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="min-w-[250px] max-w-[20vw] h-full border-r border-[#5a7c6b] bg-[#2d4339]"
+              >
+                <FarmReportSidebar
+                  setSelectedField={handleFieldSelect}
+                  setIsSidebarVisible={() => {}}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        <div className="flex-1 p-2 h-screen overflow-y-auto bg-[#344E41]">
-          {hasManuallySelected && selectedFieldDetails ? (
-            <>
-              {/* Header */}
-              <div className="mb-2 flex items-center gap-2 flex-wrap bg-[#2d4339] rounded-lg p-2">
-                <button
-                  className="bg-[#5a7c6b] text-white px-3 py-1.5 rounded-md text-sm shadow hover:bg-[#4a6b5a] transition-colors flex items-center gap-1"
-                  onClick={handleBackToFieldSelection}
-                >
-                  <ChevronLeft size={16} />
-                  Back
-                </button>
-
-                <button
-                  disabled={!featureAccess.hasSubscription || isDownloading}
-                  onClick={handleDownloadPDF}
-                  className={`px-3 py-1.5 rounded-md text-sm shadow transition-all flex items-center gap-1 ${
-                    featureAccess.hasSubscription
-                      ? "bg-[#5a7c6b] text-white hover:bg-[#4a6b5a]"
-                      : "bg-gray-500 text-gray-300 cursor-not-allowed"
-                  }`}
-                >
-                  {isDownloading ? (
-                    <>
-                      <LoaderCircle className="animate-spin" size={14} />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowDownToLine size={14} />
-                      PDF
-                    </>
-                  )}
-                </button>
-
-                {!featureAccess.hasSubscription && (
-                  <span className="text-xs text-white/70">
-                    Subscribe to download
-                  </span>
-                )}
-
-                <div className="ml-auto text-white text-sm font-medium bg-[#5a7c6b] px-2 py-1 rounded-md">
-                  📍{" "}
-                  {selectedFieldDetails?.fieldName ||
-                    selectedFieldDetails?.farmName ||
-                    "Field"}
+          {/* Desktop Main Content */}
+          <div className="flex-1 p-2 h-screen overflow-y-auto bg-[#344E41]">
+            {hasManuallySelected && selectedFieldDetails ? (
+              <>
+                {renderHeader()}
+                {renderReportContent()}
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full w-full">
+                <div className="flex flex-col items-center text-center opacity-80">
+                  <img src={img1} alt="" className="w-[250px] h-[250px] mb-4" />
+                  <p className="text-xl font-semibold text-white">
+                    Select a Field to Generate Report
+                  </p>
+                  <p className="text-sm mt-2 text-white/70">
+                    Choose from the sidebar
+                  </p>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
 
-              {/* Report Content */}
-              <PremiumPageWrapper
-                isLocked={!featureAccess.hasFarmReportAccess}
-                onSubscribe={handleSubscribe}
-                title="Farm Report"
-              >
-                <div ref={mainReportRef}>
-                  {!isRefreshingSubscription && (
-                    <FarmReportContent
-                      selectedFieldDetails={selectedFieldDetails}
-                      fields={fields}
-                      mapRef={mapRef}
-                      isFieldDataReady={isFieldDataReady}
-                      isPreparedForPDF={isPreparedForPDF}
-                      forecastData={forecastData}
-                      featureAccess={featureAccess}
-                      onSubscribe={handleSubscribe}
-                    />
-                  )}
-                </div>
-              </PremiumPageWrapper>
+        {/* ===== TABLET/MOBILE VIEW ===== */}
+        <div className="lg:hidden flex-1 px-3 py-4 h-screen overflow-y-auto">
+          {/* Mobile/Tablet Dropdown */}
+          <div className="mb-4">
+            <FieldDropdown
+              fields={fields}
+              selectedField={selectedField}
+              setSelectedField={setSelectedField}
+            />
+          </div>
+
+          {/* Mobile/Tablet Content - Auto shows with selected field */}
+          {selectedField ? (
+            <>
+              {renderHeader()}
+              {renderReportContent()}
             </>
           ) : (
             <div className="flex items-center justify-center h-full w-full">
-              <div className="flex flex-col items-center text-center opacity-80">
-                <img src={img1} alt="" className="w-[250px] h-[250px] mb-4" />
-                <p className="text-xl font-semibold text-white">
-                  Select a Field to Generate Report
-                </p>
-                <p className="text-sm mt-2 text-white/70">Choose from the sidebar</p>
+              <div className="flex flex-col items-center text-center opacity-60">
+                <img src={img1} alt="" className="w-[200px] h-[200px] mb-4" />
+                <p className="text-xl font-semibold">Loading...</p>
               </div>
             </div>
           )}

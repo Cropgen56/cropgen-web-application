@@ -21,8 +21,7 @@ import WeatherSkeleton from "../components/Skeleton/WeatherSkeleton";
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
-
-const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
+import FieldDropdown from "../components/comman/FieldDropdown";
 
 const formatCoordinates = (data) => {
   if (!data || data.length === 0) return [];
@@ -215,15 +214,29 @@ const Weather = () => {
       </AnimatePresence>
 
       <div className="m-0 p-0 w-full flex flex-row">
+        {/* Desktop Sidebar - Hidden on tablet/mobile */}
         {isSidebarVisible && (
-          <WeatherSidebar
-            fields={fields}
-            setSelectedField={setSelectedField}
-            selectedField={selectedField}
-            hasSubscription={hasSubscription}
-          />
+          <div className="hidden lg:block">
+            <WeatherSidebar
+              fields={fields}
+              setSelectedField={setSelectedField}
+              selectedField={selectedField}
+              hasSubscription={hasSubscription}
+            />
+          </div>
         )}
-        <div className="w-full bg-[#5f7e6f] m-0 p-0 ml-[320px] h-screen overflow-y-auto overflow-x-hidden">
+
+        {/* Main Content */}
+        <div className="w-full bg-[#5f7e6f] m-0 p-0 lg:ml-[320px] h-screen overflow-y-auto overflow-x-hidden">
+          {/* Tablet/Mobile Dropdown - Hidden on desktop */}
+          <div className="lg:hidden p-3">
+            <FieldDropdown
+              fields={fields}
+              selectedField={selectedField}
+              setSelectedField={setSelectedField}
+            />
+          </div>
+
           {loading ? (
             <WeatherSkeleton />
           ) : (
@@ -232,7 +245,6 @@ const Weather = () => {
               onSubscribe={handleSubscribe}
               title="Weather Analytics"
             >
-              {/* <>  */}
               <WeekWeather
                 selectedField={selectedField}
                 forecastData={forecastData}
@@ -269,7 +281,6 @@ const Weather = () => {
                 historicalData={historicalData}
                 dateRange={dateRange}
               />
-              {/* </>  */}
             </PremiumPageWrapper>
           )}
         </div>

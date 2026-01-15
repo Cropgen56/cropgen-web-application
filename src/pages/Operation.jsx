@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { message } from "antd";
@@ -10,8 +10,7 @@ import img1 from "../assets/image/Group 31.png";
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
-
-const SUBSCRIPTION_CHECK_INTERVAL = 5 * 60 * 1000;
+import FieldDropdown from "../components/comman/FieldDropdown";
 
 const Operation = () => {
   const dispatch = useDispatch();
@@ -23,9 +22,7 @@ const Operation = () => {
   const userId = user?.id;
 
   const [selectedField, setSelectedField] = useState(null);
-    const [showMembershipModalLocal, setShowMembershipModalLocal] =
-      useState(false);
-  
+  const [showMembershipModalLocal, setShowMembershipModalLocal] = useState(false);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
@@ -35,20 +32,18 @@ const Operation = () => {
     }
   }, [dispatch, userId]);
 
-  // Updated to select the last added field (most recent)
-useEffect(() => {
-  if (fields?.length > 0 && !selectedField) {
-    setSelectedField(fields[fields.length - 1]); // full object like weather
-  }
-}, [fields, selectedField]);
-  
-  
+  useEffect(() => {
+    if (fields?.length > 0 && !selectedField) {
+      setSelectedField(fields[fields.length - 1]);
+    }
+  }, [fields, selectedField]);
 
-const selectedFieldDetails = selectedField;
+  const selectedFieldDetails = selectedField;
 
   const handleSubscribe = useCallback(() => {
     if (selectedFieldDetails) {
-      const areaInHectares = selectedFieldDetails?.areaInHectares ||
+      const areaInHectares =
+        selectedFieldDetails?.areaInHectares ||
         selectedFieldDetails?.acre * 0.404686 ||
         5;
       const fieldData = {
@@ -68,7 +63,9 @@ const selectedFieldDetails = selectedField;
 
   const handleSkipMembership = useCallback(() => {
     setShowMembershipModalLocal(false);
-    message.info("You can activate premium anytime from the locked content sections");
+    message.info(
+      "You can activate premium anytime from the locked content sections"
+    );
   }, []);
 
   const handleCloseMembershipModal = useCallback(() => {
@@ -78,9 +75,9 @@ const selectedFieldDetails = selectedField;
   const handleClosePricing = useCallback(() => {
     setShowPricingOverlay(false);
     setPricingFieldData(null);
-  }, [selectedField, authToken, dispatch]);
+  }, []);
 
-  if (fields.length === 0) {
+  if (fields?.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
         <img
@@ -101,11 +98,11 @@ const selectedFieldDetails = selectedField;
     );
   }
 
-const hasSubscription = selectedField?.subscription?.hasActiveSubscription;
-const hasFarmOperationsManagement =
-  hasSubscription &&
-  selectedField?.subscription?.plan?.features?.farmOperationsManagement;
-  
+  const hasSubscription = selectedField?.subscription?.hasActiveSubscription;
+  const hasFarmOperationsManagement =
+    hasSubscription &&
+    selectedField?.subscription?.plan?.features?.farmOperationsManagement;
+
   return (
     <>
       <SubscriptionModal
@@ -113,7 +110,9 @@ const hasFarmOperationsManagement =
         onClose={handleCloseMembershipModal}
         onSubscribe={handleSubscribe}
         onSkip={handleSkipMembership}
-        fieldName={selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName}
+        fieldName={
+          selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName
+        }
       />
 
       <AnimatePresence>
@@ -135,15 +134,29 @@ const hasFarmOperationsManagement =
         )}
       </AnimatePresence>
 
-      <div className="w-full h-full m-0 p-0 d-flex">
-        <OperationSidebar
-          setSelectedField={setSelectedField}
-          selectedField={selectedField}
-          hasSubscription={hasSubscription}
-        />
-        <div className="bg-[#5a7c6b]">
+      <div className="w-full h-full m-0 p-0 flex">
+        {/* Desktop Sidebar - Hidden on tablet/mobile */}
+        <div className="hidden lg:block">
+          <OperationSidebar
+            setSelectedField={setSelectedField}
+            selectedField={selectedField}
+            hasSubscription={hasSubscription}
+          />
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 bg-[#5a7c6b] h-screen overflow-y-auto">
+          {/* Tablet/Mobile Dropdown - Hidden on desktop */}
+          <div className="lg:hidden p-3">
+            <FieldDropdown
+              fields={fields}
+              selectedField={selectedField}
+              setSelectedField={setSelectedField}
+            />
+          </div>
+
           <PremiumPageWrapper
-            isLocked={!hasFarmOperationsManagement} // Fixed variable name
+            isLocked={!hasFarmOperationsManagement}
             onSubscribe={handleSubscribe}
             title="Farm Operations Management"
           >
