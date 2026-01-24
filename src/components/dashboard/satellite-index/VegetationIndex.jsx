@@ -32,6 +32,7 @@ const NdviGraph = ({ selectedFieldsDetials, onSubscribe, hasVegetationIndices })
   const { indexTimeSeriesSummary = null, loading } =
     useSelector((state) => state.satellite) || {};
 
+
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDVI");
 

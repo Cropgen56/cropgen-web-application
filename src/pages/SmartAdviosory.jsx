@@ -20,10 +20,34 @@ import PricingOverlay from "../components/pricing/PricingOverlay";
 import FieldDropdown from "../components/comman/FieldDropdown";
 
 import { getFarmFields } from "../redux/slices/farmSlice";
-import useIsTablet from "../components/smartadvisory/smartadvisorysidebar/Istablet";
+import {
+  fetchForecastData,
+  fetchHistoricalWeather,
+  fetchAOIs,
+  createAOI,
+} from "../redux/slices/weatherSlice";
+import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
 
+import useIsTablet from "../components/smartadvisory/smartadvisorysidebar/Istablet";
 import "leaflet/dist/leaflet.css";
 import img1 from "../assets/image/Group 31.png";
+
+/* ---------- Utils ---------- */
+const formatCoordinates = (data) => {
+  if (!Array.isArray(data) || data.length === 0) return [];
+  const coords = data.map((p) => [p.lng, p.lat]);
+  const first = coords[0];
+  const last = coords[coords.length - 1];
+  if (first[0] !== last[0] || first[1] !== last[1]) coords.push(first);
+  return coords;
+};
+
+const getToday = () => new Date().toISOString().split("T")[0];
+const getSixMonthsAgo = () => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 6);
+  return d.toISOString().split("T")[0];
+};
 
 const SmartAdvisory = () => {
   const dispatch = useDispatch();
@@ -31,106 +55,140 @@ const SmartAdvisory = () => {
   const isTablet = useIsTablet();
 
   const user = useSelector((s) => s.auth?.user);
-  const fieldsRaw = useSelector((s) => s.farmfield?.fields ?? []);
+  const fieldsRaw = useSelector((s) => s.farmfield?.fields);
+  const aois = useSelector((s) => s.weather?.aois ?? []);
+
+  const fields = useMemo(
+    () => (Array.isArray(fieldsRaw) ? fieldsRaw : []),
+    [fieldsRaw]
+  );
 
   const [selectedField, setSelectedField] = useState(null);
-  // Track if user has manually selected a field (for desktop only)
-  const [hasManuallySelected, setHasManuallySelected] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+
+  const [historicalData, setHistoricalData] = useState(null);
+  const [dateRange, setDateRange] = useState(null);
+
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
-  const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
-  const selectedFieldsDetials = useMemo(
-    () => (selectedField ? [selectedField] : []),
-    [selectedField]
-  );
-
-  // Check if we're on mobile/tablet
-  const [isMobileOrTablet, setIsMobileOrTablet] = useState(
-    window.innerWidth < 1024
-  );
-
+  /* ---------- Fetch fields + AOIs ---------- */
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobileOrTablet(window.innerWidth < 1024);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Fetch fields on mount
-  useEffect(() => {
-    if (user?.id) dispatch(getFarmFields(user.id));
+    if (user?.id) {
+      dispatch(getFarmFields(user.id));
+      dispatch(fetchAOIs());
+    }
   }, [dispatch, user?.id]);
 
-  // Auto-select latest field for mobile/tablet only
+  /* ---------- Fetch Smart Advisory ---------- */
   useEffect(() => {
-    if (isMobileOrTablet && fields.length > 0 && !selectedField) {
+    if (selectedField?._id) {
+      dispatch(fetchSmartAdvisory({ fieldId: selectedField._id })).catch(
+        () => {}
+      );
+    }
+  }, [dispatch, selectedField]);
+
+  /* ---------- AOI ---------- */
+  const aoiPayload = useMemo(() => {
+    if (!selectedField?.field?.length) return null;
+    return {
+      name: selectedField._id,
+      geometry: {
+        type: "Polygon",
+        coordinates: [formatCoordinates(selectedField.field)],
+      },
+    };
+  }, [selectedField]);
+
+  useEffect(() => {
+    if (!aoiPayload) return;
+    const exists = aois.find((a) => a.name === aoiPayload.name);
+    if (!exists && aoiPayload.geometry.coordinates[0].length) {
+      dispatch(createAOI(aoiPayload));
+    }
+  }, [aoiPayload, aois, dispatch]);
+
+  /* ---------- Forecast ---------- */
+  useEffect(() => {
+    if (!selectedField || !aois.length) return;
+    const matchingAOI = aois.find((a) => a.name === selectedField._id);
+    if (matchingAOI?.id) {
+      dispatch(fetchForecastData({ geometry_id: matchingAOI.id }));
+    }
+  }, [dispatch, selectedField, aois]);
+
+  /* ---------- Auto 6-month historical weather ---------- */
+  useEffect(() => {
+    if (!selectedField || !aois.length || historicalData) return;
+
+    const matchingAOI = aois.find((a) => a.name === selectedField._id);
+    if (!matchingAOI?.id) return;
+
+    const startDate = getSixMonthsAgo();
+    const endDate = getToday();
+
+    dispatch(
+      fetchHistoricalWeather({
+        geometry_id: matchingAOI.id,
+        start_date: startDate,
+        end_date: endDate,
+      })
+    )
+      .unwrap()
+      .then((res) => {
+        if (res?.daily) {
+          setHistoricalData(res.daily);
+          setDateRange({ startDate, endDate });
+        }
+      })
+      .catch(() => {});
+  }, [dispatch, selectedField, aois, historicalData]);
+
+  /* ---------- Auto select for tablet ---------- */
+  useEffect(() => {
+    if (isTablet && fields.length && !selectedField) {
       setSelectedField(fields[fields.length - 1]);
     }
-  }, [fields, selectedField, isMobileOrTablet]);
+  }, [fields, selectedField, isTablet]);
 
   const handleFieldSelect = useCallback((field) => {
     setSelectedField(field);
-    setHasManuallySelected(true);
+    setIsSidebarVisible(false);
   }, []);
 
-  const handleBackToFieldSelection = useCallback(() => {
-    setSelectedField(null);
-    setHasManuallySelected(false);
-  }, []);
-
-  // Handlers
   const handleSubscribe = useCallback(() => {
     if (!selectedField) {
       message.warning("Please select a field first");
       return;
     }
+
     const areaInHectares =
-      selectedField?.areaInHectares ??
-      (selectedField?.acre ? selectedField.acre * 0.404686 : 5);
+      selectedField.areaInHectares ??
+      (selectedField.acre ? selectedField.acre * 0.404686 : 5);
+
     setPricingFieldData({
       id: selectedField._id,
       name: selectedField.fieldName || selectedField.farmName,
-      areaInHectares,
       cropName: selectedField.cropName,
+      areaInHectares,
     });
+
     setShowPricingOverlay(true);
     setShowMembershipModal(false);
   }, [selectedField]);
 
-  const handleSkipMembership = useCallback(() => {
-    setShowMembershipModal(false);
-    message.info(
-      "You can activate premium anytime from the locked content sections"
-    );
-  }, []);
-
-  const handleCloseMembershipModal = useCallback(
-    () => setShowMembershipModal(false),
-    []
-  );
-
-  const handleClosePricing = useCallback(() => {
-    setShowPricingOverlay(false);
-    setPricingFieldData(null);
-  }, []);
-
-  if (!fields || fields.length === 0) {
+  if (!fields.length) {
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
-        <img
-          src={img1}
-          alt="No Fields"
-          className="w-[400px] h-[400px] mb-6 opacity-70"
-        />
-        <h2 className="text-2xl font-semibold text-white">
-          Add Farm to See the Smart Advisory
+      <div className="flex flex-col items-center justify-center h-screen bg-[#5a7c6b] text-white text-center px-4">
+        <img src={img1} className="w-[260px] mb-6 opacity-70" />
+        <h2 className="text-2xl font-semibold">
+          Add Farm to See Smart Advisory
         </h2>
         <button
           onClick={() => navigate("/addfield")}
-          className="mt-6 px-5 py-2 rounded-lg bg-white text-[#5a7c6b] font-medium hover:bg-gray-200 transition"
+          className="mt-6 px-5 py-2 bg-white text-[#5a7c6b] rounded-lg"
         >
           Add Field
         </button>
@@ -143,85 +201,50 @@ const SmartAdvisory = () => {
     hasSubscription &&
     selectedField?.subscription?.plan?.features?.smartAdvisorySystem;
 
-  // Desktop: show sidebar when no manual selection
-  const showSidebar = !hasManuallySelected;
-
-  // Content to render for advisory cards
   const renderAdvisoryContent = () => (
     <PremiumPageWrapper
       isLocked={!hasSmartAdvisorySystem}
       onSubscribe={handleSubscribe}
       title="Smart Advisory System"
     >
-      {isTablet ? (
-        <div className="flex flex-col gap-4 w-full max-w-[1024px] mx-auto">
-          <div className="w-full h-[350px] rounded-lg overflow-hidden shadow relative">
-            <SmartAdvisoryMap
-              fields={fields}
-              selectedField={selectedField}
-              setSelectedField={setSelectedField}
-              selectedFieldsDetials={selectedFieldsDetials}
-              showFieldDropdown={false}
-              height="350px"
-            />
+      <div className="flex flex-col gap-3 sm:gap-4 w-full">
+
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
+          <div className="flex flex-col w-full lg:w-[65%] gap-3 sm:gap-4">
+            <div className="w-full rounded-lg overflow-hidden shadow
+                            h-[260px] sm:h-[300px] lg:h-[350px]">
+              <SmartAdvisoryMap
+                fields={fields}
+                selectedField={selectedField}
+                setSelectedField={setSelectedField}
+                height="100%"
+              />
+            </div>
+            <NDVIChartCard selectedField={selectedField} />
           </div>
-          <NDVIChartCard selectedField={selectedField} />
-          <div className="flex flex-col gap-4 w-full">
-            <div className="bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
-              <IrrigationStatusCard />
-            </div>
-            <div className="bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
-              <NutrientManagement />
-            </div>
-            <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
-              <WeatherCard />
-            </div>
-            <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
-              <PestDiseaseCard />
-            </div>
-            <div className="col-span-2 bg-[#4b6b5b] rounded-lg p-2 overflow-x-auto">
-              <Soiltemp />
-            </div>
-          </div>
-          <div className="w-full bg-[#4b6b5b] rounded-lg p-2 overflow-hidden">
-            <FarmAdvisoryCard />
+
+          <div className="w-full lg:w-[35%]">
+            <IrrigationStatusCard />
           </div>
         </div>
-      ) : (
-        <div className="flex flex-col gap-4 w-full">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex flex-col lg:w-[65%]">
-              <div className="w-full h-[350px] rounded-lg overflow-hidden shadow relative">
-                <SmartAdvisoryMap
-                  fields={fields}
-                  selectedField={selectedField}
-                  setSelectedField={setSelectedField}
-                  selectedFieldsDetials={selectedFieldsDetials}
-                  showFieldDropdown={false}
-                  height="350px"
-                />
-              </div>
-              <NDVIChartCard selectedField={selectedField} />
-            </div>
-            <div className="lg:w-[35%]">
-              <IrrigationStatusCard />
-            </div>
-          </div>
-          <NutrientManagement />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 w-full">
-            <WeatherCard />
-            <PestDiseaseCard />
-          </div>
-          <div className="flex flex-row gap-4 w-full">
-            <div className="w-full overflow-x-auto">
-              <Soiltemp />
-            </div>
-          </div>
-          <div className="w-full">
-            <FarmAdvisoryCard />
-          </div>
+
+        <NutrientManagement />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <WeatherCard
+            selectedField={selectedField}
+            historicalData={historicalData}
+            dateRange={dateRange}
+          />
+          <PestDiseaseCard />
         </div>
-      )}
+
+        <div className="w-full overflow-x-auto">
+          <Soiltemp />
+        </div>
+
+        <FarmAdvisoryCard />
+      </div>
     </PremiumPageWrapper>
   );
 
@@ -229,24 +252,17 @@ const SmartAdvisory = () => {
     <>
       <SubscriptionModal
         isOpen={showMembershipModal}
-        onClose={handleCloseMembershipModal}
+        onClose={() => setShowMembershipModal(false)}
         onSubscribe={handleSubscribe}
-        onSkip={handleSkipMembership}
-        fieldName={selectedField?.fieldName || selectedField?.farmName}
+        onSkip={() => setShowMembershipModal(false)}
+        fieldName={selectedField?.fieldName}
       />
 
       <AnimatePresence>
         {showPricingOverlay && pricingFieldData && (
-          <motion.div
-            key="pricing-overlay"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8"
-          >
+          <motion.div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center">
             <PricingOverlay
-              onClose={handleClosePricing}
+              onClose={() => setShowPricingOverlay(false)}
               userArea={pricingFieldData.areaInHectares}
               selectedField={pricingFieldData}
             />
@@ -254,92 +270,25 @@ const SmartAdvisory = () => {
         )}
       </AnimatePresence>
 
-      <div className="flex h-screen overflow-hidden bg-[#5a7c6b] text-white">
-        {/* ===== DESKTOP VIEW (unchanged) ===== */}
-        <div className="hidden lg:flex w-full h-full">
-          {/* Desktop Sidebar with Animation */}
-          <AnimatePresence>
-            {showSidebar && (
-              <motion.div
-                initial={{ x: -280, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -280, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="min-w-[250px] h-full border-r border-gray-700 bg-white text-black"
-              >
-                <SmartAdvisorySidebar
-                  setSelectedField={handleFieldSelect}
-                  setIsSidebarVisible={() => {}}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Desktop Main Content */}
-          <div className="flex-1 px-3 py-4 h-screen overflow-y-auto relative">
-            {hasManuallySelected && selectedField ? (
-              <>
-                <div className="mb-4">
-                  <button
-                    className="bg-[#344e41] text-white px-4 py-2 rounded-md text-sm shadow hover:bg-[#2d4339] transition-colors flex items-center gap-2"
-                    onClick={handleBackToFieldSelection}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
-                    Select Another Farm
-                  </button>
-                </div>
-                {renderAdvisoryContent()}
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-full w-full">
-                <div className="flex flex-col items-center text-center opacity-60">
-                  <img src={img1} alt="" className="w-[300px] h-[300px] mb-4" />
-                  <p className="text-2xl font-semibold">
-                    Select a Field to Generate Smart Advisory
-                  </p>
-                  <p className="text-sm mt-2 opacity-80">
-                    Choose a field from the sidebar to view detailed advisory
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+      <div className="flex h-screen bg-[#5a7c6b]">
+        <div className="hidden lg:flex">
+          {isSidebarVisible && (
+            <SmartAdvisorySidebar
+              setSelectedField={handleFieldSelect}
+              setIsSidebarVisible={setIsSidebarVisible}
+            />
+          )}
         </div>
 
-        {/* ===== TABLET/MOBILE VIEW ===== */}
-        <div className="lg:hidden flex-1 px-3 py-4 h-screen overflow-y-auto">
-          {/* Mobile/Tablet Dropdown */}
-          <div className="mb-4">
+        <div className="flex-1 p-2 sm:p-3 lg:p-4 overflow-y-auto">
+          {selectedField ? (
+            renderAdvisoryContent()
+          ) : (
             <FieldDropdown
               fields={fields}
               selectedField={selectedField}
               setSelectedField={setSelectedField}
             />
-          </div>
-
-          {/* Mobile/Tablet Content - Auto shows with selected field */}
-          {selectedField ? (
-            renderAdvisoryContent()
-          ) : (
-            <div className="flex items-center justify-center h-full w-full">
-              <div className="flex flex-col items-center text-center opacity-60">
-                <img src={img1} alt="" className="w-[200px] h-[200px] mb-4" />
-                <p className="text-xl font-semibold">Loading...</p>
-              </div>
-            </div>
           )}
         </div>
       </div>

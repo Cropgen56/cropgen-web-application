@@ -52,8 +52,7 @@ const NDVIChartCard = ({ selectedField }) => {
       geometry: fieldGeometry,
       index,
     };
-
-    console.log("Fetching NDVI data with params:", params);
+    
     dispatch(fetchIndexTimeSeriesSummary(params));
   }, [dispatch, fieldGeometry, sowingDate, index]);
 

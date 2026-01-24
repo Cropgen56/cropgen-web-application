@@ -19,8 +19,7 @@ import Insights from "../components/dashboard/insights/Insights";
 import CropAdvisory from "../components/dashboard/CropAdvisory";
 import "../styles/dashboard.css";
 import NdviGraph from "../components/dashboard/satellite-index/VegetationIndex";
-import WaterIndex from "../components/dashboard/satellite-index/WaterIndex";
-import { PlusIcon, X } from "lucide-react";
+import WaterIndex from "../components/dashboard/satellite-index/WaterIndex";import { PlusIcon, X } from "lucide-react";
 import {
   fetchAOIs,
   createAOI,

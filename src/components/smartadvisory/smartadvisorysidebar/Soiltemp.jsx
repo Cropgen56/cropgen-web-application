@@ -138,6 +138,8 @@ const CustomDropdown = ({ value, onChange, options }) => {
 
 const Soiltemp = () => {
   const historicalWeather = useSelector((s) => s.weather?.historicalWeather);
+
+  console.log(historicalWeather)
   const fullData = useMemo(
     () => buildChartData(historicalWeather),
     [historicalWeather]

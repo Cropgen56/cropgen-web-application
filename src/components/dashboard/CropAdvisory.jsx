@@ -1,140 +1,145 @@
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useMemo,
-  useCallback,
-} from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useMemo, useRef, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
 import CropAdvisorySkeleton from "../Skeleton/CropAdvisorySkeleton";
 import IndexPremiumWrapper from "../subscription/Indexpremiumwrapper";
-import { selectHasWeeklyAdvisoryReports } from "../../redux/slices/membershipSlice";
 
-/* small presentational card */
-const AdvisoryCard = React.memo(({ category, activityText, isPreparedForPDF }) => (
-  <div 
-    className={`
-      ${isPreparedForPDF 
-        ? 'w-full h-auto min-h-[140px]' 
-        : 'flex-none lg:w-[250px] lg:h-[160px] md:w-[170px] md:h-[130px]'
-      } 
-      bg-[#344E41]/90 border border-gray-200 rounded-lg p-3 md:p-2 shadow-md overflow-y-auto no-scrollbar
-    `}
-    style={isPreparedForPDF ? {
-      breakInside: 'avoid',
-      pageBreakInside: 'avoid',
-      WebkitColumnBreakInside: 'avoid',
-    } : {}}
-  >
-    <h3 className="text-sm lg:text-base font-bold text-white mb-1 md:mb-0.5">
-      {category}
-    </h3>
-    <div className="text-xs lg:text-sm text-gray-300 font-medium leading-tight">
-      {activityText || "No data available"}
+/* ===================== CARD ===================== */
+const AdvisoryCard = React.memo(
+  ({ title, description, isPreparedForPDF = false }) => (
+    <div
+      className={`
+        ${
+          isPreparedForPDF
+            ? "w-full min-h-[140px]"
+            : "flex-none lg:w-[260px] lg:h-[170px] md:w-[180px] md:h-[140px]"
+        }
+        bg-[#344E41]/90
+        border border-gray-200
+        rounded-lg
+        p-3
+        shadow-md
+        overflow-y-auto
+        no-scrollbar
+      `}
+      style={
+        isPreparedForPDF
+          ? {
+              breakInside: "avoid",
+              pageBreakInside: "avoid",
+              WebkitColumnBreakInside: "avoid",
+            }
+          : {}
+      }
+    >
+      <h3 className="text-sm lg:text-base font-bold text-white mb-2">
+        {title}
+      </h3>
+
+      <p className="text-xs lg:text-sm text-gray-200 leading-relaxed">
+        {description?.trim()
+          ? description
+          : "No advisory required at this stage."}
+      </p>
     </div>
-  </div>
-));
+  )
+);
 AdvisoryCard.displayName = "AdvisoryCard";
 
-const categories = [
-  { key: "disease_pest", label: "Disease/Pest Control" },
-  { key: "spray", label: "Spray Recommendation" },
-  { key: "fertigation", label: "Fertigation" },
-  { key: "water", label: "Watering" },
-  { key: "monitoring", label: "Monitoring" },
-];
-
-const CropAdvisory = ({ 
-  selectedFieldsDetials = [], 
-  onSubscribe, 
+/* ===================== MAIN ===================== */
+const CropAdvisory = ({
+  onSubscribe,
   hasWeeklyAdvisoryReports,
-  isPreparedForPDF = false 
+  isPreparedForPDF = false,
 }) => {
-  const dispatch = useDispatch();
-
-  // source data
-  const { advisory: smartAdvisory, loading } = useSelector(
+  const { advisory: data, loading } = useSelector(
     (s) => s.smartAdvisory || {}
   );
-  // const hasWeeklyAdvisoryReports = useSelector(selectHasWeeklyAdvisoryReports);
 
-  // horizontal scroll refs/drag state
+  /* -------- Drag Scroll -------- */
   const scrollRef = useRef(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-  // derive weekly items (safe access)
-  const weeklyItems = smartAdvisory?.smartAdvisory?.weeklyAdvisory?.items || [];
-
-  // map advisory items into a simple key -> advice map
-  const advisoryMapped = useMemo(() => {
-    if (!Array.isArray(weeklyItems) || weeklyItems.length === 0) return null;
-    const map = {};
-    weeklyItems.forEach((item) => {
-      if (item && item.key) map[item.key] = item.advice;
-    });
-    return map;
-  }, [weeklyItems]);
-
-  // attach mouse drag handlers for horizontal scroll
   const attachDragHandlers = useCallback(() => {
-    const slider = scrollRef.current;
-    if (!slider) return () => {};
-    const handleMouseDown = (e) => {
+    const el = scrollRef.current;
+    if (!el) return () => {};
+
+    const down = (e) => {
       isDragging.current = true;
-      startX.current = e.pageX - slider.offsetLeft;
-      scrollLeft.current = slider.scrollLeft;
-      slider.style.cursor = "grabbing";
+      startX.current = e.pageX - el.offsetLeft;
+      scrollLeft.current = el.scrollLeft;
+      el.style.cursor = "grabbing";
     };
-    const handleMouseLeaveOrUp = () => {
-      if (isDragging.current) {
-        isDragging.current = false;
-        slider.style.cursor = "grab";
-      }
+
+    const up = () => {
+      isDragging.current = false;
+      el.style.cursor = "grab";
     };
-    const handleMouseMove = (e) => {
+
+    const move = (e) => {
       if (!isDragging.current) return;
       e.preventDefault();
-      const x = e.pageX - slider.offsetLeft;
-      const walk = x - startX.current;
-      slider.scrollLeft = scrollLeft.current - walk;
+      el.scrollLeft =
+        scrollLeft.current - (e.pageX - el.offsetLeft - startX.current);
     };
 
-    slider.addEventListener("mousedown", handleMouseDown);
-    slider.addEventListener("mouseleave", handleMouseLeaveOrUp);
-    slider.addEventListener("mouseup", handleMouseLeaveOrUp);
-    slider.addEventListener("mousemove", handleMouseMove);
+    el.addEventListener("mousedown", down);
+    el.addEventListener("mouseleave", up);
+    el.addEventListener("mouseup", up);
+    el.addEventListener("mousemove", move);
 
     return () => {
-      slider.removeEventListener("mousedown", handleMouseDown);
-      slider.removeEventListener("mouseleave", handleMouseLeaveOrUp);
-      slider.removeEventListener("mouseup", handleMouseLeaveOrUp);
-      slider.removeEventListener("mousemove", handleMouseMove);
+      el.removeEventListener("mousedown", down);
+      el.removeEventListener("mouseleave", up);
+      el.removeEventListener("mouseup", up);
+      el.removeEventListener("mousemove", move);
     };
   }, []);
 
   useEffect(() => {
-    // Don't attach drag handlers in PDF mode
     if (isPreparedForPDF) return;
     const cleanup = attachDragHandlers();
     return () => cleanup && cleanup();
   }, [attachDragHandlers, isPreparedForPDF]);
 
+  /* -------- Map Backend → Cards -------- */
+  const advisory = useMemo(() => {
+    const weekly = data?.smartAdvisory?.weeklyAdvisory;
+    const irrigation = data?.smartAdvisory?.irrigationStage;
+
+    if (!weekly && !irrigation) return null;
+
+    return {
+      spray:
+        weekly?.sprayRecommendation?.purpose ||
+        "No spray recommended at this stage.",
+
+      fertigation:
+        weekly?.fertigationSchedule?.purpose ||
+        "No fertigation required at this stage.",
+
+      weather:
+        weekly?.weatherAlert?.instruction ||
+        "No adverse weather conditions expected.",
+
+      cropRisk:
+        weekly?.cropRiskAlert?.instruction ||
+        "No significant crop risk detected.",
+
+      irrigation:
+        irrigation?.recommendations
+          ? `${irrigation.recommendations.action}. ${irrigation.recommendations.quantity} ${irrigation.recommendations.unit}. ${irrigation.recommendations.rationale}`
+          : "No irrigation required at this stage.",
+    };
+  }, [data]);
+
+  /* ===================== RENDER ===================== */
   return (
-    <div 
-      className={`
-        flex flex-col gap-3 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 
-        ${isPreparedForPDF ? 'h-auto' : 'md:h-auto lg:h-auto'} 
-        p-3 overflow-hidden crop-advisory-section
-      `}
-      data-section="advisory"
-    >
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-900">
-          Weekly Crop Advisory
-        </h2>
-      </div>
+    <div className="flex flex-col gap-3 mt-10 mb-3 rounded-lg shadow-md border border-gray-200 bg-gray-50 p-3">
+      <h2 className="text-xl font-bold text-gray-900">
+        Weekly Crop Advisory
+      </h2>
 
       <IndexPremiumWrapper
         isLocked={!hasWeeklyAdvisoryReports}
@@ -143,36 +148,24 @@ const CropAdvisory = ({
       >
         {loading ? (
           <CropAdvisorySkeleton />
-        ) : advisoryMapped ? (
+        ) : advisory ? (
           <div
             ref={scrollRef}
-            className={`
-              advisory-cards-container
-              ${isPreparedForPDF 
-                ? 'grid grid-cols-2 gap-4 w-full pdf-advisory-grid' 
-                : 'flex flex-nowrap justify-between lg:gap-4 gap-2 p-2 md:p-0 overflow-x-auto scrollbar-hide no-scrollbar scroll-smooth touch-auto overscroll-x-contain cursor-grab select-none'
-              }
-            `}
-            style={isPreparedForPDF ? {
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '16px',
-              width: '100%',
-              overflow: 'visible',
-            } : {}}
+            className={
+              isPreparedForPDF
+                ? "grid grid-cols-2 gap-4 w-full"
+                : "flex gap-2 overflow-x-auto scrollbar-hide cursor-grab"
+            }
           >
-            {categories.map((category) => (
-              <AdvisoryCard
-                key={category.key}
-                category={category.label}
-                activityText={advisoryMapped[category.key]}
-                isPreparedForPDF={isPreparedForPDF}
-              />
-            ))}
+            <AdvisoryCard title="Spray Recommendation" description={advisory.spray} />
+            <AdvisoryCard title="Fertigation" description={advisory.fertigation} />
+            <AdvisoryCard title="Weather" description={advisory.weather} />
+            <AdvisoryCard title="Crop Risk" description={advisory.cropRisk} />
+            <AdvisoryCard title="Irrigation" description={advisory.irrigation} />
           </div>
         ) : (
-          <div className="flex items-center justify-center p-8 text-gray-500">
-            <p>No advisory data available. Please check your field details.</p>
+          <div className="p-6 text-gray-500 text-center">
+            No advisory data available.
           </div>
         )}
       </IndexPremiumWrapper>

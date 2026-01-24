@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const BASE_URL = "https://server.cropgenapp.com/v2/api";
+const BASE_URL = process.env.REACT_APP_SMART_ADVISORY;
 
 export const runSmartAdvisory = createAsyncThunk(
   "smartAdvisory/runSmartAdvisory",
@@ -71,10 +71,24 @@ const smartAdvisorySlice = createSlice({
         state.loading = true;
       })
       .addCase(fetchSmartAdvisory.fulfilled, (state, action) => {
-        state.loading = false;
-        state.advisory = action.payload?.advisories[0];
-      })
-      .addCase(fetchSmartAdvisory.rejected, (state, action) => {
+  state.loading = false;
+
+  const advisories = action.payload?.advisories ?? [];
+
+  if (advisories.length === 0) {
+    state.advisory = null;
+    return;
+  }
+
+  // ✅ pick latest advisory by createdAt
+  const latestAdvisory = advisories.reduce((latest, current) => {
+    return new Date(current.createdAt) > new Date(latest.createdAt)
+      ? current
+      : latest;
+  });
+
+  state.advisory = latestAdvisory;
+}).addCase(fetchSmartAdvisory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

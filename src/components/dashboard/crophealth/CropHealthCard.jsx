@@ -21,6 +21,8 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe, hasCropHealthA
   const advisory = useSelector((state) => state.smartAdvisory.advisory);
   const advisoryLoading = useSelector((state) => state.smartAdvisory.loading);
 
+ 
+
   useEffect(() => {
     dispatch(fetchCrops());
   }, [dispatch]);
