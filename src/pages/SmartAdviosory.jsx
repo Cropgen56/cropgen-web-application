@@ -243,7 +243,7 @@ const SmartAdvisory = () => {
           <Soiltemp />
         </div>
 
-        <FarmAdvisoryCard />
+        <FarmAdvisoryCard selectedField={selectedField} />
       </div>
     </PremiumPageWrapper>
   );
