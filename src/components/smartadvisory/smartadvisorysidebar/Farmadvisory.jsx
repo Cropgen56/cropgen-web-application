@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 
@@ -41,9 +41,6 @@ const ActivityIcon = ({ type }) => {
 export default function FarmAdvisoryCard({ selectedField }) {
   const dispatch = useDispatch();
 
-  const generateRef = useRef(null);
-  const fetchRef = useRef(null);
-
   const user = useSelector((s) => s.auth?.user);
   const advisory = useSelector((s) => s.smartAdvisory?.advisory);
   const { activities = [], activitiesLoading } = useSelector(
@@ -54,24 +51,16 @@ export default function FarmAdvisoryCard({ selectedField }) {
   const fieldId = selectedField?._id;
   const advisoryId = advisory?._id;
 
-  /* ================= NORMALIZE FIELD ID ================= */
-
   const advisoryFieldId =
     typeof advisory?.farmFieldId === "string"
       ? advisory?.farmFieldId
       : advisory?.farmFieldId?._id;
 
-  /* ================= RESET ON CHANGE ================= */
+  /* ================= GENERATE ACTIVITIES (WEEKLY) ================= */
 
   useEffect(() => {
-    generateRef.current = null;
-    fetchRef.current = null;
-  }, [farmerId, fieldId, advisoryId]);
-
-  /* ================= GENERATE (WEEKLY) ================= */
-
-  useEffect(() => {
-    if (!farmerId || !fieldId || !advisoryId) return;
+    if (!farmerId || !fieldId) return;
+    if (!advisoryId) return;
     if (advisoryFieldId !== fieldId) return;
 
     const cacheKey = getCacheKey(farmerId, fieldId, advisoryId);
@@ -81,9 +70,6 @@ export default function FarmAdvisoryCard({ selectedField }) {
       const { timestamp } = JSON.parse(cached);
       if (Date.now() - timestamp < ONE_WEEK) return;
     }
-
-    if (generateRef.current === advisoryId) return;
-    generateRef.current = advisoryId;
 
     dispatch(generateActivities({ farmerId, fieldId, advisoryId }))
       .unwrap()
@@ -96,14 +82,12 @@ export default function FarmAdvisoryCard({ selectedField }) {
       .catch(() => {});
   }, [dispatch, farmerId, fieldId, advisoryId, advisoryFieldId]);
 
-  /* ================= FETCH ================= */
+  /* ================= FETCH ACTIVITIES ================= */
 
   useEffect(() => {
-    if (!farmerId || !fieldId || !advisoryId) return;
+    if (!farmerId || !fieldId) return;
+    if (!advisoryId) return;
     if (advisoryFieldId !== fieldId) return;
-
-    if (fetchRef.current === advisoryId) return;
-    fetchRef.current = advisoryId;
 
     dispatch(fetchActivities({ farmerId, fieldId, advisoryId }));
   }, [dispatch, farmerId, fieldId, advisoryId, advisoryFieldId]);
@@ -121,10 +105,6 @@ export default function FarmAdvisoryCard({ selectedField }) {
 
       <div className="bg-white px-6 py-4">
         {activitiesLoading && <p>Loading activities…</p>}
-
-        {!activitiesLoading && activities.length === 0 && (
-          <p>No activities generated for this advisory.</p>
-        )}
 
         {activities.map((a) => (
           <div key={a._id} className="flex gap-4 border-b py-3">

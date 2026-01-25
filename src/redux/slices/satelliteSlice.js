@@ -86,7 +86,7 @@ export const fetchSatelliteDates = createAsyncThunk(
         },
         start_date: sixMonthsBefore,
         end_date: today,
-        provider: "aws",
+        provider: "both",
         satellite: "s2",
       };
 
@@ -140,7 +140,7 @@ export const fetchIndexData = createAsyncThunk(
         },
         date: endDate,
         index_name: index,
-        provider: "aws",
+        provider: "both",
         satellite: "s2",
         width: 800,
         height: 800,
@@ -191,7 +191,7 @@ export const fetchIndexDataForMap = createAsyncThunk(
         },
         date: endDate,
         index_name: index,
-        provider: "aws",
+        provider: "both",
         satellite: "s2",
         width: 800,
         height: 800,
