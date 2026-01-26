@@ -16,7 +16,6 @@ import CropHealth from "../components/dashboard/crophealth/CropHealthCard";
 import ForeCast from "../components/dashboard/forecast/ForeCast";
 import PlantGrowthActivity from "../components/dashboard/PlantGrowthActivity";
 import Insights from "../components/dashboard/insights/Insights";
-import CropAdvisory from "../components/dashboard/CropAdvisory";
 import "../styles/dashboard.css";
 import NdviGraph from "../components/dashboard/satellite-index/VegetationIndex";
 import WaterIndex from "../components/dashboard/satellite-index/WaterIndex";import { PlusIcon, X } from "lucide-react";
@@ -523,14 +522,6 @@ const Dashboard = () => {
           <Insights
             onSubscribe={handleSubscribe}
             hasAgronomicInsights={hasAgronomicInsights}
-          />
-
-          <CropAdvisory
-            selectedFieldsDetials={
-              selectedFieldDetails ? [selectedFieldDetails] : []
-            }
-            onSubscribe={handleSubscribe}
-            hasWeeklyAdvisoryReports={hasWeeklyAdvisoryReports}
           />
 
           <PlantGrowthActivity

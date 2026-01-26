@@ -11,7 +11,7 @@ import IrrigationStatusCard from "../components/smartadvisory/smartadvisorysideb
 import NutrientManagement from "../components/smartadvisory/smartadvisorysidebar/NutrientManagement";
 import WeatherCard from "../components/smartadvisory/smartadvisorysidebar/WeatherCard";
 import PestDiseaseCard from "../components/smartadvisory/smartadvisorysidebar/PestDiseaseCard";
-import FarmAdvisoryCard from "../components/smartadvisory/smartadvisorysidebar/Farmadvisory";
+import FarmAdvisoryCard from "../components/smartadvisory/smartadvisorysidebar/FarmActivity";
 import Soiltemp from "../components/smartadvisory/smartadvisorysidebar/Soiltemp";
 
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
@@ -89,6 +89,8 @@ const SmartAdvisory = () => {
       );
     }
   }, [dispatch, selectedField]);
+
+
 
   /* ---------- AOI ---------- */
   const aoiPayload = useMemo(() => {
@@ -210,7 +212,7 @@ const SmartAdvisory = () => {
       <div className="flex flex-col gap-3 sm:gap-4 w-full">
 
         <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
-          <div className="flex flex-col w-full lg:w-[65%] gap-3 sm:gap-4">
+          <div className="flex flex-col w-full lg:w-[100%] gap-3 sm:gap-4">
             <div className="w-full rounded-lg overflow-hidden shadow
                             h-[260px] sm:h-[300px] lg:h-[350px]">
               <SmartAdvisoryMap
@@ -222,10 +224,10 @@ const SmartAdvisory = () => {
             </div>
             <NDVIChartCard selectedField={selectedField} />
           </div>
-
+{/* 
           <div className="w-full lg:w-[35%]">
             <IrrigationStatusCard />
-          </div>
+          </div> */}
         </div>
 
         <NutrientManagement />

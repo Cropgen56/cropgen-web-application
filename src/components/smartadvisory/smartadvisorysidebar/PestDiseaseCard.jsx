@@ -1,20 +1,23 @@
 import img3 from "../../../assets/image/Frame 268.png";
 import { useSelector } from "react-redux";
 
+/* ================= HELPERS ================= */
+
+const getRiskColor = (message = "") => {
+  const msg = message.toLowerCase();
+  if (msg.includes("high")) return "text-red-600";
+  if (msg.includes("moderate")) return "text-yellow-500";
+  if (msg.includes("low")) return "text-green-600";
+  return "text-gray-600";
+};
+
 const PestDiseaseCard = () => {
   const { advisory } = useSelector((state) => state.smartAdvisory || {});
 
-  const cropRisk =
-    advisory?.smartAdvisory?.weeklyAdvisory?.cropRiskAlert ?? null;
-
-  /* ---------- Helpers ---------- */
-  const getRiskColor = (level) => {
-    if (!level) return "text-gray-500";
-    if (level.toLowerCase() === "high") return "text-red-600";
-    if (level.toLowerCase() === "medium") return "text-yellow-500";
-    if (level.toLowerCase() === "low") return "text-green-600";
-    return "text-gray-500";
-  };
+  // NEW SOURCE (activitiesToDo)
+  const cropRisk = advisory?.activitiesToDo?.find(
+    (a) => a.type === "CROP_RISK"
+  );
 
   return (
     <div className="bg-[#344e41] rounded-lg p-4 text-white w-full shadow-sm flex flex-col gap-2">
@@ -26,36 +29,42 @@ const PestDiseaseCard = () => {
 
       {/* ================= CONTENT ================= */}
       <div className="bg-white text-black rounded-md p-3 text-sm flex flex-col justify-center h-full">
-        {cropRisk?.enabled ? (
+        {!cropRisk ? (
           <>
-            <p className="font-bold mb-1">
-              • {cropRisk.riskType || "Crop Risk"}{" "}
-              {cropRisk.riskLevel && (
-                <span
-                  className={`ml-1 font-medium ${getRiskColor(
-                    cropRisk.riskLevel
-                  )}`}
-                >
-                  ({cropRisk.riskLevel})
-                </span>
-              )}
+            <p className="font-semibold text-green-600 text-center">
+              No Major Crop Risk
             </p>
-
-            <p className="text-[12px] text-gray-700 leading-relaxed">
-              {cropRisk.instruction ||
-                "Monitor the field regularly and take preventive measures."}
+            <p className="text-[12px] mt-1 text-gray-600 text-center">
+              Crop condition is stable. Continue normal monitoring.
             </p>
           </>
         ) : (
           <>
-            <p className="font-semibold text-green-600 text-center">
-              No Significant Crop Risk
+            {/* TITLE */}
+            <p className="font-bold mb-1">
+              • {cropRisk.title}
             </p>
 
-            <p className="text-[12px] mt-1 text-gray-600 text-center leading-relaxed">
-              {cropRisk?.instruction ||
-                "Crop health is stable. Continue regular field monitoring."}
+            {/* MESSAGE */}
+            <p
+              className={`text-[12px] leading-relaxed mb-2 ${getRiskColor(
+                cropRisk.message
+              )}`}
+            >
+              {cropRisk.message}
             </p>
+
+            {/* DETAILS */}
+            {cropRisk.details && (
+              <div className="text-[11px] text-gray-600 space-y-1">
+                {cropRisk.details.chemical && (
+                  <div>🧴 {cropRisk.details.chemical}</div>
+                )}
+                {cropRisk.details.quantity && (
+                  <div>📏 {cropRisk.details.quantity}</div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>

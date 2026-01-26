@@ -8,6 +8,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const IrrigationStatusCard = ({ isTablet = false }) => {
   const { advisory } = useSelector((state) => state.smartAdvisory || {});
 
+  console.log(advisory)
   /* ---------- Safe Access ---------- */
   const irrigationStage = advisory?.smartAdvisory?.irrigationStage;
   const percentage = irrigationStage?.irrigationPercentage ?? 0;

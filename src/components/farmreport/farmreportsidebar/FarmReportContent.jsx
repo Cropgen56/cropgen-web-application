@@ -1,12 +1,10 @@
-// components/farmreport/FarmReportContent.jsx
 import React, { useMemo } from "react";
 
 import FarmReportMap from "./FarmReportMap";
 import CropHealth from "../../dashboard/crophealth/CropHealthCard";
 import ForeCast from "../../dashboard/forecast/ForeCast";
 import PlantGrowthActivity from "../../dashboard/PlantGrowthActivity";
-import Insights from "../../dashboard/insights/Insights";
-import CropAdvisory from "../../dashboard/CropAdvisory";
+import Insights from "../../dashboard/insights/Insights"; 
 import NdviGraph from "../../dashboard/satellite-index/VegetationIndex";
 import WaterIndex from "../../dashboard/satellite-index/WaterIndex";
 import EvapotranspirationDashboard from "../../dashboard/satellite-index/ETChart";
@@ -147,15 +145,6 @@ const FarmReportContent = ({
           hasAgronomicInsights={hasAgronomicInsights}
         />
 
-        <div className="mt-2">
-          <CropAdvisory
-            key={`advisory-${selectedFieldDetails?._id}`}
-            selectedFieldsDetials={[selectedFieldDetails]}
-            onSubscribe={onSubscribe}
-            hasWeeklyAdvisoryReports={hasWeeklyAdvisoryReports}
-            isPreparedForPDF={isPreparedForPDF} 
-          />
-        </div>
 
         <div className="mt-2">
           <PlantGrowthActivity
