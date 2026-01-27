@@ -308,7 +308,7 @@ const SignupLogin = () => {
               </div>
 
               {onboardingRequired && (
-                <div className="flex items-start gap-2">
+              <div>                <div className="flex items-start gap-2">
                   <input
                     type="checkbox"
                     checked={formData.terms}
@@ -331,6 +331,24 @@ const SignupLogin = () => {
                     emails
                   </label>
                 </div>
+                <div className="flex items-start gap-2 mt-2">
+  <input
+    type="checkbox"
+    checked={formData.whatsappConsent}
+    onChange={(e) =>
+      setFormData({ ...formData, whatsappConsent: e.target.checked })
+    }
+    className="mt-0.5 lg:mt-1 w-3 h-3 lg:w-4 lg:h-4 text-emerald-600 border-gray-300 rounded"
+  />
+  <label className="text-[10px] lg:text-xs text-gray-700">
+    I agree to receive farm advisories, alerts, and updates on WhatsApp from
+    CropGen. I understand that message frequency may vary and I can opt out at
+    any time.
+  </label>
+</div>
+
+                </div>
+
               )}
 
               <div className="flex gap-3 justify-center">
