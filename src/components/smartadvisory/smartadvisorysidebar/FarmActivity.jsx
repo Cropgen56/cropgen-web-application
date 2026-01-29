@@ -94,11 +94,13 @@ export default function FarmAdvisoryCard() {
 
   /* ================= SEND WHATSAPP ================= */
 
-  const sendWhatsApp = async (phoneWithCountryCode) => {
+  const sendWhatsApp = async ({phoneWithCountryCode,language}) => {
     if (!advisory?._id) {
       alert("Farm advisory not available");
       return;
     }
+
+    console.log()
 
     const whatsappPhone = phoneWithCountryCode.replace(/[^\d]/g, "");
 
@@ -106,6 +108,7 @@ export default function FarmAdvisoryCard() {
       sendFarmAdvisoryWhatsApp({
         phone: whatsappPhone,
         farmAdvisoryId: advisory._id, // ✅ TRACKING ID
+        language: language
       })
     ).unwrap();
 
@@ -119,7 +122,7 @@ export default function FarmAdvisoryCard() {
 
     if (userProfile?.phone) {
       try {
-        await sendWhatsApp(userProfile.phone);
+        await sendWhatsApp({phoneWithCountryCode:userProfile.phone,language:"en"});
       } catch (error) {
         alert("Failed to send advisory on WhatsApp");
       }
@@ -127,6 +130,23 @@ export default function FarmAdvisoryCard() {
       setShowPhoneDialog(true);
     }
   };
+
+
+  const handleAcceptAllHindi = async () => {
+    if (!activities.length) return;
+
+    if (userProfile?.phone) {
+      try {
+        await sendWhatsApp({phoneWithCountryCode:userProfile.phone,language:"hi"});
+      } catch (error) {
+        alert("Failed to send advisory on WhatsApp");
+      }
+    } else {
+      setShowPhoneDialog(true);
+    }
+  };
+
+  
 
   const handleSavePhoneAndSend = async () => {
     if (!phoneInput) {
@@ -193,7 +213,13 @@ export default function FarmAdvisoryCard() {
               onClick={handleAcceptAll}
               className="bg-green-600 text-white px-5 py-2 rounded-md text-sm font-semibold hover:bg-green-700 transition"
             >
-              ✅ Accept All
+              ✅ Accept En
+            </button>
+            <button
+              onClick={handleAcceptAllHindi}
+              className="bg-green-600 text-white px-5 py-2 rounded-md text-sm font-semibold hover:bg-green-700 transition"
+            >
+              ✅ Accept Hi
             </button>
 
             <button

@@ -61,6 +61,7 @@ export const refreshAccessToken = createAsyncThunk(
     },
   }
 );
+
 export const getUserProfileData = createAsyncThunk(
   "auth/getUserProfile",
   async (token, { rejectWithValue }) => {

@@ -39,13 +39,14 @@ export const fetchSmartAdvisory = createAsyncThunk(
 
 export const sendFarmAdvisoryWhatsApp = createAsyncThunk(
   "smartAdvisory/sendFarmAdvisoryWhatsApp",
-  async ({ phone, farmAdvisoryId }, thunkAPI) => {
+  async ({ phone, farmAdvisoryId, language }, thunkAPI) => {
     try {
       const res = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/whatsapp/send-farm-advisory`,
         {
           phone,
           farmAdvisoryId,
+          language
         }
       );
 
