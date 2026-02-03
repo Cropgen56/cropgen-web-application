@@ -67,7 +67,7 @@ const NpkSummary = () => {
 /* ---------- MAIN COMPONENT ---------- */
 const NutrientManagement = ({ isTablet = false }) => {
   const advisory = useSelector(
-    (state) => state.smartAdvisory?.advisory ?? null
+    (state) => state.smartAdvisory?.advisory ?? null,
   );
 
   const nutrientManagement =
@@ -80,14 +80,13 @@ const NutrientManagement = ({ isTablet = false }) => {
 
   const cropName = advisory?.farmFieldId?.cropName ?? "Crop";
 
-  const expectedYield =
-    cropYield?.standardYield ?? cropYield?.aiYield ?? null;
+  const expectedYield = cropYield?.standardYield ?? cropYield?.aiYield ?? null;
 
   const yieldUnit = cropYield?.unit ?? "";
 
   return (
     <div
-      className={`bg-[#344e41] rounded-lg ${
+      className={`bg-[#344e41] rounded-lg mb-2 ${
         isTablet ? "p-[6px]" : "p-4"
       } text-white w-full flex flex-col`}
     >
@@ -105,9 +104,7 @@ const NutrientManagement = ({ isTablet = false }) => {
 
       {/* ---------- Main Section ---------- */}
       <div
-        className={`bg-[#5a7c6b] ${
-          isTablet ? "p-[6px]" : "p-3"
-        } rounded-md`}
+        className={`bg-[#5a7c6b] ${isTablet ? "p-[6px]" : "p-3"} rounded-md`}
       >
         <div className="font-bold mb-3">Crop: {cropName}</div>
 
@@ -136,9 +133,7 @@ const NutrientManagement = ({ isTablet = false }) => {
         } flex justify-between items-center font-bold mt-3`}
       >
         <span>Expected Yield</span>
-        <span>
-          {expectedYield ? `${expectedYield} ${yieldUnit}` : "—"}
-        </span>
+        <span>{expectedYield ? `${expectedYield} ${yieldUnit}` : "—"}</span>
       </div>
 
       {/* ---------- Recommendation (BELOW YIELD) ---------- */}

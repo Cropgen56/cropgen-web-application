@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import {
   LineChart,
   Line,
@@ -21,11 +27,10 @@ import {
 
 const NDVIChartCard = ({ selectedField }) => {
   const dispatch = useDispatch();
-  
+
   // Get data from Redux
-  const { indexTimeSeriesSummary = null, loading } = useSelector(
-    (state) => state.satellite
-  ) || {};
+  const { indexTimeSeriesSummary = null, loading } =
+    useSelector((state) => state.satellite) || {};
 
   const [index, setIndex] = useState("NDVI");
 
@@ -52,7 +57,7 @@ const NDVIChartCard = ({ selectedField }) => {
       geometry: fieldGeometry,
       index,
     };
-    
+
     dispatch(fetchIndexTimeSeriesSummary(params));
   }, [dispatch, fieldGeometry, sowingDate, index]);
 
@@ -152,12 +157,15 @@ const NDVIChartCard = ({ selectedField }) => {
   const hasData = chartData.length > 0;
 
   // Format change value for display
-  const changeDisplay = summaryData.change >= 0 
-    ? `+${summaryData.change.toFixed(2)}` 
-    : summaryData.change.toFixed(2);
+  const changeDisplay =
+    summaryData.change >= 0
+      ? `+${summaryData.change.toFixed(2)}`
+      : summaryData.change.toFixed(2);
 
-  const changeColor = summaryData.change >= 0 ? "text-[#86D72F]" : "text-red-400";
-  const changeBgColor = summaryData.change >= 0 ? "bg-[#47664D]" : "bg-red-900/30";
+  const changeColor =
+    summaryData.change >= 0 ? "text-[#86D72F]" : "text-red-400";
+  const changeBgColor =
+    summaryData.change >= 0 ? "bg-[#47664D]" : "bg-red-900/30";
 
   // No field selected state
   if (!selectedField) {
@@ -177,14 +185,16 @@ const NDVIChartCard = ({ selectedField }) => {
   }
 
   return (
-    <div className="w-full bg-[#2C4C3B] rounded-lg px-3 py-4 text-white">
+    <div className="w-full bg-[#2C4C3B] rounded-lg px-3 py-4 text-white mb-2">
       {/* Header Row */}
       <div className="flex flex-col md:flex-row justify-between gap-6">
         {/* Left: NDVI Info */}
         <div className="w-full md:w-[35%] flex flex-col gap-3">
           {/* Index Selector */}
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-3xl lg:text-4xl font-bold text-[#86D72F]">{index}</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#86D72F]">
+              {index}
+            </h2>
             <select
               value={index}
               onChange={handleIndexChange}
@@ -198,7 +208,9 @@ const NDVIChartCard = ({ selectedField }) => {
           </div>
 
           {/* Change Value */}
-          <div className={`${changeBgColor} ${changeColor} px-4 py-2 rounded-md text-xl font-semibold w-fit`}>
+          <div
+            className={`${changeBgColor} ${changeColor} px-4 py-2 rounded-md text-xl font-semibold w-fit`}
+          >
             {isLoading ? "..." : changeDisplay}
           </div>
 
@@ -211,7 +223,8 @@ const NDVIChartCard = ({ selectedField }) => {
 
           {/* Field Name */}
           <p className="text-xs text-gray-400">
-            Field: {selectedField?.fieldName || selectedField?.farmName || "Unknown"}
+            Field:{" "}
+            {selectedField?.fieldName || selectedField?.farmName || "Unknown"}
           </p>
 
           {/* Summary Stats */}

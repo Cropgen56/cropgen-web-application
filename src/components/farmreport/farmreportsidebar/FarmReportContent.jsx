@@ -1,29 +1,39 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useRef, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 import FarmReportMap from "./FarmReportMap";
 import CropHealth from "../../dashboard/crophealth/CropHealthCard";
 import ForeCast from "../../dashboard/forecast/ForeCast";
 import PlantGrowthActivity from "../../dashboard/PlantGrowthActivity";
-import Insights from "../../dashboard/insights/Insights"; 
+import Insights from "../../dashboard/insights/Insights";
 import NdviGraph from "../../dashboard/satellite-index/VegetationIndex";
 import WaterIndex from "../../dashboard/satellite-index/WaterIndex";
 import EvapotranspirationDashboard from "../../dashboard/satellite-index/ETChart";
+
+import { useAoiManagement } from "../../dashboard/hooks/useAoiManagement";
+import { useWeatherForecast } from "../../dashboard/hooks/useWeatherForecast";
+
+import { fetchSmartAdvisory } from "../../../redux/slices/smartAdvisorySlice";
+
+/* ---------------- constants (same as Dashboard) ---------------- */
+
+const POLL_INTERVAL = 5000; // 5 sec
+const MAX_POLL_ATTEMPTS = 12; // 1 min
+
+/* ---------------- Skeleton ---------------- */
 
 const MapLoadingSkeleton = () => (
   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
     {[1, 2, 3, 4].map((i) => (
       <div
         key={i}
-        className="relative w-full h-[230px] rounded-lg overflow-hidden shadow-md bg-[#5a7c6b] animate-pulse flex items-center justify-center"
-      >
-        <div className="text-center">
-          <div className="w-10 h-10 bg-[#4a6b5a] rounded-full mx-auto mb-2"></div>
-          <p className="text-white/70 text-sm">Loading...</p>
-        </div>
-      </div>
+        className="relative w-full h-[230px] rounded-lg bg-[#5a7c6b] animate-pulse"
+      />
     ))}
   </div>
 );
+
+/* ---------------- Component ---------------- */
 
 const FarmReportContent = ({
   selectedFieldDetails,
@@ -31,32 +41,67 @@ const FarmReportContent = ({
   mapRef,
   isFieldDataReady,
   isPreparedForPDF,
-  forecastData,
   featureAccess,
   onSubscribe,
 }) => {
-  const { forecast, units } = forecastData || {};
+  const dispatch = useDispatch();
 
-  const etChartData = useMemo(() => {
-    if (forecast && forecast.length > 0) return forecast;
+  /* ===== SAME HOOKS AS DASHBOARD ===== */
+  const { aoiId } = useAoiManagement(selectedFieldDetails);
+  const { forecast, units } = useWeatherForecast(aoiId);
 
-    const mockData = [];
-    const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      mockData.push({
-        date: date.toISOString().split("T")[0],
-        et0: (Math.random() * 3 + 2).toFixed(2),
-        precipitation: (Math.random() * 5).toFixed(2),
-        temp_max: Math.floor(Math.random() * 10 + 25),
-        temp_min: Math.floor(Math.random() * 10 + 15),
-        humidity: Math.floor(Math.random() * 30 + 50),
-      });
+  /* ===== ADVISORY STATE ===== */
+  const advisoryState = useSelector((s) => s.smartAdvisory);
+
+  const pollRef = useRef(null);
+  const pollCountRef = useRef(0);
+
+  /* ===== FETCH ADVISORY (same as Dashboard) ===== */
+  const fetchAdvisory = useCallback(() => {
+    if (!selectedFieldDetails?._id) return;
+
+    dispatch(
+      fetchSmartAdvisory({
+        fieldId: selectedFieldDetails._id,
+      }),
+    );
+  }, [dispatch, selectedFieldDetails]);
+
+  /* ===== INITIAL FETCH ===== */
+  useEffect(() => {
+    fetchAdvisory();
+  }, [fetchAdvisory]);
+
+  /* ===== POLLING LOGIC ===== */
+  useEffect(() => {
+    if (!selectedFieldDetails?._id) return;
+
+    if (advisoryState?.exists) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+      pollCountRef.current = 0;
+      return;
     }
-    return mockData;
-  }, [forecast]);
 
+    if (!pollRef.current) {
+      pollRef.current = setInterval(() => {
+        pollCountRef.current += 1;
+        fetchAdvisory();
+
+        if (pollCountRef.current >= MAX_POLL_ATTEMPTS) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+        }
+      }, POLL_INTERVAL);
+    }
+
+    return () => {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    };
+  }, [advisoryState?.exists, fetchAdvisory, selectedFieldDetails]);
+
+  /* ===== FEATURE FLAGS ===== */
   const {
     hasCropHealthAndYield,
     hasWeatherAnalytics,
@@ -64,31 +109,28 @@ const FarmReportContent = ({
     hasWaterIndices,
     hasEvapotranspiration,
     hasAgronomicInsights,
-    hasWeeklyAdvisoryReports,
     hasCropGrowthMonitoring,
   } = featureAccess;
 
+  console.log("Feature Access:", isFieldDataReady);
+
   return (
     <>
-      {/* Section 0: Map & Crop Health */}
-      <div
-        className="farm-section bg-[#2d4339] rounded-lg p-2 mb-2"
-        data-section-index="0"
-      >
-        {isFieldDataReady ? (
-          <FarmReportMap
-            key={selectedFieldDetails?._id}
-            selectedFieldsDetials={[selectedFieldDetails]}
-            ref={mapRef}
-            hidePolygonForPDF={isPreparedForPDF}
-          />
+      {/* ================= SECTION 0 : MAP + CROP HEALTH ================= */}
+      <div className="bg-[#2d4339] rounded-lg p-2 mb-2">
+        <FarmReportMap
+          key={selectedFieldDetails?._id}
+          selectedFieldsDetials={[selectedFieldDetails]}
+          ref={mapRef}
+          hidePolygonForPDF={isPreparedForPDF}
+        />
+        {/* {isFieldDataReady ? (
         ) : (
           <MapLoadingSkeleton />
-        )}
+        )} */}
 
         <div className="mt-2">
           <CropHealth
-            key={`crop-health-${selectedFieldDetails?._id}`}
             selectedFieldsDetials={[selectedFieldDetails]}
             fields={fields}
             onSubscribe={onSubscribe}
@@ -97,11 +139,8 @@ const FarmReportContent = ({
         </div>
       </div>
 
-      {/* Section 1: Weather & Indices */}
-      <div
-        className="farm-section bg-[#2d4339] rounded-lg p-2 mb-2"
-        data-section-index="1"
-      >
+      {/* ================= SECTION 1 : WEATHER + INDICES ================= */}
+      <div className="bg-[#2d4339] rounded-lg p-2 mb-2">
         <ForeCast
           hasWeatherAnalytics={hasWeatherAnalytics}
           onSubscribe={onSubscribe}
@@ -109,7 +148,6 @@ const FarmReportContent = ({
 
         <div className="mt-2">
           <NdviGraph
-            key={`ndvi-${selectedFieldDetails?._id}`}
             selectedFieldsDetials={[selectedFieldDetails]}
             onSubscribe={onSubscribe}
             hasVegetationIndices={hasVegetationIndices}
@@ -118,7 +156,6 @@ const FarmReportContent = ({
 
         <div className="mt-2">
           <WaterIndex
-            key={`water-${selectedFieldDetails?._id}`}
             selectedFieldsDetials={[selectedFieldDetails]}
             onSubscribe={onSubscribe}
             hasWaterIndices={hasWaterIndices}
@@ -127,28 +164,23 @@ const FarmReportContent = ({
 
         <div className="mt-2">
           <EvapotranspirationDashboard
-            forecast={etChartData}
-            units={units || { et0: "mm/day" }}
+            forecast={forecast}
+            units={units}
             onSubscribe={onSubscribe}
             hasEvapotranspiration={hasEvapotranspiration}
           />
         </div>
       </div>
 
-      {/* Section 2: Insights & Advisory */}
-      <div
-        className="farm-section bg-[#2d4339] rounded-lg p-2"
-        data-section-index="2"
-      >
+      {/* ================= SECTION 2 : INSIGHTS ================= */}
+      <div className="bg-[#2d4339] rounded-lg p-2">
         <Insights
           onSubscribe={onSubscribe}
           hasAgronomicInsights={hasAgronomicInsights}
         />
 
-
         <div className="mt-2">
           <PlantGrowthActivity
-            key={`growth-${selectedFieldDetails?._id}`}
             selectedFieldsDetials={[selectedFieldDetails]}
             onSubscribe={onSubscribe}
             hasCropGrowthMonitoring={hasCropGrowthMonitoring}

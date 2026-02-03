@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  useMemo,
-} from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Listbox } from "@headlessui/react";
 import {
   MapContainer,
@@ -76,7 +71,7 @@ const SmartAdvisoryMap = ({
   setSelectedField,
   selectedFieldsDetials,
   showFieldDropdown = false,
-  height = "300px",
+  height = "500px",
 }) => {
   const dispatch = useDispatch();
   const { indexData, loading } = useSelector((state) => state?.satellite);
@@ -111,29 +106,29 @@ const SmartAdvisoryMap = ({
       fields.find((item) => item?._id === selectedField?._id) ||
       selectedField ||
       {},
-    [fields, selectedField]
+    [fields, selectedField],
   );
 
   const polygonCoordinates = useMemo(
     () => selectedFieldData.field?.map(({ lat, lng }) => ({ lat, lng })) || [],
-    [selectedFieldData]
+    [selectedFieldData],
   );
 
   const centroid = useMemo(
     () => calculatePolygonCentroid(polygonCoordinates),
-    [polygonCoordinates]
+    [polygonCoordinates],
   );
 
   const polygonBounds = useMemo(
     () => calculatePolygonBounds(polygonCoordinates),
-    [polygonCoordinates]
+    [polygonCoordinates],
   );
 
   useEffect(() => {
     setImage(
       indexData?.image_base64
         ? `data:image/png;base64,${indexData.image_base64}`
-        : null
+        : null,
     );
   }, [indexData]);
 
@@ -156,7 +151,7 @@ const SmartAdvisoryMap = ({
 
   return (
     <div
-      className="flex flex-col items-center w-full relative"
+      className="flex flex-col items-center w-full relative mt-2"
       style={{ height: height }}
     >
       <MapContainer

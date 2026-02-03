@@ -127,7 +127,7 @@ const calculateBounds = (coords) => {
       typeof lat === "number" &&
       typeof lng === "number" &&
       !isNaN(lat) &&
-      !isNaN(lng)
+      !isNaN(lng),
   );
 
   if (validCoords.length === 0) return null;
@@ -158,7 +158,7 @@ const calculateImageBounds = (coords, centerOffset = 0) => {
       typeof lat === "number" &&
       typeof lng === "number" &&
       !isNaN(lat) &&
-      !isNaN(lng)
+      !isNaN(lng),
   );
 
   if (validCoords.length === 0) return null;
@@ -259,7 +259,7 @@ const MapCaptureMode = ({ isPDFMode }) => {
       map.scrollWheelZoom.disable();
       map.boxZoom.disable();
       map.keyboard.disable();
-      
+
       // Force a redraw without animation
       map.invalidateSize({ animate: false });
     }
@@ -267,7 +267,6 @@ const MapCaptureMode = ({ isPDFMode }) => {
 
   return null;
 };
-
 
 // Color Palette Legend Component for PDF
 const ColorPaletteLegend = ({ legend, indexName }) => {
@@ -322,20 +321,20 @@ const ColorBarLegend = ({ legend, indexName }) => {
           />
         ))}
       </div>
-      
+
       {/* Labels below the bar */}
       <div className="flex justify-between mt-1 px-1">
         <span className="text-[9px] text-white/80">
-          {sortedLegend[0]?.label || 'Low'}
+          {sortedLegend[0]?.label || "Low"}
         </span>
         <span className="text-[9px] text-white/80 font-medium">
           {indexName}
         </span>
         <span className="text-[9px] text-white/80">
-          {sortedLegend[sortedLegend.length - 1]?.label || 'High'}
+          {sortedLegend[sortedLegend.length - 1]?.label || "High"}
         </span>
       </div>
-      
+
       {/* Detailed legend items */}
       <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 mt-1">
         {sortedLegend.map((item, idx) => (
@@ -345,7 +344,7 @@ const ColorBarLegend = ({ legend, indexName }) => {
               style={{ backgroundColor: item.color }}
             />
             <span className="text-[8px] text-white/90">
-              {item.label}: {item.hectares?.toFixed(1) || '0.0'}ha
+              {item.label}: {item.hectares?.toFixed(1) || "0.0"}ha
             </span>
           </div>
         ))}
@@ -365,9 +364,14 @@ const TITLES = {
 const DEFAULT_CENTER = [20.135245, 77.156935];
 
 const FarmReportMap = React.forwardRef(
-  ({ selectedFieldsDetials, selectedDate = null, hidePolygonForPDF = false }, ref) => {
+  (
+    { selectedFieldsDetials, selectedDate = null, hidePolygonForPDF = false },
+    ref,
+  ) => {
     const dispatch = useDispatch();
-    const { indexDataByType, loading } = useSelector((state) => state.satellite);
+    const { indexDataByType, loading } = useSelector(
+      (state) => state.satellite,
+    );
 
     const hasFetchedRef = useRef(false);
     const prevFieldIdRef = useRef(null);
@@ -393,7 +397,7 @@ const FarmReportMap = React.forwardRef(
           (point) =>
             point &&
             typeof point.lat === "number" &&
-            typeof point.lng === "number"
+            typeof point.lng === "number",
         )
         .map(({ lat, lng }) => [lng, lat]);
 
@@ -403,17 +407,17 @@ const FarmReportMap = React.forwardRef(
 
     const centroid = useMemo(
       () => calculateCentroid(polygonCoordinates),
-      [polygonCoordinates]
+      [polygonCoordinates],
     );
 
     const polygonBounds = useMemo(
       () => calculateBounds(polygonCoordinates),
-      [polygonCoordinates]
+      [polygonCoordinates],
     );
 
     const imageBounds = useMemo(
       () => calculateImageBounds(polygonCoordinates, 0.05),
-      [polygonCoordinates]
+      [polygonCoordinates],
     );
 
     const leafletCoordinates = useMemo(() => {
@@ -423,7 +427,7 @@ const FarmReportMap = React.forwardRef(
             typeof lat === "number" &&
             typeof lng === "number" &&
             !isNaN(lat) &&
-            !isNaN(lng)
+            !isNaN(lng),
         )
         .map(([lng, lat]) => [lat, lng]);
     }, [polygonCoordinates]);
@@ -453,8 +457,8 @@ const FarmReportMap = React.forwardRef(
             endDate: dateToUse,
             geometry: [polygonCoordinates],
             index,
-          })
-        )
+          }),
+        ),
       );
 
       Promise.all(fetchPromises).finally(() => {
@@ -483,7 +487,8 @@ const FarmReportMap = React.forwardRef(
         }
       };
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const toggleLegend = useCallback((indexName) => {
@@ -549,10 +554,7 @@ const FarmReportMap = React.forwardRef(
             isValidBounds(effectiveImageBounds);
 
           return (
-            <div
-              key={`${indexName}-${fieldId}`}
-              className="map-card-wrapper"
-            >
+            <div key={`${indexName}-${fieldId}`} className="map-card-wrapper">
               <div className="relative w-full h-[250px] rounded-xl overflow-hidden shadow-md bg-gray-900">
                 {showLoader && (
                   <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-[5000] rounded-xl">
@@ -571,13 +573,14 @@ const FarmReportMap = React.forwardRef(
                     <button
                       onClick={() => {
                         const dateToUse =
-                          selectedDate || new Date().toISOString().split("T")[0];
+                          selectedDate ||
+                          new Date().toISOString().split("T")[0];
                         dispatch(
                           fetchIndexDataForMap({
                             endDate: dateToUse,
                             geometry: [polygonCoordinates],
                             index: indexName,
-                          })
+                          }),
                         );
                       }}
                       className="mt-2 px-3 py-1 bg-[#344e41] text-white text-xs rounded hover:bg-[#5a7c6b] transition-colors"
@@ -642,10 +645,10 @@ const FarmReportMap = React.forwardRef(
                   minZoom={10}
                   attributionControl={false}
                   zoomControl={false}
-                  preferCanvas={true} 
+                  preferCanvas={true}
                 >
                   <MapResizer />
-                   <MapCaptureMode isPDFMode={hidePolygonForPDF} />
+                  <MapCaptureMode isPDFMode={hidePolygonForPDF} />
 
                   <TileLayer
                     attribution="© Google Maps"
@@ -694,15 +697,20 @@ const FarmReportMap = React.forwardRef(
               </div>
 
               {/* Color Palette Legend for PDF - Always visible when hidePolygonForPDF is true */}
-              {hidePolygonForPDF && layer?.legend && indexName !== "TRUE_COLOR" && (
-                <ColorBarLegend legend={layer.legend} indexName={TITLES[indexName]} />
-              )}
+              {hidePolygonForPDF &&
+                layer?.legend &&
+                indexName !== "TRUE_COLOR" && (
+                  <ColorBarLegend
+                    legend={layer.legend}
+                    indexName={TITLES[indexName]}
+                  />
+                )}
             </div>
           );
         })}
       </div>
     );
-  }
+  },
 );
 
 FarmReportMap.displayName = "FarmReportMap";

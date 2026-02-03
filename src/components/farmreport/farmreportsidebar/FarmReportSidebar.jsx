@@ -56,7 +56,7 @@ const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
   // Sort fields in descending order (latest first)
   const filteredFields = fields
     .filter((field) =>
-      field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
+      field.fieldName.toLowerCase().includes(searchQuery.toLowerCase()),
     )
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
@@ -67,7 +67,7 @@ const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
         lat: acc.lat + point.lat,
         lng: acc.lng + point.lng,
       }),
-      { lat: 0, lng: 0 }
+      { lat: 0, lng: 0 },
     );
     return {
       lat: (total.lat / field.length).toFixed(3),
@@ -84,7 +84,9 @@ const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Weather2 />
-            <h2 className="text-[18px] font-bold text-[#344e41]">Farm Report</h2>
+            <h2 className="text-[18px] font-bold text-[#344e41]">
+              Farm Report
+            </h2>
           </div>
           {/* Close Icon */}
           <div
@@ -150,7 +152,7 @@ const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
                 isSubscribed={isSubscribed}
                 onClick={() => {
                   setSelectedIndex(index);
-                  setSelectedField(field); // Pass full field object
+                  setSelectedField(field);
                   setIsSidebarVisible(false);
                 }}
               />
