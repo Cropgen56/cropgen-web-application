@@ -12,11 +12,9 @@ import {
   RainCloude,
 } from "../../../assets/image/weather/index.js";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
-import { selectHasWeatherAnalytics } from "../../../redux/slices/membershipSlice";
 
 function ForeCast({ onSubscribe, hasWeatherAnalytics }) {
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
-  // const hasWeatherAnalytics = useSelector(selectHasWeatherAnalytics);
 
   const weatherData = {
     currentConditions: {

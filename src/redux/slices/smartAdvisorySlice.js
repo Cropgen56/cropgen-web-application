@@ -4,39 +4,29 @@ import axios from "axios";
 const BASE_URL = process.env.REACT_APP_SMART_ADVISORY;
 
 /* =====================================================
-   SMART ADVISORY APIs
+   FETCH SMART ADVISORY
 ===================================================== */
-
-export const runSmartAdvisory = createAsyncThunk(
-  "smartAdvisory/runSmartAdvisory",
-  async ({ fieldId, geometryId, targetDate, language, token }, thunkAPI) => {
-    try {
-      const res = await axios.post(
-        `${BASE_URL}/advisory/${fieldId}/advisory/run`,
-        { geometryId, targetDate, language },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      return res.data.data;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data || err.message);
-    }
-  }
-);
-
 export const fetchSmartAdvisory = createAsyncThunk(
   "smartAdvisory/fetchSmartAdvisory",
   async ({ fieldId }, thunkAPI) => {
     try {
-      const res = await axios.get(`${BASE_URL}/advisory/${fieldId}?latest=true`);
-      return res.data;
+      const res = await axios.get(
+        `${BASE_URL}/advisory/${fieldId}?latest=true`,
+      );
+
+      return {
+        exists: res.data?.exists ?? false,
+        advisory: res.data?.advisories?.[0] || null,
+      };
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
 
+/* =====================================================
+   SEND WHATSAPP ADVISORY (UNCHANGED)
+===================================================== */
 export const sendFarmAdvisoryWhatsApp = createAsyncThunk(
   "smartAdvisory/sendFarmAdvisoryWhatsApp",
   async ({ phone, farmAdvisoryId, language }, thunkAPI) => {
@@ -46,58 +36,44 @@ export const sendFarmAdvisoryWhatsApp = createAsyncThunk(
         {
           phone,
           farmAdvisoryId,
-          language
-        }
+          language,
+        },
       );
 
       return res.data;
     } catch (err) {
-      return thunkAPI.rejectWithValue(
-        err.response?.data || err.message
-      );
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
-  }
+  },
 );
-
 
 /* =====================================================
    SLICE
 ===================================================== */
-
 const smartAdvisorySlice = createSlice({
   name: "smartAdvisory",
   initialState: {
-    /* advisory */
     loading: false,
+
     advisory: null,
+    exists: false, // 🔑 NEW (for polling & instant update)
     error: null,
 
     whatsappSending: false,
-  whatsappSuccess: false,
-  whatsappError: null,
+    whatsappSuccess: false,
+    whatsappError: null,
   },
 
   reducers: {
     clearSmartAdvisory(state) {
       state.advisory = null;
+      state.exists = false;
       state.error = null;
-    }
+    },
   },
 
   extraReducers: (builder) => {
     builder
-      /* ---------- Run Advisory ---------- */
-      .addCase(runSmartAdvisory.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(runSmartAdvisory.fulfilled, (state, action) => {
-        state.loading = false;
-        state.advisory = action.payload;
-      })
-      .addCase(runSmartAdvisory.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
 
       /* ---------- Fetch Advisory ---------- */
       .addCase(fetchSmartAdvisory.pending, (state) => {
@@ -105,33 +81,30 @@ const smartAdvisorySlice = createSlice({
       })
       .addCase(fetchSmartAdvisory.fulfilled, (state, action) => {
         state.loading = false;
-        state.advisory = action.payload?.advisories[0]
+        state.exists = action.payload.exists;
+        state.advisory = action.payload.advisory;
       })
       .addCase(fetchSmartAdvisory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      /* ---------- Send WhatsApp Advisory ---------- */
-.addCase(sendFarmAdvisoryWhatsApp.pending, (state) => {
-  state.whatsappSending = true;
-  state.whatsappSuccess = false;
-  state.whatsappError = null;
-})
-.addCase(sendFarmAdvisoryWhatsApp.fulfilled, (state) => {
-  state.whatsappSending = false;
-  state.whatsappSuccess = true;
-})
-.addCase(sendFarmAdvisoryWhatsApp.rejected, (state, action) => {
-  state.whatsappSending = false;
-  state.whatsappError = action.payload;
-});
 
-
+      /* ---------- WhatsApp ---------- */
+      .addCase(sendFarmAdvisoryWhatsApp.pending, (state) => {
+        state.whatsappSending = true;
+        state.whatsappSuccess = false;
+        state.whatsappError = null;
+      })
+      .addCase(sendFarmAdvisoryWhatsApp.fulfilled, (state) => {
+        state.whatsappSending = false;
+        state.whatsappSuccess = true;
+      })
+      .addCase(sendFarmAdvisoryWhatsApp.rejected, (state, action) => {
+        state.whatsappSending = false;
+        state.whatsappError = action.payload;
+      });
   },
 });
 
-export const {
-  clearSmartAdvisory,
-} = smartAdvisorySlice.actions;
-
+export const { clearSmartAdvisory } = smartAdvisorySlice.actions;
 export default smartAdvisorySlice.reducer;

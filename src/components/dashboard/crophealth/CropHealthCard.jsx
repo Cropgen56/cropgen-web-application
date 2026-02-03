@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Card from "react-bootstrap/Card";
 import * as turf from "@turf/turf";
 import SoilAnalysisChart from "./SoilAnalysisChart.jsx";
 import SoilHealthChart from "./SoilHealthChart.jsx";
@@ -9,7 +8,11 @@ import { fetchCrops } from "../../../redux/slices/cropSlice.js";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper.jsx";
 // import { selectHasCropHealthAndYield } from "../../../redux/slices/membershipSlice.js";
 
-const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe, hasCropHealthAndYield  }) => {
+const CropHealth = ({
+  selectedFieldsDetials,
+  onSubscribe,
+  hasCropHealthAndYield,
+}) => {
   const cropDetials = selectedFieldsDetials?.[0];
   const { sowingDate, field: corrdinatesPoint, cropName } = cropDetials || {};
   const dispatch = useDispatch();
@@ -21,8 +24,6 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe, hasCropHealthA
   const advisory = useSelector((state) => state.smartAdvisory.advisory);
   const advisoryLoading = useSelector((state) => state.smartAdvisory.loading);
 
- 
-
   useEffect(() => {
     dispatch(fetchCrops());
   }, [dispatch]);
@@ -30,7 +31,7 @@ const CropHealth = ({ selectedFieldsDetials, fields, onSubscribe, hasCropHealthA
   const cropInfo = useMemo(() => {
     if (!cropName || !crops?.length) return null;
     return crops.find(
-      (c) => c.cropName.toLowerCase() === cropName.toLowerCase()
+      (c) => c.cropName.toLowerCase() === cropName.toLowerCase(),
     );
   }, [cropName, crops]);
 

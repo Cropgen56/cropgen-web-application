@@ -6,15 +6,15 @@ export const fetchweatherData = createAsyncThunk(
   async ({ latitude, longitude }, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${latitude},${longitude}?key=NAJUNXK89Y3ZLPJL3NYH6BS4E`
+        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${latitude},${longitude}?key=NAJUNXK89Y3ZLPJL3NYH6BS4E`,
       );
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || "Failed to fetch weather data"
+        error.response?.data || "Failed to fetch weather data",
       );
     }
-  }
+  },
 );
 
 export const createAOI = createAsyncThunk(
@@ -26,7 +26,7 @@ export const createAOI = createAsyncThunk(
     try {
       const state = getState();
       const existingAOI = state.weather.aois?.find(
-        (aoi) => aoi.name === payload.name
+        (aoi) => aoi.name === payload.name,
       );
 
       if (existingAOI) {
@@ -56,7 +56,7 @@ export const createAOI = createAsyncThunk(
         await dispatch(fetchAOIs()).unwrap();
         const state = getState();
         const existingAOI = state.weather.aois?.find(
-          (aoi) => aoi.name === payload.name
+          (aoi) => aoi.name === payload.name,
         );
         if (existingAOI) {
           return existingAOI.id;
@@ -65,7 +65,7 @@ export const createAOI = createAsyncThunk(
 
       return rejectWithValue(error.response?.data || "Failed to create AOI");
     }
-  }
+  },
 );
 
 export const fetchAOIs = createAsyncThunk(
@@ -88,7 +88,7 @@ export const fetchAOIs = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to fetch AOIs");
     }
-  }
+  },
 );
 
 export const fetchForecastData = createAsyncThunk(
@@ -105,10 +105,10 @@ export const fetchForecastData = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || "Failed to fetch forecast data"
+        error.response?.data || "Failed to fetch forecast data",
       );
     }
-  }
+  },
 );
 
 export const fetchHistoricalWeather = createAsyncThunk(
@@ -126,10 +126,10 @@ export const fetchHistoricalWeather = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || "Failed to fetch historical weather data"
+        error.response?.data || "Failed to fetch historical weather data",
       );
     }
-  }
+  },
 );
 
 const weatherSlice = createSlice({

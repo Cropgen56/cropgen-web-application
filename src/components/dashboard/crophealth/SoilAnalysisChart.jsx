@@ -49,7 +49,7 @@ const NutrientBar = React.memo(
         </div>
       </div>
     );
-  }
+  },
 );
 NutrientBar.displayName = "NutrientBar";
 
@@ -63,7 +63,6 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
   const farmDetails = selectedFieldsDetials[0] || {};
   const { cropName = "Crop", variety = "", sowingDate } = farmDetails;
 
-  const satelliteState = useSelector((s) => s.satellite || {});
   const smartAdvisory = useSelector((s) => s.smartAdvisory?.advisory || null);
   const advisoryLoading = Boolean(useSelector((s) => s.smartAdvisory?.loading));
 
@@ -74,7 +73,7 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
     const now = new Date();
     return Math.max(
       1,
-      Math.floor((now.getTime() - sow.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      Math.floor((now.getTime() - sow.getTime()) / (1000 * 60 * 60 * 24)) + 1,
     );
   }, [sowingDate]);
 
