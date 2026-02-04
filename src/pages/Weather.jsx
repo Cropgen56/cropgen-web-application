@@ -12,16 +12,15 @@ import WeatherSidebar from "../components/weather/weathersidebar/WeatherSidebar"
 import { getFarmFields } from "../redux/slices/farmSlice";
 import { useNavigate } from "react-router-dom";
 import img1 from "../assets/image/Group 31.png";
-import {
-  fetchForecastData,
-  createAOI,
-  fetchAOIs,
-} from "../redux/slices/weatherSlice";
+import { fetchForecastData, fetchAOIs } from "../redux/slices/weatherSlice"; // ← sirf zaroori imports, createAOI hata diya
 import WeatherSkeleton from "../components/Skeleton/WeatherSkeleton";
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 import FieldDropdown from "../components/comman/FieldDropdown";
+
+import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
+import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherForecast";
 
 const formatCoordinates = (data) => {
   if (!data || data.length === 0) return [];
@@ -36,8 +35,9 @@ const formatCoordinates = (data) => {
 
 const Weather = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const user = useSelector((state) => state?.auth?.user);
-  const authToken = useSelector((state) => state?.auth?.token);
 
   const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
   const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
@@ -59,8 +59,13 @@ const Weather = () => {
   const [historicalData, setHistoricalData] = useState(null);
   const [dateRange, setDateRange] = useState(null);
 
-  const navigate = useNavigate();
+  console.log(selectedField);
 
+  // Hook handles AOI creation/lookup — bilkul Dashboard jaisa pattern
+  const { aoiId } = useAoiManagement(selectedField);
+  const { forecast, units } = useWeatherForecast(aoiId);
+
+  // Initial fetch AOIs + fields (Dashboard style)
   useEffect(() => {
     if (user?.id) {
       dispatch(fetchAOIs());
@@ -68,6 +73,7 @@ const Weather = () => {
     }
   }, [dispatch, user?.id]);
 
+  // Auto-select last field if none selected (Dashboard style)
   useEffect(() => {
     if (fields.length > 0 && !selectedField) {
       setSelectedField(fields[fields.length - 1]);
@@ -94,14 +100,14 @@ const Weather = () => {
   const handleSkipMembership = useCallback(() => {
     setShowMembershipModalLocal(false);
     message.info(
-      "You can activate premium anytime from the locked content sections"
+      "You can activate premium anytime from the locked content sections",
     );
   }, []);
 
   const handleCloseMembershipModal = useCallback(() => {
     setShowMembershipModalLocal(false);
     message.info(
-      "You can activate premium anytime from the locked content sections"
+      "You can activate premium anytime from the locked content sections",
     );
   }, []);
 
@@ -115,7 +121,7 @@ const Weather = () => {
       setHistoricalData(data);
       setDateRange({ startDate, endDate });
     },
-    []
+    [],
   );
 
   const handleClearHistoricalData = useCallback(() => {
@@ -123,6 +129,7 @@ const Weather = () => {
     setDateRange(null);
   }, []);
 
+  // Payload ab bhi rakha hai kyunki forecast fetch mein potentially use ho sakta hai
   const payload = useMemo(() => {
     if (!selectedField?.field?.length) return null;
     const geometryCoords = formatCoordinates(selectedField.field);
@@ -135,15 +142,7 @@ const Weather = () => {
     };
   }, [selectedField]);
 
-  useEffect(() => {
-    if (payload && payload.geometry.coordinates[0].length > 0) {
-      const existingAOI = aois.find((aoi) => aoi.name === payload.name);
-      if (!existingAOI) {
-        dispatch(createAOI(payload));
-      }
-    }
-  }, [payload, dispatch, aois]);
-
+  // Forecast fetch — Dashboard ke pattern se inspired (matching AOI se)
   useEffect(() => {
     if (selectedField && aois.length > 0) {
       const matchingAOI = aois.find((aoi) => aoi.name === selectedField._id);
@@ -153,6 +152,7 @@ const Weather = () => {
     }
   }, [dispatch, selectedField, aois]);
 
+  // Clear historical data on field change
   useEffect(() => {
     handleClearHistoricalData();
   }, [selectedField, handleClearHistoricalData]);
@@ -214,7 +214,6 @@ const Weather = () => {
       </AnimatePresence>
 
       <div className="m-0 p-0 w-full flex flex-row">
-        {/* Desktop Sidebar - Hidden on tablet/mobile */}
         {isSidebarVisible && (
           <div className="hidden lg:block">
             <WeatherSidebar
@@ -226,9 +225,7 @@ const Weather = () => {
           </div>
         )}
 
-        {/* Main Content */}
         <div className="w-full bg-[#5f7e6f] m-0 p-0 lg:ml-[320px] h-screen overflow-y-auto overflow-x-hidden">
-          {/* Tablet/Mobile Dropdown - Hidden on desktop */}
           <div className="lg:hidden p-3">
             <FieldDropdown
               fields={fields}
