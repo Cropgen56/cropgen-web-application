@@ -19,7 +19,7 @@ const PremiumPageWrapper = ({ children, isLocked, onSubscribe, title }) => {
         transition={{ duration: 0.3 }}
         className="absolute inset-0 flex items-center justify-center"
         style={{
-          background: "rgba(52, 78, 65, 0.55)", // #344E41 with 85% opacity
+          background: "rgba(52, 78, 65, 0.55)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
         }}

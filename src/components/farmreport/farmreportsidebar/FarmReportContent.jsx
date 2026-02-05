@@ -110,9 +110,7 @@ const FarmReportContent = ({
     hasEvapotranspiration,
     hasAgronomicInsights,
     hasCropGrowthMonitoring,
-  } = featureAccess;
-
-  console.log("Feature Access:", isFieldDataReady);
+  } = featureAccess || {};
 
   return (
     <>

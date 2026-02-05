@@ -25,17 +25,6 @@ import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherFore
 
 import img1 from "../assets/image/Group 31.png";
 
-const formatCoordinates = (data) => {
-  if (!data || data.length === 0) return [];
-  const coords = data.map((p) => [p.lng, p.lat]);
-  const first = coords[0];
-  const last = coords[coords.length - 1];
-  if (first[0] !== last[0] || first[1] !== last[1]) {
-    coords.push(first);
-  }
-  return coords;
-};
-
 const Weather = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -91,6 +80,21 @@ const Weather = () => {
     field: selectedField,
     featureKey: "weatherAnalytics",
   });
+
+  useEffect(() => {
+    if (!selectedField || !fields.length) return;
+
+    const updatedField = fields.find((f) => f._id === selectedField._id);
+
+    // Only update when subscription actually changes
+    if (
+      updatedField &&
+      JSON.stringify(updatedField.subscription) !==
+        JSON.stringify(selectedField.subscription)
+    ) {
+      setSelectedField(updatedField);
+    }
+  }, [fields, selectedField]);
 
   /* ---------- EMPTY STATE (UNCHANGED UI) ---------- */
 

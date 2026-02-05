@@ -1,4 +1,3 @@
-
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   createSubscription,
@@ -6,87 +5,80 @@ import {
   fetchAllSubscriptions,
 } from "../../api/subscriptionApi";
 
+/* -------------------- THUNKS -------------------- */
+
 export const fetchSubscriptions = createAsyncThunk(
-  "subscriptions/fetchSubscriptions",
+  "subscription/fetchSubscriptions",
   async (_, { getState, rejectWithValue }) => {
     try {
-      const { auth } = getState();
-      const token = auth.token;
-      if (!token) {
-        return rejectWithValue("No authentication token available");
-      }
-      const response = await fetchAllSubscriptions(token);
-      return response;
+      const token = getState().auth.token;
+      if (!token) throw new Error("No authentication token available");
+      return await fetchAllSubscriptions(token);
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to fetch subscriptions");
+      return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
 export const createUserSubscription = createAsyncThunk(
-  "subscriptions/createUserSubscription",
-  async (subscriptionData, { getState, rejectWithValue }) => {
+  "subscription/createUserSubscription",
+  async (payload, { getState, rejectWithValue }) => {
     try {
-      const { auth } = getState();
-      const token = auth.token;
-      if (!token) {
-        return rejectWithValue("No authentication token available");
-      }
-      const response = await createSubscription(subscriptionData, token);
-      return response;
+      const token = getState().auth.token;
+      if (!token) throw new Error("No authentication token available");
+      return await createSubscription(payload, token);
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to create subscription");
+      return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
 export const verifyUserSubscriptionPayment = createAsyncThunk(
-  "subscriptions/verifyUserSubscriptionPayment",
+  "subscription/verifyUserSubscriptionPayment",
   async ({ subscriptionId, paymentData }, { getState, rejectWithValue }) => {
     try {
-      const { auth } = getState();
-      const token = auth.token;
-      if (!token) {
-        return rejectWithValue("No authentication token available");
-      }
-      const response = await verifySubscriptionPayment(
+      const token = getState().auth.token;
+      if (!token) throw new Error("No authentication token available");
+      return await verifySubscriptionPayment(
         subscriptionId,
         paymentData,
-        token
+        token,
       );
-      return response;
     } catch (error) {
-      return rejectWithValue(error.message || "Failed to verify payment");
+      return rejectWithValue(error.message);
     }
-  }
+  },
 );
 
+/* -------------------- SLICE -------------------- */
+
 const subscriptionSlice = createSlice({
-  name: "subscriptions",
+  name: "subscription",
   initialState: {
     subscriptions: [],
     loading: false,
     error: null,
-    // Add payment success state
+
+    // ✅ Single source of truth for modal
     paymentSuccess: null,
-    showPaymentSuccessModal: false,
   },
+
   reducers: {
-    // Add payment success actions
     setPaymentSuccess: (state, action) => {
       state.paymentSuccess = action.payload;
-      state.showPaymentSuccessModal = true;
     },
     clearPaymentSuccess: (state) => {
       state.paymentSuccess = null;
-      state.showPaymentSuccessModal = false;
     },
     clearError: (state) => {
       state.error = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
+
+      /* ---- FETCH PLANS ---- */
       .addCase(fetchSubscriptions.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -99,34 +91,39 @@ const subscriptionSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      /* ---- CREATE SUB ---- */
       .addCase(createUserSubscription.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(createUserSubscription.fulfilled, (state, action) => {
+      .addCase(createUserSubscription.fulfilled, (state) => {
         state.loading = false;
       })
       .addCase(createUserSubscription.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
+
+      /* ---- VERIFY PAYMENT ---- */
       .addCase(verifyUserSubscriptionPayment.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(verifyUserSubscriptionPayment.fulfilled, (state, action) => {
         state.loading = false;
-        // Optionally set payment success here if the API returns the necessary data
+
         if (action.payload?.success) {
           const data = action.payload.data || {};
+
           state.paymentSuccess = {
             fieldName: data.fieldName,
             planName: data.planName,
             features: data.features || [],
             daysLeft: data.daysLeft,
             transactionId: data.transactionId,
+            subscriptionId: data.subscriptionId,
           };
-          state.showPaymentSuccessModal = true;
         }
       })
       .addCase(verifyUserSubscriptionPayment.rejected, (state, action) => {
@@ -136,11 +133,12 @@ const subscriptionSlice = createSlice({
   },
 });
 
-// Export actions
-export const { setPaymentSuccess, clearPaymentSuccess, clearError } = subscriptionSlice.actions;
+/* -------------------- EXPORTS -------------------- */
 
-// Export selectors
-export const selectPaymentSuccess = (state) => state.subscription?.paymentSuccess;
-export const selectShowPaymentSuccessModal = (state) => state.subscription?.showPaymentSuccessModal;
+export const { setPaymentSuccess, clearPaymentSuccess, clearError } =
+  subscriptionSlice.actions;
+
+export const selectPaymentSuccess = (state) =>
+  state.subscription.paymentSuccess;
 
 export default subscriptionSlice.reducer;

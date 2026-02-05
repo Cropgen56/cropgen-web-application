@@ -6,30 +6,18 @@ import React, {
   useRef,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
-import { message } from "antd";
 import { useNavigate } from "react-router-dom";
-import { ArrowDownToLine, LoaderCircle, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmReportSidebar";
 import FarmReportContent from "../components/farmreport/farmreportsidebar/FarmReportContent";
-import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
-import SubscriptionModal from "../components/subscription/SubscriptionModal";
-import PricingOverlay from "../components/pricing/PricingOverlay";
-import PaymentSuccessModal from "../components/subscription/PaymentSuccessModal";
-import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
 import FieldDropdown from "../components/comman/FieldDropdown";
+import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
 
-import {
-  getFarmFields,
-  updateFieldSubscription,
-} from "../redux/slices/farmSlice";
-import {
-  setPaymentSuccess,
-  clearPaymentSuccess,
-  selectPaymentSuccess,
-  selectShowPaymentSuccessModal,
-} from "../redux/slices/subscriptionSlice";
+import FeatureGuard from "../components/subscription/FeatureGuard";
+import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
+
+import { getFarmFields } from "../redux/slices/farmSlice";
 import { clearIndexDataByType } from "../redux/slices/satelliteSlice";
 
 import useFarmReportPDF from "../components/farmreport/useFarmReportPDF";
@@ -41,111 +29,62 @@ import img1 from "../assets/image/Group 31.png";
 const FarmReport = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const user = useSelector((s) => s.auth?.user);
   const fields = useSelector((s) => s.farmfield?.fields || []);
   const fieldsLoading = useSelector((s) => s.farmfield?.loading);
 
-  const paymentSuccess = useSelector(selectPaymentSuccess);
-  const showPaymentSuccessModalRedux = useSelector(
-    selectShowPaymentSuccessModal,
-  );
-
   const [selectedField, setSelectedField] = useState(null);
-  const [hasManuallySelected, setHasManuallySelected] = useState(false);
-  const [showMembershipModal, setShowMembershipModal] = useState(false);
-  const [showPricingOverlay, setShowPricingOverlay] = useState(false);
-  const [pricingFieldData, setPricingFieldData] = useState(null);
-  const [isRefreshingSubscription, setIsRefreshingSubscription] =
-    useState(false);
-
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const mainReportRef = useRef(null);
-
-  /* ================= SELECTED FIELD ================= */
-  const selectedFieldDetails = useMemo(
-    () => (selectedField ? selectedField : null),
-    [selectedField],
-  );
-
-  /* ================= FEATURE ACCESS (✅ FIXED) ================= */
-  const featureAccess = useMemo(() => {
-    const hasSubscription =
-      selectedFieldDetails?.subscription?.hasActiveSubscription;
-
-    const planFeatures =
-      selectedFieldDetails?.subscription?.plan?.features || {};
-
-    const hasFeature = (key) => hasSubscription && (planFeatures[key] ?? true);
-
-    return {
-      hasFarmReportAccess: !!hasSubscription,
-      hasCropHealthAndYield: hasFeature("cropHealthAndYield"),
-      hasWeatherAnalytics: hasFeature("weatherAnalytics"),
-      hasVegetationIndices: hasFeature("vegetationIndices"),
-      hasWaterIndices: hasFeature("waterIndices"),
-      hasEvapotranspiration: hasFeature("evapotranspirationMonitoring"),
-      hasAgronomicInsights: hasFeature("agronomicInsights"),
-      hasWeeklyAdvisoryReports: hasFeature("weeklyAdvisoryReports"),
-      hasCropGrowthMonitoring: hasFeature("cropGrowthMonitoring"),
-      hasSubscription: !!hasSubscription,
-    };
-  }, [selectedFieldDetails]);
-
-  /* ================= AOI + WEATHER ================= */
-  const { aoiId } = useAoiManagement(selectedFieldDetails);
-  const { forecast, units } = useWeatherForecast(aoiId);
-
-  /* ================= PDF ================= */
-  const {
-    isDownloading,
-    downloadProgress,
-    isPreparedForPDF,
-    downloadFarmReportPDF,
-  } = useFarmReportPDF(selectedFieldDetails);
 
   /* ================= FETCH FIELDS ================= */
   useEffect(() => {
     if (user?.id) dispatch(getFarmFields(user.id));
   }, [dispatch, user?.id]);
 
-  /* ================= CLEAR DATA ================= */
+  /* ================= AUTO SELECT FIELD ================= */
   useEffect(() => {
-    dispatch(clearIndexDataByType());
-  }, [selectedFieldDetails?._id, dispatch]);
-
-  /* ================= HANDLERS ================= */
-  const handleFieldSelect = useCallback((field) => {
-    setSelectedField(field);
-    setHasManuallySelected(true);
-  }, []);
-
-  const handleBack = useCallback(() => {
-    setSelectedField(null);
-    setHasManuallySelected(false);
-  }, []);
-
-  const handleSubscribe = useCallback(() => {
-    if (!selectedFieldDetails) {
-      message.warning("Please select a field first");
-      return;
+    if (!selectedField && fields.length > 0) {
+      setSelectedField(fields[fields.length - 1]);
     }
+  }, [fields, selectedField]);
 
-    setPricingFieldData({
-      id: selectedFieldDetails._id,
-      name: selectedFieldDetails.fieldName || selectedFieldDetails.farmName,
-      areaInHectares:
-        selectedFieldDetails.areaInHectares ||
-        selectedFieldDetails.acre * 0.404686,
-    });
+  /* ================= SYNC FIELD AFTER SUBSCRIPTION ================= */
+  useEffect(() => {
+    if (!selectedField || !fields.length) return;
 
-    setShowPricingOverlay(true);
-    setShowMembershipModal(false);
-  }, [selectedFieldDetails]);
+    const updatedField = fields.find((f) => f._id === selectedField._id);
 
-  const handleDownloadPDF = useCallback(() => {
-    downloadFarmReportPDF(mainReportRef);
-  }, [downloadFarmReportPDF]);
+    if (
+      updatedField &&
+      JSON.stringify(updatedField.subscription) !==
+        JSON.stringify(selectedField.subscription)
+    ) {
+      setSelectedField(updatedField);
+    }
+  }, [fields, selectedField]);
+
+  /* ================= CLEAR OLD DATA ================= */
+  useEffect(() => {
+    if (selectedField?._id) {
+      dispatch(clearIndexDataByType());
+    }
+  }, [dispatch, selectedField?._id]);
+
+  /* ================= AOI + WEATHER ================= */
+  const { aoiId } = useAoiManagement(selectedField);
+  const { forecast, units } = useWeatherForecast(aoiId);
+
+  /* ================= PDF ================= */
+  const { isDownloading, isPreparedForPDF, downloadFarmReportPDF } =
+    useFarmReportPDF(selectedField);
+
+  /* ================= FEATURE GUARD ================= */
+  const farmReportGuard = useSubscriptionGuard({
+    field: selectedField,
+    featureKey: "cropHealthAndYield",
+  });
 
   /* ================= STATES ================= */
   if (fieldsLoading) {
@@ -172,88 +111,57 @@ const FarmReport = () => {
 
   /* ================= RENDER ================= */
   return (
-    <>
-      <SubscriptionModal
-        isOpen={showMembershipModal}
-        onClose={() => setShowMembershipModal(false)}
-        onSubscribe={handleSubscribe}
-      />
-
-      <PaymentSuccessModal
-        isOpen={showPaymentSuccessModalRedux}
-        onClose={() => dispatch(clearPaymentSuccess())}
-        fieldName={paymentSuccess?.fieldName}
-      />
-
-      <AnimatePresence>
-        {showPricingOverlay && pricingFieldData && (
-          <motion.div
-            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <PricingOverlay
-              selectedField={pricingFieldData}
-              onClose={() => setShowPricingOverlay(false)}
-              onPaymentSuccess={() => {}}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="flex h-screen bg-[#344E41] text-white">
+    <div className="flex h-screen bg-[#344E41] text-white">
+      {/* Sidebar */}
+      {isSidebarVisible && (
         <div className="hidden lg:flex">
-          {isSidebarVisible && (
-            <FarmReportSidebar
-              setSelectedField={handleFieldSelect}
-              setIsSidebarVisible={setIsSidebarVisible}
-            />
-          )}
+          <FarmReportSidebar
+            setSelectedField={setSelectedField}
+            setIsSidebarVisible={setIsSidebarVisible} // ✅ FIX
+          />
         </div>
+      )}
 
-        <div className="flex-1 p-4 overflow-y-auto">
-          {!selectedField ? (
-            <FieldDropdown
-              fields={fields}
-              selectedField={selectedField}
-              setSelectedField={handleFieldSelect}
-            />
-          ) : (
-            <>
-              <div className="mb-3 flex justify-between bg-[#2d4339] p-2 rounded">
-                <button
-                  onClick={handleBack}
-                  className="flex items-center gap-1"
-                >
-                  <ChevronLeft size={16} /> Back
-                </button>
+      {/* Main Content */}
+      <div className="flex-1 p-4 overflow-y-auto">
+        {!selectedField ? (
+          <FieldDropdown
+            fields={fields}
+            selectedField={selectedField}
+            setSelectedField={setSelectedField}
+          />
+        ) : (
+          <>
+            <div className="mb-3 flex justify-between bg-[#2d4339] p-2 rounded">
+              <button
+                onClick={() => setSelectedField(null)}
+                className="flex items-center gap-1"
+              >
+                <ChevronLeft size={16} /> Back
+              </button>
 
-                <button
-                  onClick={handleDownloadPDF}
-                  className="bg-[#0C2214] text-white px-4 py-1 rounded"
-                >
-                  {isDownloading ? "Generating..." : "PDF"}
-                </button>
+              <button
+                onClick={() => downloadFarmReportPDF(mainReportRef)}
+                className="bg-[#0C2214] text-white px-4 py-1 rounded"
+              >
+                {isDownloading ? "Generating..." : "PDF"}
+              </button>
+            </div>
+
+            <FeatureGuard guard={farmReportGuard} title="Farm Report">
+              <div ref={mainReportRef}>
+                <FarmReportContent
+                  selectedFieldDetails={selectedField}
+                  forecast={forecast}
+                  units={units}
+                  isPreparedForPDF={isPreparedForPDF}
+                />
               </div>
-
-              <PremiumPageWrapper title="Farm Report">
-                <div ref={mainReportRef}>
-                  <FarmReportContent
-                    selectedFieldDetails={selectedFieldDetails}
-                    forecast={forecast}
-                    units={units}
-                    isPreparedForPDF={isPreparedForPDF}
-                    featureAccess={featureAccess}
-                    onSubscribe={handleSubscribe}
-                  />
-                </div>
-              </PremiumPageWrapper>
-            </>
-          )}
-        </div>
+            </FeatureGuard>
+          </>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

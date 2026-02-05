@@ -6,32 +6,41 @@ export const useSubscriptionGuard = ({ field, featureKey }) => {
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
+  /**
+   * FEATURE ACCESS DECISION (FINAL, CORRECT)
+   */
   const hasFeatureAccess = useMemo(() => {
     if (!field?.subscription) return false;
 
-    // Plan-based subscription (Weather, Operation)
-    if (field.subscription?.plan?.features) {
-      return Boolean(field.subscription.plan.features[featureKey]);
+    const sub = field.subscription;
+
+    // Must be active (trial or paid)
+    if (sub.active !== true && sub.hasActiveSubscription !== true) {
+      return false;
     }
 
-    // Direct subscription (Smart Advisory)
-    if (
-      field.subscription?.hasActiveSubscription === true ||
-      field.subscription?.active === true
-    ) {
-      return true;
+    // Feature-level access (trial & paid handled same way)
+    if (featureKey && sub.plan?.features) {
+      return Boolean(sub.plan.features[featureKey]);
     }
 
-    return false;
+    // No featureKey provided → allow if active
+    return true;
   }, [field, featureKey]);
 
+  /**
+   * SUBSCRIBE HANDLER
+   */
   const handleSubscribe = useCallback(() => {
     if (!field) {
       message.warning("Please select a field first");
       return;
     }
 
-    const areaInHectares = field?.areaInHectares || field?.acre * 0.404686 || 5;
+    const areaInHectares =
+      field?.areaInHectares ||
+      (Number.isFinite(field?.acre) ? field.acre * 0.40468564224 : 0) ||
+      5;
 
     setPricingFieldData({
       id: field._id,
@@ -46,9 +55,11 @@ export const useSubscriptionGuard = ({ field, featureKey }) => {
 
   return {
     hasFeatureAccess,
+
     showMembershipModal,
     showPricingOverlay,
     pricingFieldData,
+
     handleSubscribe,
     closeMembershipModal: () => setShowMembershipModal(false),
     closePricingOverlay: () => {
