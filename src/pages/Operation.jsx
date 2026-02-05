@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import img1 from "../assets/image/Group 31.png";
 import FieldDropdown from "../components/comman/FieldDropdown";
 
-import FeatureGuard from "../components/subscription/FeatureGuard";
+import FeatureGuard from "../components/subscription/FeatureGuardComponent";
 import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
 
 const Operation = () => {

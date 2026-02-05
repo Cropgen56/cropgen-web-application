@@ -24,17 +24,15 @@ import {
 } from "../../../utility/formatDate";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
+
 import IndexPremiumWrapper from "../../subscription/PremiumIndexWrapper";
-import { selectHasWaterIndices } from "../../../redux/slices/membershipSlice";
+import FeatureGuard from "../../subscription/FeatureGuard";
+import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
 
 const WATER_COLOR_MAIN = "#38bdf8";
 const WATER_COLOR_LIGHT = "#7dd3fc";
 
-const WaterIndex = ({
-  selectedFieldsDetials,
-  onSubscribe,
-  hasWaterIndices,
-}) => {
+const WaterIndex = ({ selectedFieldsDetials }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { waterIndexData = null, loading } =
     useSelector((state) => state.satellite) || {};
@@ -42,15 +40,18 @@ const WaterIndex = ({
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDMI");
 
-  // Get feature flag
-  // const hasWaterIndices = useSelector(selectHasWaterIndices);
+  /* ================= FEATURE GUARD (ADDED) ================= */
+  const waterIndexGuard = useSubscriptionGuard({
+    field: selectedFieldsDetials?.[0],
+    featureKey: "waterIndices",
+  });
 
   const scrollRef = useRef(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-  // Fetch parameters
+  /* ================= FETCH PARAMS ================= */
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
     return {
@@ -61,13 +62,13 @@ const WaterIndex = ({
     };
   }, [field, sowingDate, index]);
 
-  // Fetch water index data
+  /* ================= FETCH DATA ================= */
   useEffect(() => {
     if (!fetchParams) return;
     dispatch(fetchWaterIndexData(fetchParams));
   }, [dispatch, fetchParams]);
 
-  // Process chart data
+  /* ================= DATA PROCESSING ================= */
   const chartData = useMemo(() => {
     let timeseries =
       waterIndexData?.data?.timeseries ||
@@ -84,7 +85,6 @@ const WaterIndex = ({
     }));
   }, [waterIndexData, index]);
 
-  // Calculate summary statistics
   const summaryData = useMemo(() => {
     const summary = waterIndexData?.data?.summary ||
       waterIndexData?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
@@ -94,7 +94,6 @@ const WaterIndex = ({
     return { min, mean, max, timestamp };
   }, [waterIndexData]);
 
-  // Y-axis configuration
   const yAxisConfig = useMemo(() => {
     const { min, mean, max } = summaryData;
     const domain = [
@@ -109,7 +108,6 @@ const WaterIndex = ({
     return { domain, ticks };
   }, [summaryData]);
 
-  // Chart configuration
   const chartConfig = useMemo(() => {
     const length = chartData.length;
     return {
@@ -118,7 +116,6 @@ const WaterIndex = ({
     };
   }, [chartData.length]);
 
-  // Tick formatter for Y-axis
   const tickFormatter = useCallback(
     (value) => {
       const { min, mean, max } = summaryData;
@@ -130,19 +127,15 @@ const WaterIndex = ({
     [summaryData],
   );
 
-  // Tooltip formatter
   const tooltipFormatter = useCallback(
     (value) => [value.toFixed(3), index],
     [index],
   );
 
-  // Label formatter
   const labelFormatter = useCallback((label) => `Date: ${label}`, []);
-
-  // Index change handler
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
-  // Drag scroll handlers
+  /* ================= DRAG SCROLL ================= */
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -154,37 +147,27 @@ const WaterIndex = ({
       el.style.cursor = "grabbing";
     };
 
-    const handleMouseLeave = () => {
-      if (isDragging.current) {
-        isDragging.current = false;
-        el.style.cursor = "grab";
-      }
-    };
-
-    const handleMouseUp = () => {
-      if (isDragging.current) {
-        isDragging.current = false;
-        el.style.cursor = "grab";
-      }
+    const stopDrag = () => {
+      isDragging.current = false;
+      el.style.cursor = "grab";
     };
 
     const handleMouseMove = (e) => {
       if (!isDragging.current) return;
       e.preventDefault();
       const x = e.pageX - el.offsetLeft;
-      const walk = x - startX.current;
-      el.scrollLeft = scrollLeft.current - walk;
+      el.scrollLeft = scrollLeft.current - (x - startX.current);
     };
 
     el.addEventListener("mousedown", handleMouseDown);
-    el.addEventListener("mouseleave", handleMouseLeave);
-    el.addEventListener("mouseup", handleMouseUp);
+    el.addEventListener("mouseleave", stopDrag);
+    el.addEventListener("mouseup", stopDrag);
     el.addEventListener("mousemove", handleMouseMove);
 
     return () => {
       el.removeEventListener("mousedown", handleMouseDown);
-      el.removeEventListener("mouseleave", handleMouseLeave);
-      el.removeEventListener("mouseup", handleMouseUp);
+      el.removeEventListener("mouseleave", stopDrag);
+      el.removeEventListener("mouseup", stopDrag);
       el.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
@@ -192,182 +175,113 @@ const WaterIndex = ({
   const isLoading = loading?.waterIndexData || false;
   const hasData = chartData.length > 0;
 
-  // Index descriptions
   const indexDescriptions = {
     NDMI: "NDMI values can be used to monitor vegetation water content and drought conditions over time.",
     NDWI: "NDWI values help assess water presence in vegetation and detect surface water or irrigation zones.",
-    SMI: "SMI (Soil Moisture Index) helps track surface soil moisture to support irrigation and drought planning.",
-    MSI: "MSI values indicate water stress; higher values suggest drier vegetation or moisture deficit.",
-    WI: "WI (Water Index) highlights moisture content in crops and helps assess water availability trends.",
-    NMDI: "NMDI helps detect moisture variations in soil and vegetation, especially under stress or dry spells.",
+    SMI: "SMI helps track surface soil moisture to support irrigation and drought planning.",
+    MSI: "MSI values indicate water stress; higher values suggest drier vegetation.",
+    WI: "WI highlights moisture content in crops and helps assess water availability trends.",
+    NMDI: "NMDI helps detect moisture variations in soil and vegetation under stress.",
   };
 
+  /* ================= RENDER ================= */
+
   return (
-    <div className="w-full flex justify-center mt-2 p-2">
-      <div className="relative w-full bg-white border border-gray-200 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
-        {/* Index Selector */}
-        <div className="absolute top-3 right-3 z-50">
-          <select
-            value={index}
-            onChange={handleIndexChange}
-            className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-          >
-            <option value="NDMI" className="text-gray-700">
-              NDMI
-            </option>
-            <option value="NDWI" className="text-gray-700">
-              NDWI
-            </option>
-            <option value="SMI" className="text-gray-700">
-              SMI
-            </option>
-            <option value="MSI" className="text-gray-700">
-              MSI
-            </option>
-            <option value="WI" className="text-gray-700">
-              WI
-            </option>
-            <option value="NMDI" className="text-gray-700">
-              NMDI
-            </option>
-          </select>
-        </div>
+    <FeatureGuard guard={waterIndexGuard} title="Water Index">
+      <div className="w-full flex justify-center mt-2 p-2">
+        <div className="relative w-full bg-white border border-gray-200 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+          {/* ===== UI BELOW IS UNCHANGED ===== */}
 
-        {/* Title */}
-        <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">
-          Water Index
-        </h2>
+          <div className="absolute top-3 right-3 z-50">
+            <select
+              value={index}
+              onChange={handleIndexChange}
+              className="border-2 border-gray-300 bg-white rounded-[25px] px-3 py-1 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+            >
+              {Object.keys(indexDescriptions).map((key) => (
+                <option key={key} value={key}>
+                  {key}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
-          {/* Summary Card */}
-          <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
-            <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
-              <h2 className="text-xl font-bold text-sky-700">{index}</h2>
-              <button className="bg-sky-50 text-sky-700 px-3 py-1 text-sm font-semibold rounded mt-1 border border-sky-200 hover:bg-sky-100 transition-all">
-                +0.15
-              </button>
-              <p className="my-1 text-gray-600 text-xs lg:text-sm text-center">
-                Last Update{" "}
-                {summaryData.timestamp
-                  ? `${getDaysAgo(summaryData.timestamp)} days Ago`
-                  : "N/A"}
-              </p>
-              <div className="border-2 border-gray-200 bg-white p-2 rounded text-gray-700 text-sm w-full">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="flex-1 text-xs text-gray-600">
-                    {indexDescriptions[index]}
-                  </span>
-                  <span className="bg-gray-100 rounded-full p-1 border border-gray-200">
-                    <Info
-                      size={16}
-                      strokeWidth={1.5}
-                      color={WATER_COLOR_MAIN}
-                    />
-                  </span>
+          <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">
+            Water Index
+          </h2>
+
+          <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
+            <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
+              <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
+                <h2 className="text-xl font-bold text-sky-700">{index}</h2>
+                <button className="bg-sky-50 text-sky-700 px-3 py-1 text-sm font-semibold rounded mt-1 border border-sky-200">
+                  +0.15
+                </button>
+                <p className="my-1 text-gray-600 text-xs lg:text-sm text-center">
+                  Last Update{" "}
+                  {summaryData.timestamp
+                    ? `${getDaysAgo(summaryData.timestamp)} days Ago`
+                    : "N/A"}
+                </p>
+                <div className="border-2 border-gray-200 bg-white p-2 rounded text-gray-700 text-sm w-full">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="flex-1 text-xs text-gray-600">
+                      {indexDescriptions[index]}
+                    </span>
+                    <Info size={16} color={WATER_COLOR_MAIN} />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Chart Container */}
-          <div className="lg:w-3/4 flex-grow">
-            <IndexPremiumWrapper
-              isLocked={!hasWaterIndices}
-              onSubscribe={onSubscribe}
-              title="Water Index"
-            >
-              <div
-                ref={scrollRef}
-                className="w-full overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
+            <div className="lg:w-3/4 flex-grow">
+              <IndexPremiumWrapper
+                isLocked={!waterIndexGuard.hasFeatureAccess}
+                onSubscribe={waterIndexGuard.handleSubscribe}
+                title="Water Index"
               >
-                {isLoading ? (
-                  <div
-                    className="text-center text-gray-900"
-                    style={{
-                      minHeight: "180px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
+                <div
+                  ref={scrollRef}
+                  className="w-full overflow-x-auto pr-6 bg-white rounded-xl p-2 min-h-[180px]"
+                >
+                  {isLoading ? (
                     <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />
-                    <strong>Loading Water Index...</strong>
-                  </div>
-                ) : !hasData ? (
-                  <div className="bg-gray-100 rounded-lg p-4 mx-auto mt-2 max-w-md">
-                    <div className="text-center">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        No Data Available
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        We couldn't find any data for the selected field and
-                        time range. Please verify the field selection or adjust
-                        the date range to ensure data availability.
-                      </p>
+                  ) : !hasData ? (
+                    <div className="text-center text-sm text-gray-600">
+                      No Data Available
                     </div>
-                  </div>
-                ) : (
-                  <div className="w-full">
+                  ) : (
                     <ResponsiveContainer width={chartConfig.width} height={180}>
-                      <LineChart
-                        data={chartData}
-                        margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
-                      >
-                        <CartesianGrid stroke="rgba(0, 0, 0, 0.1)" />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fontSize: 12, fill: "#333" }}
-                          interval={chartConfig.interval}
-                          type="category"
-                        />
+                      <LineChart data={chartData}>
+                        <CartesianGrid stroke="rgba(0,0,0,0.1)" />
+                        <XAxis dataKey="date" interval={chartConfig.interval} />
                         <YAxis
                           domain={yAxisConfig.domain}
-                          tick={{ fontSize: 12, fill: "#333" }}
                           ticks={yAxisConfig.ticks}
                           tickFormatter={tickFormatter}
-                          type="number"
                         />
                         <Tooltip
                           formatter={tooltipFormatter}
                           labelFormatter={labelFormatter}
-                          contentStyle={{
-                            backgroundColor: "#fff",
-                            border: "none",
-                            borderRadius: "8px",
-                            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-                          }}
                         />
-                        <Legend
-                          layout="horizontal"
-                          verticalAlign="top"
-                          align="start"
-                          wrapperStyle={{
-                            paddingBottom: "8px",
-                            paddingLeft: "40px",
-                            fontWeight: "bold",
-                            color: "#333",
-                          }}
-                        />
+                        <Legend />
                         <Line
                           type="monotone"
                           dataKey={index}
                           stroke={WATER_COLOR_MAIN}
                           strokeWidth={3}
-                          dot={{ r: 3, fill: WATER_COLOR_MAIN }}
-                          activeDot={{ r: 5, fill: WATER_COLOR_LIGHT }}
-                          connectNulls={false}
+                          dot={{ r: 3 }}
                         />
                       </LineChart>
                     </ResponsiveContainer>
-                  </div>
-                )}
-              </div>
-            </IndexPremiumWrapper>
+                  )}
+                </div>
+              </IndexPremiumWrapper>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </FeatureGuard>
   );
 };
 

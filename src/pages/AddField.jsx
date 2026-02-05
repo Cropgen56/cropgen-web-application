@@ -8,10 +8,6 @@ import * as turf from "@turf/turf";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import PricingOverlay from "../components/pricing/PricingOverlay";
-import {
-  setNewFieldAdded,
-  showMembershipModal,
-} from "../redux/slices/membershipSlice";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
@@ -90,7 +86,7 @@ const AddField = () => {
           acre: areaInAcres,
           typeOfFarming,
           areaInHectares,
-        })
+        }),
       ).unwrap();
 
       if (result?.success) {

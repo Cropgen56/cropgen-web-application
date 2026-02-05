@@ -42,16 +42,15 @@ const FeatureGuard = ({ guard, title, children }) => {
             />
           </motion.div>
         )}
+        {/* Feature Lock Wrapper */}
+        <PremiumPageWrapper
+          isLocked={!guard.hasFeatureAccess}
+          onSubscribe={guard.handleSubscribe}
+          title={title}
+        >
+          {children}
+        </PremiumPageWrapper>
       </AnimatePresence>
-
-      {/* Feature Lock Wrapper */}
-      {/* <PremiumPageWrapper
-        isLocked={!guard.hasFeatureAccess}
-        onSubscribe={guard.handleSubscribe}
-        title={title}
-      >
-      </PremiumPageWrapper> */}
-      {children}
     </>
   );
 };

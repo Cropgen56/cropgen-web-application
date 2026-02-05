@@ -13,7 +13,9 @@ import PestDiseaseCard from "../components/smartadvisory/smartadvisorysidebar/Pe
 import FarmAdvisoryCard from "../components/smartadvisory/smartadvisorysidebar/FarmActivity";
 import Soiltemp from "../components/smartadvisory/smartadvisorysidebar/Soiltemp";
 
-import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
+import FeatureGuard from "../components/subscription/FeatureGuardComponent";
+import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
+
 import PricingOverlay from "../components/pricing/PricingOverlay";
 import FieldDropdown from "../components/comman/FieldDropdown";
 
@@ -71,6 +73,13 @@ const SmartAdvisory = () => {
       dispatch(fetchAOIs());
     }
   }, [dispatch, user?.id]);
+
+  /* ---------- AUTO SELECT ---------- */
+  useEffect(() => {
+    if (isTablet && fields.length && !selectedField) {
+      setSelectedField(fields[fields.length - 1]);
+    }
+  }, [isTablet, fields, selectedField]);
 
   /* ---------- FETCH ADVISORY ---------- */
   useEffect(() => {
@@ -130,14 +139,13 @@ const SmartAdvisory = () => {
       .catch(() => {});
   }, [dispatch, aois, selectedField?._id]);
 
-  /* ---------- AUTO SELECT ---------- */
-  useEffect(() => {
-    if (isTablet && fields.length && !selectedField) {
-      setSelectedField(fields[fields.length - 1]);
-    }
-  }, [isTablet, fields, selectedField]);
+  /* ---------- SUBSCRIPTION GUARD (SAME AS WEATHER) ---------- */
+  const advisoryGuard = useSubscriptionGuard({
+    field: selectedField,
+    featureKey: "smartAdvisorySystem",
+  });
 
-  /* ---------- SUBSCRIBE ---------- */
+  /* ---------- PRICING ---------- */
   const handleSubscribe = useCallback(() => {
     if (!selectedField) {
       message.warning("Please select a field first");
@@ -185,7 +193,6 @@ const SmartAdvisory = () => {
       </AnimatePresence>
 
       <div className="flex h-screen bg-[#5a7c6b]">
-        {/* Sidebar */}
         <div className="hidden lg:flex">
           {isSidebarVisible && (
             <SmartAdvisorySidebar
@@ -195,8 +202,7 @@ const SmartAdvisory = () => {
           )}
         </div>
 
-        {/* Main */}
-        <div className="flex-1 p-4  overflow-y-auto ">
+        <div className="flex-1 p-4 overflow-y-auto">
           <FieldDropdown
             fields={fields}
             selectedField={selectedField}
@@ -204,10 +210,10 @@ const SmartAdvisory = () => {
           />
 
           {selectedField && (
-            <PremiumPageWrapper
-              isLocked={!selectedField?.subscription?.hasActiveSubscription}
-              onSubscribe={handleSubscribe}
+            <FeatureGuard
+              guard={advisoryGuard}
               title="Smart Advisory System"
+              onSubscribe={handleSubscribe}
             >
               <SmartAdvisoryMap
                 fields={fields}
@@ -229,7 +235,7 @@ const SmartAdvisory = () => {
 
               <Soiltemp />
               <FarmAdvisoryCard selectedField={selectedField} />
-            </PremiumPageWrapper>
+            </FeatureGuard>
           )}
         </div>
       </div>

@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PlusIcon, X } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 
 import MapView from "../components/dashboard/mapview/MapView";
@@ -14,10 +13,7 @@ import EvapotranspirationDashboard from "../components/dashboard/satellite-index
 import Insights from "../components/dashboard/insights/Insights";
 import PlantGrowthActivity from "../components/dashboard/PlantGrowthActivity";
 
-import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PaymentSuccessModal from "../components/subscription/PaymentSuccessModal";
-import PricingOverlay from "../components/pricing/PricingOverlay";
-import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
 
 import { useFarmFields } from "../components/dashboard/hooks/useFarmFields";
 import { useSelectedField } from "../components/dashboard/hooks/useSelectedField";
@@ -28,16 +24,11 @@ import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
 
 import "../styles/dashboard.css";
 
-const POLL_INTERVAL = 5000;
-const MAX_POLL_ATTEMPTS = 12;
-
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const pollRef = useRef(null);
-  const pollCountRef = useRef(0);
-
+  /* ================= DATA ================= */
   const { fields, isLoadingFields } = useFarmFields();
   const { selectedField, selectedFieldDetails, handleFieldSelection } =
     useSelectedField(fields);
@@ -45,69 +36,40 @@ const Dashboard = () => {
   const { aoiId } = useAoiManagement(selectedFieldDetails);
   const { forecast, units } = useWeatherForecast(aoiId);
 
-  const advisoryState = useSelector((state) => state.smartAdvisory);
+  /* ================= ADVISORY (CALL ONLY ONCE PER FIELD) ================= */
+  const lastFetchedFieldIdRef = useRef(null);
 
-  /* ------------------ Fetch advisory ------------------ */
-  const fetchAdvisory = useCallback(() => {
-    if (!selectedFieldDetails?._id) return;
-
-    dispatch(
-      fetchSmartAdvisory({
-        fieldId: selectedFieldDetails._id,
-      }),
-    );
-  }, [dispatch, selectedFieldDetails]);
-
-  /* ------------------ Initial fetch ------------------ */
   useEffect(() => {
-    fetchAdvisory();
-  }, [fetchAdvisory]);
+    const fieldId = selectedFieldDetails?._id;
+    if (!fieldId) return;
 
-  /* ------------------ Polling for new advisory ------------------ */
-  useEffect(() => {
-    if (!selectedFieldDetails?._id) return;
+    // ✅ Prevent duplicate API calls
+    if (lastFetchedFieldIdRef.current === fieldId) return;
 
-    if (advisoryState?.exists) {
-      // Advisory found → stop polling
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-      pollCountRef.current = 0;
-      return;
-    }
+    lastFetchedFieldIdRef.current = fieldId;
+    dispatch(fetchSmartAdvisory({ fieldId }));
+  }, [dispatch, selectedFieldDetails?._id]);
 
-    // Start polling if advisory not found
-    if (!pollRef.current) {
-      pollRef.current = setInterval(() => {
-        pollCountRef.current += 1;
-        fetchAdvisory();
-
-        if (pollCountRef.current >= MAX_POLL_ATTEMPTS) {
-          clearInterval(pollRef.current);
-          pollRef.current = null;
-        }
-      }, POLL_INTERVAL);
-    }
-
-    return () => {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    };
-  }, [advisoryState?.exists, fetchAdvisory, selectedFieldDetails]);
-
-  /* ------------------ UI helpers ------------------ */
+  /* ================= SUBSCRIPTION HELPERS ================= */
   const isSubscribed =
     !!selectedFieldDetails?.subscription?.hasActiveSubscription;
 
-  const hasFeature = (key) =>
-    isSubscribed && !!selectedFieldDetails?.subscription?.plan?.features?.[key];
+  const hasFeature = useCallback(
+    (featureKey) =>
+      isSubscribed &&
+      !!selectedFieldDetails?.subscription?.plan?.features?.[featureKey],
+    [isSubscribed, selectedFieldDetails],
+  );
 
   const showContent = fields.length > 0 && !isLoadingFields;
 
-  /* ------------------ Render ------------------ */
+  /* ================= RENDER ================= */
   return (
     <div className="dashboard min-h-screen w-full overflow-y-auto p-2 lg:p-4">
+      {/* Payment success handled globally */}
       <PaymentSuccessModal />
 
+      {/* MAP */}
       <MapView
         selectedField={selectedField}
         setSelectedField={handleFieldSelection}
@@ -118,17 +80,17 @@ const Dashboard = () => {
         showFieldDropdown
       />
 
+      {/* MAIN CONTENT */}
       {showContent && (
         <div className="mt-6 space-y-8">
           {selectedFieldDetails && (
             <CropHealth
-              selectedFieldsDetials={[selectedFieldDetails]}
-              fields={fields}
+              selectedFieldDetails={selectedFieldDetails}
               hasCropHealthAndYield={hasFeature("soilAnalysisAndHealth")}
             />
           )}
 
-          <ForeCast hasWeatherAnalytics={hasFeature("weatherAnalytics")} />
+          <ForeCast selectedFieldDetails={selectedFieldDetails} />
 
           <NdviGraph
             selectedFieldsDetials={
@@ -161,9 +123,9 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* First-time user overlay */}
+      {/* FIRST-TIME USER OVERLAY */}
       <AnimatePresence>
-        {fields.length === 0 && (
+        {fields.length === 0 && !isLoadingFields && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -171,9 +133,10 @@ const Dashboard = () => {
           >
             <button
               onClick={() => navigate("/addfield")}
-              className="px-6 py-4 bg-green-600 rounded-xl text-white"
+              className="px-6 py-4 bg-green-600 rounded-xl text-white flex items-center gap-2"
             >
-              <PlusIcon /> Add Your First Field
+              <PlusIcon />
+              Add Your First Field
             </button>
           </motion.div>
         )}

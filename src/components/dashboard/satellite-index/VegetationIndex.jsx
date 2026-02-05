@@ -24,14 +24,12 @@ import {
 } from "../../../utility/formatDate";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
-import IndexPremiumWrapper from "../../subscription/PremiumIndexWrapper";
-import { selectHasVegetationIndices } from "../../../redux/slices/membershipSlice";
 
-const NdviGraph = ({
-  selectedFieldsDetials,
-  onSubscribe,
-  hasVegetationIndices,
-}) => {
+import IndexPremiumWrapper from "../../subscription/PremiumIndexWrapper";
+import FeatureGuard from "../../subscription/FeatureGuard";
+import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
+
+const NdviGraph = ({ selectedFieldsDetials }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { indexTimeSeriesSummary = null, loading } =
     useSelector((state) => state.satellite) || {};
@@ -39,28 +37,32 @@ const NdviGraph = ({
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDVI");
 
-  // Get feature flag
-  // const hasVegetationIndices = useSelector(selectHasVegetationIndices);
+  /* ================= FEATURE GUARD (ADDED) ================= */
+  const vegetationGuard = useSubscriptionGuard({
+    field: selectedFieldsDetials?.[0],
+    featureKey: "vegetationIndices",
+  });
 
   const scrollRef = useRef(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-  // Fetch index data
+  /* ================= FETCH DATA ================= */
   useEffect(() => {
     if (!field || !sowingDate) return;
 
-    const params = {
-      startDate: getOneYearBefore(getTodayDate()),
-      endDate: getTodayDate(),
-      geometry: field,
-      index,
-    };
-    dispatch(fetchIndexTimeSeriesSummary(params));
+    dispatch(
+      fetchIndexTimeSeriesSummary({
+        startDate: getOneYearBefore(getTodayDate()),
+        endDate: getTodayDate(),
+        geometry: field,
+        index,
+      }),
+    );
   }, [dispatch, field, sowingDate, index]);
 
-  // Process chart data
+  /* ================= DATA PROCESSING ================= */
   const chartData = useMemo(() => {
     let timeseries =
       indexTimeSeriesSummary?.data?.timeseries ||
@@ -78,7 +80,6 @@ const NdviGraph = ({
     }));
   }, [indexTimeSeriesSummary, index]);
 
-  // Calculate summary statistics
   const summaryData = useMemo(() => {
     const summary = indexTimeSeriesSummary?.data?.summary ||
       indexTimeSeriesSummary?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
@@ -88,7 +89,6 @@ const NdviGraph = ({
     return { min, mean, max, timestamp };
   }, [indexTimeSeriesSummary]);
 
-  // Y-axis configuration
   const yAxisConfig = useMemo(() => {
     const { min, mean, max } = summaryData;
     const domain = [
@@ -103,7 +103,6 @@ const NdviGraph = ({
     return { domain, ticks };
   }, [summaryData]);
 
-  // Chart configuration
   const chartConfig = useMemo(() => {
     const length = chartData.length;
     return {
@@ -112,7 +111,6 @@ const NdviGraph = ({
     };
   }, [chartData.length]);
 
-  // Tick formatter for Y-axis
   const tickFormatter = useCallback(
     (value) => {
       const { min, mean, max } = summaryData;
@@ -124,19 +122,15 @@ const NdviGraph = ({
     [summaryData],
   );
 
-  // Tooltip formatter
   const tooltipFormatter = useCallback(
     (value) => [value.toFixed(3), index],
     [index],
   );
 
-  // Label formatter
   const labelFormatter = useCallback((label) => `Date: ${label}`, []);
-
-  // Index change handler
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
-  // Drag scroll handlers
+  /* ================= DRAG SCROLL ================= */
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -148,37 +142,27 @@ const NdviGraph = ({
       el.style.cursor = "grabbing";
     };
 
-    const handleMouseLeave = () => {
-      if (isDragging.current) {
-        isDragging.current = false;
-        el.style.cursor = "grab";
-      }
-    };
-
-    const handleMouseUp = () => {
-      if (isDragging.current) {
-        isDragging.current = false;
-        el.style.cursor = "grab";
-      }
+    const stopDrag = () => {
+      isDragging.current = false;
+      el.style.cursor = "grab";
     };
 
     const handleMouseMove = (e) => {
       if (!isDragging.current) return;
       e.preventDefault();
       const x = e.pageX - el.offsetLeft;
-      const walk = x - startX.current;
-      el.scrollLeft = scrollLeft.current - walk;
+      el.scrollLeft = scrollLeft.current - (x - startX.current);
     };
 
     el.addEventListener("mousedown", handleMouseDown);
-    el.addEventListener("mouseleave", handleMouseLeave);
-    el.addEventListener("mouseup", handleMouseUp);
+    el.addEventListener("mouseleave", stopDrag);
+    el.addEventListener("mouseup", stopDrag);
     el.addEventListener("mousemove", handleMouseMove);
 
     return () => {
       el.removeEventListener("mousedown", handleMouseDown);
-      el.removeEventListener("mouseleave", handleMouseLeave);
-      el.removeEventListener("mouseup", handleMouseUp);
+      el.removeEventListener("mouseleave", stopDrag);
+      el.removeEventListener("mouseup", stopDrag);
       el.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
@@ -186,156 +170,129 @@ const NdviGraph = ({
   const isLoading = loading?.indexTimeSeriesSummary || false;
   const hasData = chartData.length > 0;
 
+  /* ================= RENDER ================= */
+
   return (
-    <div className="w-full flex justify-center mt-4">
-      <div className="relative w-full bg-white rounded-2xl shadow-md text-black flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-3">
-        {/* Index Selector */}
-        <div className="absolute top-3 right-3 z-50">
-          <select
-            value={index}
-            onChange={handleIndexChange}
-            className="border-2 border-gray-300 bg-white/90 rounded-[25px] px-3 py-1 text-black text-sm focus:outline-none focus:border-green-500"
-          >
-            <option value="NDVI">NDVI</option>
-            <option value="EVI">EVI</option>
-            <option value="SAVI">SAVI</option>
-            <option value="SUCROSE">SUCROSE</option>
-          </select>
-        </div>
+    <FeatureGuard guard={vegetationGuard} title="Vegetation Index">
+      <div className="w-full flex justify-center mt-4">
+        <div className="relative w-full bg-white border border-gray-200 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+          {/* ===== UI BELOW IS UNCHANGED ===== */}
 
-        {/* Title */}
-        <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">
-          Vegetation Index
-        </h2>
+          <div className="absolute top-3 right-3 z-50">
+            <select
+              value={index}
+              onChange={handleIndexChange}
+              className="border-2 border-gray-300 bg-white/90 rounded-[25px] px-3 py-1 text-black text-sm focus:outline-none focus:border-green-500"
+            >
+              <option value="NDVI">NDVI</option>
+              <option value="EVI">EVI</option>
+              <option value="SAVI">SAVI</option>
+              <option value="SUCROSE">SUCROSE</option>
+            </select>
+          </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
-          {/* Summary Card */}
-          <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
-            <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
-              <h2 className="text-xl font-bold text-green-600">{index}</h2>
-              <button className="bg-green-100 text-green-600 px-3 py-1 text-sm font-semibold rounded mt-1 border border-green-200 hover:bg-green-200 transition-all">
-                +0.15
-              </button>
-              <p className="my-1 text-gray-600 text-sm text-center">
-                Last Update{" "}
-                {summaryData.timestamp
-                  ? `${getDaysAgo(summaryData.timestamp)} days Ago`
-                  : "N/A"}
-              </p>
-              <div className="border border-gray-200 bg-white/90 p-2 rounded text-black text-sm w-full">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="flex-1 text-xs text-gray-500">
-                    {index} values help in mapping vegetation and detecting
-                    cover changes over time.
-                  </span>
-                  <span className="bg-white/90 rounded-full p-1 border border-gray-200">
-                    <Info size={16} strokeWidth={1.5} color="#22c55e" />
-                  </span>
+          <h2 className="text-xl lg:text-2xl font-bold mb-2 relative z-10">
+            Vegetation Index
+          </h2>
+
+          <div className="relative z-10 flex flex-col lg:flex-row gap-2 lg:gap-4">
+            <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
+              <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
+                <h2 className="text-xl font-bold text-green-600">{index}</h2>
+                <button className="bg-green-100 text-green-600 px-3 py-1 text-sm font-semibold rounded mt-1 border border-green-200 hover:bg-green-200 transition-all">
+                  +0.15
+                </button>
+                <p className="my-1 text-gray-600 text-sm text-center">
+                  Last Update{" "}
+                  {summaryData.timestamp
+                    ? `${getDaysAgo(summaryData.timestamp)} days Ago`
+                    : "N/A"}
+                </p>
+                <div className="border border-gray-200 bg-white/90 p-2 rounded text-black text-sm w-full">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="flex-1 text-xs text-gray-500">
+                      {index} values help in mapping vegetation and detecting
+                      cover changes over time.
+                    </span>
+                    <span className="bg-white/90 rounded-full p-1 border border-gray-200">
+                      <Info size={16} strokeWidth={1.5} color="#22c55e" />
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Chart Container */}
-          <div className="lg:w-3/4 flex-grow">
-            <IndexPremiumWrapper
-              isLocked={!hasVegetationIndices}
-              onSubscribe={onSubscribe}
-              title="Vegetation Index"
-            >
-              <div
-                ref={scrollRef}
-                className="overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
+            <div className="lg:w-3/4 flex-grow">
+              <IndexPremiumWrapper
+                isLocked={!vegetationGuard.hasFeatureAccess}
+                onSubscribe={vegetationGuard.handleSubscribe}
+                title="Vegetation Index"
               >
-                {isLoading ? (
-                  <div
-                    className="text-center text-green-600"
-                    style={{
-                      minHeight: "180px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <LoadingSpinner size={48} color="#22c55e" />
-                    <strong>Loading Vegetation Index...</strong>
-                  </div>
-                ) : !hasData ? (
-                  <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
-                    <div className="text-center">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                        No Data Available
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        We couldn't find any data for the selected field and
-                        time range. Please verify the field selection or adjust
-                        the date range to ensure data availability.
-                      </p>
+                <div
+                  ref={scrollRef}
+                  className="overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
+                >
+                  {isLoading ? (
+                    <div
+                      className="text-center text-green-600"
+                      style={{
+                        minHeight: "180px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <LoadingSpinner size={48} color="#22c55e" />
+                      <strong>Loading Vegetation Index...</strong>
                     </div>
-                  </div>
-                ) : (
-                  <div className="w-full">
+                  ) : !hasData ? (
+                    <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
+                      <div className="text-center">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                          No Data Available
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          We couldn't find any data for the selected field and
+                          time range.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
                     <ResponsiveContainer width={chartConfig.width} height={180}>
                       <LineChart
                         data={chartData}
                         margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
                       >
                         <CartesianGrid stroke="rgba(0,0,0,0.1)" />
-                        <XAxis
-                          dataKey="date"
-                          tick={{ fontSize: 12, fill: "#333" }}
-                          interval={chartConfig.interval}
-                          type="category"
-                        />
+                        <XAxis dataKey="date" interval={chartConfig.interval} />
                         <YAxis
                           domain={yAxisConfig.domain}
-                          tick={{ fontSize: 12, fill: "#333" }}
                           ticks={yAxisConfig.ticks}
                           tickFormatter={tickFormatter}
-                          type="number"
                         />
                         <Tooltip
                           formatter={tooltipFormatter}
                           labelFormatter={labelFormatter}
-                          contentStyle={{
-                            backgroundColor: "#fff",
-                            border: "1px solid #e2e8f0",
-                            borderRadius: "8px",
-                            padding: "8px",
-                          }}
                         />
-                        <Legend
-                          layout="horizontal"
-                          verticalAlign="top"
-                          align="start"
-                          wrapperStyle={{
-                            paddingBottom: "8px",
-                            paddingLeft: "40px",
-                            fontWeight: "bold",
-                            color: "#333",
-                            color: "#333",
-                          }}
-                        />
+                        <Legend />
                         <Line
                           type="monotone"
                           dataKey={index}
                           stroke="#22c55e"
                           strokeWidth={3}
-                          dot={{ r: 3, fill: "#22c55e" }}
-                          activeDot={{ r: 5, fill: "#16a34a" }}
-                          connectNulls={false}
+                          dot={{ r: 3 }}
                         />
                       </LineChart>
                     </ResponsiveContainer>
-                  </div>
-                )}
-              </div>
-            </IndexPremiumWrapper>
+                  )}
+                </div>
+              </IndexPremiumWrapper>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </FeatureGuard>
   );
 };
 

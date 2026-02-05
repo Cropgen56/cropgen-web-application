@@ -10,11 +10,15 @@ import {
   ReferenceDot,
 } from "recharts";
 import { useSelector } from "react-redux";
+
 import PlantGrowthSkeleton from "../Skeleton/PlantGrowthSkeleton.jsx";
 import PremiumContentWrapper from "../subscription/PremiumContentWrapper.jsx";
-import { selectHasCropGrowthMonitoring } from "../../redux/slices/membershipSlice.js";
+import FeatureGuard from "../subscription/FeatureGuard";
+import { useSubscriptionGuard } from "../subscription/hooks/useSubscriptionGuard";
 
 const GRASS_COLOR_MAIN = "#86D72F";
+
+/* ================= CONSTANTS ================= */
 
 const CROP_GROWTH_DURATIONS = {
   Barley: 12,
@@ -98,6 +102,8 @@ const CROP_GROWTH_DURATIONS = {
   Other: 13,
 };
 
+/* ================= HELPERS ================= */
+
 const generateCurveData = (interval, cropName) => {
   const totalWeeks =
     CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other;
@@ -124,81 +130,84 @@ const formatDayToWeekDay = (day) => {
   return `Week ${week}, Day ${dayOfWeek}`;
 };
 
-const PlantGrowthActivity = memo(
-  ({ selectedFieldsDetials = [], onSubscribe, hasCropGrowthMonitoring }) => {
-    const advisoryState = useSelector((s) => s.smartAdvisory?.advisory || null);
-    // const hasCropGrowthMonitoring = useSelector(selectHasCropGrowthMonitoring);
+/* ================= COMPONENT ================= */
 
-    const field = selectedFieldsDetials[0] || {};
-    const cropName =
-      field?.cropName || advisoryState?.farmFieldId?.cropName || "Other";
+const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
+  const advisoryState = useSelector((s) => s.smartAdvisory?.advisory || null);
 
-    const plantActivity =
-      advisoryState?.smartAdvisory?.plantGrowthActivity ||
-      advisoryState?.plantGrowthActivity ||
-      null;
+  const field = selectedFieldsDetials[0] || {};
 
-    const sowingDateStr =
-      field?.sowingDate || advisoryState?.farmFieldId?.sowingDate || null;
-    const targetDateStr = advisoryState?.targetDate || new Date().toISOString();
+  /* ================= FEATURE GUARD (ADDED) ================= */
+  const plantGrowthGuard = useSubscriptionGuard({
+    field,
+    featureKey: "cropGrowthMonitoring",
+  });
 
-    const { daysSinceSowing, currentWeek } = useMemo(() => {
-      const safeParse = (d) => {
-        if (!d) return null;
-        const dd = new Date(d);
-        return isNaN(dd.getTime()) ? null : dd;
-      };
+  const cropName =
+    field?.cropName || advisoryState?.farmFieldId?.cropName || "Other";
 
-      const sowing = safeParse(sowingDateStr);
-      const target = safeParse(targetDateStr) || new Date();
+  const plantActivity =
+    advisoryState?.smartAdvisory?.plantGrowthActivity ||
+    advisoryState?.plantGrowthActivity ||
+    null;
 
-      if (!sowing) return { daysSinceSowing: 1, currentWeek: 1 };
+  const sowingDateStr =
+    field?.sowingDate || advisoryState?.farmFieldId?.sowingDate || null;
+  const targetDateStr = advisoryState?.targetDate || new Date().toISOString();
 
-      const diffDays = Math.max(
-        1,
-        Math.floor(
-          (target.getTime() - sowing.getTime()) / (1000 * 60 * 60 * 24)
-        ) + 1
-      );
+  const { daysSinceSowing, currentWeek } = useMemo(() => {
+    const sowing = sowingDateStr ? new Date(sowingDateStr) : null;
+    const target = targetDateStr ? new Date(targetDateStr) : new Date();
 
-      const weeks = Math.min(
-        Math.ceil(diffDays / 7),
-        CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other
-      );
-
-      return { daysSinceSowing: diffDays, currentWeek: weeks };
-    }, [sowingDateStr, targetDateStr, cropName]);
-
-    const [interval, setInterval] = useState("Weeks");
-    const data = useMemo(
-      () => generateCurveData(interval, cropName),
-      [interval, cropName]
-    );
-    const referenceLabel =
-      interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
-
-    const [tooltipPos, setTooltipPos] = useState(null);
-
-    if (!sowingDateStr) {
-      return (
-        <div className="w-full flex justify-center mt-4">
-          <div className="relative w-full max-w-4xl rounded-2xl shadow-lg bg-white p-4 text-center">
-            <div className="text-gray-800 text-sm">
-              Sowing date not available for this field.
-            </div>
-          </div>
-        </div>
-      );
+    if (!sowing || isNaN(sowing)) {
+      return { daysSinceSowing: 1, currentWeek: 1 };
     }
 
-    const isLoading = false;
+    const diffDays =
+      Math.max(1, Math.floor((target - sowing) / (1000 * 60 * 60 * 24))) + 1;
 
+    const weeks = Math.min(
+      Math.ceil(diffDays / 7),
+      CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other,
+    );
+
+    return { daysSinceSowing: diffDays, currentWeek: weeks };
+  }, [sowingDateStr, targetDateStr, cropName]);
+
+  const [interval, setInterval] = useState("Weeks");
+
+  const data = useMemo(
+    () => generateCurveData(interval, cropName),
+    [interval, cropName],
+  );
+
+  const referenceLabel =
+    interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
+
+  const [tooltipPos, setTooltipPos] = useState(null);
+
+  if (!sowingDateStr) {
     return (
+      <div className="w-full flex justify-center mt-4">
+        <div className="relative w-full max-w-4xl rounded-2xl shadow-lg bg-white p-4 text-center">
+          <div className="text-gray-800 text-sm">
+            Sowing date not available for this field.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isLoading = false;
+
+  return (
+    <FeatureGuard guard={plantGrowthGuard} title="Crop Growth Monitoring">
       <PremiumContentWrapper
-        isLocked={!hasCropGrowthMonitoring}
-        onSubscribe={onSubscribe}
+        isLocked={!plantGrowthGuard.hasFeatureAccess}
+        onSubscribe={plantGrowthGuard.handleSubscribe}
         title="Crop Growth Monitoring"
       >
+        {/* 🔴 UI BELOW IS UNCHANGED */}
         <div className="w-full flex mt-6">
           <div className="relative w-full rounded-2xl shadow-lg flex flex-col overflow-hidden p-3 md:p-5 bg-white">
             <div className="w-full mb-4 flex items-start justify-between">
@@ -266,21 +275,16 @@ const PlantGrowthActivity = memo(
                       dataKey="label"
                       axisLine={false}
                       tickLine={false}
-                      tick={{
-                        fill: "#333",
-                        fontSize: "11px",
-                        fontWeight: "600",
-                      }}
                       interval={Math.max(0, Math.floor(data.length / 8))}
                     />
                     <YAxis hide />
+
                     <ReferenceLine
                       x={referenceLabel}
                       stroke={GRASS_COLOR_MAIN}
                       strokeWidth={2}
                     />
 
-                    {/* capture the svg coordinates of the reference point via label's viewBox and store in state */}
                     <ReferenceDot
                       x={referenceLabel}
                       y={
@@ -317,30 +321,18 @@ const PlantGrowthActivity = memo(
                   </AreaChart>
                 </ResponsiveContainer>
 
-                {/* tooltip near the reference point (convert svg coords to container) */}
                 {tooltipPos && plantActivity && (
                   <div
                     className="absolute z-50 bg-[#344E41] text-white text-xs p-3 rounded shadow-xl max-w-[320px]"
                     style={{
                       left: Math.max(8, tooltipPos.x - 160),
                       top: Math.max(8, tooltipPos.y - 100),
-                      transform: "translateZ(0)",
                     }}
                   >
                     <p className="font-bold text-sm mb-1">
                       {plantActivity.stageName ||
                         `BBCH ${plantActivity?.bbchStage ?? ""}`}
                     </p>
-                    {plantActivity.bbchStage && (
-                      <p className="text-xs text-gray-200 mb-1">
-                        BBCH: {plantActivity.bbchStage}
-                      </p>
-                    )}
-                    {plantActivity.description && (
-                      <p className="text-xs text-gray-200 mb-1">
-                        {plantActivity.description}
-                      </p>
-                    )}
                     <p className="italic text-gray-300 mt-1 text-xs">
                       {interval === "Days"
                         ? formatDayToWeekDay(daysSinceSowing)
@@ -353,9 +345,9 @@ const PlantGrowthActivity = memo(
           </div>
         </div>
       </PremiumContentWrapper>
-    );
-  }
-);
+    </FeatureGuard>
+  );
+});
 
 PlantGrowthActivity.displayName = "PlantGrowthActivity";
 

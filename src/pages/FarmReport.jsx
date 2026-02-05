@@ -14,7 +14,7 @@ import FarmReportContent from "../components/farmreport/farmreportsidebar/FarmRe
 import FieldDropdown from "../components/comman/FieldDropdown";
 import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
 
-import FeatureGuard from "../components/subscription/FeatureGuard";
+import FeatureGuard from "../components/subscription/FeatureGuardComponent";
 import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
 
 import { getFarmFields } from "../redux/slices/farmSlice";

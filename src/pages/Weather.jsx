@@ -14,7 +14,7 @@ import WeatherSidebar from "../components/weather/weathersidebar/WeatherSidebar"
 import WeatherSkeleton from "../components/Skeleton/WeatherSkeleton";
 import FieldDropdown from "../components/comman/FieldDropdown";
 
-import FeatureGuard from "../components/subscription/FeatureGuard";
+import FeatureGuard from "../components/subscription/FeatureGuardComponent";
 import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
 
 import { getFarmFields } from "../redux/slices/farmSlice";
