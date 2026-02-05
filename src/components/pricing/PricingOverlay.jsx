@@ -88,7 +88,7 @@ function transformApiData(apiData, billing, currency, userArea) {
           basePrice = pricePerHectare;
         } else {
           const currencyMatch = Object.values(pricingByCurrencyAndCycle).find(
-            (p) => p.currency === currency
+            (p) => p.currency === currency,
           );
 
           if (currencyMatch) {
@@ -148,12 +148,12 @@ function transformApiData(apiData, billing, currency, userArea) {
         if (currency === "USD") {
           formattedPrice = `$${displayPrice.toFixed(2)}${unit}`;
           priceBreakdown = `($${basePrice.toFixed(
-            2
+            2,
           )}/ha × ${areaInHectares.toFixed(1)} ha)`;
         } else {
           formattedPrice = `₹${Math.round(displayPrice)}${unit}`;
           priceBreakdown = `(₹${Math.round(
-            basePrice
+            basePrice,
           )}/ha × ${areaInHectares.toFixed(1)} ha)`;
         }
       }
@@ -241,7 +241,7 @@ export default function PricingOverlay({
       const s = Math.min(
         (window.innerWidth - 48) / (el.scrollWidth || 1),
         (window.innerHeight - 48) / (el.scrollHeight || 1),
-        1
+        1,
       );
       setScale(s > 0 ? s : 1);
     };
@@ -263,7 +263,7 @@ export default function PricingOverlay({
 
   const adjusted = useMemo(
     () => transformApiData(subscriptions, billing, currency, userArea),
-    [subscriptions, billing, currency, userArea]
+    [subscriptions, billing, currency, userArea],
   );
 
   const groups = useMemo(() => {
@@ -358,7 +358,7 @@ export default function PricingOverlay({
                 razorpay_subscription_id: response.razorpay_subscription_id,
                 razorpay_signature: response.razorpay_signature,
               },
-            })
+            }),
           ).unwrap();
 
           if (verifyRes.success) {
@@ -378,7 +378,7 @@ export default function PricingOverlay({
             } else {
               sessionStorage.setItem(
                 "paymentSuccess",
-                JSON.stringify(successData)
+                JSON.stringify(successData),
               );
               dispatch(setPaymentSuccess(successData));
               onClose?.();
@@ -568,7 +568,7 @@ export default function PricingOverlay({
                 <button
                   onClick={() =>
                     setGroupIndex(
-                      (i) => (i - 1 + groups.length) % groups.length
+                      (i) => (i - 1 + groups.length) % groups.length,
                     )
                   }
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 rounded-full p-2 transition-colors"

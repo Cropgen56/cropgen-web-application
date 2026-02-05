@@ -1,30 +1,27 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
-import { message } from "antd";
 import { getFarmFields } from "../redux/slices/farmSlice";
 import OperationSidebar from "../components/operation/operationsidebar/OperationSidebar";
 import Calendar from "../components/operation/operationcalender/OperationCalender";
 import { useNavigate } from "react-router-dom";
 import img1 from "../assets/image/Group 31.png";
-import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
-import SubscriptionModal from "../components/subscription/SubscriptionModal";
-import PricingOverlay from "../components/pricing/PricingOverlay";
 import FieldDropdown from "../components/comman/FieldDropdown";
+
+import FeatureGuard from "../components/subscription/FeatureGuard";
+import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
 
 const Operation = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state?.auth?.user);
-  const authToken = useSelector((state) => state?.auth?.token);
-  const fields = useSelector((state) => state?.farmfield?.fields);
   const navigate = useNavigate();
+
+  const user = useSelector((state) => state?.auth?.user);
+  const fields = useSelector((state) => state?.farmfield?.fields);
 
   const userId = user?.id;
 
   const [selectedField, setSelectedField] = useState(null);
-  const [showMembershipModalLocal, setShowMembershipModalLocal] = useState(false);
-  const [showPricingOverlay, setShowPricingOverlay] = useState(false);
-  const [pricingFieldData, setPricingFieldData] = useState(null);
+
+  /* ---------- FETCH FIELDS (UNCHANGED) ---------- */
 
   useEffect(() => {
     if (userId) {
@@ -38,44 +35,14 @@ const Operation = () => {
     }
   }, [fields, selectedField]);
 
-  const selectedFieldDetails = selectedField;
+  /* ---------- SUBSCRIPTION LOGIC (COMMON) ---------- */
 
-  const handleSubscribe = useCallback(() => {
-    if (selectedFieldDetails) {
-      const areaInHectares =
-        selectedFieldDetails?.areaInHectares ||
-        selectedFieldDetails?.acre * 0.404686 ||
-        5;
-      const fieldData = {
-        id: selectedFieldDetails._id,
-        name: selectedFieldDetails.fieldName || selectedFieldDetails.farmName,
-        areaInHectares,
-        cropName: selectedFieldDetails.cropName,
-      };
+  const subscriptionGuard = useSubscriptionGuard({
+    field: selectedField,
+    featureKey: "farmOperationsManagement",
+  });
 
-      setPricingFieldData(fieldData);
-      setShowPricingOverlay(true);
-      setShowMembershipModalLocal(false);
-    } else {
-      message.warning("Please select a field first");
-    }
-  }, [selectedFieldDetails]);
-
-  const handleSkipMembership = useCallback(() => {
-    setShowMembershipModalLocal(false);
-    message.info(
-      "You can activate premium anytime from the locked content sections"
-    );
-  }, []);
-
-  const handleCloseMembershipModal = useCallback(() => {
-    setShowMembershipModalLocal(false);
-  }, []);
-
-  const handleClosePricing = useCallback(() => {
-    setShowPricingOverlay(false);
-    setPricingFieldData(null);
-  }, []);
+  /* ---------- EMPTY STATE (UNCHANGED UI) ---------- */
 
   if (fields?.length === 0) {
     return (
@@ -98,73 +65,38 @@ const Operation = () => {
     );
   }
 
-  const hasSubscription = selectedField?.subscription?.hasActiveSubscription;
-  const hasFarmOperationsManagement =
-    hasSubscription &&
-    selectedField?.subscription?.plan?.features?.farmOperationsManagement;
+  /* ---------- MAIN UI (UNCHANGED STRUCTURE) ---------- */
 
   return (
-    <>
-      <SubscriptionModal
-        isOpen={showMembershipModalLocal}
-        onClose={handleCloseMembershipModal}
-        onSubscribe={handleSubscribe}
-        onSkip={handleSkipMembership}
-        fieldName={
-          selectedFieldDetails?.fieldName || selectedFieldDetails?.farmName
-        }
-      />
+    <div className="w-full h-full m-0 p-0 flex">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <OperationSidebar
+          setSelectedField={setSelectedField}
+          selectedField={selectedField}
+          hasSubscription={subscriptionGuard.hasFeatureAccess}
+        />
+      </div>
 
-      <AnimatePresence>
-        {showPricingOverlay && pricingFieldData && (
-          <motion.div
-            key="pricing-overlay"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8"
-          >
-            <PricingOverlay
-              onClose={handleClosePricing}
-              userArea={pricingFieldData.areaInHectares}
-              selectedField={pricingFieldData}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="w-full h-full m-0 p-0 flex">
-        {/* Desktop Sidebar - Hidden on tablet/mobile */}
-        <div className="hidden lg:block">
-          <OperationSidebar
-            setSelectedField={setSelectedField}
+      {/* Main Content */}
+      <div className="flex-1 bg-[#5a7c6b] h-screen overflow-y-auto">
+        {/* Mobile Dropdown */}
+        <div className="lg:hidden p-3">
+          <FieldDropdown
+            fields={fields}
             selectedField={selectedField}
-            hasSubscription={hasSubscription}
+            setSelectedField={setSelectedField}
           />
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 bg-[#5a7c6b] h-screen overflow-y-auto">
-          {/* Tablet/Mobile Dropdown - Hidden on desktop */}
-          <div className="lg:hidden p-3">
-            <FieldDropdown
-              fields={fields}
-              selectedField={selectedField}
-              setSelectedField={setSelectedField}
-            />
-          </div>
-
-          <PremiumPageWrapper
-            isLocked={!hasFarmOperationsManagement}
-            onSubscribe={handleSubscribe}
-            title="Farm Operations Management"
-          >
-            <Calendar selectedField={selectedField?._id} />
-          </PremiumPageWrapper>
-        </div>
+        <FeatureGuard
+          guard={subscriptionGuard}
+          title="Farm Operations Management"
+        >
+          <Calendar selectedField={selectedField?._id} />
+        </FeatureGuard>
       </div>
-    </>
+    </div>
   );
 };
 

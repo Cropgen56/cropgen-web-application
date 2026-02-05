@@ -24,13 +24,17 @@ import {
 } from "../../../utility/formatDate";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
-import IndexPremiumWrapper from "../../subscription/Indexpremiumwrapper";
+import IndexPremiumWrapper from "../../subscription/PremiumIndexWrapper";
 import { selectHasWaterIndices } from "../../../redux/slices/membershipSlice";
 
 const WATER_COLOR_MAIN = "#38bdf8";
 const WATER_COLOR_LIGHT = "#7dd3fc";
 
-const WaterIndex = ({ selectedFieldsDetials, onSubscribe, hasWaterIndices }) => {
+const WaterIndex = ({
+  selectedFieldsDetials,
+  onSubscribe,
+  hasWaterIndices,
+}) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { waterIndexData = null, loading } =
     useSelector((state) => state.satellite) || {};
@@ -123,13 +127,13 @@ const WaterIndex = ({ selectedFieldsDetials, onSubscribe, hasWaterIndices }) => 
       if (Math.abs(value - max) < 0.001) return `Max: ${value.toFixed(3)}`;
       return value.toFixed(2);
     },
-    [summaryData]
+    [summaryData],
   );
 
   // Tooltip formatter
   const tooltipFormatter = useCallback(
     (value) => [value.toFixed(3), index],
-    [index]
+    [index],
   );
 
   // Label formatter

@@ -28,8 +28,8 @@ import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
 
 import "../styles/dashboard.css";
 
-const POLL_INTERVAL = 5000; // 5 sec
-const MAX_POLL_ATTEMPTS = 12; // 1 min
+const POLL_INTERVAL = 5000;
+const MAX_POLL_ATTEMPTS = 12;
 
 const Dashboard = () => {
   const dispatch = useDispatch();

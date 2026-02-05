@@ -1,7 +1,8 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Lock } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import { Lock } from "lucide-react";
 
+// wrapper for dashboard satellite index componet
 const IndexPremiumWrapper = ({ children, isLocked, onSubscribe }) => {
   if (!isLocked) return children;
 
@@ -19,9 +20,9 @@ const IndexPremiumWrapper = ({ children, isLocked, onSubscribe }) => {
         transition={{ duration: 0.3 }}
         className="absolute inset-0 flex items-center justify-center rounded-lg"
         style={{
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          background: "rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
         }}
       >
         <motion.button

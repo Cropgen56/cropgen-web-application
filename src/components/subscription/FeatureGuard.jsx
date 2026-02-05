@@ -4,6 +4,7 @@ import PricingOverlay from "../pricing/PricingOverlay";
 import PremiumPageWrapper from "./PremiumPageWrapper";
 
 const FeatureGuard = ({ guard, title, children }) => {
+  // console.log(guard, title, children);
   return (
     <>
       <SubscriptionModal

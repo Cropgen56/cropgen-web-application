@@ -24,14 +24,17 @@ import {
 } from "../../../utility/formatDate";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
-import IndexPremiumWrapper from "../../subscription/Indexpremiumwrapper";
+import IndexPremiumWrapper from "../../subscription/PremiumIndexWrapper";
 import { selectHasVegetationIndices } from "../../../redux/slices/membershipSlice";
 
-const NdviGraph = ({ selectedFieldsDetials, onSubscribe, hasVegetationIndices }) => {
+const NdviGraph = ({
+  selectedFieldsDetials,
+  onSubscribe,
+  hasVegetationIndices,
+}) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { indexTimeSeriesSummary = null, loading } =
     useSelector((state) => state.satellite) || {};
-
 
   const dispatch = useDispatch();
   const [index, setIndex] = useState("NDVI");
@@ -118,13 +121,13 @@ const NdviGraph = ({ selectedFieldsDetials, onSubscribe, hasVegetationIndices })
       if (Math.abs(value - max) < 0.001) return `Max: ${value.toFixed(3)}`;
       return value.toFixed(2);
     },
-    [summaryData]
+    [summaryData],
   );
 
   // Tooltip formatter
   const tooltipFormatter = useCallback(
     (value) => [value.toFixed(3), index],
-    [index]
+    [index],
   );
 
   // Label formatter

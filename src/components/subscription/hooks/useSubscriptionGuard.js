@@ -1,19 +1,29 @@
 import { useState, useCallback, useMemo } from "react";
 import { message } from "antd";
 
-export const useSubscriptionGuard = ({
-  field,
-  featureKey, // ex: "weatherAnalytics", "soilAnalytics"
-}) => {
+export const useSubscriptionGuard = ({ field, featureKey }) => {
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
-  const hasSubscription = field?.subscription?.hasActiveSubscription;
-
   const hasFeatureAccess = useMemo(() => {
-    return hasSubscription && field?.subscription?.plan?.features?.[featureKey];
-  }, [hasSubscription, field, featureKey]);
+    if (!field?.subscription) return false;
+
+    // Plan-based subscription (Weather, Operation)
+    if (field.subscription?.plan?.features) {
+      return Boolean(field.subscription.plan.features[featureKey]);
+    }
+
+    // Direct subscription (Smart Advisory)
+    if (
+      field.subscription?.hasActiveSubscription === true ||
+      field.subscription?.active === true
+    ) {
+      return true;
+    }
+
+    return false;
+  }, [field, featureKey]);
 
   const handleSubscribe = useCallback(() => {
     if (!field) {
@@ -34,23 +44,17 @@ export const useSubscriptionGuard = ({
     setShowMembershipModal(false);
   }, [field]);
 
-  const closeMembershipModal = () => {
-    setShowMembershipModal(false);
-  };
-
-  const closePricingOverlay = () => {
-    setShowPricingOverlay(false);
-    setPricingFieldData(null);
-  };
-
   return {
     hasFeatureAccess,
     showMembershipModal,
     showPricingOverlay,
     pricingFieldData,
     handleSubscribe,
-    closeMembershipModal,
-    closePricingOverlay,
+    closeMembershipModal: () => setShowMembershipModal(false),
+    closePricingOverlay: () => {
+      setShowPricingOverlay(false);
+      setPricingFieldData(null);
+    },
     setShowMembershipModal,
   };
 };
