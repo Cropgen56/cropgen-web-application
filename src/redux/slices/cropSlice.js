@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { getCrops, getCropHealthYield, generateCropAdvisory } from "../../api/cropApi";
+import { getCrops } from "../../api/cropApi";
 
 export const fetchCrops = createAsyncThunk(
   "crops/fetchCrops",
@@ -10,32 +10,7 @@ export const fetchCrops = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
-  }
-);
-
-export const fetchCropHealthYield = createAsyncThunk(
-  "crops/fetchCropHealthYield",
-  async (payload, { rejectWithValue }) => {
-    try {
-      const data = await getCropHealthYield(payload);
-      return data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
-// NEW: Fetch crop advisory
-export const fetchCropAdvisory = createAsyncThunk(
-  "crops/fetchCropAdvisory",
-  async (payload, { rejectWithValue }) => {
-    try {
-      const data = await generateCropAdvisory(payload);
-      return data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
+  },
 );
 
 const cropSlice = createSlice({
@@ -74,32 +49,6 @@ const cropSlice = createSlice({
       .addCase(fetchCrops.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
-      // Handle crop health and yield states
-      .addCase(fetchCropHealthYield.pending, (state) => {
-        state.healthYieldLoading = true;
-        state.healthYieldError = null;
-      })
-      .addCase(fetchCropHealthYield.fulfilled, (state, action) => {
-        state.healthYieldLoading = false;
-        state.cropHealthYield = action.payload;
-      })
-      .addCase(fetchCropHealthYield.rejected, (state, action) => {
-        state.healthYieldLoading = false;
-        state.healthYieldError = action.payload;
-      })
-      // NEW: Handle crop advisory states
-      .addCase(fetchCropAdvisory.pending, (state) => {
-        state.advisoryLoading = true;
-        state.advisoryError = null;
-      })
-      .addCase(fetchCropAdvisory.fulfilled, (state, action) => {
-        state.advisoryLoading = false;
-        state.cropAdvisory = action.payload;
-      })
-      .addCase(fetchCropAdvisory.rejected, (state, action) => {
-        state.advisoryLoading = false;
-        state.advisoryError = action.payload;
       });
   },
 });

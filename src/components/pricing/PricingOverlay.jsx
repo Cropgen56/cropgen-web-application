@@ -22,7 +22,7 @@ import PlanCard from "./PlanCard";
 /* ================= CONSTANTS ================= */
 
 const USD_TO_INR = 83;
-const DEFAULT_AREA = 5;
+const DEFAULT_AREA = 1;
 
 const FEATURE_DISPLAY_NAMES = {
   satelliteImagery: "Satellite Imagery",
@@ -53,33 +53,35 @@ const ENTERPRISE_PLAN = {
 };
 
 /* ================= HELPERS ================= */
-
-function transformApiData(apiData, billing, currency, userArea) {
+function transformApiData(
+  apiData,
+  billing,
+  currency,
+  userArea,
+  platform = "web",
+) {
   if (!Array.isArray(apiData)) return [];
 
-  const areaInHectares = userArea || DEFAULT_AREA;
+  const area = userArea || DEFAULT_AREA;
 
   const plans = apiData
+    .filter((plan) => plan.platform === platform)
     .map((plan) => {
       const pricingMap = {};
       plan.pricing?.forEach((p) => {
         pricingMap[`${p.currency}_${p.billingCycle}`] = p;
       });
 
-      const isTrial = plan.isTrial;
-      let totalPrice = 0;
-      let basePrice = 0;
+      const priceObj = pricingMap[`${currency}_${billing}`];
 
-      if (!isTrial) {
-        const priceObj = pricingMap[`${currency}_${billing}`];
-        if (priceObj) {
-          basePrice = priceObj.amountMinor / 100;
-          totalPrice = basePrice * areaInHectares;
-        }
+      let totalPrice = 0;
+      if (priceObj) {
+        totalPrice = (priceObj.pricePerUnitMinor / 100) * area;
       }
 
       const enabled = [];
       const disabled = [];
+
       Object.entries(plan.features || {}).forEach(([k, v]) => {
         (v ? enabled : disabled).push(FEATURE_DISPLAY_NAMES[k] || k);
       });
@@ -88,16 +90,25 @@ function transformApiData(apiData, billing, currency, userArea) {
         _id: plan._id,
         name: plan.name,
         tagline: plan.description,
+
         price:
-          isTrial || totalPrice === 0
-            ? `Free Trial (${plan.trialDays} days)`
+          plan.slug === "free-trial"
+            ? "Free"
             : currency === "USD"
               ? `$${totalPrice.toFixed(2)}/${billing}`
               : `₹${Math.round(totalPrice)}/${billing}`,
+
+        priceBreakdown:
+          plan.slug === "free-trial"
+            ? `Free Trial (${plan.trialDays} days)`
+            : null,
+
         features: enabled,
         missing: disabled,
-        isTrial,
-        trialDays: plan.trialDays,
+
+        // ✅ trial only if free-trial plan
+        isTrialPlan: plan.slug === "free-trial",
+
         active: plan.active,
         isEnterprise: false,
       };
@@ -105,6 +116,7 @@ function transformApiData(apiData, billing, currency, userArea) {
     .filter((p) => p.active !== false);
 
   plans.push(ENTERPRISE_PLAN);
+
   return plans;
 }
 
@@ -168,7 +180,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   /* ---------- DATA ---------- */
 
   const plans = useMemo(
-    () => transformApiData(subscriptions, billing, currency, userArea),
+    () => transformApiData(subscriptions, billing, currency, userArea, "web"),
     [subscriptions, billing, currency, userArea],
   );
 
@@ -183,68 +195,78 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   const visiblePlans = groups[groupIndex] || [];
 
   /* ---------- SUBSCRIBE ---------- */
-
   const handleSubscribeClick = async ({ plan }) => {
     if (!token) return toast.error("Please login");
 
     try {
-      const res = await dispatch(
-        createUserSubscription({
-          planId: plan._id,
-          fieldId: selectedField.id,
-          hectares: userArea,
-          billingCycle: plan.isTrial ? "trial" : billing,
-          currency,
-        }),
-      ).unwrap();
+      const payload = {
+        farmId: selectedField.id,
+        planId: plan._id,
+      };
 
-      if (plan.isTrial) {
+      // ✅ FREE TRIAL PLAN
+      if (plan.isTrialPlan) {
+        payload.billingCycle = "trial";
+      } else {
+        payload.billingCycle = billing;
+        payload.displayCurrency = currency;
+      }
+
+      const res = await dispatch(createUserSubscription(payload)).unwrap();
+
+      // TRIAL FLOW
+      if (res.type === "trial") {
         dispatch(
           setPaymentSuccess({
-            fieldName: selectedField.name,
+            fieldName: selectedField.fieldName,
             planName: plan.name,
-            daysLeft: plan.trialDays,
+            daysLeft: res.daysLeft,
           }),
         );
-        dispatch(getFarmFields(user.id));
+
+        dispatch(getFarmFields(user._id));
         onClose();
         return;
       }
 
-      setCheckoutData({ plan, razorpay: res.data });
+      // PAID FLOW
+      setCheckoutData({
+        plan,
+        order: res.order,
+        subscriptionId: res.subscriptionId,
+      });
     } catch (e) {
       toast.error(e.message || "Subscription failed");
     }
   };
 
   /* ---------- RAZORPAY ---------- */
-
   useEffect(() => {
     if (!checkoutData || !window.Razorpay) return;
 
-    const { plan, razorpay } = checkoutData;
+    const { plan, order, subscriptionId } = checkoutData;
 
     const rzp = new window.Razorpay({
-      key: razorpay.key,
-      subscription_id: razorpay.razorpaySubscriptionId,
+      key: order.key,
+      order_id: order.id,
       name: "CropGen",
       handler: async (response) => {
         await dispatch(
           verifyUserSubscriptionPayment({
-            subscriptionId: razorpay.subscriptionRecordId,
+            subscriptionId,
             paymentData: response,
           }),
         ).unwrap();
 
         dispatch(
           setPaymentSuccess({
-            fieldName: selectedField.name,
+            fieldName: selectedField.fieldName,
             planName: plan.name,
             transactionId: response.razorpay_payment_id,
           }),
         );
 
-        dispatch(getFarmFields(user.id));
+        dispatch(getFarmFields(user._id));
         onClose();
         navigate("/cropgen-analytics");
       },

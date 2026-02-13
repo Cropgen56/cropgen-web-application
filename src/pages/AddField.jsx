@@ -114,7 +114,7 @@ const AddField = () => {
 
   const handleClosePricing = () => {
     setShowOverlay(false);
-    setSelectedField(null); // Clear selected field
+    setSelectedField(null);
     if (pendingRedirect) {
       navigate("/cropgen-analytics");
     }

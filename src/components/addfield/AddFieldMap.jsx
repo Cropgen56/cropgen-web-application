@@ -32,7 +32,7 @@ const AddFieldMap = ({
   clearMarkers,
   onToggleSidebar,
 }) => {
-  const [selectedLocation, setSelectedLocation] = useState({
+  const [selectedLocation] = useState({
     lat: 20.5937,
     lng: 78.9629,
     name: "Default Location",
@@ -41,21 +41,9 @@ const AddFieldMap = ({
   const [showUploadOverlay, setShowUploadOverlay] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [geojsonLayers, setGeojsonLayers] = useState([]);
-  const [locationBlocked, setLocationBlocked] = useState(false);
   const [isMapReady, setIsMapReady] = useState(false);
-  const [initialLocationSet, setInitialLocationSet] = useState(false);
 
-  const [, setIsFullMap] = useState(false);
   const mapRef = useRef(null);
-
-  const requestLocation = () => {
-    return new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 8000,
-      });
-    });
-  };
 
   // Map Controller - only sets ref, no side effects
   const MapController = () => {
@@ -72,69 +60,10 @@ const AddFieldMap = ({
     return null;
   };
 
-  // Handle initial location fetch - runs once
-  // useEffect(() => {
-  //   if (initialLocationSet) return;
-
-  //   navigator.geolocation.getCurrentPosition(
-  //     (pos) => {
-  //       const { latitude, longitude } = pos.coords;
-  //       setSelectedLocation({
-  //         lat: latitude,
-  //         lng: longitude,
-  //         name: "Your Location",
-  //       });
-  //       setLocationBlocked(false);
-  //       setInitialLocationSet(true);
-  //     },
-  //     (err) => {
-  //       console.error("Geolocation error:", err);
-  //       setLocationBlocked(true);
-  //       setInitialLocationSet(true);
-  //     },
-  //     { enableHighAccuracy: true, timeout: 8000 }
-  //   );
-  // }, [initialLocationSet]);
-  useEffect(() => {
-    if (initialLocationSet) return;
-
-    requestLocation()
-      .then((pos) => {
-        setSelectedLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          name: "Your Location",
-        });
-        setLocationBlocked(false);
-      })
-      .catch(() => {
-        setLocationBlocked(true);
-      })
-      .finally(() => {
-        setInitialLocationSet(true);
-      });
-  }, [initialLocationSet]);
-
-  useEffect(() => {
-    if (
-      isMapReady &&
-      initialLocationSet &&
-      !locationBlocked &&
-      mapRef.current &&
-      selectedLocation.name === "Your Location"
-    ) {
-      // Use setView instead of flyTo to avoid animation jitter on initial load
-      mapRef.current.setView([selectedLocation.lat, selectedLocation.lng], 17, {
-        animate: false,
-      });
-    }
-  }, [isMapReady, initialLocationSet, locationBlocked, selectedLocation]);
-
   // Handle GeoJSON bounds - with debounce to prevent jitter
   useEffect(() => {
     if (geojsonLayers.length === 0 || !mapRef.current || !isMapReady) return;
 
-    // Small delay to prevent conflict with other map movements
     const timeoutId = setTimeout(() => {
       let allBounds = null;
       geojsonLayers.forEach((geojson) => {
@@ -220,7 +149,7 @@ const AddFieldMap = ({
           setMarkers((currentMarkers) =>
             currentMarkers.length > 12
               ? [...currentMarkers.slice(1), { lat, lng }]
-              : [...currentMarkers, { lat, lng }]
+              : [...currentMarkers, { lat, lng }],
           );
         }
       },
@@ -257,7 +186,6 @@ const AddFieldMap = ({
       const handleShowLocation = (result) => {
         const { x, y, label } = result.location;
         onLocationSelect({ lat: y, lng: x, name: label });
-        // Let the search control handle the map movement
       };
 
       map.on("geosearch/showlocation", handleShowLocation);
@@ -271,95 +199,32 @@ const AddFieldMap = ({
     return null;
   };
 
-  const handleEnableLocation = useCallback(() => {
-    setLocationBlocked(false);
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setSelectedLocation({
-          lat: latitude,
-          lng: longitude,
-          name: "Your Location",
-        });
-        setLocationBlocked(false);
-
-        if (mapRef.current) {
-          mapRef.current.flyTo([latitude, longitude], 17, {
-            animate: true,
-            duration: 1,
-          });
-        }
-      },
-      () => {
-        setLocationBlocked(true);
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  }, []);
-
   const handleCurrentLocation = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setSelectedLocation({
-            lat: latitude,
-            lng: longitude,
-            name: "Your Current Location",
-          });
           mapRef.current?.flyTo([latitude, longitude], 18, {
             animate: true,
             duration: 1,
           });
+          setSelectedIcon("current-location");
         },
-        () => alert("Unable to fetch your location."),
+        () =>
+          alert("Unable to fetch your location. Please allow location access."),
         {
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 0,
-        }
+        },
       );
     } else {
-      alert("Geolocation not supported.");
+      alert("Geolocation is not supported by your browser.");
     }
-    setSelectedIcon("current-location");
   }, []);
 
   return (
     <>
-      {locationBlocked && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[5000]"
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-            className="bg-white p-6 rounded-xl shadow-lg w-80 text-center"
-          >
-            <h2 className="text-lg font-semibold">
-              Location Permission Needed
-            </h2>
-            <p className="text-gray-600 text-sm mt-2">
-              Please enable location access to load the map correctly.
-            </p>
-
-            <button
-              onClick={handleEnableLocation}
-              className="mt-4 w-full bg-[#075a53] text-white py-2 rounded-lg"
-            >
-              Enable Location
-            </button>
-          </motion.div>
-        </motion.div>
-      )}
-
       <div className="min-h-screen w-full flex flex-col items-center relative overflow-hidden">
         <div
           className={`w-full m-0 p-0 z-[1000] relative ${
@@ -379,7 +244,6 @@ const AddFieldMap = ({
                   : "h-screen"
               }
               pointer-events-auto z-0`}
-            // Disable animations on initial load
             fadeAnimation={false}
             markerZoomAnimation={false}
           >
@@ -411,7 +275,7 @@ const AddFieldMap = ({
             )}
 
             <Markers />
-            <SearchField onLocationSelect={setSelectedLocation} />
+            <SearchField onLocationSelect={() => {}} />
             <CursorUpdater isAddingMarkers={isAddingMarkers} />
 
             {isTabletView && (
@@ -444,7 +308,6 @@ const AddFieldMap = ({
             onClick={() => {
               setShowUploadOverlay(true);
               if (isTabletView) {
-                setIsFullMap(true);
                 onToggleSidebar(false);
               }
             }}
@@ -488,11 +351,7 @@ const AddFieldMap = ({
             <button
               onClick={() => {
                 setSelectedIcon("back-button");
-                if (markers.length === 0) {
-                  alert("No markers left to remove.");
-                } else {
-                  removeLastMarker();
-                }
+                removeLastMarker();
               }}
               className={`bg-[#075a53] text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-400 ease-in-out cursor-pointer hover:bg-[#064841] ${
                 selectedIcon === "back-button" ? "ring-2 ring-white" : ""
