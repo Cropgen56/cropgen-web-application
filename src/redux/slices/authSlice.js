@@ -59,7 +59,7 @@ export const refreshAccessToken = createAsyncThunk(
       const { auth } = getState();
       return !auth.refreshPending;
     },
-  }
+  },
 );
 
 export const getUserProfileData = createAsyncThunk(
@@ -70,10 +70,10 @@ export const getUserProfileData = createAsyncThunk(
       return response;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || "Failed to fetch user profile"
+        error.response?.data || "Failed to fetch user profile",
       );
     }
-  }
+  },
 );
 
 export const updateUserData = createAsyncThunk(
@@ -85,7 +85,7 @@ export const updateUserData = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to update user");
     }
-  }
+  },
 );
 
 export const sendotp = createAsyncThunk(
@@ -97,7 +97,7 @@ export const sendotp = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "OTP sending failed");
     }
-  }
+  },
 );
 
 export const verifyuserotp = createAsyncThunk(
@@ -109,14 +109,14 @@ export const verifyuserotp = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "OTP verification failed");
     }
-  }
+  },
 );
 
 export const completeProfile = createAsyncThunk(
   "auth/completeProfile",
   async (
     { token, terms, organizationCode, firstName, lastName, phone, role },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const response = await completeUserProfile({
@@ -131,10 +131,10 @@ export const completeProfile = createAsyncThunk(
       return response;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data || { message: "Profile completion failed" }
+        error.response?.data || { message: "Profile completion failed" },
       );
     }
-  }
+  },
 );
 
 export const logoutUser = createAsyncThunk(
@@ -146,7 +146,7 @@ export const logoutUser = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || "Logout failed");
     }
-  }
+  },
 );
 
 // Upload Avatar Thunk
@@ -166,7 +166,7 @@ export const uploadAvatar = createAsyncThunk(
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const { uploadUrl } = presignRes.data.data;
@@ -202,10 +202,10 @@ export const uploadAvatar = createAsyncThunk(
     } catch (error) {
       console.error("Upload Avatar Error:", error);
       return rejectWithValue(
-        error.response?.data?.message || "Avatar upload failed"
+        error.response?.data?.message || "Avatar upload failed",
       );
     }
-  }
+  },
 );
 
 const initialState = {
@@ -420,7 +420,7 @@ const authSlice = createSlice({
           action.type.endsWith("/rejected"),
         (state) => {
           state.status = "idle";
-        }
+        },
       );
   },
 });

@@ -21,8 +21,8 @@ import PlanCard from "./PlanCard";
 
 /* ================= CONSTANTS ================= */
 
-const USD_TO_INR = 83;
 const DEFAULT_AREA = 1;
+const PLAN_ORDER = ["free-trial", "basic", "pro", "premium"];
 
 const FEATURE_DISPLAY_NAMES = {
   satelliteImagery: "Satellite Imagery",
@@ -53,26 +53,18 @@ const ENTERPRISE_PLAN = {
 };
 
 /* ================= HELPERS ================= */
-function transformApiData(
-  apiData,
-  billing,
-  currency,
-  userArea,
-  platform = "web",
-) {
+
+function transformApiData(apiData, billing, userArea, platform = "web") {
   if (!Array.isArray(apiData)) return [];
 
   const area = userArea || DEFAULT_AREA;
 
-  const plans = apiData
+  let plans = apiData
     .filter((plan) => plan.platform === platform)
     .map((plan) => {
-      const pricingMap = {};
-      plan.pricing?.forEach((p) => {
-        pricingMap[`${p.currency}_${p.billingCycle}`] = p;
-      });
-
-      const priceObj = pricingMap[`${currency}_${billing}`];
+      const priceObj = plan.pricing?.find(
+        (p) => p.currency === "USD" && p.billingCycle === billing,
+      );
 
       let totalPrice = 0;
       if (priceObj) {
@@ -88,33 +80,27 @@ function transformApiData(
 
       return {
         _id: plan._id,
+        slug: plan.slug,
         name: plan.name,
         tagline: plan.description,
-
         price:
           plan.slug === "free-trial"
             ? "Free"
-            : currency === "USD"
-              ? `$${totalPrice.toFixed(2)}/${billing}`
-              : `₹${Math.round(totalPrice)}/${billing}`,
-
+            : `$${totalPrice.toFixed(2)}/${billing}`,
         priceBreakdown:
           plan.slug === "free-trial"
             ? `Free Trial (${plan.trialDays} days)`
             : null,
-
         features: enabled,
         missing: disabled,
-
-        // ✅ trial only if free-trial plan
         isTrialPlan: plan.slug === "free-trial",
-
         active: plan.active,
         isEnterprise: false,
       };
     })
     .filter((p) => p.active !== false);
 
+  plans.sort((a, b) => PLAN_ORDER.indexOf(a.slug) - PLAN_ORDER.indexOf(b.slug));
   plans.push(ENTERPRISE_PLAN);
 
   return plans;
@@ -130,11 +116,12 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   const { token, user } = useSelector((s) => s.auth);
 
   const [billing, setBilling] = useState("monthly");
-  const [currency, setCurrency] = useState("USD");
   const [groupIndex, setGroupIndex] = useState(0);
   const [cardsPerGroup, setCardsPerGroup] = useState(3);
   const [scale, setScale] = useState(1);
   const [checkoutData, setCheckoutData] = useState(null);
+  const [dialogError, setDialogError] = useState(null);
+
   const containerRef = useRef(null);
 
   /* ---------- LOAD DATA ---------- */
@@ -180,8 +167,8 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   /* ---------- DATA ---------- */
 
   const plans = useMemo(
-    () => transformApiData(subscriptions, billing, currency, userArea, "web"),
-    [subscriptions, billing, currency, userArea],
+    () => transformApiData(subscriptions, billing, userArea, "web"),
+    [subscriptions, billing, userArea],
   );
 
   const groups = useMemo(() => {
@@ -195,6 +182,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   const visiblePlans = groups[groupIndex] || [];
 
   /* ---------- SUBSCRIBE ---------- */
+
   const handleSubscribeClick = async ({ plan }) => {
     if (!token) return toast.error("Please login");
 
@@ -204,17 +192,15 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
         planId: plan._id,
       };
 
-      // ✅ FREE TRIAL PLAN
       if (plan.isTrialPlan) {
         payload.billingCycle = "trial";
       } else {
         payload.billingCycle = billing;
-        payload.displayCurrency = currency;
+        payload.displayCurrency = "USD";
       }
 
       const res = await dispatch(createUserSubscription(payload)).unwrap();
 
-      // TRIAL FLOW
       if (res.type === "trial") {
         dispatch(
           setPaymentSuccess({
@@ -229,18 +215,23 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
         return;
       }
 
-      // PAID FLOW
       setCheckoutData({
         plan,
         order: res.order,
         subscriptionId: res.subscriptionId,
       });
     } catch (e) {
-      toast.error(e.message || "Subscription failed");
+      const message =
+        e?.message ||
+        e?.response?.data?.message ||
+        "Subscription failed. Please try again.";
+
+      setDialogError(message);
     }
   };
 
   /* ---------- RAZORPAY ---------- */
+
   useEffect(() => {
     if (!checkoutData || !window.Razorpay) return;
 
@@ -279,7 +270,6 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   /* ================= RENDER ================= */
 
   if (loading) return <Loader2 className="animate-spin mx-auto mt-40" />;
-  if (error) return <div>Error loading plans</div>;
 
   return (
     <div className="fixed inset-0 z-[9999] bg-[#344E41]/50 flex items-center justify-center p-4">
@@ -293,14 +283,12 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
           <X size={28} className="text-white" />
         </button>
 
-        {/* ===== HEADER UI (UNCHANGED) ===== */}
         <h2 className="text-4xl font-extrabold text-center text-white mb-6">
           Choose the <span className="text-[#E1FFF0]">Right Plan</span>
         </h2>
 
-        {/* ===== TOGGLES ===== */}
+        {/* Billing Toggle */}
         <div className="flex justify-center gap-6 mb-6 flex-wrap">
-          {/* Billing Toggle */}
           <div className="flex items-center gap-3">
             <span onClick={() => setBilling("monthly")}>Monthly</span>
             <div
@@ -318,25 +306,9 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
             <span onClick={() => setBilling("yearly")}>Yearly</span>
             <span className="bg-[#E1FFF0] px-2 rounded text-sm">Save 20%</span>
           </div>
-
-          {/* Currency Toggle */}
-          <div className="flex items-center gap-3">
-            <span onClick={() => setCurrency("USD")}>Plan in $</span>
-            <div
-              onClick={() => setCurrency((c) => (c === "USD" ? "INR" : "USD"))}
-              className="w-14 h-7 bg-gray-200 rounded-full relative cursor-pointer"
-            >
-              <div
-                className={`absolute top-0.5 w-6 h-6 rounded-full bg-[#344E41] ${
-                  currency === "USD" ? "left-1" : "left-7"
-                }`}
-              />
-            </div>
-            <span onClick={() => setCurrency("INR")}>Plan in ₹</span>
-          </div>
         </div>
 
-        {/* ===== PLANS ===== */}
+        {/* Plans */}
         <div className="flex justify-center gap-6">
           {visiblePlans.map((p) => (
             <PlanCard
@@ -348,6 +320,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
           ))}
         </div>
 
+        {/* Arrows */}
         {groups.length > 1 && (
           <>
             <button
@@ -365,6 +338,35 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
               <ChevronRight size={36} />
             </button>
           </>
+        )}
+
+        {/* Error Dialog */}
+        {dialogError && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+              <button
+                onClick={() => setDialogError(null)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-black"
+              >
+                <X size={20} />
+              </button>
+
+              <h3 className="text-xl font-semibold text-red-600 mb-4">
+                Subscription
+              </h3>
+
+              <p className="text-gray-700 mb-6">{error}</p>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setDialogError(null)}
+                  className="px-5 py-2 bg-[#344E41] text-white rounded-lg"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </motion.div>
     </div>
