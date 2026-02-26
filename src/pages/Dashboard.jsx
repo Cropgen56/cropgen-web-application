@@ -109,10 +109,18 @@ const Dashboard = () => {
           <EvapotranspirationDashboard
             forecast={forecast}
             units={units}
+            selectedFieldsDetials={
+              selectedFieldDetails ? [selectedFieldDetails] : []
+            }
             hasEvapotranspiration={hasFeature("evapotranspirationMonitoring")}
           />
 
-          <Insights hasAgronomicInsights={hasFeature("agronomicInsights")} />
+          <Insights
+            selectedFieldsDetials={
+              selectedFieldDetails ? [selectedFieldDetails] : []
+            }
+            hasAgronomicInsights={hasFeature("agronomicInsights")}
+          />
 
           <PlantGrowthActivity
             selectedFieldsDetials={

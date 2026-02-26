@@ -60,7 +60,12 @@ function transformApiData(apiData, billing, userArea, platform = "web") {
   const area = userArea || DEFAULT_AREA;
 
   let plans = apiData
-    .filter((plan) => plan.platform === platform)
+    .filter(
+      (plan) =>
+        plan.platform === platform &&
+        plan.active !== false &&
+        plan.isInternal !== true,
+    )
     .map((plan) => {
       const priceObj = plan.pricing?.find(
         (p) => p.currency === "USD" && p.billingCycle === billing,
@@ -97,8 +102,7 @@ function transformApiData(apiData, billing, userArea, platform = "web") {
         active: plan.active,
         isEnterprise: false,
       };
-    })
-    .filter((p) => p.active !== false);
+    });
 
   plans.sort((a, b) => PLAN_ORDER.indexOf(a.slug) - PLAN_ORDER.indexOf(b.slug));
   plans.push(ENTERPRISE_PLAN);

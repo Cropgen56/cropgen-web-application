@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import ReactECharts from "echarts-for-react";
 import { useSelector } from "react-redux";
 
@@ -8,17 +8,17 @@ import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGu
 
 const CLOUD_COLOR_MAIN = "#87CEEB";
 
-const EvapotranspirationChart = ({ selectedFieldDetails }) => {
+const EvapotranspirationChart = ({ selectedFieldsDetials }) => {
   const chartRef = useRef(null);
   const forecastData = useSelector((state) => state.weather.forecastData) || {};
 
-  /* ================= FEATURE GUARD (ADDED) ================= */
+  /* ================= FEATURE GUARD ================= */
   const evapotranspirationGuard = useSubscriptionGuard({
-    field: selectedFieldDetails,
+    field: selectedFieldsDetials?.[0],
     featureKey: "evapotranspirationMonitoring",
   });
 
-  /* ================= DATA (UNCHANGED) ================= */
+  /* ================= DATA ================= */
   const dateData = forecastData.forecast?.time || [];
   const evapotranspirationData =
     forecastData.forecast?.evapotranspiration || [];
@@ -41,55 +41,54 @@ const EvapotranspirationChart = ({ selectedFieldDetails }) => {
       ? dateData[
           evapotranspirationData.indexOf(Math.max(...evapotranspirationData))
         ]
-      : "";
+      : "N/A";
 
-  const option = {
-    tooltip: { trigger: "axis" },
-    grid: {
-      left: "0%",
-      right: "0%",
-      top: "14%",
-      bottom: "0%",
-      containLabel: true,
-    },
-    xAxis: {
-      type: "category",
-      data: dateData.map((date) => date.slice(5)),
-      axisLabel: {
-        rotate: 45,
-        interval: 0,
-        fontSize: 10,
-        color: "#333",
+  const option = useMemo(
+    () => ({
+      tooltip: { trigger: "axis" },
+      grid: {
+        left: "0%",
+        right: "0%",
+        top: "14%",
+        bottom: "0%",
+        containLabel: true,
       },
-      axisLine: { lineStyle: { color: "rgba(0, 0, 0, 0.1)" } },
-    },
-    yAxis: {
-      type: "value",
-      min: 0,
-      max: 12,
-      interval: 2,
-      axisLabel: {
-        formatter: "{value} mm",
-        fontWeight: "bold",
-        align: "left",
-        padding: [0, 0, 0, 1],
-        color: "#333",
+      xAxis: {
+        type: "category",
+        data: dateData.map((d) => d.slice(5)),
+        axisLabel: {
+          rotate: 45,
+          interval: 0,
+          fontSize: 10,
+          color: "#333",
+        },
       },
-      splitLine: { lineStyle: { color: "rgba(0, 0, 0, 0.1)" } },
-    },
-    series: [
-      {
-        name: "Evapotranspiration",
-        type: "line",
-        data: evapotranspirationData,
-        smooth: true,
-        symbol: "circle",
-        symbolSize: 8,
-        itemStyle: { color: CLOUD_COLOR_MAIN },
-        lineStyle: { color: CLOUD_COLOR_MAIN },
+      yAxis: {
+        type: "value",
+        min: 0,
+        max: 12,
+        interval: 2,
+        axisLabel: {
+          formatter: "{value} mm",
+          fontWeight: "bold",
+          color: "#333",
+        },
       },
-    ],
-  };
+      series: [
+        {
+          name: "Evapotranspiration",
+          type: "line",
+          data: evapotranspirationData,
+          smooth: true,
+          symbol: "circle",
+          symbolSize: 8,
+          itemStyle: { color: CLOUD_COLOR_MAIN },
+          lineStyle: { color: CLOUD_COLOR_MAIN },
+        },
+      ],
+    }),
+    [dateData, evapotranspirationData],
+  );
 
   /* ================= RENDER ================= */
 
@@ -98,64 +97,60 @@ const EvapotranspirationChart = ({ selectedFieldDetails }) => {
       guard={evapotranspirationGuard}
       title="Evapotranspiration Monitoring"
     >
-      <PremiumContentWrapper
-        isLocked={!evapotranspirationGuard.hasFeatureAccess}
-        onSubscribe={evapotranspirationGuard.handleSubscribe}
-        title="Evapotranspiration Monitoring"
-      >
-        {/* 🔴 EVERYTHING BELOW IS 100% UNCHANGED */}
-        <div className="w-full flex mt-4">
-          <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-gray-900 text-2xl font-bold">
-                Evapotranspiration
-              </h2>
+      <div className="w-full flex mt-4">
+        <div className="relative w-full bg-white border border-gray-200 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden px-3 py-3 md:px-4 md:py-4">
+          {/* ===== HEADER ===== */}
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="text-xl lg:text-2xl font-bold">
+              Evapotranspiration
+            </h2>
 
-              <div className="flex items-center gap-1 px-1 text-gray-900 font-bold text-md">
-                <svg
-                  width="10"
-                  height="10"
-                  viewBox="0 0 10 10"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="me-1"
-                >
-                  <circle cx="5" cy="5" r="5" fill={CLOUD_COLOR_MAIN} />
-                </svg>
-                Daily ET
+            <div className="flex items-center gap-1 text-gray-900 font-bold text-md">
+              <svg width="10" height="10">
+                <circle cx="5" cy="5" r="5" fill={CLOUD_COLOR_MAIN} />
+              </svg>
+              Daily ET
+            </div>
+          </div>
+
+          {/* ===== BODY ===== */}
+          <div className="flex flex-col lg:flex-row w-full mt-2 gap-3">
+            {/* LEFT SUMMARY PANEL */}
+            <div className="w-full lg:w-1/4 flex flex-col gap-2">
+              <div className="bg-white border rounded-lg p-3 text-center">
+                <p className="text-gray-500 text-xs">ET High</p>
+                <h2 className="text-gray-900 font-bold">{maxEt} mm</h2>
+                <p className="text-gray-500 text-xs">{maxEtDate}</p>
+              </div>
+
+              <div className="bg-white border rounded-lg p-3 text-center">
+                <p className="text-gray-500 text-xs">ET Average</p>
+                <h2 className="text-gray-900 font-bold">{avgEt} mm</h2>
+                <p className="text-gray-500 text-xs">16-day avg</p>
               </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row w-full mt-2">
-              <div className="flex lg:flex-col w-full lg:w-[140px] gap-2 h-auto lg:h-full mb-3 lg:mb-0">
-                <div className="flex-1 bg-white border-[2px] rounded-lg p-2 text-center">
-                  <p className="text-gray-500 text-[10px] m-0">ET High</p>
-                  <h2 className="text-gray-900 font-bold">{maxEt} mm</h2>
-                  <p className="text-gray-500 text-[10px] m-0">
-                    {maxEtDate || "N/A"}
-                  </p>
+            {/* RIGHT CHART PANEL */}
+            <div className="lg:w-3/4 flex-grow">
+              <PremiumContentWrapper
+                isLocked={!evapotranspirationGuard.hasFeatureAccess}
+                onSubscribe={evapotranspirationGuard.handleSubscribe}
+                title="Evapotranspiration Monitoring"
+              >
+                <div className="w-full bg-white rounded-xl p-2 min-h-[220px]">
+                  <ReactECharts
+                    ref={chartRef}
+                    option={option}
+                    style={{ width: "100%", height: "220px" }}
+                  />
                 </div>
-
-                <div className="flex-1 bg-white border-[2px] rounded-lg p-2 text-center">
-                  <p className="text-gray-500 text-[10px] m-0">ET Average</p>
-                  <h2 className="text-gray-900 font-bold">{avgEt} mm</h2>
-                  <p className="text-gray-500 text-[10px] m-0">16-day avg</p>
-                </div>
-              </div>
-
-              <div className="flex-1 lg:ml-3 bg-white rounded-xl p-1">
-                <ReactECharts
-                  ref={chartRef}
-                  option={option}
-                  style={{ width: "100%", height: "220px" }}
-                />
-              </div>
+              </PremiumContentWrapper>
             </div>
           </div>
         </div>
-      </PremiumContentWrapper>
+      </div>
     </FeatureGuard>
   );
 };
 
-export default EvapotranspirationChart;
+export default React.memo(EvapotranspirationChart);
