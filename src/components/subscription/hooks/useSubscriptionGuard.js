@@ -6,47 +6,51 @@ export const useSubscriptionGuard = ({ field, featureKey }) => {
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
-  /**
-   * FEATURE ACCESS DECISION (FINAL, CORRECT)
-   */
+  /* =====================================================
+     FEATURE ACCESS (STRICT & CORRECT)
+  ===================================================== */
+
   const hasFeatureAccess = useMemo(() => {
     if (!field?.subscription) return false;
 
     const sub = field.subscription;
 
-    // Must be active (trial or paid)
-    if (sub.active !== true && sub.hasActiveSubscription !== true) {
+    // Only ACTIVE subscription gets access
+    if (sub.status !== "active") {
       return false;
     }
 
-    // Feature-level access (trial & paid handled same way)
+    // Feature-level validation
     if (featureKey && sub.plan?.features) {
       return Boolean(sub.plan.features[featureKey]);
     }
 
-    // No featureKey provided → allow if active
     return true;
   }, [field, featureKey]);
 
-  /**
-   * SUBSCRIBE HANDLER
-   */
+  /* =====================================================
+     SUBSCRIBE HANDLER
+  ===================================================== */
+
   const handleSubscribe = useCallback(() => {
     if (!field) {
       message.warning("Please select a field first");
       return;
     }
 
-    const areaInHectares =
-      field?.areaInHectares ||
-      (Number.isFinite(field?.acre) ? field.acre * 0.40468564224 : 0) ||
-      5;
+    const areaInAcre = Number(field?.acre);
+
+    if (!areaInAcre || areaInAcre <= 0) {
+      message.warning("Invalid field area");
+      return;
+    }
 
     setPricingFieldData({
       id: field._id,
-      name: field.fieldName || field.farmName,
+      name: field.fieldName,
       cropName: field.cropName,
-      areaInHectares,
+      acre: areaInAcre, // ✅ Pass acre directly
+      subscription: field.subscription || null,
     });
 
     setShowPricingOverlay(true);
@@ -61,11 +65,14 @@ export const useSubscriptionGuard = ({ field, featureKey }) => {
     pricingFieldData,
 
     handleSubscribe,
+
     closeMembershipModal: () => setShowMembershipModal(false),
+
     closePricingOverlay: () => {
       setShowPricingOverlay(false);
       setPricingFieldData(null);
     },
+
     setShowMembershipModal,
   };
 };

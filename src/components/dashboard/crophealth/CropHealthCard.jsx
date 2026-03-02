@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import * as turf from "@turf/turf";
 
 import SoilAnalysisChart from "./SoilAnalysisChart";
 import SoilHealthChart from "./SoilHealthChart";
@@ -11,28 +10,26 @@ import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
 import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
 import FeatureGuard from "../../subscription/FeatureGuard";
 
+const ACRE_TO_HECTARE = 0.40468564224;
+
 const CropHealth = ({ selectedFieldDetails }) => {
   const dispatch = useDispatch();
 
-  /* ================= SUBSCRIPTION (COMPONENT LEVEL) ================= */
+  /* ================= SUBSCRIPTION ================= */
   const cropHealthGuard = useSubscriptionGuard({
     field: selectedFieldDetails,
     featureKey: "cropHealthAndYield",
   });
 
   /* ================= FIELD DATA ================= */
-  const {
-    sowingDate,
-    field: coordinates = [],
-    cropName,
-  } = selectedFieldDetails || {};
+  const { sowingDate, cropName, acre = 0 } = selectedFieldDetails || {};
 
   /* ================= REDUX ================= */
   const crops = useSelector((state) => state.crops.crops);
   const advisory = useSelector((state) => state.smartAdvisory.advisory);
   const advisoryLoading = useSelector((state) => state.smartAdvisory.loading);
 
-  /* ================= FETCH CROPS (ONCE) ================= */
+  /* ================= FETCH CROPS ================= */
   useEffect(() => {
     dispatch(fetchCrops());
   }, [dispatch]);
@@ -55,19 +52,16 @@ const CropHealth = ({ selectedFieldDetails }) => {
     return Math.max(0, Math.floor((today - start) / 86400000));
   }, [sowingDate]);
 
-  /* ================= AREA (HECTARES) ================= */
-  const totalArea = useMemo(() => {
-    if (coordinates.length < 3) return 0;
-    const coords = coordinates.map((p) => [p.lng, p.lat]);
-    coords.push(coords[0]);
-    return turf.area(turf.polygon([coords])) / 10000;
-  }, [coordinates]);
+  /* ================= AREA (FROM BACKEND ACRE) ================= */
+  const totalAreaHectare = useMemo(() => {
+    return (Number(acre) * ACRE_TO_HECTARE).toFixed(2);
+  }, [acre]);
 
   /* ================= YIELD ================= */
   const yieldData = useMemo(() => {
     if (!advisory?.yield) return null;
     return {
-      standard: advisory.yield.standardYield ?? "N/A",
+      standard: advisory?.yield?.standardYield ?? "N/A",
       ai: advisory.yield.aiYield ?? "N/A",
       unit: advisory.yield.unit ?? "",
     };
@@ -77,7 +71,7 @@ const CropHealth = ({ selectedFieldDetails }) => {
 
   return (
     <div className="p-2">
-      {/* ========= FREE SECTION ========= */}
+      {/* ========= BASIC INFO ========= */}
       <div className="bg-white rounded-2xl p-4 shadow border">
         <h2 className="text-xl font-bold text-[#344E41] mb-4">Crop Health</h2>
 
@@ -93,7 +87,7 @@ const CropHealth = ({ selectedFieldDetails }) => {
           <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-sm">
             <Info label="Crop" value={cropInfo?.cropName || cropName} />
             <Info label="Crop Age" value={`${daysFromSowing} days`} />
-            <Info label="Area" value={`${totalArea.toFixed(2)} Ha`} />
+            <Info label="Area" value={`${totalAreaHectare} Ha`} />
             <Info
               label="Standard Yield"
               value={

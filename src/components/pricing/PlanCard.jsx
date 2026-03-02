@@ -1,11 +1,51 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Check, X, Building2, ArrowRight, Crown, Users, Headphones, Shield } from "lucide-react";
+import {
+  Check,
+  X,
+  ArrowRight,
+  Crown,
+  Users,
+  Headphones,
+  Shield,
+} from "lucide-react";
 
-export default function PlanCard({ plan, selectedField, onSubscribeClick, onContactClick }) {
+export default function PlanCard({
+  plan,
+  selectedField,
+  onSubscribeClick,
+  onContactClick,
+}) {
   const [flipped, setFlipped] = useState(false);
+
   const isRecommended = !!plan.recommended;
   const isEnterprise = !!plan.isEnterprise;
+
+  /* =====================================================
+     FINAL PRICING CALCULATION (AREA × PRICE PER ACRE)
+  ===================================================== */
+
+  const pricingDetails = useMemo(() => {
+    if (!selectedField || plan.isTrialPlan || !plan.pricePerUnitMinor) {
+      return null;
+    }
+
+    const areaAcre = Number(selectedField.acre || 0);
+    if (!areaAcre) return null;
+
+    // USD stored in cents
+    const pricePerAcreUSD = plan.pricePerUnitMinor / 100;
+
+    const totalUSD = areaAcre * pricePerAcreUSD;
+
+    return {
+      area: areaAcre.toFixed(2),
+      unitPrice: pricePerAcreUSD.toFixed(2),
+      total: totalUSD.toFixed(2),
+    };
+  }, [selectedField, plan]);
+
+  /* ===================================================== */
 
   const frontCount = Math.min(5, Math.ceil(plan.features.length / 2) + 1);
   const frontFeatures = plan.features.slice(0, frontCount);
@@ -24,9 +64,13 @@ export default function PlanCard({ plan, selectedField, onSubscribeClick, onCont
     if (onContactClick) {
       onContactClick({ plan, selectedField });
     } else {
-      window.open('https://www.cropgenapp.com/contact', '_blank');
+      window.open("https://www.cropgenapp.com/contact", "_blank");
     }
   };
+
+  /* =====================================================
+     ENTERPRISE PLAN (UNCHANGED)
+  ===================================================== */
 
   if (isEnterprise) {
     return (
@@ -50,120 +94,47 @@ export default function PlanCard({ plan, selectedField, onSubscribeClick, onCont
             className="absolute inset-0 rounded-2xl shadow-xl p-6 flex flex-col bg-gradient-to-br from-[#1a2e22] via-[#344E41] to-[#2d4a3a] text-white border-2 border-[#E1FFF0]/30"
             style={{ backfaceVisibility: "hidden" }}
           >
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#E1FFF0] to-[#a8e6cf] text-[#344E41] text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-lg">
-              <Crown size={12} className="text-[#344E41]" />
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-[#344E41] text-xs font-bold px-4 py-1 rounded-full shadow">
               ENTERPRISE
             </span>
 
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[#E1FFF0]/10 rounded-full blur-2xl" />
-            <div className="absolute bottom-0 left-0 w-20 h-20 bg-[#E1FFF0]/5 rounded-full blur-xl" />
+            <h3 className="text-[24px] font-extrabold mt-6">{plan.name}</h3>
+            <p className="text-xs text-gray-300">{plan.tagline}</p>
 
-            <div className="mt-6 mb-2">
-              <div className="w-12 h-12 rounded-xl bg-[#E1FFF0]/20 border border-[#E1FFF0]/30 flex items-center justify-center">
-                <Building2 className="text-[#E1FFF0]" size={24} />
-              </div>
+            <div className="mt-4 text-[20px] font-bold text-[#E1FFF0]">
+              Custom Pricing
             </div>
 
-            <h3 className="text-[24px] font-extrabold mb-1">{plan.name}</h3>
-            <p className="text-xs text-gray-300 mb-2">{plan.tagline}</p>
-
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-[20px] font-bold text-[#E1FFF0]">
-                Custom Pricing
-              </p>
-            </div>
-
-            <hr className="border-t border-white/20 my-3" />
-
-            <div className="flex-1 flex flex-col gap-2 text-[11px] font-semibold leading-[22px] overflow-hidden">
+            <div className="flex-1 mt-4 space-y-2 text-sm font-semibold">
               <p className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-[#E1FFF0]/20 flex items-center justify-center shrink-0">
-                  <Check strokeWidth={3} size={12} className="text-[#E1FFF0]" />
-                </div>
-                All Premium Features Included
+                <Check size={14} /> All Premium Features
               </p>
               <p className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-[#E1FFF0]/20 flex items-center justify-center shrink-0">
-                  <Users strokeWidth={3} size={12} className="text-[#E1FFF0]" />
-                </div>
-                Unlimited Team Members
+                <Users size={14} /> Unlimited Team Members
               </p>
               <p className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-[#E1FFF0]/20 flex items-center justify-center shrink-0">
-                  <Headphones strokeWidth={3} size={12} className="text-[#E1FFF0]" />
-                </div>
-                Dedicated Account Manager
+                <Headphones size={14} /> Dedicated Manager
               </p>
               <p className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-[#E1FFF0]/20 flex items-center justify-center shrink-0">
-                  <Shield strokeWidth={3} size={12} className="text-[#E1FFF0]" />
-                </div>
-                Priority Support & SLA
+                <Shield size={14} /> Priority Support
               </p>
             </div>
 
-            <div className="mt-3 flex gap-2">
+            <div className="mt-4 flex gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setFlipped(true);
                 }}
-                className="flex-1 py-2 rounded-2xl text-xs bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/20"
+                className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs"
               >
-                View All Features
+                View All
               </button>
               <button
                 onClick={handleContact}
-                className="flex-1 py-2 rounded-2xl font-bold text-xs bg-[#E1FFF0] text-[#344E41] hover:bg-white transition-all duration-300 flex items-center justify-center gap-1"
+                className="flex-1 py-2 rounded-xl bg-[#E1FFF0] text-[#344E41] font-bold text-xs flex items-center justify-center gap-1"
               >
-                Contact Us
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          <div
-            className="absolute inset-0 rounded-2xl shadow-xl p-6 flex flex-col bg-gradient-to-br from-[#1a2e22] via-[#344E41] to-[#2d4a3a] text-white border-2 border-[#E1FFF0]/30"
-            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-          >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[#E1FFF0]/10 rounded-full blur-2xl" />
-
-            <div className="flex items-center gap-2 mt-4 mb-3">
-              <Building2 className="text-[#E1FFF0]" size={20} />
-              <h3 className="text-[18px] font-bold">
-                {plan.name} — All Features
-              </h3>
-            </div>
-
-            <div className="text-[11px] flex-1 overflow-auto font-semibold leading-[20px] pr-2">
-              {plan.features.map((f, idx) => (
-                <p key={idx} className="flex items-center gap-2 mb-1.5">
-                  <Check
-                    strokeWidth={4}
-                    size={14}
-                    className="text-[#E1FFF0] shrink-0"
-                  />
-                  {f}
-                </p>
-              ))}
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setFlipped(false);
-                }}
-                className="flex-1 py-2 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-colors border border-white/20"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleContact}
-                className="flex-1 py-2 rounded-2xl font-bold text-xs bg-[#E1FFF0] text-[#344E41] hover:bg-white transition-all duration-300 flex items-center justify-center gap-1"
-              >
-                Contact Us
-                <ArrowRight size={14} />
+                Contact <ArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -172,9 +143,13 @@ export default function PlanCard({ plan, selectedField, onSubscribeClick, onCont
     );
   }
 
+  /* =====================================================
+     NORMAL PLAN CARD
+  ===================================================== */
+
   return (
     <div
-      className="w-[300px] md:w-[320px] h-[420px]"
+      className="w-[300px] md:w-[320px] h-[460px]"
       style={{ perspective: 1000 }}
     >
       <motion.div
@@ -189,10 +164,11 @@ export default function PlanCard({ plan, selectedField, onSubscribeClick, onCont
         }}
         className="cursor-pointer"
       >
+        {/* FRONT */}
         <div
           className={`absolute inset-0 rounded-2xl shadow-lg p-6 flex flex-col ${
             isRecommended
-              ? "bg-[#344E41] text-white border-[2px] border-white"
+              ? "bg-[#344E41] text-white border-2 border-white"
               : "bg-white text-black border border-gray-200"
           }`}
           style={{ backfaceVisibility: "hidden" }}
@@ -202,89 +178,86 @@ export default function PlanCard({ plan, selectedField, onSubscribeClick, onCont
               Recommended
             </span>
           )}
-          <h3 className="text-[24px] font-extrabold mt-6 mb-1">{plan.name}</h3>
-          <p className="text-xs mb-2">{plan.tagline}</p>
-          <div className="flex items-baseline justify-between mt-2">
-            <p className="text-[20px] font-bold">{plan.price || ""}</p>
-            {plan.priceBreakdown && (
-              <p className="text-xs text-gray-400">{plan.priceBreakdown}</p>
+
+          <h3 className="text-[24px] font-extrabold mt-6">{plan.name}</h3>
+          <p className="text-xs mb-3">{plan.tagline}</p>
+
+          {/* PRICE SECTION */}
+          <div>
+            <p className="text-[24px] font-bold">
+              {pricingDetails
+                ? `$${pricingDetails.total}/${plan.billingCycle || "monthly"}`
+                : plan.price}
+            </p>
+
+            {pricingDetails && (
+              <p className="text-[12px] text-gray-500 font-medium mt-1">
+                {pricingDetails.area} acres × ${pricingDetails.unitPrice}
+              </p>
             )}
           </div>
 
-          <hr className="border-t border-gray-800 mb-3" />
-          <div className="flex-1 flex flex-col gap-1 text-[11px] font-semibold leading-[24px] overflow-hidden">
-            {frontFeatures.length > 0 ? (
-              frontFeatures.map((f, idx) => (
-                <p key={idx} className="flex items-center gap-2 mb-0">
-                  <Check
-                    strokeWidth={4}
-                    size={14}
-                    className="text-green-700 shrink-0"
-                  />
-                  {f}
-                </p>
-              ))
-            ) : (
-              <p className="text-gray-500">No features enabled</p>
-            )}
+          <hr className="border-t border-gray-300 my-3" />
+
+          {/* FEATURES */}
+          <div className="flex-1 flex flex-col gap-1 text-[11px] font-semibold">
+            {frontFeatures.map((f, idx) => (
+              <p key={idx} className="flex items-center gap-2">
+                <Check size={14} className="text-green-700" />
+                {f}
+              </p>
+            ))}
           </div>
 
+          {/* BUTTONS */}
           <div className="mt-3 flex gap-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setFlipped(true);
               }}
-              className="flex-1 py-2 rounded-2xl text-xs bg-[#5A7C6B] text-white hover:bg-[#466657]"
+              className="flex-1 py-2 rounded-xl text-xs bg-[#5A7C6B] text-white"
             >
-              View All Features
+              View All
             </button>
+
             <button
               onClick={handleSubscribe}
-              className="flex-1 py-2 rounded-2xl font-bold text-xs bg-white text-[#344E41] hover:bg-gray-100 border-[1px] border-[#344E41]"
+              className="flex-1 py-2 rounded-xl text-xs font-bold bg-white text-[#344E41] border border-[#344E41]"
             >
               Subscribe
             </button>
           </div>
         </div>
 
+        {/* BACK */}
         <div
-          className={`absolute inset-0 rounded-2xl shadow-lg p-6 flex flex-col ${
-            isRecommended
-              ? "bg-[#344E41] text-white border-[2px] border-white"
-              : "bg-white text-black border border-gray-200"
-          }`}
+          className="absolute inset-0 rounded-2xl shadow-lg p-6 flex flex-col bg-white text-black border border-gray-200"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           <h3 className="text-[18px] font-bold mt-6 mb-3">
             {plan.name} — All Features
           </h3>
-          <div className="text-[11px] flex-1 overflow-auto font-semibold leading-[20px] pr-2">
+
+          <div className="flex-1 overflow-auto text-[11px] font-semibold">
             {backFeatures.map((f, idx) => (
               <p key={idx} className="flex items-center gap-2 mb-1">
                 {plan.features.includes(f) ? (
-                  <Check
-                    strokeWidth={4}
-                    size={14}
-                    className="text-green-700 shrink-0"
-                  />
+                  <Check size={14} className="text-green-700" />
                 ) : (
-                  <X
-                    strokeWidth={4}
-                    size={14}
-                    className="text-red-600 shrink-0"
-                  />
+                  <X size={14} className="text-red-600" />
                 )}
                 {f}
               </p>
             ))}
           </div>
+
           <button
             onClick={(e) => {
               e.stopPropagation();
               setFlipped(false);
             }}
-            className="mt-3 w-full py-2 rounded-2xl bg-[#5A7C6B] text-white hover:bg-[#466657]"
+            className="mt-3 w-full py-2 rounded-xl bg-[#5A7C6B] text-white"
           >
             Back
           </button>

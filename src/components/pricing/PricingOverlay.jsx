@@ -54,10 +54,10 @@ const ENTERPRISE_PLAN = {
 
 /* ================= HELPERS ================= */
 
-function transformApiData(apiData, billing, userArea, platform = "web") {
+function transformApiData(apiData, billing, selectedField, platform = "web") {
   if (!Array.isArray(apiData)) return [];
 
-  const area = userArea || DEFAULT_AREA;
+  const area = Number(selectedField?.acre) || 0;
 
   let plans = apiData
     .filter(
@@ -67,13 +67,19 @@ function transformApiData(apiData, billing, userArea, platform = "web") {
         plan.isInternal !== true,
     )
     .map((plan) => {
+      // ✅ Always calculate using INR
       const priceObj = plan.pricing?.find(
-        (p) => p.currency === "USD" && p.billingCycle === billing,
+        (p) => p.currency === "INR" && p.billingCycle === billing,
       );
 
-      let totalPrice = 0;
-      if (priceObj) {
-        totalPrice = (priceObj.pricePerUnitMinor / 100) * area;
+      let totalUSD = null;
+
+      if (priceObj && area > 0) {
+        const pricePerAcreINR = priceObj.pricePerUnitMinor / 100;
+        const totalINR = pricePerAcreINR * area;
+
+        const USD_RATE = 91.46; // keep centralized later
+        totalUSD = (totalINR / USD_RATE).toFixed(2);
       }
 
       const enabled = [];
@@ -88,14 +94,15 @@ function transformApiData(apiData, billing, userArea, platform = "web") {
         slug: plan.slug,
         name: plan.name,
         tagline: plan.description,
+
+        // ✅ FINAL monthly total
         price:
           plan.slug === "free-trial"
             ? "Free"
-            : `$${totalPrice.toFixed(2)}/${billing}`,
-        priceBreakdown:
-          plan.slug === "free-trial"
-            ? `Free Trial (${plan.trialDays} days)`
-            : null,
+            : totalUSD
+              ? `$${totalUSD}/${billing}`
+              : null,
+
         features: enabled,
         missing: disabled,
         isTrialPlan: plan.slug === "free-trial",
@@ -105,6 +112,7 @@ function transformApiData(apiData, billing, userArea, platform = "web") {
     });
 
   plans.sort((a, b) => PLAN_ORDER.indexOf(a.slug) - PLAN_ORDER.indexOf(b.slug));
+
   plans.push(ENTERPRISE_PLAN);
 
   return plans;
@@ -171,8 +179,8 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   /* ---------- DATA ---------- */
 
   const plans = useMemo(
-    () => transformApiData(subscriptions, billing, userArea, "web"),
-    [subscriptions, billing, userArea],
+    () => transformApiData(subscriptions, billing, selectedField, "web"),
+    [subscriptions, billing, selectedField],
   );
 
   const groups = useMemo(() => {
