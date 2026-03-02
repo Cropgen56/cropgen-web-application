@@ -1,14 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Check,
-  X,
-  ArrowRight,
-  Crown,
-  Users,
-  Headphones,
-  Shield,
-} from "lucide-react";
+import { Check, X, ArrowRight, Users, Headphones, Shield } from "lucide-react";
 
 export default function PlanCard({
   plan,
@@ -21,56 +13,7 @@ export default function PlanCard({
   const isRecommended = !!plan.recommended;
   const isEnterprise = !!plan.isEnterprise;
 
-  /* =====================================================
-     FINAL PRICING CALCULATION (AREA × PRICE PER ACRE)
-  ===================================================== */
-
-  const pricingDetails = useMemo(() => {
-    if (!selectedField || plan.isTrialPlan || !plan.pricePerUnitMinor) {
-      return null;
-    }
-
-    const areaAcre = Number(selectedField.acre || 0);
-    if (!areaAcre) return null;
-
-    // USD stored in cents
-    const pricePerAcreUSD = plan.pricePerUnitMinor / 100;
-
-    const totalUSD = areaAcre * pricePerAcreUSD;
-
-    return {
-      area: areaAcre.toFixed(2),
-      unitPrice: pricePerAcreUSD.toFixed(2),
-      total: totalUSD.toFixed(2),
-    };
-  }, [selectedField, plan]);
-
-  /* ===================================================== */
-
-  const frontCount = Math.min(5, Math.ceil(plan.features.length / 2) + 1);
-  const frontFeatures = plan.features.slice(0, frontCount);
-  const backFeatures = [
-    ...plan.features.slice(frontCount),
-    ...(plan.missing || []),
-  ];
-
-  const handleSubscribe = (e) => {
-    e.stopPropagation();
-    onSubscribeClick?.({ plan, selectedField });
-  };
-
-  const handleContact = (e) => {
-    e.stopPropagation();
-    if (onContactClick) {
-      onContactClick({ plan, selectedField });
-    } else {
-      window.open("https://www.cropgenapp.com/contact", "_blank");
-    }
-  };
-
-  /* =====================================================
-     ENTERPRISE PLAN (UNCHANGED)
-  ===================================================== */
+  /* ================= ENTERPRISE ================= */
 
   if (isEnterprise) {
     return (
@@ -119,37 +62,29 @@ export default function PlanCard({
                 <Shield size={14} /> Priority Support
               </p>
             </div>
-
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setFlipped(true);
-                }}
-                className="flex-1 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs"
-              >
-                View All
-              </button>
-              <button
-                onClick={handleContact}
-                className="flex-1 py-2 rounded-xl bg-[#E1FFF0] text-[#344E41] font-bold text-xs flex items-center justify-center gap-1"
-              >
-                Contact <ArrowRight size={14} />
-              </button>
-            </div>
           </div>
         </motion.div>
       </div>
     );
   }
 
-  /* =====================================================
-     NORMAL PLAN CARD
-  ===================================================== */
+  /* ================= NORMAL PLAN ================= */
+
+  const frontCount = Math.min(5, Math.ceil(plan.features.length / 2) + 1);
+  const frontFeatures = plan.features.slice(0, frontCount);
+  const backFeatures = [
+    ...plan.features.slice(frontCount),
+    ...(plan.missing || []),
+  ];
+
+  const handleSubscribe = (e) => {
+    e.stopPropagation();
+    onSubscribeClick?.({ plan, selectedField });
+  };
 
   return (
     <div
-      className="w-[300px] md:w-[320px] h-[460px]"
+      className="w-[300px] md:w-[320px] h-[500px]"
       style={{ perspective: 1000 }}
     >
       <motion.div
@@ -173,28 +108,18 @@ export default function PlanCard({
           }`}
           style={{ backfaceVisibility: "hidden" }}
         >
-          {isRecommended && (
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-[#344E41] text-xs font-bold px-3 py-1 rounded-full">
-              Recommended
-            </span>
-          )}
-
           <h3 className="text-[24px] font-extrabold mt-6">{plan.name}</h3>
           <p className="text-xs mb-3">{plan.tagline}</p>
 
-          {/* PRICE SECTION */}
-          <div>
+          {/* ✅ PRICE SECTION */}
+          <div className="mb-3">
             <p className="text-[24px] font-bold">
-              {pricingDetails
-                ? `$${pricingDetails.total}/${plan.billingCycle || "monthly"}`
-                : plan.price}
+              ${plan.totalPrice?.toFixed(2)}/{plan.billingCycle}
             </p>
 
-            {pricingDetails && (
-              <p className="text-[12px] text-gray-500 font-medium mt-1">
-                {pricingDetails.area} acres × ${pricingDetails.unitPrice}
-              </p>
-            )}
+            <p className="text-[12px] text-gray-500 font-medium mt-1">
+              {plan.area.toFixed(2)} acres × ${plan.unitPrice}
+            </p>
           </div>
 
           <hr className="border-t border-gray-300 my-3" />

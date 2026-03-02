@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import { motion } from "framer-motion";
-import { Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, X, ChevronLeft, ChevronRight, Palette } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -67,19 +67,16 @@ function transformApiData(apiData, billing, selectedField, platform = "web") {
         plan.isInternal !== true,
     )
     .map((plan) => {
-      // ✅ Always calculate using INR
       const priceObj = plan.pricing?.find(
-        (p) => p.currency === "INR" && p.billingCycle === billing,
+        (p) => p.currency === "USD" && p.billingCycle === billing,
       );
 
-      let totalUSD = null;
+      let unitPrice = 0;
+      let total = 0;
 
       if (priceObj && area > 0) {
-        const pricePerAcreINR = priceObj.pricePerUnitMinor / 100;
-        const totalINR = pricePerAcreINR * area;
-
-        const USD_RATE = 91.46; // keep centralized later
-        totalUSD = (totalINR / USD_RATE).toFixed(2);
+        unitPrice = priceObj.pricePerUnitMinor / 100; // cents → dollars
+        total = unitPrice * area;
       }
 
       const enabled = [];
@@ -94,14 +91,11 @@ function transformApiData(apiData, billing, selectedField, platform = "web") {
         slug: plan.slug,
         name: plan.name,
         tagline: plan.description,
+        billingCycle: billing,
 
-        // ✅ FINAL monthly total
-        price:
-          plan.slug === "free-trial"
-            ? "Free"
-            : totalUSD
-              ? `$${totalUSD}/${billing}`
-              : null,
+        unitPrice,
+        totalPrice: total,
+        area,
 
         features: enabled,
         missing: disabled,
@@ -112,7 +106,6 @@ function transformApiData(apiData, billing, selectedField, platform = "web") {
     });
 
   plans.sort((a, b) => PLAN_ORDER.indexOf(a.slug) - PLAN_ORDER.indexOf(b.slug));
-
   plans.push(ENTERPRISE_PLAN);
 
   return plans;
@@ -182,6 +175,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
     () => transformApiData(subscriptions, billing, selectedField, "web"),
     [subscriptions, billing, selectedField],
   );
+  console.log(plans);
 
   const groups = useMemo(() => {
     const arr = [];
