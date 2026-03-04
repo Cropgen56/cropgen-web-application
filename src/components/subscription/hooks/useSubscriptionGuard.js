@@ -49,7 +49,7 @@ export const useSubscriptionGuard = ({ field, featureKey }) => {
       id: field._id,
       name: field.fieldName,
       cropName: field.cropName,
-      acre: areaInAcre, // ✅ Pass acre directly
+      acre: areaInAcre,
       subscription: field.subscription || null,
     });
 

@@ -17,14 +17,14 @@ const AddField = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [pendingRedirect, setPendingRedirect] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const [fieldArea, setFieldArea] = useState(0);
 
-  // Add state to store the newly created field data
   const [selectedField, setSelectedField] = useState(null);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userId = useSelector((state) => state?.auth?.user?.id);
+
+  /* ================= RESPONSIVE ================= */
 
   useEffect(() => {
     const handleResize = () => {
@@ -32,29 +32,37 @@ const AddField = () => {
       setIsMobileView(width < 640);
       setIsTabletView(width < 1024);
     };
+
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  /* ================= MAP ACTIONS ================= */
+
   const toggleAddMarkers = () => setIsAddingMarkers((prev) => !prev);
+
   const clearMarkers = () => setMarkers([]);
 
   const toggleSidebar = (visible) => setIsSidebarVisible(visible);
+
+  /* ================= AREA CALCULATION ================= */
 
   const calculateArea = (coords) => {
     if (coords.length < 3) return 0;
 
     const coordinates = coords.map((point) => [point.lng, point.lat]);
     coordinates.push(coordinates[0]);
+
     const polygon = turf.polygon([coordinates]);
     const area = turf.area(polygon);
-    return area / 4046.86;
+
+    return area / 4046.86; // acres
   };
 
-  const acresToHectares = (acres) => {
-    return acres * 0.404686;
-  };
+  const acresToHectares = (acres) => acres * 0.404686;
+
+  /* ================= SAVE FIELD ================= */
 
   const saveFarm = async ({
     cropName,
@@ -65,13 +73,12 @@ const AddField = () => {
     typeOfFarming,
   }) => {
     if (markers.length === 0) {
-      message.error("No markers added. Please add some markers first.");
+      message.error("No markers added. Please add markers first.");
       return;
     }
 
     const areaInAcres = calculateArea(markers);
     const areaInHectares = acresToHectares(areaInAcres);
-    setFieldArea(areaInHectares);
 
     try {
       const result = await dispatch(
@@ -91,17 +98,19 @@ const AddField = () => {
 
       if (result?.success) {
         message.success("Field added successfully!");
-        setShowOverlay(true);
-        // navigate("/cropgen-analytics");
-        // Store the field data for pricing overlay
+
+        const field = result.farmField;
+
         const fieldData = {
-          id: result?.farmField?._id,
-          name: farmName,
-          areaInHectares,
-          cropName,
+          id: field._id,
+          fieldName: field.fieldName,
+          cropName: field.cropName,
+          acre: field.acre,
+          subscription: field.subscription || null,
         };
 
         setSelectedField(fieldData);
+        setShowOverlay(true);
         setPendingRedirect(true);
       } else {
         message.error("Failed to add field. Please try again.");
@@ -112,21 +121,24 @@ const AddField = () => {
     }
   };
 
+  /* ================= CLOSE PRICING ================= */
+
   const handleClosePricing = () => {
     setShowOverlay(false);
     setSelectedField(null);
+
     if (pendingRedirect) {
       navigate("/cropgen-analytics");
     }
   };
 
+  /* ================= CURRENT AREA ================= */
+
   const getCurrentArea = () => {
     if (markers.length < 3) return 0;
-    const areaInAcres = calculateArea(markers);
-    return acresToHectares(areaInAcres);
+    return acresToHectares(calculateArea(markers));
   };
 
-  // Get dynamic heights based on screen size
   const getMapHeight = () => {
     if (isMobileView) return "35vh";
     return "40vh";
@@ -137,21 +149,22 @@ const AddField = () => {
     return "60vh";
   };
 
+  /* ================= RENDER ================= */
+
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <AnimatePresence>
-        {showOverlay && (
+        {showOverlay && selectedField && (
           <motion.div
             key="pricing-overlay"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-8 no-scrollbar overflow-y-auto"
+            transition={{ duration: 0.6 }}
+            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
           >
             <PricingOverlay
               onClose={handleClosePricing}
-              userArea={fieldArea}
               selectedField={selectedField}
             />
           </motion.div>
@@ -159,9 +172,7 @@ const AddField = () => {
       </AnimatePresence>
 
       {isTabletView ? (
-        // Tablet & Mobile Layout
         <div className="w-full h-screen flex flex-col relative overflow-hidden">
-          {/* Map Container */}
           <div
             className={`relative w-full flex-shrink-0 ${
               showOverlay ? "h-screen z-[30]" : "z-0"
@@ -179,35 +190,35 @@ const AddField = () => {
               showUploadOverlay={showOverlay}
             />
 
-            {/* Action Buttons */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-4 z-50 pointer-events-auto">
-              <button className="bg-[#344E41] text-white px-2 sm:px-4 py-1 rounded text-xs sm:text-sm">
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-4 z-50">
+              <button className="bg-[#344E41] text-white px-3 py-1 rounded text-sm">
                 Calendar
               </button>
+
               <button
                 onClick={clearMarkers}
-                className="bg-[#344E41] text-white px-2 sm:px-4 py-1 rounded text-xs sm:text-sm"
+                className="bg-[#344E41] text-white px-3 py-1 rounded text-sm"
               >
                 Undo
               </button>
+
               <button
                 onClick={toggleAddMarkers}
-                className="bg-[#344E41] text-white px-2 sm:px-4 py-1 rounded text-xs sm:text-sm"
+                className="bg-[#344E41] text-white px-3 py-1 rounded text-sm"
               >
                 {isAddingMarkers ? "Stop" : "Add Field"}
               </button>
             </div>
           </div>
 
-          {/* Sidebar Container */}
           <AnimatePresence>
             {isSidebarVisible && (
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
-                transition={{ duration: 0.5, ease: "easeInOut" }}
-                className={`w-full flex-grow p-2 sm:p-4 flex justify-center items-start overflow-y-auto bg-white pointer-events-auto ${
+                transition={{ duration: 0.4 }}
+                className={`w-full flex-grow p-4 overflow-y-auto bg-white ${
                   showOverlay ? "z-10" : "z-20"
                 }`}
                 style={{ height: getSidebarHeight() }}
@@ -223,13 +234,13 @@ const AddField = () => {
           </AnimatePresence>
         </div>
       ) : (
-        // Desktop Layout
         <div className="w-full h-screen flex overflow-hidden">
           <AddFieldSidebar
             saveFarm={saveFarm}
             markers={markers}
             currentArea={getCurrentArea()}
           />
+
           <AddFieldMap
             markers={markers}
             setMarkers={setMarkers}

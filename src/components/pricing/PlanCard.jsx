@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, X, ArrowRight, Users, Headphones, Shield } from "lucide-react";
+import { Check, X, Users, Headphones, Shield } from "lucide-react";
 
 export default function PlanCard({
   plan,
@@ -18,11 +18,10 @@ export default function PlanCard({
   if (isEnterprise) {
     return (
       <div
-        className="w-[300px] md:w-[320px] h-[420px]"
+        className="w-[300px] md:w-[320px] h-[540px]"
         style={{ perspective: 1000 }}
       >
         <motion.div
-          onClick={() => setFlipped((s) => !s)}
           animate={{ rotateY: flipped ? 180 : 0 }}
           transition={{ duration: 0.7 }}
           style={{
@@ -31,37 +30,42 @@ export default function PlanCard({
             width: "100%",
             height: "100%",
           }}
-          className="cursor-pointer"
         >
           <div
-            className="absolute inset-0 rounded-2xl shadow-xl p-6 flex flex-col bg-gradient-to-br from-[#1a2e22] via-[#344E41] to-[#2d4a3a] text-white border-2 border-[#E1FFF0]/30"
+            className="absolute inset-0 rounded-2xl shadow-xl p-6 flex flex-col justify-between bg-gradient-to-br from-[#1a2e22] via-[#344E41] to-[#2d4a3a] text-white border border-[#E1FFF0]/30"
             style={{ backfaceVisibility: "hidden" }}
           >
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-[#344E41] text-xs font-bold px-4 py-1 rounded-full shadow">
               ENTERPRISE
             </span>
 
-            <h3 className="text-[24px] font-extrabold mt-6">{plan.name}</h3>
-            <p className="text-xs text-gray-300">{plan.tagline}</p>
+            <div>
+              <h3 className="text-[24px] font-extrabold mt-6">{plan.name}</h3>
+              <p className="text-sm text-gray-200 mt-1">{plan.tagline}</p>
 
-            <div className="mt-4 text-[20px] font-bold text-[#E1FFF0]">
-              Custom Pricing
+              <div className="mt-5 text-[22px] font-bold text-[#E1FFF0]">
+                Custom Pricing
+              </div>
             </div>
 
-            <div className="flex-1 mt-4 space-y-2 text-sm font-semibold">
+            <div className="space-y-3 text-sm font-medium">
               <p className="flex items-center gap-2">
-                <Check size={14} /> All Premium Features
+                <Check size={16} /> All Premium Features
               </p>
               <p className="flex items-center gap-2">
-                <Users size={14} /> Unlimited Team Members
+                <Users size={16} /> Unlimited Team Members
               </p>
               <p className="flex items-center gap-2">
-                <Headphones size={14} /> Dedicated Manager
+                <Headphones size={16} /> Dedicated Manager
               </p>
               <p className="flex items-center gap-2">
-                <Shield size={14} /> Priority Support
+                <Shield size={16} /> Priority Support
               </p>
             </div>
+
+            <button className="w-full py-3 rounded-xl bg-white text-[#344E41] font-semibold">
+              Contact Sales
+            </button>
           </div>
         </motion.div>
       </div>
@@ -70,10 +74,12 @@ export default function PlanCard({
 
   /* ================= NORMAL PLAN ================= */
 
-  const frontCount = Math.min(5, Math.ceil(plan.features.length / 2) + 1);
-  const frontFeatures = plan.features.slice(0, frontCount);
+  const FRONT_FEATURE_LIMIT = 4;
+
+  const frontFeatures = plan.features.slice(0, FRONT_FEATURE_LIMIT);
+
   const backFeatures = [
-    ...plan.features.slice(frontCount),
+    ...plan.features.slice(FRONT_FEATURE_LIMIT),
     ...(plan.missing || []),
   ];
 
@@ -84,11 +90,10 @@ export default function PlanCard({
 
   return (
     <div
-      className="w-[300px] md:w-[320px] h-[500px]"
+      className="w-[300px] md:w-[320px] h-[540px]"
       style={{ perspective: 1000 }}
     >
       <motion.div
-        onClick={() => setFlipped((s) => !s)}
         animate={{ rotateY: flipped ? 180 : 0 }}
         transition={{ duration: 0.7 }}
         style={{
@@ -99,82 +104,99 @@ export default function PlanCard({
         }}
         className="cursor-pointer"
       >
-        {/* FRONT */}
+        {/* FRONT SIDE */}
+
         <div
-          className={`absolute inset-0 rounded-2xl shadow-lg p-6 flex flex-col ${
+          className={`absolute inset-0 rounded-2xl shadow-xl p-6 flex flex-col justify-between ${
             isRecommended
               ? "bg-[#344E41] text-white border-2 border-white"
               : "bg-white text-black border border-gray-200"
           }`}
           style={{ backfaceVisibility: "hidden" }}
         >
-          <h3 className="text-[24px] font-extrabold mt-6">{plan.name}</h3>
-          <p className="text-xs mb-3">{plan.tagline}</p>
+          {/* TOP CONTENT */}
 
-          {/* ✅ PRICE SECTION */}
-          <div className="mb-3">
-            <p className="text-[24px] font-bold">
-              ${plan.totalPrice?.toFixed(2)}/{plan.billingCycle}
-            </p>
+          <div>
+            <h3 className="text-[24px] font-extrabold mt-4">{plan.name}</h3>
+            <p className="text-sm mt-1 mb-4">{plan.tagline}</p>
 
-            <p className="text-[12px] text-gray-500 font-medium mt-1">
-              {plan.area.toFixed(2)} acres × ${plan.unitPrice}
-            </p>
-          </div>
+            {/* PRICE */}
 
-          <hr className="border-t border-gray-300 my-3" />
-
-          {/* FEATURES */}
-          <div className="flex-1 flex flex-col gap-1 text-[11px] font-semibold">
-            {frontFeatures.map((f, idx) => (
-              <p key={idx} className="flex items-center gap-2">
-                <Check size={14} className="text-green-700" />
-                {f}
+            <div>
+              <p className="text-[26px] font-bold">
+                ${plan.totalPrice?.toFixed(2)}/{plan.billingCycle}
               </p>
-            ))}
+
+              <p className="text-xs text-gray-500 font-medium mt-1">
+                {plan.area.toFixed(2)} acres × ${plan.unitPrice}
+              </p>
+            </div>
+
+            <hr className="border-t border-gray-300 my-4" />
+
+            {/* FEATURES */}
+
+            <div className="flex flex-col gap-2 text-sm font-medium">
+              {frontFeatures.map((f, idx) => (
+                <p key={idx} className="flex items-center gap-2">
+                  <Check size={16} className="text-green-600" />
+                  {f}
+                </p>
+              ))}
+
+              {plan.features.length > FRONT_FEATURE_LIMIT && (
+                <p className="text-xs text-gray-400 mt-1">
+                  +{plan.features.length - FRONT_FEATURE_LIMIT} more features
+                </p>
+              )}
+            </div>
           </div>
 
           {/* BUTTONS */}
-          <div className="mt-3 flex gap-2">
+
+          <div className="flex gap-3">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setFlipped(true);
               }}
-              className="flex-1 py-2 rounded-xl text-xs bg-[#5A7C6B] text-white"
+              className="flex-1 py-2 rounded-xl text-sm bg-[#5A7C6B] text-white font-medium hover:bg-[#49675a]"
             >
               View All
             </button>
 
             <button
               onClick={handleSubscribe}
-              className="flex-1 py-2 rounded-xl text-xs font-bold bg-white text-[#344E41] border border-[#344E41]"
+              className="flex-1 py-2 rounded-xl text-sm font-semibold bg-white text-[#344E41] border border-[#344E41] hover:bg-[#f5f7f6]"
             >
               Subscribe
             </button>
           </div>
         </div>
 
-        {/* BACK */}
+        {/* BACK SIDE */}
+
         <div
-          className="absolute inset-0 rounded-2xl shadow-lg p-6 flex flex-col bg-white text-black border border-gray-200"
+          className="absolute inset-0 rounded-2xl shadow-xl p-6 flex flex-col justify-between bg-white text-black border border-gray-200"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
-          <h3 className="text-[18px] font-bold mt-6 mb-3">
-            {plan.name} — All Features
-          </h3>
+          <div>
+            <h3 className="text-[20px] font-bold mt-4 mb-4">
+              {plan.name} — All Features
+            </h3>
 
-          <div className="flex-1 overflow-auto text-[11px] font-semibold">
-            {backFeatures.map((f, idx) => (
-              <p key={idx} className="flex items-center gap-2 mb-1">
-                {plan.features.includes(f) ? (
-                  <Check size={14} className="text-green-700" />
-                ) : (
-                  <X size={14} className="text-red-600" />
-                )}
-                {f}
-              </p>
-            ))}
+            <div className="max-h-[320px] overflow-y-auto text-sm font-medium space-y-2 pr-2">
+              {backFeatures.map((f, idx) => (
+                <p key={idx} className="flex items-center gap-2">
+                  {plan.features.includes(f) ? (
+                    <Check size={16} className="text-green-600" />
+                  ) : (
+                    <X size={16} className="text-red-500" />
+                  )}
+                  {f}
+                </p>
+              ))}
+            </div>
           </div>
 
           <button
@@ -182,7 +204,7 @@ export default function PlanCard({
               e.stopPropagation();
               setFlipped(false);
             }}
-            className="mt-3 w-full py-2 rounded-xl bg-[#5A7C6B] text-white"
+            className="mt-4 w-full py-2 rounded-xl bg-[#5A7C6B] text-white font-medium hover:bg-[#49675a]"
           >
             Back
           </button>

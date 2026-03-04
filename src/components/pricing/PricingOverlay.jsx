@@ -335,13 +335,13 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
               }
               className="absolute left-4 top-1/2"
             >
-              <ChevronLeft size={36} />
+              <ChevronLeft size={36} color="white" />
             </button>
             <button
               onClick={() => setGroupIndex((i) => (i + 1) % groups.length)}
               className="absolute right-4 top-1/2"
             >
-              <ChevronRight size={36} />
+              <ChevronRight size={36} color="white" />
             </button>
           </>
         )}
