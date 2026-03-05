@@ -130,25 +130,6 @@ const Dashboard = () => {
           />
         </div>
       )}
-
-      {/* FIRST-TIME USER OVERLAY */}
-      <AnimatePresence>
-        {fields.length === 0 && !isLoadingFields && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
-          >
-            <button
-              onClick={() => navigate("/addfield")}
-              className="px-6 py-4 bg-green-600 rounded-xl text-white flex items-center gap-2"
-            >
-              <PlusIcon />
-              Add Your First Field
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

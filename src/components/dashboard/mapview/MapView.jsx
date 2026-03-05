@@ -27,6 +27,42 @@ import { resetSatelliteState } from "../../../redux/slices/satelliteSlice";
 import LogoFlipLoader from "../../comman/loading/LogoFlipLoader";
 import IndexDates from "./indexdates/IndexDates";
 
+const TutorialOverlay = ({ show, onAddField }) => {
+  if (!show) return null;
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center z-[2000] pointer-events-none">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 w-[100%] max-w-4xl pointer-events-auto">
+        <h2 className="text-xl font-semibold text-center mb-4">
+          How to Add Your First Farm Field
+        </h2>
+
+        <div className="aspect-video rounded-lg overflow-hidden">
+          <iframe
+            className="w-full h-full"
+            src="https://www.youtube.com/embed/U_sVgXnqYPk"
+            title="Add Field Tutorial"
+            allowFullScreen
+          />
+        </div>
+
+        <p className="text-gray-600 text-center mt-4">
+          Watch this tutorial to learn how to add your farm field.
+        </p>
+
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={onAddField}
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            Add Your Field
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const calculatePolygonCentroid = (coordinates) => {
   if (!coordinates || coordinates.length < 3) return { lat: null, lng: null };
   let area = 0,
@@ -86,7 +122,7 @@ const FarmMap = ({
   selectedField,
   setSelectedField,
   selectedFieldsDetials,
-  showFieldDropdown = true
+  showFieldDropdown = true,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -112,12 +148,12 @@ const FarmMap = ({
   // Get selected field data with subscription status
   const selectedFieldObj = useMemo(
     () => fields.find((f) => f._id === selectedField),
-    [fields, selectedField]
+    [fields, selectedField],
   );
 
   const isSelectedFieldSubscribed = useMemo(
     () => selectedFieldObj?.subscription?.hasActiveSubscription === true,
-    [selectedFieldObj]
+    [selectedFieldObj],
   );
 
   useEffect(() => {
@@ -130,26 +166,26 @@ const FarmMap = ({
 
   const selectedFieldData = useMemo(
     () => fields.find((item) => item?._id === selectedField) || {},
-    [fields, selectedField]
+    [fields, selectedField],
   );
   const polygonCoordinates = useMemo(
     () => selectedFieldData.field?.map(({ lat, lng }) => ({ lat, lng })) || [],
-    [selectedFieldData]
+    [selectedFieldData],
   );
   const centroid = useMemo(
     () => calculatePolygonCentroid(polygonCoordinates),
-    [polygonCoordinates]
+    [polygonCoordinates],
   );
   const polygonBounds = useMemo(
     () => calculatePolygonBounds(polygonCoordinates),
-    [polygonCoordinates]
+    [polygonCoordinates],
   );
 
   useEffect(() => {
     setImage(
       indexData?.image_base64
         ? `data:image/png;base64,${indexData.image_base64}`
-        : null
+        : null,
     );
   }, [indexData]);
 
@@ -163,7 +199,7 @@ const FarmMap = ({
       currentTime - parseInt(lastFetchTime, 10) > threeHours
     ) {
       dispatch(
-        fetchweatherData({ latitude: centroid.lat, longitude: centroid.lng })
+        fetchweatherData({ latitude: centroid.lat, longitude: centroid.lng }),
       ).then((action) => {
         if (action.payload) {
           try {
@@ -192,8 +228,7 @@ const FarmMap = ({
 
   return (
     <div
-      className={`flex flex-col items-center w-full relative ${fields.length === 0 ? "h-full" : "h-[400px] md:h-[500px] lg:h-[95%]"
-        }`}
+      className={`flex flex-col items-center w-full relative h-[75vh] ${fields?.length == 0 ? "h-[98vh]" : "lg:h-[85vh]${"}`}
     >
       <MapContainer
         center={
@@ -202,8 +237,9 @@ const FarmMap = ({
         zoom={18}
         attributionControl={false}
         zoomControl={true}
-        className={`w-full h-full overflow-hidden ${fields.length === 0 ? "rounded-t-2xl rounded-b-none" : "rounded-2xl"
-          }`}
+        className={`w-full h-full overflow-hidden ${
+          fields.length === 0 ? "rounded-2xl" : "rounded-2xl"
+        }`}
         ref={mapRef}
         maxZoom={20}
       >
@@ -270,6 +306,10 @@ const FarmMap = ({
           bounds={polygonBounds}
         />
       </MapContainer>
+      <TutorialOverlay
+        show={fields.length === 0}
+        onAddField={() => navigate("/addfield")}
+      />
 
       <div className="absolute top-2 right-2 flex flex-row gap-3 items-end z-[1000]">
         {showFieldDropdown && fields?.length > 0 && (
@@ -296,14 +336,16 @@ const FarmMap = ({
                      max-h-[300px] overflow-y-auto no-scrollbar"
                 >
                   {sortedFields.map((field) => {
-                    const isSubscribed = field.subscription?.hasActiveSubscription === true;
+                    const isSubscribed =
+                      field.subscription?.hasActiveSubscription === true;
 
                     return (
                       <Listbox.Option
                         key={field._id}
                         value={field._id}
                         className={({ active }) =>
-                          `cursor-pointer select-none px-3 py-2 rounded transition-all duration-500 ease-in-out ${active ? "bg-[#5a7c6b]" : ""
+                          `cursor-pointer select-none px-3 py-2 rounded transition-all duration-500 ease-in-out ${
+                            active ? "bg-[#5a7c6b]" : ""
                           }`
                         }
                       >
@@ -367,41 +409,6 @@ const FarmMap = ({
           )}
         </div>
       </div>
-
-      {fields?.length > 0 ? (
-        <IndexDates selectedFieldsDetials={selectedFieldsDetials} />
-      ) : (
-        <div className="w-full text-white text-base bg-[#5a7c6b] rounded cursor-pointer">
-          <div className="w-full text-center z-[1000]">
-            <div className="flex justify-between items-center gap-4 p-2.5 bg-[#5a7c6b] rounded w-full">
-              <div className="flex items-center gap-3 border-r border-gray-200 pr-2">
-                <button
-                  aria-label="Calendar"
-                  className="border-r border-gray-200 pr-2"
-                >
-                  <Calender />
-                </button>
-                <button aria-label="Previous">
-                  <LeftArrow />
-                </button>
-              </div>
-              <button
-                className="add-new-field cursor-pointer"
-                onClick={() => navigate("/addfield")}
-                aria-label="Add New Field"
-              >
-                Add Field
-              </button>
-              <button
-                className="border-l border-gray-200 pl-2"
-                aria-label="Next"
-              >
-                <RightArrow />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
