@@ -409,6 +409,7 @@ const FarmMap = ({
           )}
         </div>
       </div>
+      <IndexDates selectedFieldsDetials={selectedFieldsDetials} />
     </div>
   );
 };
