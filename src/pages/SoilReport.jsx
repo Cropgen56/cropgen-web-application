@@ -28,17 +28,85 @@ import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
 import FieldDropdown from "../components/comman/FieldDropdown";
 
 const cropOptions = [
-  "Barley", "Wheat", "Pearl Millet", "Sorghum", "Finger Millet", "Chickpea", "Red Gram",
-  "Green Gram", "Black Gram", "Lentil", "Field Pea", "Horse Gram", "Cowpea", "Groundnut",
-  "Mustard", "Soybean", "Sunflower", "Sesame", "Linseed", "Castor", "Safflower", "Niger",
-  "Sugarcane", "Cotton", "Jute", "Tobacco", "Potato", "Tomato", "Brinjal", "Cabbage",
-  "Cauliflower", "Onion", "Garlic", "Okra", "Carrot", "Radish", "Spinach", "Methi",
-  "Green Peas", "Bitter Gourd", "Bottle Gourd", "Pumpkin", "Cucumber", "Beans", "Mango",
-  "Banana", "Guava", "Apple", "Papaya", "Orange", "Lemon", "Pomegranate", "Grapes",
-  "Pineapple", "Watermelon", "Muskmelon", "Turmeric", "Ginger", "Coriander", "Cumin",
-  "Black Pepper", "Red Chilies", "Tea", "Coffee", "Coconut", "Arecanut", "Rubber",
-  "Dragon Fruit", "Sponge Gourd", "Snake Gourd", "Ash Gourd", "Drumstick", "Chili",
-  "Chia", "Rice", "Kiwi", "Amla", "Capsicum", "Other"
+  "Barley",
+  "Wheat",
+  "Pearl Millet",
+  "Sorghum",
+  "Finger Millet",
+  "Chickpea",
+  "Red Gram",
+  "Green Gram",
+  "Black Gram",
+  "Lentil",
+  "Field Pea",
+  "Horse Gram",
+  "Cowpea",
+  "Groundnut",
+  "Mustard",
+  "Soybean",
+  "Sunflower",
+  "Sesame",
+  "Linseed",
+  "Castor",
+  "Safflower",
+  "Niger",
+  "Sugarcane",
+  "Cotton",
+  "Jute",
+  "Tobacco",
+  "Potato",
+  "Tomato",
+  "Brinjal",
+  "Cabbage",
+  "Cauliflower",
+  "Onion",
+  "Garlic",
+  "Okra",
+  "Carrot",
+  "Radish",
+  "Spinach",
+  "Methi",
+  "Green Peas",
+  "Bitter Gourd",
+  "Bottle Gourd",
+  "Pumpkin",
+  "Cucumber",
+  "Beans",
+  "Mango",
+  "Banana",
+  "Guava",
+  "Apple",
+  "Papaya",
+  "Orange",
+  "Lemon",
+  "Pomegranate",
+  "Grapes",
+  "Pineapple",
+  "Watermelon",
+  "Muskmelon",
+  "Turmeric",
+  "Ginger",
+  "Coriander",
+  "Cumin",
+  "Black Pepper",
+  "Red Chilies",
+  "Tea",
+  "Coffee",
+  "Coconut",
+  "Arecanut",
+  "Rubber",
+  "Dragon Fruit",
+  "Sponge Gourd",
+  "Snake Gourd",
+  "Ash Gourd",
+  "Drumstick",
+  "Chili",
+  "Chia",
+  "Rice",
+  "Kiwi",
+  "Amla",
+  "Capsicum",
+  "Other",
 ].sort((a, b) => a.localeCompare(b));
 
 // Crop Selection Dropdown Component
@@ -50,7 +118,7 @@ const CropSelectionDropdown = ({
   onGenerateReport,
   onDownloadPDF,
   reportGenerated,
-  disabled
+  disabled,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentCropOpen, setCurrentCropOpen] = useState(false);
@@ -140,7 +208,9 @@ const CropSelectionDropdown = ({
                           setCurrentCropOpen(false);
                         }}
                         className={`px-3 py-1.5 cursor-pointer text-sm text-gray-700 hover:bg-[#344e41] hover:text-white ${
-                          currentCrop === option ? "bg-[#344e41] text-white" : ""
+                          currentCrop === option
+                            ? "bg-[#344e41] text-white"
+                            : ""
                         }`}
                       >
                         {option}
@@ -165,9 +235,7 @@ const CropSelectionDropdown = ({
                   }}
                   className="w-full px-3 py-2 bg-[#344E41] text-white rounded-md flex items-center justify-between text-sm"
                 >
-                  <span className="truncate">
-                    {nextCrop || "Select Crop"}
-                  </span>
+                  <span className="truncate">{nextCrop || "Select Crop"}</span>
                   <ChevronDown
                     size={16}
                     className={`transition-transform ${
@@ -255,7 +323,7 @@ const SoilReport = () => {
 
   // Mobile/Tablet detection state
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(
-    window.innerWidth < 1024
+    window.innerWidth < 1024,
   );
 
   const reportRef = useRef();

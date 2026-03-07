@@ -131,223 +131,234 @@ const formatDayToWeekDay = (day) => {
 };
 
 /* ================= COMPONENT ================= */
+const PlantGrowthActivity = memo(
+  ({ selectedFieldsDetials = [], bypassPremium = false }) => {
+    const advisoryState = useSelector((s) => s.smartAdvisory?.advisory || null);
 
-const PlantGrowthActivity = memo(({ selectedFieldsDetials = [] }) => {
-  const advisoryState = useSelector((s) => s.smartAdvisory?.advisory || null);
+    const field = selectedFieldsDetials[0] || {};
 
-  const field = selectedFieldsDetials[0] || {};
+    const plantGrowthGuard = useSubscriptionGuard({
+      field,
+      featureKey: "cropGrowthMonitoring",
+    });
 
-  /* ================= FEATURE GUARD (ADDED) ================= */
-  const plantGrowthGuard = useSubscriptionGuard({
-    field,
-    featureKey: "cropGrowthMonitoring",
-  });
+    const cropName =
+      field?.cropName || advisoryState?.farmFieldId?.cropName || "Other";
 
-  const cropName =
-    field?.cropName || advisoryState?.farmFieldId?.cropName || "Other";
+    const plantActivity =
+      advisoryState?.smartAdvisory?.plantGrowthActivity ||
+      advisoryState?.plantGrowthActivity ||
+      null;
 
-  const plantActivity =
-    advisoryState?.smartAdvisory?.plantGrowthActivity ||
-    advisoryState?.plantGrowthActivity ||
-    null;
+    const sowingDateStr =
+      field?.sowingDate || advisoryState?.farmFieldId?.sowingDate || null;
 
-  const sowingDateStr =
-    field?.sowingDate || advisoryState?.farmFieldId?.sowingDate || null;
-  const targetDateStr = advisoryState?.targetDate || new Date().toISOString();
+    const targetDateStr = advisoryState?.targetDate || new Date().toISOString();
 
-  const { daysSinceSowing, currentWeek } = useMemo(() => {
-    const sowing = sowingDateStr ? new Date(sowingDateStr) : null;
-    const target = targetDateStr ? new Date(targetDateStr) : new Date();
+    const { daysSinceSowing, currentWeek } = useMemo(() => {
+      const sowing = sowingDateStr ? new Date(sowingDateStr) : null;
+      const target = targetDateStr ? new Date(targetDateStr) : new Date();
 
-    if (!sowing || isNaN(sowing)) {
-      return { daysSinceSowing: 1, currentWeek: 1 };
-    }
+      if (!sowing || isNaN(sowing)) {
+        return { daysSinceSowing: 1, currentWeek: 1 };
+      }
 
-    const diffDays =
-      Math.max(1, Math.floor((target - sowing) / (1000 * 60 * 60 * 24))) + 1;
+      const diffDays =
+        Math.max(1, Math.floor((target - sowing) / (1000 * 60 * 60 * 24))) + 1;
 
-    const weeks = Math.min(
-      Math.ceil(diffDays / 7),
-      CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other,
+      const weeks = Math.min(
+        Math.ceil(diffDays / 7),
+        CROP_GROWTH_DURATIONS[cropName] || CROP_GROWTH_DURATIONS.Other,
+      );
+
+      return { daysSinceSowing: diffDays, currentWeek: weeks };
+    }, [sowingDateStr, targetDateStr, cropName]);
+
+    const [interval, setInterval] = useState("Weeks");
+
+    const data = useMemo(
+      () => generateCurveData(interval, cropName),
+      [interval, cropName],
     );
 
-    return { daysSinceSowing: diffDays, currentWeek: weeks };
-  }, [sowingDateStr, targetDateStr, cropName]);
+    const referenceLabel =
+      interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
 
-  const [interval, setInterval] = useState("Weeks");
+    const [tooltipPos, setTooltipPos] = useState(null);
 
-  const data = useMemo(
-    () => generateCurveData(interval, cropName),
-    [interval, cropName],
-  );
-
-  const referenceLabel =
-    interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
-
-  const [tooltipPos, setTooltipPos] = useState(null);
-
-  if (!sowingDateStr) {
-    return (
-      <div className="w-full flex justify-center mt-4">
-        <div className="relative w-full max-w-4xl rounded-2xl shadow-lg bg-white p-4 text-center">
-          <div className="text-gray-800 text-sm">
-            Sowing date not available for this field.
+    if (!sowingDateStr) {
+      return (
+        <div className="w-full flex justify-center mt-4">
+          <div className="relative w-full max-w-4xl rounded-2xl shadow-lg bg-white p-4 text-center">
+            <div className="text-gray-800 text-sm">
+              Sowing date not available for this field.
+            </div>
           </div>
+        </div>
+      );
+    }
+
+    const isLoading = false;
+
+    const content = (
+      <div className="w-full flex mt-6">
+        <div className="relative w-full rounded-2xl shadow-lg flex flex-col overflow-hidden p-3 md:p-5 bg-white">
+          <div className="w-full mb-4 flex items-start justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-[#344E41] m-0">
+                Plant Growth Activity
+              </h2>
+
+              <div className="text-sm font-bold text-[#344E41] mt-2">
+                {cropName}
+              </div>
+
+              <div className="text-sm text-gray-700 mt-1">
+                {plantActivity?.stageName
+                  ? `Stage: ${plantActivity.stageName}`
+                  : `Days since sowing: ${daysSinceSowing}`}
+              </div>
+
+              {plantActivity?.description && (
+                <div className="text-xs text-gray-600 mt-1 max-w-2xl">
+                  {plantActivity.description}
+                </div>
+              )}
+            </div>
+
+            <select
+              value={interval}
+              onChange={(e) => setInterval(e.target.value)}
+              className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer"
+            >
+              <option value="Days">Days</option>
+              <option value="Weeks">Weeks</option>
+            </select>
+          </div>
+
+          {isLoading ? (
+            <PlantGrowthSkeleton />
+          ) : (
+            <div className="w-full h-[300px] bg-gray-100 rounded-2xl relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={data}
+                  margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient
+                      id="colorHeight"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor={GRASS_COLOR_MAIN}
+                        stopOpacity={0.8}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor={GRASS_COLOR_MAIN}
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                  </defs>
+
+                  <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={false} />
+                  <XAxis
+                    dataKey="label"
+                    axisLine={false}
+                    tickLine={false}
+                    interval={Math.max(0, Math.floor(data.length / 8))}
+                  />
+
+                  <YAxis hide />
+
+                  <ReferenceLine
+                    x={referenceLabel}
+                    stroke={GRASS_COLOR_MAIN}
+                    strokeWidth={2}
+                  />
+
+                  <ReferenceDot
+                    x={referenceLabel}
+                    y={
+                      data.find((d) => d.label === referenceLabel)?.height || 0
+                    }
+                    r={3}
+                    fill={GRASS_COLOR_MAIN}
+                    isFront
+                    label={({ viewBox }) => {
+                      if (!viewBox) return null;
+                      const { x, y } = viewBox;
+
+                      if (
+                        !tooltipPos ||
+                        tooltipPos.x !== x ||
+                        tooltipPos.y !== y
+                      ) {
+                        requestAnimationFrame(() => {
+                          setTooltipPos({ x, y });
+                        });
+                      }
+
+                      return null;
+                    }}
+                  />
+
+                  <Area
+                    type="monotone"
+                    dataKey="height"
+                    stroke={GRASS_COLOR_MAIN}
+                    fill="url(#colorHeight)"
+                    fillOpacity={1}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+
+              {tooltipPos && plantActivity && (
+                <div
+                  className="absolute z-50 bg-[#344E41] text-white text-xs p-3 rounded shadow-xl max-w-[320px]"
+                  style={{
+                    left: Math.max(8, tooltipPos.x - 160),
+                    top: Math.max(8, tooltipPos.y - 100),
+                  }}
+                >
+                  <p className="font-bold text-sm mb-1">
+                    {plantActivity.stageName ||
+                      `BBCH ${plantActivity?.bbchStage ?? ""}`}
+                  </p>
+
+                  <p className="italic text-gray-300 mt-1 text-xs">
+                    {interval === "Days"
+                      ? formatDayToWeekDay(daysSinceSowing)
+                      : `Week ${currentWeek}`}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
-  }
 
-  const isLoading = false;
+    if (bypassPremium) return content;
 
-  return (
-    <FeatureGuard guard={plantGrowthGuard} title="Crop Growth Monitoring">
-      <PremiumContentWrapper
-        isLocked={!plantGrowthGuard.hasFeatureAccess}
-        onSubscribe={plantGrowthGuard.handleSubscribe}
-        title="Crop Growth Monitoring"
-      >
-        {/* 🔴 UI BELOW IS UNCHANGED */}
-        <div className="w-full flex mt-6">
-          <div className="relative w-full rounded-2xl shadow-lg flex flex-col overflow-hidden p-3 md:p-5 bg-white">
-            <div className="w-full mb-4 flex items-start justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-[#344E41] m-0">
-                  Plant Growth Activity
-                </h2>
-                <div className="text-sm font-bold text-[#344E41] mt-2">
-                  {cropName}
-                </div>
-                <div className="text-sm text-gray-700 mt-1">
-                  {plantActivity?.stageName
-                    ? `Stage: ${plantActivity.stageName}`
-                    : `Days since sowing: ${daysSinceSowing}`}
-                </div>
-                {plantActivity?.description && (
-                  <div className="text-xs text-gray-600 mt-1 max-w-2xl">
-                    {plantActivity.description}
-                  </div>
-                )}
-              </div>
-
-              <select
-                value={interval}
-                onChange={(e) => setInterval(e.target.value)}
-                className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer"
-              >
-                <option value="Days">Days</option>
-                <option value="Weeks">Weeks</option>
-              </select>
-            </div>
-
-            {isLoading ? (
-              <PlantGrowthSkeleton />
-            ) : (
-              <div className="w-full h-[300px] bg-gray-100 rounded-2xl relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={data}
-                    margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="colorHeight"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor={GRASS_COLOR_MAIN}
-                          stopOpacity={0.8}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor={GRASS_COLOR_MAIN}
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-
-                    <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={false} />
-                    <XAxis
-                      dataKey="label"
-                      axisLine={false}
-                      tickLine={false}
-                      interval={Math.max(0, Math.floor(data.length / 8))}
-                    />
-                    <YAxis hide />
-
-                    <ReferenceLine
-                      x={referenceLabel}
-                      stroke={GRASS_COLOR_MAIN}
-                      strokeWidth={2}
-                    />
-
-                    <ReferenceDot
-                      x={referenceLabel}
-                      y={
-                        data.find((d) => d.label === referenceLabel)?.height ||
-                        0
-                      }
-                      r={3}
-                      fill={GRASS_COLOR_MAIN}
-                      isFront
-                      label={({ viewBox }) => {
-                        if (!viewBox) return null;
-                        const { x, y } = viewBox;
-
-                        if (
-                          !tooltipPos ||
-                          tooltipPos.x !== x ||
-                          tooltipPos.y !== y
-                        ) {
-                          requestAnimationFrame(() => {
-                            setTooltipPos({ x, y });
-                          });
-                        }
-                        return null;
-                      }}
-                    />
-
-                    <Area
-                      type="monotone"
-                      dataKey="height"
-                      stroke={GRASS_COLOR_MAIN}
-                      fill="url(#colorHeight)"
-                      fillOpacity={1}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-
-                {tooltipPos && plantActivity && (
-                  <div
-                    className="absolute z-50 bg-[#344E41] text-white text-xs p-3 rounded shadow-xl max-w-[320px]"
-                    style={{
-                      left: Math.max(8, tooltipPos.x - 160),
-                      top: Math.max(8, tooltipPos.y - 100),
-                    }}
-                  >
-                    <p className="font-bold text-sm mb-1">
-                      {plantActivity.stageName ||
-                        `BBCH ${plantActivity?.bbchStage ?? ""}`}
-                    </p>
-                    <p className="italic text-gray-300 mt-1 text-xs">
-                      {interval === "Days"
-                        ? formatDayToWeekDay(daysSinceSowing)
-                        : `Week ${currentWeek}`}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </PremiumContentWrapper>
-    </FeatureGuard>
-  );
-});
+    return (
+      <FeatureGuard guard={plantGrowthGuard} title="Crop Growth Monitoring">
+        <PremiumContentWrapper
+          isLocked={!plantGrowthGuard.hasFeatureAccess}
+          onSubscribe={plantGrowthGuard.handleSubscribe}
+          title="Crop Growth Monitoring"
+        >
+          {content}
+        </PremiumContentWrapper>
+      </FeatureGuard>
+    );
+  },
+);
 
 PlantGrowthActivity.displayName = "PlantGrowthActivity";
 

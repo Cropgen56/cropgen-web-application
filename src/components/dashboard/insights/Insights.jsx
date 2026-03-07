@@ -28,10 +28,10 @@ const Insight = ({ icon, title, description }) => {
       </div>
 
       <div className="flex gap-4 ml-auto">
-        <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 transition-colors bg-white">
+        <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 bg-white">
           <FcCheckmark className="text-lg" />
         </button>
-        <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 transition-colors bg-white">
+        <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 bg-white">
           <FaXmark className="text-red-500 text-lg" />
         </button>
       </div>
@@ -41,8 +41,7 @@ const Insight = ({ icon, title, description }) => {
 
 /* ================= MAIN COMPONENT ================= */
 
-const Insights = ({ selectedFieldsDetials }) => {
-  /* ✅ FIX: use first field object like other components */
+const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
   const insightsGuard = useSubscriptionGuard({
     field: selectedFieldsDetials?.[0],
     featureKey: "agronomicInsights",
@@ -82,15 +81,35 @@ const Insights = ({ selectedFieldsDetials }) => {
     },
   ];
 
+  /* ================= MAIN UI ================= */
+
+  const content = (
+    <div className="flex flex-col rounded-lg shadow-inner bg-white">
+      {insights.map((insight, index) => (
+        <Insight key={index} {...insight} />
+      ))}
+    </div>
+  );
+
   return (
-    <FeatureGuard guard={insightsGuard} title="Agronomic Insights">
-      <div className="w-full flex mt-8">
-        <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden p-4 md:p-6">
-          {/* ===== HEADER (Always Visible) ===== */}
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
+    <div className="w-full flex mt-8">
+      <div className="relative w-full bg-gray-50 rounded-2xl shadow-md text-gray-900 flex flex-col overflow-hidden p-4 md:p-6">
+        {/* HEADER */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 px-4 sm:px-6">
+          <div className="flex items-center gap-1">
+            <div className="text-md lg:text-lg font-semibold text-gray-900">
+              Insights
+            </div>
+            <div className="flex flex-col items-center [&_svg]:fill-gray-500">
+              <UpArrow />
+              <DownArrow />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <div className="text-md lg:text-lg font-semibold text-gray-900">
-                Insights
+                Action
               </div>
               <div className="flex flex-col items-center [&_svg]:fill-gray-500">
                 <UpArrow />
@@ -98,37 +117,29 @@ const Insights = ({ selectedFieldsDetials }) => {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <div className="text-md lg:text-lg font-semibold text-gray-900">
-                  Action
-                </div>
-                <div className="flex flex-col items-center [&_svg]:fill-gray-500">
-                  <UpArrow />
-                  <DownArrow />
-                </div>
-              </div>
-              <div className="text-xs lg:text-sm text-gray-500 cursor-pointer hover:text-gray-900">
-                See all
-              </div>
+            <div className="text-xs lg:text-sm text-gray-500 cursor-pointer hover:text-gray-900">
+              See all
             </div>
           </div>
-
-          {/* ===== CONTENT (GATED ONLY HERE) ===== */}
-          <PremiumContentWrapper
-            isLocked={!insightsGuard.hasFeatureAccess}
-            onSubscribe={insightsGuard.handleSubscribe}
-            title="Agronomic Insights"
-          >
-            <div className="flex flex-col rounded-lg shadow-inner bg-white">
-              {insights.map((insight, index) => (
-                <Insight key={index} {...insight} />
-              ))}
-            </div>
-          </PremiumContentWrapper>
         </div>
+
+        {/* ===== CONDITIONAL PREMIUM HANDLING ===== */}
+
+        {bypassPremium ? (
+          content
+        ) : (
+          <FeatureGuard guard={insightsGuard} title="Agronomic Insights">
+            <PremiumContentWrapper
+              isLocked={!insightsGuard.hasFeatureAccess}
+              onSubscribe={insightsGuard.handleSubscribe}
+              title="Agronomic Insights"
+            >
+              {content}
+            </PremiumContentWrapper>
+          </FeatureGuard>
+        )}
       </div>
-    </FeatureGuard>
+    </div>
   );
 };
 

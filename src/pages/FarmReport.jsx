@@ -19,6 +19,7 @@ import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscr
 
 import { getFarmFields } from "../redux/slices/farmSlice";
 import { clearIndexDataByType } from "../redux/slices/satelliteSlice";
+import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
 
 import useFarmReportPDF from "../components/farmreport/useFarmReportPDF";
 import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
@@ -34,9 +35,17 @@ const FarmReport = () => {
   const fields = useSelector((s) => s.farmfield?.fields || []);
   const fieldsLoading = useSelector((s) => s.farmfield?.loading);
 
+  const { advisory, loading: advisoryLoading } = useSelector(
+    (state) => state.smartAdvisory,
+  );
+
   const [selectedField, setSelectedField] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+
   const mainReportRef = useRef(null);
+
+  /* ================= PREVENT DUPLICATE ADVISORY CALL ================= */
+  const lastFetchedFieldIdRef = useRef(null);
 
   /* ================= FETCH FIELDS ================= */
   useEffect(() => {
@@ -71,6 +80,22 @@ const FarmReport = () => {
       dispatch(clearIndexDataByType());
     }
   }, [dispatch, selectedField?._id]);
+
+  /* ================= FETCH SMART ADVISORY ================= */
+  useEffect(() => {
+    const fieldId = selectedField?._id;
+
+    if (!fieldId) return;
+
+    // Prevent duplicate API calls
+    if (lastFetchedFieldIdRef.current === fieldId) return;
+
+    lastFetchedFieldIdRef.current = fieldId;
+
+    dispatch(fetchSmartAdvisory({ fieldId }));
+  }, [dispatch, selectedField?._id]);
+
+  console.log(advisory);
 
   /* ================= AOI + WEATHER ================= */
   const { aoiId } = useAoiManagement(selectedField);
@@ -117,49 +142,42 @@ const FarmReport = () => {
         <div className="hidden lg:flex">
           <FarmReportSidebar
             setSelectedField={setSelectedField}
-            setIsSidebarVisible={setIsSidebarVisible} // ✅ FIX
+            setIsSidebarVisible={setIsSidebarVisible}
           />
         </div>
       )}
 
       {/* Main Content */}
       <div className="flex-1 p-4 overflow-y-auto">
-        {!selectedField ? (
-          <FieldDropdown
-            fields={fields}
-            selectedField={selectedField}
-            setSelectedField={setSelectedField}
-          />
-        ) : (
-          <>
-            <div className="mb-3 flex justify-between bg-[#2d4339] p-2 rounded">
-              <button
-                onClick={() => setSelectedField(null)}
-                className="flex items-center gap-1"
-              >
-                <ChevronLeft size={16} /> Back
-              </button>
+        <>
+          <div className="mb-3 flex justify-between bg-[#2d4339] p-2 rounded">
+            <FieldDropdown
+              fields={fields}
+              selectedField={selectedField}
+              setSelectedField={setSelectedField}
+            />
 
-              <button
-                onClick={() => downloadFarmReportPDF(mainReportRef)}
-                className="bg-[#0C2214] text-white px-4 py-1 rounded"
-              >
-                {isDownloading ? "Generating..." : "PDF"}
-              </button>
+            <button
+              onClick={() => downloadFarmReportPDF(mainReportRef)}
+              className="bg-[#0C2214] text-white px-4 py-1 rounded"
+            >
+              {isDownloading ? "Generating..." : "PDF"}
+            </button>
+          </div>
+
+          <FeatureGuard guard={farmReportGuard} title="Farm Report">
+            <div ref={mainReportRef}>
+              <FarmReportContent
+                selectedFieldDetails={selectedField}
+                forecast={forecast}
+                units={units}
+                isPreparedForPDF={isPreparedForPDF}
+                advisory={advisory}
+                advisoryLoading={advisoryLoading}
+              />
             </div>
-
-            <FeatureGuard guard={farmReportGuard} title="Farm Report">
-              <div ref={mainReportRef}>
-                <FarmReportContent
-                  selectedFieldDetails={selectedField}
-                  forecast={forecast}
-                  units={units}
-                  isPreparedForPDF={isPreparedForPDF}
-                />
-              </div>
-            </FeatureGuard>
-          </>
-        )}
+          </FeatureGuard>
+        </>
       </div>
     </div>
   );
