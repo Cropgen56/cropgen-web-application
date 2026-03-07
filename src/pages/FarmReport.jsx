@@ -1,13 +1,6 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
 
 import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmReportSidebar";
 import FarmReportContent from "../components/farmreport/farmreportsidebar/FarmReportContent";
@@ -43,51 +36,33 @@ const FarmReport = () => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const mainReportRef = useRef(null);
-
-  /* ================= PREVENT DUPLICATE ADVISORY CALL ================= */
   const lastFetchedFieldIdRef = useRef(null);
 
-  /* ================= FETCH FIELDS ================= */
+  /* Fetch Fields */
   useEffect(() => {
     if (user?.id) dispatch(getFarmFields(user.id));
   }, [dispatch, user?.id]);
 
-  /* ================= AUTO SELECT FIELD ================= */
+  /* Auto Select Field */
   useEffect(() => {
     if (!selectedField && fields.length > 0) {
       setSelectedField(fields[fields.length - 1]);
     }
   }, [fields, selectedField]);
 
-  /* ================= SYNC FIELD AFTER SUBSCRIPTION ================= */
-  useEffect(() => {
-    if (!selectedField || !fields.length) return;
-
-    const updatedField = fields.find((f) => f._id === selectedField._id);
-
-    if (
-      updatedField &&
-      JSON.stringify(updatedField.subscription) !==
-        JSON.stringify(selectedField.subscription)
-    ) {
-      setSelectedField(updatedField);
-    }
-  }, [fields, selectedField]);
-
-  /* ================= CLEAR OLD DATA ================= */
+  /* Clear Old Satellite Data */
   useEffect(() => {
     if (selectedField?._id) {
       dispatch(clearIndexDataByType());
     }
   }, [dispatch, selectedField?._id]);
 
-  /* ================= FETCH SMART ADVISORY ================= */
+  /* Fetch Advisory */
   useEffect(() => {
     const fieldId = selectedField?._id;
 
     if (!fieldId) return;
 
-    // Prevent duplicate API calls
     if (lastFetchedFieldIdRef.current === fieldId) return;
 
     lastFetchedFieldIdRef.current = fieldId;
@@ -95,23 +70,20 @@ const FarmReport = () => {
     dispatch(fetchSmartAdvisory({ fieldId }));
   }, [dispatch, selectedField?._id]);
 
-  console.log(advisory);
-
-  /* ================= AOI + WEATHER ================= */
+  /* AOI + Weather */
   const { aoiId } = useAoiManagement(selectedField);
   const { forecast, units } = useWeatherForecast(aoiId);
 
-  /* ================= PDF ================= */
+  /* PDF Hook */
   const { isDownloading, isPreparedForPDF, downloadFarmReportPDF } =
     useFarmReportPDF(selectedField);
 
-  /* ================= FEATURE GUARD ================= */
+  /* Feature Guard */
   const farmReportGuard = useSubscriptionGuard({
     field: selectedField,
     featureKey: "cropHealthAndYield",
   });
 
-  /* ================= STATES ================= */
   if (fieldsLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#344E41]">
@@ -134,10 +106,8 @@ const FarmReport = () => {
     );
   }
 
-  /* ================= RENDER ================= */
   return (
     <div className="flex h-screen bg-[#344E41] text-white">
-      {/* Sidebar */}
       {isSidebarVisible && (
         <div className="hidden lg:flex">
           <FarmReportSidebar
@@ -147,37 +117,34 @@ const FarmReport = () => {
         </div>
       )}
 
-      {/* Main Content */}
       <div className="flex-1 p-4 overflow-y-auto">
-        <>
-          <div className="mb-3 flex justify-between bg-[#2d4339] p-2 rounded">
-            <FieldDropdown
-              fields={fields}
-              selectedField={selectedField}
-              setSelectedField={setSelectedField}
+        <div className="mb-3 flex justify-between bg-[#2d4339] p-2 rounded">
+          <FieldDropdown
+            fields={fields}
+            selectedField={selectedField}
+            setSelectedField={setSelectedField}
+          />
+
+          <button
+            onClick={() => downloadFarmReportPDF(mainReportRef)}
+            className="bg-[#0C2214] text-white px-4 py-1 rounded"
+          >
+            {isDownloading ? "Generating..." : "PDF"}
+          </button>
+        </div>
+
+        <FeatureGuard guard={farmReportGuard} title="Farm Report">
+          <div ref={mainReportRef}>
+            <FarmReportContent
+              selectedFieldDetails={selectedField}
+              forecast={forecast}
+              units={units}
+              isPreparedForPDF={isPreparedForPDF}
+              advisory={advisory}
+              advisoryLoading={advisoryLoading}
             />
-
-            <button
-              onClick={() => downloadFarmReportPDF(mainReportRef)}
-              className="bg-[#0C2214] text-white px-4 py-1 rounded"
-            >
-              {isDownloading ? "Generating..." : "PDF"}
-            </button>
           </div>
-
-          <FeatureGuard guard={farmReportGuard} title="Farm Report">
-            <div ref={mainReportRef}>
-              <FarmReportContent
-                selectedFieldDetails={selectedField}
-                forecast={forecast}
-                units={units}
-                isPreparedForPDF={isPreparedForPDF}
-                advisory={advisory}
-                advisoryLoading={advisoryLoading}
-              />
-            </div>
-          </FeatureGuard>
-        </>
+        </FeatureGuard>
       </div>
     </div>
   );

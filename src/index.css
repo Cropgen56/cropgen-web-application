@@ -8,16 +8,31 @@
 /* Global styles */
 body {
   margin: 0;
-  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+  font-family:
+    "Poppins",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Roboto",
+    "Oxygen",
+    "Ubuntu",
+    "Cantarell",
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: "Poppins", source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+  font-family:
+    "Poppins", source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
+}
+
+.farm-section {
+  page-break-inside: avoid;
 }
 
 /* Custom styles for Toastify */
@@ -170,7 +185,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 1 !important;
   visibility: visible !important;
   display: block !important;
-  transform: none !important; 
+  transform: none !important;
 }
 .recharts-wrapper {
   overflow: visible !important;
@@ -215,7 +230,7 @@ img {
 
 .leaflet-control-geosearch button.reset:hover {
   background: gray !important;
-  border-color: #265A48 !important;
+  border-color: #265a48 !important;
 }
 
 .leaflet-control-geosearch button.reset::before {
@@ -249,4 +264,3 @@ img {
   background-color: #f0f0f0 !important;
   cursor: pointer;
 }
-

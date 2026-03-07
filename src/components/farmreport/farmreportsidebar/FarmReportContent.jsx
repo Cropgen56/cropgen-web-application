@@ -20,11 +20,7 @@ const FarmReportContent = ({
 }) => {
   const dispatch = useDispatch();
 
-  /* ================= AOI ================= */
-
   useAoiManagement(selectedFieldDetails);
-
-  /* ================= PREVENT DUPLICATE ADVISORY CALL ================= */
 
   const lastFetchedFieldIdRef = useRef(null);
 
@@ -41,9 +37,12 @@ const FarmReportContent = ({
 
   return (
     <>
-      {/* ================= SECTION 1 : MAP + CROP HEALTH ================= */}
+      {/* ================= SECTION 1 ================= */}
 
-      <div className="bg-[#2d4339] rounded-lg p-2 mb-2">
+      <div
+        className="farm-section bg-[#2d4339] rounded-lg p-2 mb-2"
+        data-section-title="Satellite Imagery & Crop Health"
+      >
         <FarmReportMap
           key={selectedFieldDetails?._id}
           selectedFieldsDetials={[selectedFieldDetails]}
@@ -59,9 +58,12 @@ const FarmReportContent = ({
         </div>
       </div>
 
-      {/* ================= SECTION 2 : WEATHER + INDICES ================= */}
+      {/* ================= SECTION 2 ================= */}
 
-      <div className="bg-[#2d4339] rounded-lg p-2 mb-2">
+      <div
+        className="farm-section bg-[#2d4339] rounded-lg p-2 mb-2"
+        data-section-title="Weather & Vegetation Indices"
+      >
         <ForeCast selectedFieldDetails={selectedFieldDetails} bypassPremium />
 
         <div className="mt-2">
@@ -86,9 +88,12 @@ const FarmReportContent = ({
         </div>
       </div>
 
-      {/* ================= SECTION 3 : INSIGHTS ================= */}
+      {/* ================= SECTION 3 ================= */}
 
-      <div className="bg-[#2d4339] rounded-lg p-2">
+      <div
+        className="farm-section bg-[#2d4339] rounded-lg p-2"
+        data-section-title="Insights & Advisory"
+      >
         <Insights
           selectedFieldsDetials={[selectedFieldDetails]}
           bypassPremium
