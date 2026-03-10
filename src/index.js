@@ -25,7 +25,7 @@ root.render(
         <App />
       </AuthAutoRefresh>
     </Provider>
-  </GoogleOAuthProvider>
+  </GoogleOAuthProvider>,
 );
 
 reportWebVitals();

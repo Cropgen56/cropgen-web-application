@@ -8,9 +8,15 @@ const App = () => {
   const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
+    let cleanup;
+
     if (token) {
-      initActivityTracker(token);
+      cleanup = initActivityTracker(token);
     }
+
+    return () => {
+      cleanup?.();
+    };
   }, [token]);
 
   return (

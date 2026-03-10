@@ -1,10 +1,16 @@
 import axios from "axios";
 
 let lastPing = 0;
-const PING_INTERVAL = 60 * 1000; 
+let teardownActivityTracker = null;
+
+const PING_INTERVAL = 60 * 1000;
+const ANALYTICS_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:7070/v1";
 
 export function initActivityTracker(token) {
   if (!token) return;
+
+  teardownActivityTracker?.();
 
   const ping = async () => {
     const now = Date.now();
@@ -13,18 +19,22 @@ export function initActivityTracker(token) {
     lastPing = now;
     try {
       await axios.post(
-   `${process.env.REACT_APP_API_URL}/api/analytics/ping`,
+        `${ANALYTICS_BASE_URL}/api/analytics/ping`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-    } catch (err) {
-      
-    }
+    } catch (err) {}
   };
 
-  ["click", "keydown", "scroll"].forEach((event) =>
-    window.addEventListener(event, ping)
-  );
+  const events = ["click", "keydown", "scroll"];
+
+  events.forEach((event) => window.addEventListener(event, ping, { passive: true }));
+
+  teardownActivityTracker = () => {
+    events.forEach((event) => window.removeEventListener(event, ping));
+  };
+
+  return teardownActivityTracker;
 }

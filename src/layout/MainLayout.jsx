@@ -19,7 +19,7 @@ const MainLayout = () => {
   }, [dispatch]);
 
   /* ---------- REDUX STATE ---------- */
-  const { loading } = useSelector((state) => state.auth);
+  const { status } = useSelector((state) => state.auth);
   const paymentSuccess = useSelector(
     (state) => state.subscription.paymentSuccess,
   );
@@ -29,7 +29,7 @@ const MainLayout = () => {
     setIsSidebarCollapsed(collapsed);
   };
 
-  if (loading) {
+  if (status === "loading") {
     return <div>Loading...</div>;
   }
 

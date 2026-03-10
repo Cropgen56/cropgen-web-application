@@ -94,21 +94,19 @@ export default function FarmAdvisoryCard() {
 
   /* ================= SEND WHATSAPP ================= */
 
-  const sendWhatsApp = async ({phoneWithCountryCode,language}) => {
+  const sendWhatsApp = async ({ phoneWithCountryCode, language }) => {
     if (!advisory?._id) {
       alert("Farm advisory not available");
       return;
     }
-
-    console.log()
 
     const whatsappPhone = phoneWithCountryCode.replace(/[^\d]/g, "");
 
     await dispatch(
       sendFarmAdvisoryWhatsApp({
         phone: whatsappPhone,
-        farmAdvisoryId: advisory._id, // ✅ TRACKING ID
-        language: language
+        farmAdvisoryId: advisory._id,
+        language,
       })
     ).unwrap();
 
@@ -122,7 +120,10 @@ export default function FarmAdvisoryCard() {
 
     if (userProfile?.phone) {
       try {
-        await sendWhatsApp({phoneWithCountryCode:userProfile.phone,language:"en"});
+        await sendWhatsApp({
+          phoneWithCountryCode: userProfile.phone,
+          language: "en",
+        });
       } catch (error) {
         alert("Failed to send advisory on WhatsApp");
       }
@@ -137,7 +138,10 @@ export default function FarmAdvisoryCard() {
 
     if (userProfile?.phone) {
       try {
-        await sendWhatsApp({phoneWithCountryCode:userProfile.phone,language:"hi"});
+        await sendWhatsApp({
+          phoneWithCountryCode: userProfile.phone,
+          language: "hi",
+        });
       } catch (error) {
         alert("Failed to send advisory on WhatsApp");
       }
@@ -171,7 +175,10 @@ export default function FarmAdvisoryCard() {
       ).unwrap();
 
       setShowPhoneDialog(false);
-      await sendWhatsApp(formattedPhone);
+      await sendWhatsApp({
+        phoneWithCountryCode: formattedPhone,
+        language: "en",
+      });
     } catch (error) {
       alert("Failed to update phone number");
     }

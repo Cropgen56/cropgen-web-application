@@ -20,8 +20,6 @@ const SignupLogin = () => {
   const [completingProfile, setCompletingProfile] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [orgCodeError, setOrgCodeError] = useState("");
-  const [orgCodeTouched, setOrgCodeTouched] = useState(false);
-
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
@@ -120,14 +118,12 @@ const SignupLogin = () => {
 
   const handleOrgCodeChange = (e) => {
     setFormData({ ...formData, organizationCode: e.target.value });
-    setOrgCodeTouched(true);
     if (orgCodeError) setOrgCodeError("");
   };
 
   useEffect(() => {
     setOtpVerified(false);
     setOrgCodeError("");
-    setOrgCodeTouched(false);
   }, [formData.email]);
 
   const translateY = `${-(step - 1) * 100}%`;

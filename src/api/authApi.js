@@ -16,7 +16,6 @@ export const refreshToken = async () => {
     );
     return response.data;
   } catch (error) {
-    console.error("Refresh token error:", error);
     throw error.response?.data?.message || "Token refresh failed";
   }
 };
@@ -34,8 +33,7 @@ export const logoutUserApi = async () => {
     );
     return response.data;
   } catch (error) {
-    console.error("Refresh token error:", error);
-    throw error.response?.data?.message || "Token refresh failed";
+    throw error.response?.data?.message || "Logout failed";
   }
 };
 
@@ -92,10 +90,25 @@ export const completeUserProfile = async ({
   token,
   terms,
   organizationCode,
+  firstName,
+  lastName,
+  phone,
+  role,
 }) => {
+  const payload = {
+    terms,
+    organizationCode,
+    firstName,
+    lastName,
+    phone,
+    role,
+  };
+
   const response = await axios.post(
     `${API_URL}/api/auth/complete-profile`,
-    { terms, organizationCode },
+    Object.fromEntries(
+      Object.entries(payload).filter(([, value]) => value !== undefined)
+    ),
     {
       withCredentials: true,
       headers: {

@@ -29,24 +29,24 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         >
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/cropgen-analytics" element={<Dashboard />} />
-          <Route path="/addfield" element={<AddField />} />
-          <Route path="/weather" element={<Weather />} />
-          <Route path="/operation" element={<Operation />} />
-          <Route path="/disease-detection" element={<DiseaseDetection />} />
-          <Route path="/smart-advisory" element={<SmartAdvisory />} />
-          <Route path="/soil-report" element={<SoilReport />} />
-          <Route path="/farm-report" element={<FarmReport />} />
+          <Route index element={<Dashboard />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="cropgen-analytics" element={<Dashboard />} />
+          <Route path="addfield" element={<AddField />} />
+          <Route path="weather" element={<Weather />} />
+          <Route path="operation" element={<Operation />} />
+          <Route path="disease-detection" element={<DiseaseDetection />} />
+          <Route path="smart-advisory" element={<SmartAdvisory />} />
+          <Route path="soil-report" element={<SoilReport />} />
+          <Route path="farm-report" element={<FarmReport />} />
           <Route
-            path="/Personalise-crop-schedule"
+            path="Personalise-crop-schedule"
             element={<PersonaliseCropSchedule />}
           />
-          <Route path="/setting" element={<Setting />} />
+          <Route path="setting" element={<Setting />} />
+          <Route path="*" element={<PageNotFound />} />
         </Route>
         <Route path="/login" element={<AuthLayout />} />
-        <Route path="/*" element={<PageNotFound />} />
       </Routes>
     </Router>
   );

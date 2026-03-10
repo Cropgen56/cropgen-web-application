@@ -118,8 +118,6 @@ const AddFarm = ({ selectedFarm }) => {
       latlng: polygonCoordinates,
     };
 
-    console.log("Payload sent to API:", updatedData);
-
     try {
       setUpdating(true);
       await dispatch(
