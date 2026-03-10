@@ -119,6 +119,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
 
   const { subscriptions, loading, error } = useSelector((s) => s.subscription);
   const { token, user } = useSelector((s) => s.auth);
+  const fields = useSelector((s) => s.farmfield?.fields || []);
 
   const [billing, setBilling] = useState("monthly");
   const [groupIndex, setGroupIndex] = useState(0);
@@ -172,10 +173,25 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
   /* ---------- DATA ---------- */
 
   const plans = useMemo(
-    () => transformApiData(subscriptions, billing, selectedField, "web"),
-    [subscriptions, billing, selectedField],
+    () => {
+      const selectedFieldId = selectedField?.id || selectedField?._id;
+      const firstFieldId = fields[0]?._id || fields[0]?.id;
+      const isFirstFarm = !!selectedFieldId && selectedFieldId === firstFieldId;
+
+      return transformApiData(subscriptions, billing, selectedField, "web").map(
+        (plan) =>
+          plan.isTrialPlan
+            ? {
+                ...plan,
+                trialDisabled: fields.length > 1 && !isFirstFarm,
+                disabledMessage:
+                  "Free trial is available only for your first farm. Please choose a paid plan for additional farms.",
+              }
+            : plan,
+      );
+    },
+    [subscriptions, billing, selectedField, fields],
   );
-  console.log(plans);
 
   const groups = useMemo(() => {
     const arr = [];
@@ -191,6 +207,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
 
   const handleSubscribeClick = async ({ plan }) => {
     if (!token) return toast.error("Please login");
+    if (plan.trialDisabled) return;
 
     try {
       const payload = {
@@ -361,7 +378,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
                 Subscription
               </h3>
 
-              <p className="text-gray-700 mb-6">{error}</p>
+              <p className="text-gray-700 mb-6">{dialogError || error}</p>
 
               <div className="flex justify-end">
                 <button

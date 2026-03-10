@@ -12,6 +12,7 @@ export default function PlanCard({
 
   const isRecommended = !!plan.recommended;
   const isEnterprise = !!plan.isEnterprise;
+  const isDisabled = !!plan.trialDisabled;
 
   /* ================= ENTERPRISE ================= */
 
@@ -85,6 +86,7 @@ export default function PlanCard({
 
   const handleSubscribe = (e) => {
     e.stopPropagation();
+    if (isDisabled) return;
     onSubscribeClick?.({ plan, selectedField });
   };
 
@@ -102,7 +104,7 @@ export default function PlanCard({
           width: "100%",
           height: "100%",
         }}
-        className="cursor-pointer"
+        className={isDisabled ? "cursor-not-allowed" : "cursor-pointer"}
       >
         {/* FRONT SIDE */}
 
@@ -111,7 +113,7 @@ export default function PlanCard({
             isRecommended
               ? "bg-[#344E41] text-white border-2 border-white"
               : "bg-white text-black border border-gray-200"
-          }`}
+          } ${isDisabled ? "opacity-70" : ""}`}
           style={{ backfaceVisibility: "hidden" }}
         >
           {/* TOP CONTENT */}
@@ -137,17 +139,26 @@ export default function PlanCard({
             {/* FEATURES */}
 
             <div className="flex flex-col gap-2 text-sm font-medium">
-              {frontFeatures.map((f, idx) => (
-                <p key={idx} className="flex items-center gap-2">
-                  <Check size={16} className="text-green-600" />
-                  {f}
-                </p>
-              ))}
+              {isDisabled ? (
+                <div className="rounded-xl border border-[#344E41]/15 bg-[#F4F7F4] px-4 py-4 text-sm leading-7 text-[#344E41] min-h-[180px]">
+                  {plan.disabledMessage}
+                </div>
+              ) : (
+                <>
+                  {frontFeatures.map((f, idx) => (
+                    <p key={idx} className="flex items-center gap-2">
+                      <Check size={16} className="text-green-600" />
+                      {f}
+                    </p>
+                  ))}
 
-              {plan.features.length > FRONT_FEATURE_LIMIT && (
-                <p className="text-xs text-gray-400 mt-1">
-                  +{plan.features.length - FRONT_FEATURE_LIMIT} more features
-                </p>
+                  {plan.features.length > FRONT_FEATURE_LIMIT && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      +{plan.features.length - FRONT_FEATURE_LIMIT} more
+                      features
+                    </p>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -160,16 +171,26 @@ export default function PlanCard({
                 e.stopPropagation();
                 setFlipped(true);
               }}
-              className="flex-1 py-2 rounded-xl text-sm bg-[#5A7C6B] text-white font-medium hover:bg-[#49675a]"
+              className={`flex-1 py-2 rounded-xl text-sm text-white font-medium ${
+                isDisabled
+                  ? "bg-[#9AA9A1] cursor-not-allowed"
+                  : "bg-[#5A7C6B] hover:bg-[#49675a]"
+              }`}
+              disabled={isDisabled}
             >
               View All
             </button>
 
             <button
               onClick={handleSubscribe}
-              className="flex-1 py-2 rounded-xl text-sm font-semibold bg-white text-[#344E41] border border-[#344E41] hover:bg-[#f5f7f6]"
+              className={`flex-1 py-2 rounded-xl text-sm font-semibold border ${
+                isDisabled
+                  ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed"
+                  : "bg-white text-[#344E41] border-[#344E41] hover:bg-[#f5f7f6]"
+              }`}
+              disabled={isDisabled}
             >
-              Subscribe
+              {isDisabled ? "Not Available" : "Subscribe"}
             </button>
           </div>
         </div>
