@@ -8,29 +8,85 @@ import {
   DownArrow,
   UpArrow,
 } from "../../../assets/DashboardIcons";
+import { useSelector } from "react-redux";
 
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
 import FeatureGuard from "../../subscription/FeatureGuard";
 import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
 
+/* ================= ICON MAPPER ================= */
+
+const getIconByType = (type) => {
+  switch (type) {
+    case "SPRAY":
+      return (
+        <div className="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center">
+          <Drop />
+        </div>
+      );
+
+    case "FERTIGATION":
+      return (
+        <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center relative">
+          <Drop />
+          <sup>
+            <SmallDrop className="absolute -top-1 -right-1" />
+          </sup>
+        </div>
+      );
+
+    case "IRRIGATION":
+      return (
+        <div className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center">
+          <Drop />
+        </div>
+      );
+
+    case "WEATHER":
+      return (
+        <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+          <Lite />
+        </div>
+      );
+
+    case "CROP_RISK":
+      return (
+        <div className="w-8 h-8 bg-purple-400 rounded-full flex items-center justify-center">
+          <Lite />
+        </div>
+      );
+
+    default:
+      return (
+        <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+          <Lite />
+        </div>
+      );
+  }
+};
+
 /* ================= SUB COMPONENT ================= */
 
 const Insight = ({ icon, title, description }) => {
   return (
-    <div className="flex items-center gap-3 lg:gap-4 py-2 px-4 border-b border-gray-200 last:border-b-0">
+    <div className="flex items-center gap-3 lg:gap-4 py-3 px-4 border-b border-gray-200 last:border-b-0">
       <div>{icon}</div>
 
       <div className="flex-1 min-w-0">
         <div className="text-sm lg:text-base font-semibold text-gray-900">
           {title}
         </div>
-        <div className="text-xs lg:text-sm text-gray-500">{description}</div>
+
+        <div className="text-xs lg:text-sm text-gray-500 whitespace-pre-line">
+          {description}
+        </div>
       </div>
 
       <div className="flex gap-4 ml-auto">
         <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 bg-white">
           <FcCheckmark className="text-lg" />
         </button>
+
         <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 bg-white">
           <FaXmark className="text-red-500 text-lg" />
         </button>
@@ -47,47 +103,41 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
     featureKey: "agronomicInsights",
   });
 
-  const insights = [
-    {
-      icon: (
-        <div className="w-8 h-8 bg-red-400 rounded-full flex items-center justify-center">
-          <Drop />
-        </div>
-      ),
-      title: "Stress is building up!",
-      description:
-        "4 hours of -80 stress was measured. Rain is not forecasted for the next 3 days.",
-    },
-    {
-      icon: (
-        <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center relative">
-          <Drop />
-          <sup>
-            <SmallDrop className="absolute -top-1 -right-1" />
-          </sup>
-        </div>
-      ),
-      title: "Shallow irrigation detected in the 7 days",
-      description: "We detected an anomaly with stress and low temperature.",
-    },
-    {
-      icon: (
-        <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center">
-          <Lite />
-        </div>
-      ),
-      title: "You should add 1mm to your irrigation",
-      description: "We detected an anomaly with stress and low temperature.",
-    },
-  ];
+  const advisory = useSelector((state) => state.smartAdvisory?.advisory);
 
-  /* ================= MAIN UI ================= */
+  /* ================= BUILD INSIGHTS ================= */
+
+  const insights =
+    advisory?.activitiesToDo?.map((activity) => {
+      let detailsText = "";
+
+      if (activity.details) {
+        detailsText = Object.entries(activity.details)
+          .filter(([_, value]) => value)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(", ");
+      }
+
+      return {
+        icon: getIconByType(activity.type),
+        title: activity.title,
+        description: detailsText
+          ? `${activity.message}\n${detailsText}`
+          : activity.message,
+      };
+    }) || [];
+
+  /* ================= CONTENT ================= */
 
   const content = (
     <div className="flex flex-col rounded-lg shadow-inner bg-white">
-      {insights.map((insight, index) => (
-        <Insight key={index} {...insight} />
-      ))}
+      {insights.length === 0 ? (
+        <div className="p-6 text-center text-gray-500 text-sm">
+          No insights available
+        </div>
+      ) : (
+        insights.map((insight, index) => <Insight key={index} {...insight} />)
+      )}
     </div>
   );
 
@@ -100,6 +150,7 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
             <div className="text-md lg:text-lg font-semibold text-gray-900">
               Insights
             </div>
+
             <div className="flex flex-col items-center [&_svg]:fill-gray-500">
               <UpArrow />
               <DownArrow />
@@ -111,6 +162,7 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
               <div className="text-md lg:text-lg font-semibold text-gray-900">
                 Action
               </div>
+
               <div className="flex flex-col items-center [&_svg]:fill-gray-500">
                 <UpArrow />
                 <DownArrow />
@@ -123,7 +175,7 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
           </div>
         </div>
 
-        {/* ===== CONDITIONAL PREMIUM HANDLING ===== */}
+        {/* PREMIUM HANDLING */}
 
         {bypassPremium ? (
           content
