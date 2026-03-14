@@ -2,21 +2,15 @@ import React, { useEffect } from "react";
 import AppRoutes from "./routes/AppRoutes";
 import { useSelector } from "react-redux";
 import { initActivityTracker } from "./utility/activityTracker";
-import WhatsAppButton from "../src/components/comman/WhatsAppButton.jsx";
+import WhatsAppButton from "./components/comman/WhatsAppButton.jsx";
 
 const App = () => {
   const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
-    let cleanup;
-
-    if (token) {
-      cleanup = initActivityTracker(token);
-    }
-
-    return () => {
-      cleanup?.();
-    };
+    if (!token) return;
+    const cleanup = initActivityTracker();
+    return cleanup;
   }, [token]);
 
   return (

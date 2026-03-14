@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import {
   getUserProfile,
   updateUser,
@@ -8,12 +7,11 @@ import {
   completeUserProfile,
   refreshToken,
   logoutUserApi,
+  getAvatarPresignedUrl,
 } from "../../api/authApi";
 import { decodeJWT } from "../../utility/decodetoken";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:7070/v1";
-
-// Add a refresh lock utility
+// Prevents simultaneous token refresh races
 const refreshLock = {
   isLocked: false,
   queue: [],
@@ -64,9 +62,9 @@ export const refreshAccessToken = createAsyncThunk(
 
 export const getUserProfileData = createAsyncThunk(
   "auth/getUserProfile",
-  async (token, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await getUserProfile(token);
+      const response = await getUserProfile();
       return response;
     } catch (error) {
       return rejectWithValue(
@@ -78,9 +76,9 @@ export const getUserProfileData = createAsyncThunk(
 
 export const updateUserData = createAsyncThunk(
   "auth/updateUser",
-  async ({ token, id, updateData }, { rejectWithValue }) => {
+  async ({ id, updateData }, { rejectWithValue }) => {
     try {
-      const response = await updateUser({ token, updateData, id });
+      const response = await updateUser({ id, updateData });
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "Failed to update user");
@@ -115,12 +113,11 @@ export const verifyuserotp = createAsyncThunk(
 export const completeProfile = createAsyncThunk(
   "auth/completeProfile",
   async (
-    { token, terms, organizationCode, firstName, lastName, phone, role },
+    { terms, organizationCode, firstName, lastName, phone, role },
     { rejectWithValue },
   ) => {
     try {
       const response = await completeUserProfile({
-        token,
         terms,
         organizationCode,
         firstName,
@@ -149,46 +146,26 @@ export const logoutUser = createAsyncThunk(
   },
 );
 
-// Upload Avatar Thunk
 export const uploadAvatar = createAsyncThunk(
   "auth/uploadAvatar",
-  async ({ file, onProgress }, { getState, rejectWithValue }) => {
+  async ({ file, onProgress }, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
-
-      if (!token) return rejectWithValue("No token found");
-
-      // Get presigned URL from backend
-      const presignRes = await axios.post(
-        `${API_URL}/api/auth/avatar-presign`,
-        { fileType: file.type },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      const { uploadUrl } = presignRes.data.data;
+      const presignRes = await getAvatarPresignedUrl(file.type);
+      const { uploadUrl } = presignRes.data;
       const key = uploadUrl.split(".com/")[1].split("?")[0];
 
-      // Upload to S3 using XMLHttpRequest for progress tracking
       await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
         xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable && onProgress) {
-            const progress = Math.round((event.loaded / event.total) * 100);
-            onProgress(progress);
+            onProgress(Math.round((event.loaded / event.total) * 100));
           }
         });
 
         xhr.addEventListener("load", () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error("Upload failed"));
-          }
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error("Upload failed"));
         });
 
         xhr.addEventListener("error", () => reject(new Error("Upload failed")));
@@ -200,7 +177,6 @@ export const uploadAvatar = createAsyncThunk(
 
       return { key };
     } catch (error) {
-      console.error("Upload Avatar Error:", error);
       return rejectWithValue(
         error.response?.data?.message || "Avatar upload failed",
       );
@@ -229,40 +205,27 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.userDetails = null;
-      state.userProfile = null;
-      state.role = null;
-      state.status = "idle";
-      state.profileStatus = "idle";
-      state.error = null;
-      state.onboardingRequired = false;
-      state.isAuthenticated = false;
-      state.refreshPending = false;
-      state.avatarUploading = false;
-      state.avatarUploadProgress = 0;
+      Object.assign(state, initialState);
     },
     decodeToken: (state) => {
-      if (state.token) {
-        try {
-          const userData = decodeJWT(state.token);
-          state.user = {
-            id: userData.id,
-            email: userData.email || userData.sub,
-            role: userData.role,
-            organizationCode: userData.organizationCode,
-          };
-          state.role = userData.role;
-          state.onboardingRequired = userData.onboardingRequired || false;
-          state.isAuthenticated = true;
-        } catch (error) {
-          state.isAuthenticated = false;
-          state.user = null;
-          state.role = null;
-          state.onboardingRequired = false;
-          state.error = "Invalid token";
-        }
+      if (!state.token) return;
+      try {
+        const userData = decodeJWT(state.token);
+        state.user = {
+          id: userData.id,
+          email: userData.email || userData.sub,
+          role: userData.role,
+          organizationCode: userData.organizationCode,
+        };
+        state.role = userData.role;
+        state.onboardingRequired = userData.onboardingRequired || false;
+        state.isAuthenticated = true;
+      } catch {
+        state.isAuthenticated = false;
+        state.user = null;
+        state.role = null;
+        state.onboardingRequired = false;
+        state.error = "Invalid token";
       }
     },
     setGoogleLoginData: (state, action) => {
@@ -286,12 +249,10 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(refreshAccessToken.pending, (state) => {
-        state.status = "loading";
         state.refreshPending = true;
         state.error = null;
       })
       .addCase(refreshAccessToken.fulfilled, (state, action) => {
-        state.status = "succeeded";
         state.refreshPending = false;
         state.token = action.payload.accessToken;
         state.user = action.payload.user || null;
@@ -301,7 +262,6 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(refreshAccessToken.rejected, (state, action) => {
-        state.status = "failed";
         state.refreshPending = false;
         state.error = action.payload;
         state.isAuthenticated = false;
@@ -310,6 +270,7 @@ const authSlice = createSlice({
         state.role = null;
         state.onboardingRequired = false;
       })
+
       .addCase(getUserProfileData.pending, (state) => {
         state.profileStatus = "loading";
         state.error = null;
@@ -323,6 +284,7 @@ const authSlice = createSlice({
         state.profileStatus = "failed";
         state.error = action.payload;
       })
+
       .addCase(updateUserData.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -336,6 +298,7 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+
       .addCase(sendotp.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -349,6 +312,7 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+
       .addCase(verifyuserotp.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -367,6 +331,7 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+
       .addCase(completeProfile.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -385,7 +350,7 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-      // Upload Avatar cases
+
       .addCase(uploadAvatar.pending, (state) => {
         state.avatarUploading = true;
         state.avatarUploadProgress = 0;
@@ -394,34 +359,18 @@ const authSlice = createSlice({
       .addCase(uploadAvatar.fulfilled, (state, action) => {
         state.avatarUploading = false;
         state.avatarUploadProgress = 100;
-        // Update userProfile avatar
         if (state.userProfile) {
-          state.userProfile = {
-            ...state.userProfile,
-            avatar: action.payload.key,
-          };
+          state.userProfile = { ...state.userProfile, avatar: action.payload.key };
         }
-        // Update user avatar if exists
         if (state.user) {
-          state.user = {
-            ...state.user,
-            avatar: action.payload.key,
-          };
+          state.user = { ...state.user, avatar: action.payload.key };
         }
       })
       .addCase(uploadAvatar.rejected, (state, action) => {
         state.avatarUploading = false;
         state.avatarUploadProgress = 0;
         state.error = action.payload;
-      })
-      .addMatcher(
-        (action) =>
-          action.type.endsWith("/fulfilled") ||
-          action.type.endsWith("/rejected"),
-        (state) => {
-          state.status = "idle";
-        },
-      );
+      });
   },
 });
 

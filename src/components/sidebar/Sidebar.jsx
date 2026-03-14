@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
@@ -54,15 +54,11 @@ const Sidebar = ({ onToggleCollapse }) => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation();
   const dispatch = useDispatch();
   const logout = useLogout();
 
-  // Get user data from Redux store
   const user = useSelector((state) => state?.auth?.user);
   const token = useSelector((state) => state.auth.token);
-  const status = useSelector((state) => state.auth.status);
-  const profileStatus = useSelector((state) => state.auth.profileStatus);
   const { userDetails, userProfile } = useSelector((state) => state.auth);
 
   // S3 bucket URL for avatar
@@ -75,10 +71,10 @@ const Sidebar = ({ onToggleCollapse }) => {
   }, [dispatch]);
 
   useEffect(() => {
-  if (token) {
-    dispatch(getUserProfileData(token));
-  }
-  }, [token]);
+    if (token) {
+      dispatch(getUserProfileData());
+    }
+  }, [token, dispatch]);
 
 
   const isInitialized = useRef(false);

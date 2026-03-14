@@ -15,11 +15,6 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Calender,
-  LeftArrow,
-  RightArrow,
-} from "../../../assets/DashboardIcons";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchweatherData } from "../../../redux/slices/weatherSlice";
@@ -228,7 +223,7 @@ const FarmMap = ({
 
   return (
     <div
-      className={`flex flex-col items-center w-full relative h-[75vh] ${fields?.length == 0 ? "h-[98vh]" : "lg:h-[85vh]${"}`}
+      className={`flex flex-col items-center w-full relative h-[75vh] ${fields?.length === 0 ? "h-[98vh]" : "lg:h-[85vh]${"}`}
     >
       <MapContainer
         center={

@@ -297,7 +297,7 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
         }
       }
     }
-  }, [selectedDate, dates, visibleCount]);
+  }, [selectedDate, dates, visibleCount, visibleDates]);
 
   const handleApplyDateRange = useCallback(() => {
     if (!customStartDate || !customEndDate) return;

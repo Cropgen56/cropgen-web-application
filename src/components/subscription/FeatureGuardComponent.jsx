@@ -3,15 +3,13 @@ import { useEffect } from "react";
 import SubscriptionModal from "./SubscriptionModal";
 import PricingOverlay from "../pricing/PricingOverlay";
 import PremiumPageWrapper from "./PremiumPageWrapper";
-
 const FeatureGuard = ({ guard, title, children }) => {
-  //  AUTO-CLOSE overlays when access is granted
   useEffect(() => {
     if (guard.hasFeatureAccess) {
       guard.closeMembershipModal();
       guard.closePricingOverlay();
     }
-  }, [guard.hasFeatureAccess]);
+  }, [guard]);
 
   return (
     <>

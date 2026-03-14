@@ -172,6 +172,12 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
             <div className="text-xs lg:text-sm text-gray-500 cursor-pointer hover:text-gray-900">
               See all
             </div>
+
+            {!bypassPremium && !insightsGuard.hasFeatureAccess && (
+              <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                Premium
+              </span>
+            )}
           </div>
         </div>
 

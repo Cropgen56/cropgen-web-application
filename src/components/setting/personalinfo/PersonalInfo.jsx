@@ -74,7 +74,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
 
   useEffect(() => {
     if (token && profileStatus === "idle" && !userProfile) {
-      dispatch(getUserProfileData(token));
+      dispatch(getUserProfileData());
     }
   }, [token, profileStatus, userProfile, dispatch]);
 
@@ -124,7 +124,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
       ).unwrap();
 
       message.success("Profile photo updated successfully!");
-      dispatch(getUserProfileData(token));
+      dispatch(getUserProfileData());
     } catch (error) {
       setPreviewUrl(null);
       setUploadProgress(0);
@@ -167,10 +167,10 @@ const PersonalInfo = ({ setShowSidebar }) => {
       };
 
       await dispatch(
-        updateUserData({ id: userId, updateData: updatePayload, token })
+        updateUserData({ id: userId, updateData: updatePayload })
       ).unwrap();
 
-      dispatch(getUserProfileData(token));
+      dispatch(getUserProfileData());
 
       message.success("Profile updated successfully!");
       setUpdateStatus({

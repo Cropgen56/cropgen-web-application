@@ -13,7 +13,7 @@ import { message } from "antd";
 const SignupLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { token, onboardingRequired } = useSelector((state) => state.auth);
+  const { onboardingRequired } = useSelector((state) => state.auth);
 
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
@@ -101,7 +101,6 @@ const SignupLogin = () => {
     setCompletingProfile(true);
     dispatch(
       completeProfile({
-        token,
         terms: true,
         organizationCode: formData.organizationCode || null,
       })

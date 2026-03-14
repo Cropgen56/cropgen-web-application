@@ -13,6 +13,16 @@ import EvapotranspirationChart from "../../dashboard/satellite-index/ETChart";
 import { useAoiManagement } from "../../dashboard/hooks/useAoiManagement";
 import { fetchSmartAdvisory } from "../../../redux/slices/smartAdvisorySlice";
 
+const Section = ({ title, children, newPage = false }) => (
+  <div
+    className={`farm-section bg-white rounded-xl shadow-sm mb-3 overflow-hidden${newPage ? " new-page-section" : ""}`}
+    data-section-title={title}
+    data-new-page={newPage ? "true" : undefined}
+  >
+    {children}
+  </div>
+);
+
 const FarmReportContent = ({
   selectedFieldDetails,
   mapRef,
@@ -27,85 +37,77 @@ const FarmReportContent = ({
   useEffect(() => {
     const fieldId = selectedFieldDetails?._id;
     if (!fieldId) return;
-
     if (lastFetchedFieldIdRef.current === fieldId) return;
-
     lastFetchedFieldIdRef.current = fieldId;
-
     dispatch(fetchSmartAdvisory({ fieldId }));
   }, [dispatch, selectedFieldDetails?._id]);
 
   return (
     <>
-      {/* ================= SECTION 1 ================= */}
+      {/* ── 1. Satellite Map ── */}
+      <Section title="Satellite Imagery">
+        <div className="p-2">
+          <FarmReportMap
+            key={selectedFieldDetails?._id}
+            selectedFieldsDetials={[selectedFieldDetails]}
+            ref={mapRef}
+            hidePolygonForPDF={isPreparedForPDF}
+          />
+        </div>
+      </Section>
 
-      <div
-        className="farm-section bg-[#2d4339] rounded-lg p-2 mb-2"
-        data-section-title="Satellite Imagery & Crop Health"
-      >
-        <FarmReportMap
-          key={selectedFieldDetails?._id}
-          selectedFieldsDetials={[selectedFieldDetails]}
-          ref={mapRef}
-          hidePolygonForPDF={isPreparedForPDF}
+      {/* ── 2. Crop Health & Yield ── */}
+      <Section title="Crop Health & Yield">
+        <CropHealth
+          selectedFieldDetails={selectedFieldDetails}
+          bypassPremium
         />
+      </Section>
 
-        <div className="mt-2">
-          <CropHealth
-            selectedFieldDetails={selectedFieldDetails}
-            bypassPremium
-          />
-        </div>
-      </div>
-
-      {/* ================= SECTION 2 ================= */}
-
-      <div
-        className="farm-section bg-[#2d4339] rounded-lg p-2 mb-2"
-        data-section-title="Weather & Vegetation Indices"
-      >
+      {/* ── 3. Weather Forecast ── */}
+      <Section title="Weather Forecast">
         <ForeCast selectedFieldDetails={selectedFieldDetails} bypassPremium />
+      </Section>
 
-        <div className="mt-2">
-          <NdviGraph
-            selectedFieldsDetials={[selectedFieldDetails]}
-            bypassPremium
-          />
-        </div>
+      {/* ── 4. Vegetation Index (NDVI) ── */}
+      <Section title="Vegetation Index (NDVI)">
+        <NdviGraph
+          selectedFieldsDetials={[selectedFieldDetails]}
+          bypassPremium
+        />
+      </Section>
 
-        <div className="mt-2">
-          <WaterIndex
-            selectedFieldsDetials={[selectedFieldDetails]}
-            bypassPremium
-          />
-        </div>
+      {/* ── 5. Water Stress Index ── */}
+      <Section title="Water Stress Index">
+        <WaterIndex
+          selectedFieldsDetials={[selectedFieldDetails]}
+          bypassPremium
+        />
+      </Section>
 
-        <div className="mt-2">
-          <EvapotranspirationChart
-            selectedFieldsDetials={[selectedFieldDetails]}
-            bypassPremium
-          />
-        </div>
-      </div>
+      {/* ── 6. Evapotranspiration ── */}
+      <Section title="Evapotranspiration (ET)">
+        <EvapotranspirationChart
+          selectedFieldsDetials={[selectedFieldDetails]}
+          bypassPremium
+        />
+      </Section>
 
-      {/* ================= SECTION 3 ================= */}
-
-      <div
-        className="farm-section bg-[#2d4339] rounded-lg p-2"
-        data-section-title="Insights & Advisory"
-      >
+      {/* ── 7. Agronomic Insights ── */}
+      <Section title="Agronomic Insights" newPage>
         <Insights
           selectedFieldsDetials={[selectedFieldDetails]}
           bypassPremium
         />
+      </Section>
 
-        <div className="mt-2">
-          <PlantGrowthActivity
-            selectedFieldsDetials={[selectedFieldDetails]}
-            bypassPremium
-          />
-        </div>
-      </div>
+      {/* ── 8. Plant Growth Activity ── */}
+      <Section title="Plant Growth Activity" newPage>
+        <PlantGrowthActivity
+          selectedFieldsDetials={[selectedFieldDetails]}
+          bypassPremium
+        />
+      </Section>
     </>
   );
 };

@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import { motion } from "framer-motion";
-import { Loader2, X, ChevronLeft, ChevronRight, Palette } from "lucide-react";
+import { Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,7 +21,6 @@ import PlanCard from "./PlanCard";
 
 /* ================= CONSTANTS ================= */
 
-const DEFAULT_AREA = 1;
 const PLAN_ORDER = ["free-trial", "basic", "pro", "premium"];
 
 const FEATURE_DISPLAY_NAMES = {
@@ -288,7 +287,7 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
 
     rzp.open();
     setCheckoutData(null);
-  }, [checkoutData]);
+  }, [checkoutData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ================= RENDER ================= */
 

@@ -4,10 +4,10 @@ import { checkFieldSubscription } from "../../api/membership";
 // Async thunk to check field subscription
 export const checkFieldSubscriptionStatus = createAsyncThunk(
   "membership/checkFieldSubscription",
-  async ({ fieldId, authToken }) => {
-    const response = await checkFieldSubscription(fieldId, authToken);
+  async ({ fieldId }) => {
+    const response = await checkFieldSubscription(fieldId);
     return { fieldId, ...response };
-  }
+  },
 );
 
 const initialState = {

@@ -80,9 +80,7 @@ export default function FarmAdvisoryCard() {
     (state) => state.smartAdvisory || {}
   );
 
-  const { userProfile, token } = useSelector(
-    (state) => state.auth || {}
-  );
+  const { userProfile } = useSelector((state) => state.auth || {});
 
   const activities = advisory?.activitiesToDo || [];
 
@@ -168,7 +166,6 @@ export default function FarmAdvisoryCard() {
     try {
       await dispatch(
         updateUserData({
-          token,
           id: userProfile._id,
           updateData: { phone: formattedPhone },
         })

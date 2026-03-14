@@ -44,7 +44,6 @@ export const useAoiManagement = (selectedField) => {
 
   // ─── Redux selectors ──────────────────────────────────────
   const aois = useSelector((state) => state?.weather?.aois ?? []);
-  const aoisFetchStatus = useSelector((state) => state?.weather?.aoisStatus); // optional – if you have it
 
   // Refs for deduplication
   const creationInProgress = useRef(new Set());

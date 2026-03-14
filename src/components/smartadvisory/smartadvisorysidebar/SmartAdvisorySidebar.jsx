@@ -3,7 +3,7 @@ import { SmartAdvisoryDarkIcon } from "../../../assets/Icons";
 import { CiSearch } from "react-icons/ci";
 import { useSelector } from "react-redux";
 import PolygonPreview from "../../polygon/PolygonPreview";
-import { ChevronLeft, MoveLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 const FieldInfo = ({
   title,

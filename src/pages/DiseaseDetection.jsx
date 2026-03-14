@@ -8,9 +8,7 @@ import img1 from "../assets/image/Group 31.png";
 import { getFarmFields } from "../redux/slices/farmSlice";
 
 import Sidebardiseasedetection from "../components/diseasedetection/sidebar/Sidebardiseasedetection";
-import UploadCropImage from "../components/diseasedetection/uploadcropimage/UploadCropImage";
 
-import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 
@@ -109,10 +107,6 @@ const DiseaseDetection = () => {
   }
 
   const hasSubscription = selectedField?.subscription?.hasActiveSubscription;
-
-  const hasDiseaseDetectionPermission =
-    hasSubscription &&
-    selectedField?.subscription?.plan?.features?.diseaseDetectionAlerts;
 
   return (
     <>

@@ -1,12 +1,18 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
+const VISUAL_CROSSING_KEY =
+  process.env.REACT_APP_VISUAL_CROSSING_KEY || "NAJUNXK89Y3ZLPJL3NYH6BS4E";
+const OBSERVE_EARTH_KEY =
+  process.env.REACT_APP_OBSERVE_EARTH_KEY || "5b97d3f0-a01a-490b-aad1-3bfa848309f2";
+const OBSERVE_EARTH_BASE = "https://observearth.com/api";
+
 export const fetchweatherData = createAsyncThunk(
   "weather/fetchweatherData",
   async ({ latitude, longitude }, { rejectWithValue }) => {
     try {
       const response = await axios.get(
-        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${latitude},${longitude}?key=NAJUNXK89Y3ZLPJL3NYH6BS4E`,
+        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${latitude},${longitude}?key=${VISUAL_CROSSING_KEY}`,
       );
       return response.data;
     } catch (error) {
@@ -20,8 +26,7 @@ export const fetchweatherData = createAsyncThunk(
 export const createAOI = createAsyncThunk(
   "weather/createAOI",
   async (payload, { rejectWithValue, dispatch, getState }) => {
-    const apiKey = "5b97d3f0-a01a-490b-aad1-3bfa848309f2";
-    const url = "https://observearth.com/api/geometry/";
+    const url = `${OBSERVE_EARTH_BASE}/geometry/`;
 
     try {
       const state = getState();
@@ -35,7 +40,7 @@ export const createAOI = createAsyncThunk(
 
       const response = await axios.post(url, payload, {
         headers: {
-          "X-API-Key": apiKey,
+          "X-API-Key": OBSERVE_EARTH_KEY,
           "Content-Type": "application/json",
         },
       });
@@ -71,13 +76,10 @@ export const createAOI = createAsyncThunk(
 export const fetchAOIs = createAsyncThunk(
   "weather/fetchAOIs",
   async (_, { rejectWithValue }) => {
-    const apiKey = "5b97d3f0-a01a-490b-aad1-3bfa848309f2";
-    const url = "https://observearth.com/api/geometry/?detail=false";
+    const url = `${OBSERVE_EARTH_BASE}/geometry/?detail=false`;
     try {
       const response = await axios.get(url, {
-        headers: {
-          "X-API-Key": apiKey,
-        },
+        headers: { "X-API-Key": OBSERVE_EARTH_KEY },
       });
 
       const aoisData = Array.isArray(response.data)
@@ -94,13 +96,10 @@ export const fetchAOIs = createAsyncThunk(
 export const fetchForecastData = createAsyncThunk(
   "weather/fetchForecastData",
   async ({ geometry_id }, { rejectWithValue }) => {
-    const apiKey = "5b97d3f0-a01a-490b-aad1-3bfa848309f2";
-    const url = `https://observearth.com/api/weather/forecast/?geometry_id=${geometry_id}`;
+    const url = `${OBSERVE_EARTH_BASE}/weather/forecast/?geometry_id=${geometry_id}`;
     try {
       const response = await axios.get(url, {
-        headers: {
-          "X-API-Key": apiKey,
-        },
+        headers: { "X-API-Key": OBSERVE_EARTH_KEY },
       });
       return response.data;
     } catch (error) {
@@ -113,15 +112,11 @@ export const fetchForecastData = createAsyncThunk(
 
 export const fetchHistoricalWeather = createAsyncThunk(
   "weather/fetchHistoricalWeather",
-
   async ({ geometry_id, start_date, end_date }, { rejectWithValue }) => {
-    const apiKey = "5b97d3f0-a01a-490b-aad1-3bfa848309f2";
-    const url = `https://observearth.com/api/weather/historical/?geometry_id=${geometry_id}&start_date=${start_date}&end_date=${end_date}`;
+    const url = `${OBSERVE_EARTH_BASE}/weather/historical/?geometry_id=${geometry_id}&start_date=${start_date}&end_date=${end_date}`;
     try {
       const response = await axios.get(url, {
-        headers: {
-          "X-API-Key": apiKey,
-        },
+        headers: { "X-API-Key": OBSERVE_EARTH_KEY },
       });
       return response.data;
     } catch (error) {

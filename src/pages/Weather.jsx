@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { motion, AnimatePresence } from "framer-motion";
-import { message } from "antd";
 import { useNavigate } from "react-router-dom";
 
 import RainChances from "../components/weather/rainchances/RainChances";

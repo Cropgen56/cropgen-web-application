@@ -22,9 +22,14 @@ const EvapotranspirationChart = ({
 
   /* ================= DATA ================= */
 
-  const dateData = forecastData.forecast?.time || [];
-  const evapotranspirationData =
-    forecastData.forecast?.evapotranspiration || [];
+  const dateData = useMemo(
+    () => forecastData.forecast?.time || [],
+    [forecastData.forecast?.time],
+  );
+  const evapotranspirationData = useMemo(
+    () => forecastData.forecast?.evapotranspiration || [],
+    [forecastData.forecast?.evapotranspiration],
+  );
 
   const maxEt =
     evapotranspirationData.length > 0

@@ -15,7 +15,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { FiInfo } from "react-icons/fi";
+
 import { MdDownload } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchIndexTimeSeriesSummary } from "../../../redux/slices/satelliteSlice";

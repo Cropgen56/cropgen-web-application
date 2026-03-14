@@ -20,7 +20,6 @@ const CropHealth = ({ selectedFieldDetails, bypassPremium = false }) => {
   const crops = useSelector((state) => state.crops.crops);
   const advisory = useSelector((state) => state.smartAdvisory?.advisory);
   const advisoryLoading = useSelector((state) => state.smartAdvisory?.loading);
-
   /* ================= SUBSCRIPTION ================= */
 
   const cropHealthGuard = useSubscriptionGuard({
@@ -86,7 +85,7 @@ const CropHealth = ({ selectedFieldDetails, bypassPremium = false }) => {
   /* ================= PREMIUM SECTION ================= */
 
   const premiumSection = (
-    <div className="flex flex-col lg:flex-row gap-8 mt-6 bg-white p-6 rounded-2xl border shadow-sm">
+    <div className="flex flex-col lg:flex-row gap-8">
       <SoilAnalysisChart selectedFieldsDetials={[fieldData]} />
       <SoilHealthChart selectedFieldsDetials={[fieldData]} />
     </div>
@@ -141,12 +140,11 @@ const CropHealth = ({ selectedFieldDetails, bypassPremium = false }) => {
             <Info
               label="AI Yield"
               value={
-                // advisoryLoading
-                //   ? "Loading..."
-                //   : yieldData
-                //     ? `${yieldData.ai} ${yieldData.unit}`
-                //     : "N/A"
-                "Test"
+                advisoryLoading
+                  ? "Loading..."
+                  : yieldData
+                    ? `${yieldData.ai} ${yieldData.unit}`
+                    : "N/A"
               }
             />
           </div>
@@ -159,19 +157,36 @@ const CropHealth = ({ selectedFieldDetails, bypassPremium = false }) => {
 
       {/* ========= PREMIUM SECTION ========= */}
 
-      {bypassPremium ? (
-        premiumSection
-      ) : (
-        <FeatureGuard guard={cropHealthGuard} title="Advanced Soil Analytics">
-          <PremiumContentWrapper
-            isLocked={!cropHealthGuard.hasFeatureAccess}
-            onSubscribe={cropHealthGuard.handleSubscribe}
-            title="Advanced Soil Analytics"
-          >
-            {premiumSection}
-          </PremiumContentWrapper>
-        </FeatureGuard>
-      )}
+      <div className="mt-6 bg-white rounded-2xl shadow border">
+        {/* Always-visible section header */}
+        <div className="px-5 py-3 border-b flex items-center justify-between">
+          <h2 className="text-xl font-bold text-[#344E41]">
+            Advanced Soil Analytics
+          </h2>
+          {!bypassPremium && !cropHealthGuard.hasFeatureAccess && (
+            <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+              Premium
+            </span>
+          )}
+        </div>
+
+        {/* Content — blurred when locked, shown normally when accessible */}
+        <div className="p-4">
+          {bypassPremium ? (
+            premiumSection
+          ) : (
+            <FeatureGuard guard={cropHealthGuard} title="Advanced Soil Analytics">
+              <PremiumContentWrapper
+                isLocked={!cropHealthGuard.hasFeatureAccess}
+                onSubscribe={cropHealthGuard.handleSubscribe}
+                title="Advanced Soil Analytics"
+              >
+                {premiumSection}
+              </PremiumContentWrapper>
+            </FeatureGuard>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

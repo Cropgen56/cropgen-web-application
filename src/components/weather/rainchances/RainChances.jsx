@@ -6,7 +6,6 @@ import rainIcon from "../../../assets/image/Vector.png";
 const RainChances = ({ forecastData, historicalData, dateRange }) => {
   // Use historical data if available, otherwise use forecast
   const dataSource = historicalData || forecastData?.forecast || {};
-  const current = forecastData?.current || {};
   const isHistorical = !!historicalData;
 
   const rainData =

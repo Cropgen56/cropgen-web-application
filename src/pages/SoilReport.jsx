@@ -1,5 +1,5 @@
 // SoilReport.jsx
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
@@ -303,7 +303,8 @@ const SoilReport = () => {
   const navigate = useNavigate();
 
   const user = useSelector((state) => state?.auth?.user);
-  const fields = useSelector((state) => state?.farmfield?.fields) || [];
+  const rawFields = useSelector((state) => state?.farmfield?.fields);
+  const fields = useMemo(() => rawFields || [], [rawFields]);
 
   const userId = user?.id;
 
@@ -321,22 +322,8 @@ const SoilReport = () => {
   const [nextCrop, setNextCrop] = useState("");
   const [reportGenerated, setReportGenerated] = useState(false);
 
-  // Mobile/Tablet detection state
-  const [isMobileOrTablet, setIsMobileOrTablet] = useState(
-    window.innerWidth < 1024,
-  );
-
   const reportRef = useRef();
   const restRef = useRef();
-
-  // Handle window resize for responsive detection
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobileOrTablet(window.innerWidth < 1024);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   // Load farm fields
   useEffect(() => {

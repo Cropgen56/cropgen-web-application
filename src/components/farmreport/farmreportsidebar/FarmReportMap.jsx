@@ -268,34 +268,6 @@ const MapCaptureMode = ({ isPDFMode }) => {
   return null;
 };
 
-// Color Palette Legend Component for PDF
-const ColorPaletteLegend = ({ legend, indexName }) => {
-  if (!legend || legend.length === 0) return null;
-
-  return (
-    <div className="color-palette-legend mt-2 bg-white/10 rounded-lg p-2">
-      <div className="flex flex-wrap gap-1 justify-center items-center">
-        {legend.map((item, idx) => (
-          <div
-            key={`${item.label}-${idx}`}
-            className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded"
-          >
-            <span
-              className="w-4 h-3 rounded-sm border border-white/20 flex-shrink-0"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="text-[10px] text-white font-medium whitespace-nowrap">
-              {item.label}
-            </span>
-            <span className="text-[9px] text-white/70 whitespace-nowrap">
-              ({item.hectares?.toFixed(1) || "0.0"}ha)
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 // Horizontal Color Bar Legend for PDF (more compact)
 const ColorBarLegend = ({ legend, indexName }) => {

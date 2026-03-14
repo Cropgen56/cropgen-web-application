@@ -95,7 +95,7 @@ const FarmReport = () => {
   if (!fields.length) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-[#344E41] text-white">
-        <img src={img1} className="w-[280px] mb-6 opacity-60" />
+        <img src={img1} alt="" className="w-[280px] mb-6 opacity-60" />
         <button
           onClick={() => navigate("/addfield")}
           className="px-6 py-3 bg-white text-[#344E41] rounded-lg"

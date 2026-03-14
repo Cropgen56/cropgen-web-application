@@ -11,9 +11,11 @@ import store from "./redux/store";
 import ClarityScript from "./ClarityScript";
 import GtagScript from "./GtagScript";
 import AuthAutoRefresh from "./authroute/AuthAutoRefresh";
-import { attachStore } from "../src/api/api.js";
+import { attachStore, setUnauthorizedHandler } from "./api/api.js";
+import { logout } from "./redux/slices/authSlice";
 
 attachStore(store);
+setUnauthorizedHandler(() => store.dispatch(logout()));
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

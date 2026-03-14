@@ -2,6 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { get, set, del, keys } from "idb-keyval";
 
+const SATELLITE_API_KEY =
+  process.env.REACT_APP_SATELLITE_API || "CROPGEN_230498adklfjadsljf";
+const SATELLITE_BASE_URL =
+  process.env.REACT_APP_API_URL_SATELLITE || "https://server.cropgenapp.com";
+
 function arraysEqual(a, b) {
   return a.length === b.length && a.every((val, index) => val === b[index]);
 }
@@ -91,13 +96,9 @@ export const fetchSatelliteDates = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `https://server.cropgenapp.com/v4/api/availability/`,
+        `${SATELLITE_BASE_URL}/v4/api/availability/`,
         payload,
-        {
-          headers: {
-            "x-api-key": "CROPGEN_230498adklfjadsljf",
-          },
-        }
+        { headers: { "x-api-key": SATELLITE_API_KEY } },
       );
 
       await set(cacheKey, {
@@ -150,13 +151,9 @@ export const fetchIndexData = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `https://server.cropgenapp.com/v4/api/calculate/index`,
+        `${SATELLITE_BASE_URL}/v4/api/calculate/index`,
         payload,
-        {
-          headers: {
-            "x-api-key": "CROPGEN_230498adklfjadsljf",
-          },
-        }
+        { headers: { "x-api-key": SATELLITE_API_KEY } },
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -201,13 +198,9 @@ export const fetchIndexDataForMap = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/calculate/index`,
+        `${SATELLITE_BASE_URL}/v4/api/calculate/index`,
         payload,
-        {
-          headers: {
-            "x-api-key": "CROPGEN_230498adklfjadsljf",
-          },
-        }
+        { headers: { "x-api-key": SATELLITE_API_KEY } },
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -275,7 +268,7 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
       }
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/timeseries/vegetation/vegetation`,
+        `${SATELLITE_BASE_URL}/v4/api/timeseries/vegetation/vegetation`,
         {
           geometry: {
             type: "Polygon",
@@ -288,11 +281,7 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
           satellite: "s2",
           max_items: 200,
         },
-        {
-          headers: {
-            "x-api-key": "CROPGEN_230498adklfjadsljf",
-          },
-        }
+        { headers: { "x-api-key": SATELLITE_API_KEY } },
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -300,7 +289,7 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const fetchWaterIndexData = createAsyncThunk(
@@ -335,7 +324,7 @@ export const fetchWaterIndexData = createAsyncThunk(
       }
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL_SATELLITE}/v4/api/timeseries/water/water`,
+        `${SATELLITE_BASE_URL}/v4/api/timeseries/water/water`,
         {
           geometry: {
             type: "Polygon",
@@ -348,11 +337,7 @@ export const fetchWaterIndexData = createAsyncThunk(
           satellite: "s2",
           max_items: 200,
         },
-        {
-          headers: {
-            "x-api-key": "CROPGEN_230498adklfjadsljf",
-          },
-        }
+        { headers: { "x-api-key": SATELLITE_API_KEY } },
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -360,7 +345,7 @@ export const fetchWaterIndexData = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const clearSatelliteDatesCache = createAsyncThunk(

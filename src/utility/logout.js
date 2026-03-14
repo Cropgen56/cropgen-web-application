@@ -4,6 +4,7 @@ import { resetFarmState } from "../redux/slices/farmSlice";
 import { resetAuthState } from "../redux/slices/authSlice";
 import { resetOperationState } from "../redux/slices/operationSlice";
 import { resetSatelliteState } from "../redux/slices/satelliteSlice";
+import { logoutUserApi } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
 
 const useLogout = () => {
@@ -12,21 +13,22 @@ const useLogout = () => {
 
   const logoutUser = async () => {
     try {
-      // Clear specific localStorage keys (replace with your app-specific keys)
+      await logoutUserApi();
+    } catch {
+      // Server logout failed (e.g. already expired), still clear local state
+    }
+
+    try {
       localStorage.removeItem("authToken");
       localStorage.removeItem("selectedFieldId");
-      // Add other specific keys as needed
 
-      // Clear IndexedDB
       await clear();
 
-      // Reset Redux state
       dispatch(resetFarmState());
       dispatch(resetAuthState());
       dispatch(resetSatelliteState());
       dispatch(resetOperationState());
 
-      // Navigate to login page (optional, adjust path as needed)
       navigate("/login");
 
       return { success: true };

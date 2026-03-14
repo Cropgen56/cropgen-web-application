@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Navigate, useLocation } from "react-router-dom";
 import { refreshAccessToken, logout } from "../redux/slices/authSlice";
-import { isTokenValid } from "../../src/utility/token";
+import { isTokenValid } from "../utility/token";
 import LogoFlipLoader from "../components/comman/loading/LogoFlipLoader";
 import { motion, AnimatePresence } from "framer-motion";
 

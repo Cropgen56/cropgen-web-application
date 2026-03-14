@@ -1,8 +1,5 @@
 import React, { useEffect, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { PlusIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 
 import MapView from "../components/dashboard/mapview/MapView";
 import CropHealth from "../components/dashboard/crophealth/CropHealthCard";
@@ -26,7 +23,6 @@ import "../styles/dashboard.css";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   /* ================= DATA ================= */
   const { fields, isLoadingFields } = useFarmFields();

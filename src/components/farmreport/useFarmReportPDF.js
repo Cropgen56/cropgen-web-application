@@ -29,12 +29,12 @@ const useFarmReportPDF = (selectedFieldDetails) => {
 
   // PDF Layout Constants
   const PDF_CONFIG = {
-    MARGIN_LEFT: 10,
-    MARGIN_RIGHT: 10,
+    MARGIN_LEFT: 8,
+    MARGIN_RIGHT: 8,
     HEADER_HEIGHT: 14,
     FOOTER_HEIGHT: 10,
-    SECTION_TITLE_HEIGHT: 10,
-    SECTION_GAP: 6,
+    SECTION_TITLE_HEIGHT: 9,
+    SECTION_GAP: 4,
     CONTENT_PADDING: 2,
   };
 
@@ -227,7 +227,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
   // Helper function to capture a section directly from the DOM
   const captureSectionFromDOM = useCallback(
     async (section, options = {}) => {
-      const { scale = 2, backgroundColor = "#2d4339" } = options;
+      const { scale = 2, backgroundColor = "#ffffff" } = options;
 
       const originalStyles = {
         position: section.style.position,
@@ -377,16 +377,17 @@ const useFarmReportPDF = (selectedFieldDetails) => {
 
   const addSectionTitle = useCallback((pdf, title, yPosition) => {
     const pdfWidth = pdf.internal.pageSize.getWidth();
+    const margin = 8;
 
-    pdf.setFillColor(90, 124, 107);
-    pdf.roundedRect(10, yPosition, pdfWidth - 20, 8, 1, 1, "F");
+    pdf.setFillColor(52, 78, 65);
+    pdf.roundedRect(margin, yPosition, pdfWidth - margin * 2, 7, 1, 1, "F");
 
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     pdf.setFont("helvetica", "bold");
-    pdf.text(title, 14, yPosition + 5.5);
+    pdf.text(title, margin + 4, yPosition + 5);
 
-    return yPosition + 10;
+    return yPosition + 9;
   }, []);
 
   const formatIrrigationType = (type) => {
@@ -737,7 +738,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
 
           const canvas = await captureSectionFromDOM(sec, {
             scale: 2,
-            backgroundColor: "#2d4339",
+            backgroundColor: "#ffffff",
           });
 
           const imgHeight = (canvas.height * contentWidth) / canvas.width;
@@ -805,7 +806,6 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         createNewPage(pdf, currentPage, totalPages, fieldName);
 
         let currentY = contentStartY;
-        let isFirstSectionOnPage = true;
 
         // Second pass: Generate the PDF with continuous flow + forced page breaks
         for (let i = 0; i < capturedSections.length; i++) {
@@ -821,15 +821,12 @@ const useFarmReportPDF = (selectedFieldDetails) => {
             currentPage++;
             createNewPage(pdf, currentPage, totalPages, fieldName);
             currentY = contentStartY;
-            isFirstSectionOnPage = true;
           }
 
-          // Check if section title + minimum content fits on current page
           if (currentY + titleHeight + minContentHeight > contentEndY) {
             currentPage++;
             createNewPage(pdf, currentPage, totalPages, fieldName);
             currentY = contentStartY;
-            isFirstSectionOnPage = true;
           }
 
           // Add section title
@@ -849,7 +846,6 @@ const useFarmReportPDF = (selectedFieldDetails) => {
               imgHeight
             );
             currentY += imgHeight + PDF_CONFIG.SECTION_GAP;
-            isFirstSectionOnPage = false;
           } else {
             // Need to split the image across pages
             let remainingImgHeight = imgHeight;
@@ -908,8 +904,6 @@ const useFarmReportPDF = (selectedFieldDetails) => {
 
               isFirstPart = false;
             }
-
-            isFirstSectionOnPage = false;
           }
 
           // Check if we need a new page for next section
@@ -921,7 +915,6 @@ const useFarmReportPDF = (selectedFieldDetails) => {
               currentPage++;
               createNewPage(pdf, currentPage, totalPages, fieldName);
               currentY = contentStartY;
-              isFirstSectionOnPage = true;
             }
           }
 
@@ -954,6 +947,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
         }, 1000);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       selectedFieldDetails,
       addPDFHeader,

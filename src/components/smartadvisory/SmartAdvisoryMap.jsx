@@ -78,8 +78,6 @@ const SmartAdvisoryMap = ({
 
   const mapRef = useRef(null);
   const [image, setImage] = useState(null);
-  const [showLegend, setShowLegend] = useState(false);
-
   // Sort fields in descending order (latest first)
   const sortedFields = useMemo(() => {
     return [...fields].sort((a, b) => {
@@ -93,13 +91,6 @@ const SmartAdvisoryMap = ({
     });
   }, [fields]);
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (!e.target.closest(".legend-dropdown-wrapper")) setShowLegend(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const selectedFieldData = useMemo(
     () =>

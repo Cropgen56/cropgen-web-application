@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Calender,
@@ -116,7 +116,7 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
 
     if (!selectedDate && uniqueDates.length)
       setSelectedDate(toISODateString(items[0].date));
-  }, [satelliteDates, visibleCount]);
+  }, [satelliteDates, visibleCount, selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleArrowClick = useCallback(
     (direction) => {

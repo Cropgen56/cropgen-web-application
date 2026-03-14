@@ -9,11 +9,9 @@ import {
 
 export const fetchSubscriptions = createAsyncThunk(
   "subscription/fetchSubscriptions",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const token = getState().auth.token;
-      if (!token) throw new Error("No authentication token available");
-      return await fetchAllSubscriptions(token);
+      return await fetchAllSubscriptions();
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -22,11 +20,9 @@ export const fetchSubscriptions = createAsyncThunk(
 
 export const createUserSubscription = createAsyncThunk(
   "subscription/createUserSubscription",
-  async (payload, { getState, rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const token = getState().auth.token;
-      if (!token) throw new Error("No authentication token available");
-      return await createSubscription(payload, token);
+      return await createSubscription(payload);
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -35,15 +31,9 @@ export const createUserSubscription = createAsyncThunk(
 
 export const verifyUserSubscriptionPayment = createAsyncThunk(
   "subscription/verifyUserSubscriptionPayment",
-  async ({ subscriptionId, paymentData }, { getState, rejectWithValue }) => {
+  async ({ subscriptionId, paymentData }, { rejectWithValue }) => {
     try {
-      const token = getState().auth.token;
-      if (!token) throw new Error("No authentication token available");
-      return await verifySubscriptionPayment(
-        subscriptionId,
-        paymentData,
-        token,
-      );
+      return await verifySubscriptionPayment(subscriptionId, paymentData);
     } catch (error) {
       return rejectWithValue(error.message);
     }

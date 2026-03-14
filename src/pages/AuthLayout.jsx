@@ -15,8 +15,6 @@ import img7 from "../assets/logo/Group 509.svg";
 
 const AuthLayout = () => {
   const dispatch = useDispatch();
-  const [animate, setAnimate] = useState(false);
-  const [height, setHeight] = useState(window.innerHeight);
   const [width, setWidth] = useState(window.innerWidth);
   const isSmallTablet = width <= 834;
   const animationDuration = 15;
@@ -77,13 +75,7 @@ const AuthLayout = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setAnimate(true), 1000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
     const handleResize = () => {
-      setHeight(window.innerHeight);
       setWidth(window.innerWidth);
     };
     window.addEventListener("resize", handleResize);
@@ -216,7 +208,6 @@ const AuthLayout = () => {
                     {planets.map((planet, i) => {
                       const total = planets.length;
                       const angle = (360 / total) * i;
-                      const animationDuration = 15;
 
                       return (
                         <div

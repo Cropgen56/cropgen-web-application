@@ -200,162 +200,162 @@ const PlantGrowthActivity = memo(
 
     const isLoading = false;
 
-    const content = (
+    /* ===== CHART (only this part gets blurred when locked) ===== */
+
+    const chartContent = isLoading ? (
+      <PlantGrowthSkeleton />
+    ) : (
+      <div className="w-full h-[300px] bg-gray-100 rounded-2xl relative">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={data}
+            margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient id="colorHeight" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor={GRASS_COLOR_MAIN}
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={GRASS_COLOR_MAIN}
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            </defs>
+
+            <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={false} />
+            <XAxis
+              dataKey="label"
+              axisLine={false}
+              tickLine={false}
+              interval={Math.max(0, Math.floor(data.length / 8))}
+            />
+            <YAxis hide />
+
+            <ReferenceLine
+              x={referenceLabel}
+              stroke={GRASS_COLOR_MAIN}
+              strokeWidth={2}
+            />
+
+            <ReferenceDot
+              x={referenceLabel}
+              y={data.find((d) => d.label === referenceLabel)?.height || 0}
+              r={3}
+              fill={GRASS_COLOR_MAIN}
+              isFront
+              label={({ viewBox }) => {
+                if (!viewBox) return null;
+                const { x, y } = viewBox;
+                if (!tooltipPos || tooltipPos.x !== x || tooltipPos.y !== y) {
+                  requestAnimationFrame(() => setTooltipPos({ x, y }));
+                }
+                return null;
+              }}
+            />
+
+            <Area
+              type="monotone"
+              dataKey="height"
+              stroke={GRASS_COLOR_MAIN}
+              fill="url(#colorHeight)"
+              fillOpacity={1}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+
+        {tooltipPos && plantActivity && (
+          <div
+            className="absolute z-50 bg-[#344E41] text-white text-xs p-3 rounded shadow-xl max-w-[320px]"
+            style={{
+              left: Math.max(8, tooltipPos.x - 160),
+              top: Math.max(8, tooltipPos.y - 100),
+            }}
+          >
+            <p className="font-bold text-sm mb-1">
+              {plantActivity.stageName ||
+                `BBCH ${plantActivity?.bbchStage ?? ""}`}
+            </p>
+            <p className="italic text-gray-300 mt-1 text-xs">
+              {interval === "Days"
+                ? formatDayToWeekDay(daysSinceSowing)
+                : `Week ${currentWeek}`}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+
+    /* ===== FULL CARD (header always visible, chart blurred when locked) ===== */
+
+    return (
       <div className="w-full flex mt-6">
         <div className="relative w-full rounded-2xl shadow-lg flex flex-col overflow-hidden p-3 md:p-5 bg-white">
+          {/* Always-visible header */}
           <div className="w-full mb-4 flex items-start justify-between">
             <div>
               <h2 className="text-xl font-semibold text-[#344E41] m-0">
                 Plant Growth Activity
               </h2>
 
-              <div className="text-sm font-bold text-[#344E41] mt-2">
-                {cropName}
-              </div>
+              {(bypassPremium || plantGrowthGuard.hasFeatureAccess) && (
+                <>
+                  <div className="text-sm font-bold text-[#344E41] mt-2">
+                    {cropName}
+                  </div>
 
-              <div className="text-sm text-gray-700 mt-1">
-                {plantActivity?.stageName
-                  ? `Stage: ${plantActivity.stageName}`
-                  : `Days since sowing: ${daysSinceSowing}`}
-              </div>
+                  <div className="text-sm text-gray-700 mt-1">
+                    {plantActivity?.stageName
+                      ? `Stage: ${plantActivity.stageName}`
+                      : `Days since sowing: ${daysSinceSowing}`}
+                  </div>
 
-              {plantActivity?.description && (
-                <div className="text-xs text-gray-600 mt-1 max-w-2xl">
-                  {plantActivity.description}
-                </div>
+                  {plantActivity?.description && (
+                    <div className="text-xs text-gray-600 mt-1 max-w-2xl">
+                      {plantActivity.description}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
-            <select
-              value={interval}
-              onChange={(e) => setInterval(e.target.value)}
-              className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer"
-            >
-              <option value="Days">Days</option>
-              <option value="Weeks">Weeks</option>
-            </select>
+            <div className="flex items-center gap-2">
+              {!bypassPremium && !plantGrowthGuard.hasFeatureAccess && (
+                <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                  Premium
+                </span>
+              )}
+
+              <select
+                value={interval}
+                onChange={(e) => setInterval(e.target.value)}
+                className="w-[100px] h-[35px] px-2 py-1 text-sm border-2 border-gray-300 rounded-full bg-white text-gray-800 focus:outline-none cursor-pointer"
+              >
+                <option value="Days">Days</option>
+                <option value="Weeks">Weeks</option>
+              </select>
+            </div>
           </div>
 
-          {isLoading ? (
-            <PlantGrowthSkeleton />
+          {/* Chart — blurred when locked */}
+          {bypassPremium ? (
+            chartContent
           ) : (
-            <div className="w-full h-[300px] bg-gray-100 rounded-2xl relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={data}
-                  margin={{ top: 60, right: 30, left: 30, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="colorHeight"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="5%"
-                        stopColor={GRASS_COLOR_MAIN}
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor={GRASS_COLOR_MAIN}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-
-                  <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={false} />
-                  <XAxis
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    interval={Math.max(0, Math.floor(data.length / 8))}
-                  />
-
-                  <YAxis hide />
-
-                  <ReferenceLine
-                    x={referenceLabel}
-                    stroke={GRASS_COLOR_MAIN}
-                    strokeWidth={2}
-                  />
-
-                  <ReferenceDot
-                    x={referenceLabel}
-                    y={
-                      data.find((d) => d.label === referenceLabel)?.height || 0
-                    }
-                    r={3}
-                    fill={GRASS_COLOR_MAIN}
-                    isFront
-                    label={({ viewBox }) => {
-                      if (!viewBox) return null;
-                      const { x, y } = viewBox;
-
-                      if (
-                        !tooltipPos ||
-                        tooltipPos.x !== x ||
-                        tooltipPos.y !== y
-                      ) {
-                        requestAnimationFrame(() => {
-                          setTooltipPos({ x, y });
-                        });
-                      }
-
-                      return null;
-                    }}
-                  />
-
-                  <Area
-                    type="monotone"
-                    dataKey="height"
-                    stroke={GRASS_COLOR_MAIN}
-                    fill="url(#colorHeight)"
-                    fillOpacity={1}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-
-              {tooltipPos && plantActivity && (
-                <div
-                  className="absolute z-50 bg-[#344E41] text-white text-xs p-3 rounded shadow-xl max-w-[320px]"
-                  style={{
-                    left: Math.max(8, tooltipPos.x - 160),
-                    top: Math.max(8, tooltipPos.y - 100),
-                  }}
-                >
-                  <p className="font-bold text-sm mb-1">
-                    {plantActivity.stageName ||
-                      `BBCH ${plantActivity?.bbchStage ?? ""}`}
-                  </p>
-
-                  <p className="italic text-gray-300 mt-1 text-xs">
-                    {interval === "Days"
-                      ? formatDayToWeekDay(daysSinceSowing)
-                      : `Week ${currentWeek}`}
-                  </p>
-                </div>
-              )}
-            </div>
+            <FeatureGuard guard={plantGrowthGuard} title="Crop Growth Monitoring">
+              <PremiumContentWrapper
+                isLocked={!plantGrowthGuard.hasFeatureAccess}
+                onSubscribe={plantGrowthGuard.handleSubscribe}
+                title="Crop Growth Monitoring"
+              >
+                {chartContent}
+              </PremiumContentWrapper>
+            </FeatureGuard>
           )}
         </div>
       </div>
-    );
-
-    if (bypassPremium) return content;
-
-    return (
-      <FeatureGuard guard={plantGrowthGuard} title="Crop Growth Monitoring">
-        <PremiumContentWrapper
-          isLocked={!plantGrowthGuard.hasFeatureAccess}
-          onSubscribe={plantGrowthGuard.handleSubscribe}
-          title="Crop Growth Monitoring"
-        >
-          {content}
-        </PremiumContentWrapper>
-      </FeatureGuard>
     );
   },
 );

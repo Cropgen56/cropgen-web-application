@@ -30,7 +30,6 @@ import FeatureGuard from "../../subscription/FeatureGuard";
 import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
 
 const WATER_COLOR_MAIN = "#38bdf8";
-const WATER_COLOR_LIGHT = "#7dd3fc";
 
 const WaterIndex = ({ selectedFieldsDetials, bypassPremium = false }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};

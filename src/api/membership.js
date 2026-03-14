@@ -1,15 +1,9 @@
-import axios from "axios";
+import api from "./api";
 
-export const checkFieldSubscription = async (fieldId, authToken) => {
+export const checkFieldSubscription = async (fieldId) => {
   try {
-    const response = await axios.get(
-      `${process.env.REACT_APP_API_URL}/api/user-subscriptions/check/${fieldId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          "Content-Type": "application/json",
-        },
-      }
+    const response = await api.get(
+      `/api/user-subscriptions/check/${fieldId}`,
     );
     return response.data;
   } catch (error) {

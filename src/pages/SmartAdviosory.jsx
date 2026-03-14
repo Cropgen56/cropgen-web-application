@@ -137,7 +137,7 @@ const SmartAdvisory = () => {
         setDateRange({ startDate, endDate });
       })
       .catch(() => {});
-  }, [dispatch, aois, selectedField?._id]);
+  }, [dispatch, aois, selectedField]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---------- SUBSCRIPTION GUARD (SAME AS WEATHER) ---------- */
   const advisoryGuard = useSubscriptionGuard({
@@ -166,7 +166,7 @@ const SmartAdvisory = () => {
   if (!fields.length) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#5a7c6b] text-white">
-        <img src={img1} className="w-[260px] mb-6 opacity-70" />
+        <img src={img1} alt="" className="w-[260px] mb-6 opacity-70" />
         <button
           onClick={() => navigate("/addfield")}
           className="px-6 py-2 bg-white text-[#5a7c6b] rounded-lg"

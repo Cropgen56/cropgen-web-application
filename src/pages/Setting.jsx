@@ -99,19 +99,6 @@ const Setting = () => {
   const [selectedOption, setSelectedOption] = useState("personalInfo");
   const [showSidebar, setShowSidebar] = useState(true);
 
-  // Mobile/Tablet detection state
-  const [isMobileOrTablet, setIsMobileOrTablet] = useState(
-    window.innerWidth < 1024
-  );
-
-  // Handle window resize for responsive detection
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobileOrTablet(window.innerWidth < 1024);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const handleOptionClick = (option) => {
     setSelectedOption(option);

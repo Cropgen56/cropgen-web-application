@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import api from "../../api/api";
 
 const BASE_URL = process.env.REACT_APP_SMART_ADVISORY;
 
@@ -31,15 +32,11 @@ export const sendFarmAdvisoryWhatsApp = createAsyncThunk(
   "smartAdvisory/sendFarmAdvisoryWhatsApp",
   async ({ phone, farmAdvisoryId, language }, thunkAPI) => {
     try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/whatsapp/send-farm-advisory`,
-        {
-          phone,
-          farmAdvisoryId,
-          language,
-        },
-      );
-
+      const res = await api.post("/api/whatsapp/send-farm-advisory", {
+        phone,
+        farmAdvisoryId,
+        language,
+      });
       return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
