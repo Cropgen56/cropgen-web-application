@@ -497,8 +497,13 @@ const FarmReportMap = React.forwardRef(
       );
     }
 
+    const gridClasses =
+      hidePolygonForPDF
+        ? "grid grid-cols-2 gap-2 w-full"
+        : "grid grid-cols-1 md:grid-cols-2 gap-2 w-full";
+
     return (
-      <div ref={ref} className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
+      <div ref={ref} className={gridClasses}>
         {INDEXES.map((indexName) => {
           const layer = indexDataByType?.[indexName];
           const isLoading = loading?.indexDataByType?.[indexName] ?? false;
@@ -526,7 +531,10 @@ const FarmReportMap = React.forwardRef(
             isValidBounds(effectiveImageBounds);
 
           return (
-            <div key={`${indexName}-${fieldId}`} className="map-card-wrapper">
+            <div
+              key={`${indexName}-${fieldId}`}
+              className={`map-card-wrapper ${hidePolygonForPDF ? "min-w-[380px]" : ""}`}
+            >
               <div className="relative w-full h-[250px] rounded-xl overflow-hidden shadow-md bg-gray-900">
                 {showLoader && (
                   <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-[5000] rounded-xl">

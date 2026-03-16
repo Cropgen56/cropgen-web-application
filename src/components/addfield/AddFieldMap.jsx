@@ -21,7 +21,6 @@ import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import { Calender, LeftArrow, RightArrow } from "../../assets/DashboardIcons";
 import "leaflet-geosearch/dist/geosearch.css";
 import FileUploadOverlay from "./FileUploadOverlay";
-import { motion } from "framer-motion";
 
 const AddFieldMap = ({
   setMarkers,
@@ -270,7 +269,13 @@ const AddFieldMap = ({
             {markers.length > 0 && (
               <Polygon
                 positions={markers.map((marker) => [marker.lat, marker.lng])}
-                color="yellow"
+                pathOptions={{
+                  color: "#eab308",
+                  weight: 2.5,
+                  dashArray: "4, 6",
+                  fillColor: "#facc15",
+                  fillOpacity: 0.15,
+                }}
               />
             )}
 

@@ -70,7 +70,7 @@ const getIconByType = (type) => {
 const Insight = ({ icon, title, description }) => {
   return (
     <div className="flex items-center gap-3 lg:gap-4 py-3 px-4 border-b border-gray-200 last:border-b-0">
-      <div>{icon}</div>
+      <div className="flex-shrink-0">{icon}</div>
 
       <div className="flex-1 min-w-0">
         <div className="text-sm lg:text-base font-semibold text-gray-900">
@@ -82,7 +82,7 @@ const Insight = ({ icon, title, description }) => {
         </div>
       </div>
 
-      <div className="flex gap-4 ml-auto">
+      <div className="flex gap-4 ml-auto flex-shrink-0">
         <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 bg-white">
           <FcCheckmark className="text-lg" />
         </button>

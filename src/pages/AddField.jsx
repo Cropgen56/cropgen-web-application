@@ -152,7 +152,7 @@ const AddField = () => {
   /* ================= RENDER ================= */
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className="relative w-full min-h-screen h-[100dvh] overflow-hidden bg-[#f8faf8]">
       <AnimatePresence>
         {showOverlay && selectedField && (
           <motion.div
@@ -160,7 +160,7 @@ const AddField = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.3 }}
             className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
           >
             <PricingOverlay
@@ -172,9 +172,9 @@ const AddField = () => {
       </AnimatePresence>
 
       {isTabletView ? (
-        <div className="w-full h-screen flex flex-col relative overflow-hidden">
+        <div className="w-full min-h-screen flex flex-col">
           <div
-            className={`relative w-full flex-shrink-0 ${
+            className={`relative w-full flex-shrink-0 border-b border-[#344e41]/20 shadow-sm ${
               showOverlay ? "h-screen z-[30]" : "z-0"
             }`}
             style={{ height: showOverlay ? "100vh" : getMapHeight() }}
@@ -189,66 +189,52 @@ const AddField = () => {
               onToggleSidebar={toggleSidebar}
               showUploadOverlay={showOverlay}
             />
-
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 sm:gap-4 z-50">
-              <button className="bg-[#344E41] text-white px-3 py-1 rounded text-sm">
-                Calendar
-              </button>
-
-              <button
-                onClick={clearMarkers}
-                className="bg-[#344E41] text-white px-3 py-1 rounded text-sm"
-              >
-                Undo
-              </button>
-
-              <button
-                onClick={toggleAddMarkers}
-                className="bg-[#344E41] text-white px-3 py-1 rounded text-sm"
-              >
-                {isAddingMarkers ? "Stop" : "Add Field"}
-              </button>
-            </div>
           </div>
 
           <AnimatePresence>
             {isSidebarVisible && (
               <motion.div
-                initial={{ opacity: 0, y: 50 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 50 }}
-                transition={{ duration: 0.4 }}
-                className={`w-full flex-grow p-4 overflow-y-auto bg-white ${
+                exit={{ opacity: 0, y: 16 }}
+                transition={{ duration: 0.3 }}
+                className={`w-full flex-grow overflow-y-auto bg-white rounded-t-2xl -mt-4 relative z-20 shadow-[0_-4px_20px_rgba(52,78,65,0.08)] ${
                   showOverlay ? "z-10" : "z-20"
                 }`}
-                style={{ height: getSidebarHeight() }}
+                style={{ minHeight: getSidebarHeight() }}
               >
-                <AddFieldSidebar
-                  saveFarm={saveFarm}
-                  markers={markers}
-                  isTabletView={true}
-                  currentArea={getCurrentArea()}
-                />
+                <div className="pt-4 pb-6 px-4 sm:px-6">
+                  <AddFieldSidebar
+                    saveFarm={saveFarm}
+                    markers={markers}
+                    isTabletView={true}
+                    currentArea={getCurrentArea()}
+                  />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       ) : (
         <div className="w-full h-screen flex overflow-hidden">
-          <AddFieldSidebar
-            saveFarm={saveFarm}
-            markers={markers}
-            currentArea={getCurrentArea()}
-          />
+          <div className="hidden sm:block flex-shrink-0 border-r border-[#344e41]/15 bg-white shadow-sm">
+            <AddFieldSidebar
+              saveFarm={saveFarm}
+              markers={markers}
+              currentArea={getCurrentArea()}
+            />
+          </div>
 
-          <AddFieldMap
-            markers={markers}
-            setMarkers={setMarkers}
-            isAddingMarkers={isAddingMarkers}
-            toggleAddMarkers={toggleAddMarkers}
-            clearMarkers={clearMarkers}
-            onToggleSidebar={toggleSidebar}
-          />
+          <div className="flex-1 min-w-0 relative">
+            <AddFieldMap
+              markers={markers}
+              setMarkers={setMarkers}
+              isAddingMarkers={isAddingMarkers}
+              toggleAddMarkers={toggleAddMarkers}
+              clearMarkers={clearMarkers}
+              onToggleSidebar={toggleSidebar}
+            />
+          </div>
         </div>
       )}
     </div>

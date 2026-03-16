@@ -15,11 +15,11 @@ const FieldDropdown = ({ fields, selectedField, setSelectedField }) => {
   };
 
   return (
-    <div className="w-[180px] relative z-[9000]">
+    <div className="w-full min-w-[140px] max-w-[220px] sm:w-[180px] relative z-[9000]">
       {/* Selected Field Header - Similar to SmartAdvisory button style */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-[#344e41] text-white px-4 py-2.5 rounded-md shadow hover:bg-[#2d4339] transition-colors flex items-center justify-between"
+        className="w-full min-h-[44px] bg-[#344e41] text-white px-3 sm:px-4 py-2.5 rounded-md shadow hover:bg-[#2d4339] active:bg-[#2d4339] transition-colors flex items-center justify-between touch-manipulation"
       >
         <div className="flex items-center gap-2">
           <ChevronLeft
@@ -27,7 +27,7 @@ const FieldDropdown = ({ fields, selectedField, setSelectedField }) => {
               isOpen ? "-rotate-90" : ""
             }`}
           />
-          <span className="text-sm font-medium">
+          <span className="text-xs sm:text-sm font-medium truncate max-w-[100px] sm:max-w-[140px]">
             {selectedField?.fieldName || "Select Farm"}
           </span>
         </div>
@@ -53,7 +53,7 @@ const FieldDropdown = ({ fields, selectedField, setSelectedField }) => {
             onClick={() => setIsOpen(false)}
           />
 
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg z-20 max-h-40 overflow-y-auto border border-gray-200">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg z-20 max-h-48 sm:max-h-40 overflow-y-auto border border-gray-200 min-w-0">
             {sortedFields.map((field) => {
               const isSelected = field._id === selectedField?._id;
               const fieldSubscribed =
@@ -62,7 +62,7 @@ const FieldDropdown = ({ fields, selectedField, setSelectedField }) => {
               return (
                 <div
                   key={field._id}
-                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors ${
+                  className={`flex items-center justify-between px-4 py-3 min-h-[44px] cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors touch-manipulation ${
                     isSelected
                       ? "bg-[#344e41] text-white"
                       : "hover:bg-[#344e41]/10 text-[#344e41]"

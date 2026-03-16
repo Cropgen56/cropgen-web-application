@@ -12,7 +12,12 @@ import FeatureGuard from "../../subscription/FeatureGuard";
 
 const ACRE_TO_HECTARE = 0.40468564224;
 
-const CropHealth = ({ selectedFieldDetails, bypassPremium = false }) => {
+const CropHealth = ({
+  selectedFieldDetails,
+  bypassPremium = false,
+  isPreparedForPDF = false,
+  aoiId = null,
+}) => {
   const dispatch = useDispatch();
 
   /* ================= REDUX ================= */
@@ -86,24 +91,31 @@ const CropHealth = ({ selectedFieldDetails, bypassPremium = false }) => {
 
   const premiumSection = (
     <div className="flex flex-col lg:flex-row gap-8">
-      <SoilAnalysisChart selectedFieldsDetials={[fieldData]} />
-      <SoilHealthChart selectedFieldsDetials={[fieldData]} />
+      <SoilAnalysisChart
+        selectedFieldsDetials={[fieldData]}
+        isPreparedForPDF={isPreparedForPDF}
+      />
+      <SoilHealthChart isPreparedForPDF={isPreparedForPDF} aoiId={aoiId} />
     </div>
   );
 
   /* ================= UI ================= */
 
   return (
-    <div className="p-2">
+    <div className="p-2 sm:p-4">
       {/* ========= BASIC INFO ========= */}
 
-      <div className="bg-white rounded-2xl p-4 shadow border">
-        <h2 className="text-xl font-bold text-[#344E41] mb-4">Crop Health</h2>
+      <div className="bg-white rounded-2xl p-3 sm:p-4 shadow border">
+        <h2 className="text-lg sm:text-xl font-bold text-[#344E41] mb-4">Crop Health</h2>
 
-        <div className="flex gap-6">
+        <div className={`flex flex-col sm:flex-row gap-4 sm:gap-6 ${isPreparedForPDF ? "min-w-0" : ""}`}>
           {/* CROP IMAGE */}
 
-          <div className="w-[160px] h-[160px] border rounded-xl p-2">
+          <div
+            className={`w-full sm:w-[160px] h-[140px] sm:h-[160px] border rounded-xl p-2 flex-shrink-0 ${
+              isPreparedForPDF ? "min-w-[160px]" : ""
+            }`}
+          >
             <img
               src={cropInfo?.cropImage || "https://via.placeholder.com/160"}
               alt="crop"
@@ -113,7 +125,7 @@ const CropHealth = ({ selectedFieldDetails, bypassPremium = false }) => {
 
           {/* INFO GRID */}
 
-          <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-12 gap-y-3 text-sm">
             <Info
               label="Crop"
               value={cropInfo?.cropName || cropName || "N/A"}
@@ -175,7 +187,10 @@ const CropHealth = ({ selectedFieldDetails, bypassPremium = false }) => {
           {bypassPremium ? (
             premiumSection
           ) : (
-            <FeatureGuard guard={cropHealthGuard} title="Advanced Soil Analytics">
+            <FeatureGuard
+              guard={cropHealthGuard}
+              title="Advanced Soil Analytics"
+            >
               <PremiumContentWrapper
                 isLocked={!cropHealthGuard.hasFeatureAccess}
                 onSubscribe={cropHealthGuard.handleSubscribe}

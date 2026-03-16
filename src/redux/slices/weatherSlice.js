@@ -197,7 +197,15 @@ const weatherSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchForecastData.fulfilled, (state, action) => {
-        state.forecastData = action.payload;
+        const geometryId = action.meta?.arg?.geometry_id;
+        if (geometryId) {
+          state.forecastData = {
+            ...(state.forecastData || {}),
+            [geometryId]: action.payload,
+          };
+        } else {
+          state.forecastData = action.payload;
+        }
         state.loading = false;
       })
       .addCase(fetchForecastData.rejected, (state, action) => {
@@ -225,5 +233,14 @@ export const { setDateRange, clearHistoricalWeather } = weatherSlice.actions;
 export const selectAOIs = (state) => state.weather.aois || [];
 export const selectAOIByName = (name) => (state) =>
   state.weather.aois?.find((aoi) => aoi.name === name) || null;
+
+/** Get forecast data for a geometry. Handles both keyed (by geometry_id) and flat store shapes. */
+export const selectForecastForGeometry = (geometryId) => (state) => {
+  const fd = state.weather?.forecastData;
+  if (!fd) return null;
+  if (geometryId && fd[geometryId]) return fd[geometryId];
+  if (fd.current || fd.forecast) return fd;
+  return null;
+};
 
 export default weatherSlice.reducer;

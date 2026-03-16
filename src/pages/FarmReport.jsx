@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import Offcanvas from "react-bootstrap/Offcanvas";
 
 import FarmReportSidebar from "../components/farmreport/farmreportsidebar/FarmReportSidebar";
 import FarmReportContent from "../components/farmreport/farmreportsidebar/FarmReportContent";
@@ -34,6 +35,7 @@ const FarmReport = () => {
 
   const [selectedField, setSelectedField] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   const mainReportRef = useRef(null);
   const lastFetchedFieldIdRef = useRef(null);
@@ -76,7 +78,7 @@ const FarmReport = () => {
 
   /* PDF Hook */
   const { isDownloading, isPreparedForPDF, downloadFarmReportPDF } =
-    useFarmReportPDF(selectedField);
+    useFarmReportPDF(selectedField, aoiId);
 
   /* Feature Guard */
   const farmReportGuard = useSubscriptionGuard({
@@ -107,9 +109,10 @@ const FarmReport = () => {
   }
 
   return (
-    <div className="flex h-screen bg-[#344E41] text-white">
+    <div className="flex flex-col sm:flex-row min-h-screen h-[100dvh] bg-[#344E41] text-white overflow-hidden">
+      {/* Desktop Sidebar */}
       {isSidebarVisible && (
-        <div className="hidden lg:flex">
+        <div className="hidden lg:flex flex-shrink-0">
           <FarmReportSidebar
             setSelectedField={setSelectedField}
             setIsSidebarVisible={setIsSidebarVisible}
@@ -117,26 +120,60 @@ const FarmReport = () => {
         </div>
       )}
 
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="mb-3 flex justify-between bg-[#2d4339] p-2 rounded">
-          <FieldDropdown
-            fields={fields}
-            selectedField={selectedField}
-            setSelectedField={setSelectedField}
+      {/* Mobile Sidebar Offcanvas */}
+      <Offcanvas
+        show={showMobileSidebar}
+        onHide={() => setShowMobileSidebar(false)}
+        placement="start"
+        className="lg:hidden"
+        style={{ maxWidth: "85vw" }}
+      >
+        <Offcanvas.Body className="p-0">
+          <FarmReportSidebar
+            setSelectedField={(field) => {
+              setSelectedField(field);
+              setShowMobileSidebar(false);
+            }}
+            setIsSidebarVisible={() => setShowMobileSidebar(false)}
           />
+        </Offcanvas.Body>
+      </Offcanvas>
 
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <div className="flex-shrink-0 mb-3 flex flex-wrap items-center gap-2 sm:gap-3 bg-[#2d4339] p-2 sm:p-3 rounded">
+          <button
+            type="button"
+            onClick={() => setShowMobileSidebar(true)}
+            className="lg:hidden touch-target min-w-[44px] flex items-center justify-center rounded bg-[#0C2214] text-white"
+            aria-label="Open farm list"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="flex-1 min-w-0">
+            <FieldDropdown
+              fields={fields}
+              selectedField={selectedField}
+              setSelectedField={setSelectedField}
+            />
+          </div>
           <button
             onClick={() => downloadFarmReportPDF(mainReportRef)}
-            className="bg-[#0C2214] text-white px-4 py-1 rounded"
+            className="touch-target min-h-[44px] bg-[#0C2214] text-white px-4 py-2 rounded font-medium shrink-0"
           >
             {isDownloading ? "Generating..." : "PDF"}
           </button>
         </div>
 
         <FeatureGuard guard={farmReportGuard} title="Farm Report">
-          <div ref={mainReportRef}>
+          <div
+            ref={mainReportRef}
+            className={`flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4 ${isPreparedForPDF ? "pdf-capture-mode" : ""}`}
+          >
             <FarmReportContent
               selectedFieldDetails={selectedField}
+              aoiId={aoiId}
               forecast={forecast}
               units={units}
               isPreparedForPDF={isPreparedForPDF}

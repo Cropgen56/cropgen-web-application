@@ -31,7 +31,11 @@ import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGu
 
 const WATER_COLOR_MAIN = "#38bdf8";
 
-const WaterIndex = ({ selectedFieldsDetials, bypassPremium = false }) => {
+const WaterIndex = ({
+  selectedFieldsDetials,
+  bypassPremium = false,
+  isPreparedForPDF = false,
+}) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { waterIndexData = null, loading } =
     useSelector((state) => state.satellite) || {};
@@ -156,14 +160,36 @@ const WaterIndex = ({ selectedFieldsDetials, bypassPremium = false }) => {
       ref={scrollRef}
       className="w-full overflow-x-auto pr-6 bg-white rounded-xl p-2 min-h-[180px]"
     >
-      {isLoading ? (
-        <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />
+      {isLoading && !isPreparedForPDF ? (
+        <div
+          className="text-center"
+          style={{
+            minHeight: "180px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <LoadingSpinner size={48} color={WATER_COLOR_MAIN} />
+          <strong className="mt-2">Loading Water Index...</strong>
+        </div>
       ) : !hasData ? (
-        <div className="text-center text-sm text-gray-600">
-          No Data Available
+        <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">
+              No Data Available
+            </h3>
+            <p className="text-sm text-gray-500">
+              We couldn't find any data for the selected field and time range.
+            </p>
+          </div>
         </div>
       ) : (
-        <ResponsiveContainer width={chartConfig.width} height={180}>
+        <ResponsiveContainer
+          width={isPreparedForPDF ? chartConfig.width : chartConfig.width}
+          height={180}
+        >
           <LineChart data={chartData}>
             <CartesianGrid stroke="rgba(0,0,0,0.1)" />
             <XAxis dataKey="date" interval={chartConfig.interval} />

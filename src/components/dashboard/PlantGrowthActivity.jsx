@@ -132,7 +132,11 @@ const formatDayToWeekDay = (day) => {
 
 /* ================= COMPONENT ================= */
 const PlantGrowthActivity = memo(
-  ({ selectedFieldsDetials = [], bypassPremium = false }) => {
+  ({
+    selectedFieldsDetials = [],
+    bypassPremium = false,
+    isPreparedForPDF = false,
+  }) => {
     const advisoryState = useSelector((s) => s.smartAdvisory?.advisory || null);
 
     const field = selectedFieldsDetials[0] || {};
@@ -206,7 +210,10 @@ const PlantGrowthActivity = memo(
       <PlantGrowthSkeleton />
     ) : (
       <div className="w-full h-[300px] bg-gray-100 rounded-2xl relative">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer
+          width={isPreparedForPDF ? 750 : "100%"}
+          height="100%"
+        >
           <AreaChart
             data={data}
             margin={{ top: 60, right: 30, left: 30, bottom: 0 }}

@@ -4,6 +4,11 @@ import { message } from "antd";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import CropGenLogo from "../../assets/image/login/logo.svg";
+import store from "../../redux/store";
+import { fetchForecastData } from "../../redux/slices/weatherSlice";
+
+// A4 content width in px at 96dpi for consistent capture
+const PDF_CAPTURE_WIDTH = 794;
 
 const SECTION_TITLES = [
   "Satellite Imagery & Crop Health",
@@ -22,7 +27,7 @@ const NEW_PAGE_SECTIONS = [
   "plant growth stage",
 ];
 
-const useFarmReportPDF = (selectedFieldDetails) => {
+const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isPreparedForPDF, setIsPreparedForPDF] = useState(false);
@@ -264,6 +269,8 @@ const useFarmReportPDF = (selectedFieldDetails) => {
 
         const canvas = await html2canvas(section, {
           scale: scale,
+          width: PDF_CAPTURE_WIDTH,
+          windowWidth: PDF_CAPTURE_WIDTH,
           useCORS: true,
           allowTaint: true,
           logging: false,
@@ -271,6 +278,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
           imageTimeout: 15000,
           removeContainer: false,
           onclone: (clonedDoc, clonedElement) => {
+            clonedElement.style.overflow = "visible";
             clonedElement
               .querySelectorAll("path.leaflet-interactive")
               .forEach((path) => {
@@ -668,6 +676,40 @@ const useFarmReportPDF = (selectedFieldDetails) => {
     [addPDFHeader, addPDFFooter]
   );
 
+  // Wait for critical data to be present before capture (up to 8s; longer for forecast/ET)
+  const waitForDataReadiness = useCallback(() => {
+    const maxWaitMs = 8000;
+    const pollIntervalMs = 250;
+    const start = Date.now();
+
+    return new Promise((resolve) => {
+      const check = () => {
+        const state = store.getState();
+        const advisory = state?.smartAdvisory?.advisory;
+        const indexData = state?.satellite?.indexDataByType;
+        const forecastData = state?.weather?.forecastData;
+
+        const hasAdvisory = !!advisory;
+        const hasIndexData =
+          indexData &&
+          (indexData.NDVI || indexData.NDMI || indexData.NDRE || indexData.TRUE_COLOR);
+        const hasForecast =
+          !!forecastData?.current ||
+          !!forecastData?.forecast ||
+          (forecastData && typeof forecastData === "object" && (forecastData.current || forecastData.forecast));
+
+        const ready = hasAdvisory || hasIndexData || hasForecast;
+
+        if (ready || Date.now() - start >= maxWaitMs) {
+          resolve();
+          return;
+        }
+        setTimeout(check, pollIntervalMs);
+      };
+      check();
+    });
+  }, []);
+
   // Get section title from element
   const getSectionTitle = useCallback((sectionElement, index) => {
     // Try to get title from data attribute
@@ -700,7 +742,16 @@ const useFarmReportPDF = (selectedFieldDetails) => {
       setIsPreparedForPDF(true);
       setDownloadProgress(0);
 
-      await new Promise((res) => setTimeout(res, 500));
+      // Proactively trigger forecast fetch if aoiId exists and no data yet
+      const state = store.getState();
+      const existingForecast = state?.weather?.forecastData;
+      if (aoiId && !existingForecast?.current && !existingForecast?.forecast) {
+        store.dispatch(fetchForecastData({ geometry_id: aoiId }));
+      }
+
+      // Wait for charts and Leaflet to render, and for critical data (up to 8s)
+      await new Promise((res) => setTimeout(res, 1500));
+      await waitForDataReadiness();
 
       try {
         const logoBase64 = await getLogoBase64();
@@ -787,7 +838,12 @@ const useFarmReportPDF = (selectedFieldDetails) => {
           pagesNeeded += additionalPages;
           tempY = newY + PDF_CONFIG.SECTION_GAP;
 
-          if (tempY > contentEndY) {
+          // Account for page break before next section when near bottom
+          const nextSection = capturedSections[index + 1];
+          if (nextSection && tempY > contentEndY - 10) {
+            pagesNeeded++;
+            tempY = contentStartY;
+          } else if (tempY > contentEndY) {
             tempY = contentStartY;
           }
 
@@ -957,6 +1013,7 @@ const useFarmReportPDF = (selectedFieldDetails) => {
       getLogoBase64,
       captureSectionFromDOM,
       calculateSectionPages,
+      waitForDataReadiness,
       createNewPage,
       shouldStartNewPage,
       getSectionTitle,

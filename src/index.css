@@ -6,6 +6,16 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 /* Global styles */
+/* Responsive & optimization base */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
   margin: 0;
   font-family:
@@ -23,6 +33,31 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Touch-friendly minimum target (44px) - use .touch-target on mobile-critical controls */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (min-width: 768px) {
+  .touch-target {
+    min-height: auto;
+    min-width: auto;
+  }
+}
+
+/* Reduce tap delay on touch devices */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Safe area for notched devices */
+.safe-area-inset {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 code {
@@ -33,6 +68,14 @@ code {
 
 .farm-section {
   page-break-inside: avoid;
+}
+
+/* Fixed-width container for consistent PDF capture regardless of viewport */
+.pdf-capture-mode {
+  width: 794px !important;
+  min-width: 794px !important;
+  max-width: 794px !important;
+  margin: 0 auto;
 }
 
 /* Custom styles for Toastify */

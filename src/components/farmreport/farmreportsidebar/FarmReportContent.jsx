@@ -27,6 +27,7 @@ const FarmReportContent = ({
   selectedFieldDetails,
   mapRef,
   isPreparedForPDF,
+  aoiId = null,
 }) => {
   const dispatch = useDispatch();
 
@@ -61,12 +62,19 @@ const FarmReportContent = ({
         <CropHealth
           selectedFieldDetails={selectedFieldDetails}
           bypassPremium
+          isPreparedForPDF={isPreparedForPDF}
+          aoiId={aoiId}
         />
       </Section>
 
       {/* ── 3. Weather Forecast ── */}
       <Section title="Weather Forecast">
-        <ForeCast selectedFieldDetails={selectedFieldDetails} bypassPremium />
+        <ForeCast
+          selectedFieldDetails={selectedFieldDetails}
+          bypassPremium
+          isPreparedForPDF={isPreparedForPDF}
+          aoiId={aoiId}
+        />
       </Section>
 
       {/* ── 4. Vegetation Index (NDVI) ── */}
@@ -74,6 +82,7 @@ const FarmReportContent = ({
         <NdviGraph
           selectedFieldsDetials={[selectedFieldDetails]}
           bypassPremium
+          isPreparedForPDF={isPreparedForPDF}
         />
       </Section>
 
@@ -82,6 +91,7 @@ const FarmReportContent = ({
         <WaterIndex
           selectedFieldsDetials={[selectedFieldDetails]}
           bypassPremium
+          isPreparedForPDF={isPreparedForPDF}
         />
       </Section>
 
@@ -90,6 +100,8 @@ const FarmReportContent = ({
         <EvapotranspirationChart
           selectedFieldsDetials={[selectedFieldDetails]}
           bypassPremium
+          isPreparedForPDF={isPreparedForPDF}
+          aoiId={aoiId}
         />
       </Section>
 
@@ -98,6 +110,7 @@ const FarmReportContent = ({
         <Insights
           selectedFieldsDetials={[selectedFieldDetails]}
           bypassPremium
+          isPreparedForPDF={isPreparedForPDF}
         />
       </Section>
 
@@ -106,6 +119,7 @@ const FarmReportContent = ({
         <PlantGrowthActivity
           selectedFieldsDetials={[selectedFieldDetails]}
           bypassPremium
+          isPreparedForPDF={isPreparedForPDF}
         />
       </Section>
     </>

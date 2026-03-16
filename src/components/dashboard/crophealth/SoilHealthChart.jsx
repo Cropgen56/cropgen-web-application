@@ -8,8 +8,18 @@ import rightVector from "../../../assets/image/dashboard/Vector 144.png";
 import soil_Temperature from "../../../assets/image/dashboard/soil-temperature1.svg";
 import soil_Moisture from "../../../assets/image/dashboard/soil-moisture1.svg";
 
-const SoilHealthChart = () => {
-  const forecastData = useSelector((state) => state.weather.forecastData) || {};
+const SoilHealthChart = ({
+  isPreparedForPDF = false,
+  aoiId = null,
+} = {}) => {
+  const forecastData =
+    useSelector((state) => {
+      const fd = state.weather?.forecastData;
+      if (aoiId && fd && typeof fd === "object" && !fd.current && fd[aoiId]) {
+        return fd[aoiId] || {};
+      }
+      return fd || {};
+    }) || {};
 
   // Use forecastData.current for latest values
   const latestTemp2cm = forecastData.current?.soil_temperature_surface || "N/A";
@@ -21,7 +31,11 @@ const SoilHealthChart = () => {
   const latestMoisture15cm = forecastData.current?.soil_moisture_15cm || "N/A";
 
   return (
-    <div className="w-full max-w-[500px] sm:max-w-[600px] md:scale-[0.95] md:pl-1 lg:max-w-[600px] mx-auto bg-white p-4 rounded-2xl mt-3 ">
+    <div
+      className={`w-full max-w-[500px] sm:max-w-[600px] md:pl-1 lg:max-w-[600px] mx-auto bg-white p-4 rounded-2xl mt-3 ${
+        isPreparedForPDF ? "" : "md:scale-[0.95]"
+      }`}
+    >
       <div className="flex items-center justify-end gap-2 md:gap-6 mt-4">
         <div className="flex items-center gap-1 md:gap-2 bg-[#344E41] border rounded-xl shadow-md p-2.5 w-42">
           <img

@@ -29,7 +29,11 @@ import IndexPremiumWrapper from "../../subscription/PremiumIndexWrapper";
 import FeatureGuard from "../../subscription/FeatureGuard";
 import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
 
-const NdviGraph = ({ selectedFieldsDetials, bypassPremium = false }) => {
+const NdviGraph = ({
+  selectedFieldsDetials,
+  bypassPremium = false,
+  isPreparedForPDF = false,
+}) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const { indexTimeSeriesSummary = null, loading } =
     useSelector((state) => state.satellite) || {};
@@ -141,7 +145,7 @@ const NdviGraph = ({ selectedFieldsDetials, bypassPremium = false }) => {
       ref={scrollRef}
       className="overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
     >
-      {isLoading ? (
+      {isLoading && !isPreparedForPDF ? (
         <div
           className="text-center text-green-600"
           style={{
@@ -155,6 +159,17 @@ const NdviGraph = ({ selectedFieldsDetials, bypassPremium = false }) => {
           <LoadingSpinner size={48} color="#22c55e" />
           <strong>Loading Vegetation Index...</strong>
         </div>
+      ) : isLoading && isPreparedForPDF ? (
+        <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-gray-800 mb-1">
+              No Data Available
+            </h3>
+            <p className="text-sm text-gray-500">
+              Data is still loading for the selected field.
+            </p>
+          </div>
+        </div>
       ) : !hasData ? (
         <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
           <div className="text-center">
@@ -167,7 +182,10 @@ const NdviGraph = ({ selectedFieldsDetials, bypassPremium = false }) => {
           </div>
         </div>
       ) : (
-        <ResponsiveContainer width={chartConfig.width} height={180}>
+        <ResponsiveContainer
+          width={isPreparedForPDF ? chartConfig.width : chartConfig.width}
+          height={180}
+        >
           <LineChart
             data={chartData}
             margin={{ top: 5, right: 15, left: 15, bottom: 5 }}

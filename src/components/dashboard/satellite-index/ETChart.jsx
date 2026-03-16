@@ -5,15 +5,19 @@ import { useSelector } from "react-redux";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
 import FeatureGuard from "../../subscription/FeatureGuard";
 import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
+import { selectForecastForGeometry } from "../../../redux/slices/weatherSlice";
 
 const CLOUD_COLOR_MAIN = "#87CEEB";
 
 const EvapotranspirationChart = ({
   selectedFieldsDetials,
   bypassPremium = false,
+  isPreparedForPDF = false,
+  aoiId = null,
 }) => {
   const chartRef = useRef(null);
-  const forecastData = useSelector((state) => state.weather.forecastData) || {};
+  const forecastData =
+    useSelector(selectForecastForGeometry(aoiId)) || {};
 
   const evapotranspirationGuard = useSubscriptionGuard({
     field: selectedFieldsDetials?.[0],
@@ -100,13 +104,34 @@ const EvapotranspirationChart = ({
 
   /* ===== CHART CONTENT ===== */
 
+  const hasETData =
+    evapotranspirationData.length > 0 && dateData.length > 0;
+
   const chartContent = (
     <div className="w-full bg-white rounded-xl p-2 min-h-[220px]">
-      <ReactECharts
-        ref={chartRef}
-        option={option}
-        style={{ width: "100%", height: "220px" }}
-      />
+      {hasETData ? (
+        <ReactECharts
+          ref={chartRef}
+          option={option}
+          style={{
+            width: isPreparedForPDF ? "600px" : "100%",
+            height: "220px",
+          }}
+        />
+      ) : isPreparedForPDF ? (
+        <div className="w-full h-[220px] flex items-center justify-center text-gray-500 text-sm border border-dashed border-gray-300 rounded-lg">
+          ET data not yet available
+        </div>
+      ) : (
+        <ReactECharts
+          ref={chartRef}
+          option={option}
+          style={{
+            width: isPreparedForPDF ? "600px" : "100%",
+            height: "220px",
+          }}
+        />
+      )}
     </div>
   );
 

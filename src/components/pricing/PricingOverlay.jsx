@@ -171,26 +171,40 @@ export default function PricingOverlay({ onClose, userArea, selectedField }) {
 
   /* ---------- DATA ---------- */
 
-  const plans = useMemo(
-    () => {
-      const selectedFieldId = selectedField?.id || selectedField?._id;
-      const firstFieldId = fields[0]?._id || fields[0]?.id;
-      const isFirstFarm = !!selectedFieldId && selectedFieldId === firstFieldId;
+  const plans = useMemo(() => {
+    const selectedFieldId = selectedField?.id || selectedField?._id;
+    const firstFieldId = fields[0]?._id || fields[0]?.id;
+    const isFirstFarm = !!selectedFieldId && selectedFieldId === firstFieldId;
 
-      return transformApiData(subscriptions, billing, selectedField, "web").map(
-        (plan) =>
-          plan.isTrialPlan
-            ? {
-                ...plan,
-                trialDisabled: fields.length > 1 && !isFirstFarm,
-                disabledMessage:
-                  "Free trial is available only for your first farm. Please choose a paid plan for additional farms.",
-              }
-            : plan,
-      );
-    },
-    [subscriptions, billing, selectedField, fields],
-  );
+    // Check if user has already used the free trial on any field
+    const hasUsedFreeTrial = fields.some(
+      (f) =>
+        f?.subscription?.plan?.slug === "free-trial" ||
+        f?.subscription?.billingCycle === "trial" ||
+        f?.subscription?.isTrial === true ||
+        String(f?.subscription?.plan?.name || "")
+          .toLowerCase()
+          .includes("free trial"),
+    );
+
+    // Disable free trial when: (1) adding additional farm, or (2) free trial already taken
+    const isAdditionalFarm = fields.length > 1 && !isFirstFarm;
+    const trialDisabled = isAdditionalFarm || hasUsedFreeTrial;
+    const trialDisabledMessage = hasUsedFreeTrial
+      ? "Free trial has already been used. Please choose a paid plan."
+      : "Free trial is available only for your first farm. Please choose a paid plan for additional farms.";
+
+    return transformApiData(subscriptions, billing, selectedField, "web").map(
+      (plan) =>
+        plan.isTrialPlan
+          ? {
+              ...plan,
+              trialDisabled,
+              disabledMessage: trialDisabledMessage,
+            }
+          : plan,
+    );
+  }, [subscriptions, billing, selectedField, fields]);
 
   const groups = useMemo(() => {
     const arr = [];

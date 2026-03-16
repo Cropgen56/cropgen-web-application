@@ -16,7 +16,11 @@ import FeatureGuard from "../components/subscription/FeatureGuardComponent";
 import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
 
 import { getFarmFields } from "../redux/slices/farmSlice";
-import { fetchForecastData, fetchAOIs } from "../redux/slices/weatherSlice";
+import {
+  fetchForecastData,
+  fetchAOIs,
+  selectForecastForGeometry,
+} from "../redux/slices/weatherSlice";
 
 import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
 import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherForecast";
@@ -27,23 +31,22 @@ const Weather = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const user = useSelector((state) => state?.auth?.user);
-  const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
-  const aois = useSelector((state) => state?.weather?.aois);
-  const forecastData = useSelector((state) => state?.weather?.forecastData);
-  const loading = useSelector((state) => state?.weather?.loading);
-
-  const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
-
   const [selectedField, setSelectedField] = useState(null);
   const [historicalData, setHistoricalData] = useState(null);
   const [dateRange, setDateRange] = useState(null);
   const [isSidebarVisible] = useState(true);
 
-  /* ---------- AOI & FORECAST (UNCHANGED) ---------- */
-
   const { aoiId } = useAoiManagement(selectedField);
   useWeatherForecast(aoiId);
+
+  const user = useSelector((state) => state?.auth?.user);
+  const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
+  const aois = useSelector((state) => state?.weather?.aois);
+  const loading = useSelector((state) => state?.weather?.loading);
+
+  const forecastData = useSelector(selectForecastForGeometry(aoiId));
+
+  const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
 
   useEffect(() => {
     if (user?.id) {
@@ -98,11 +101,11 @@ const Weather = () => {
 
   if (fields.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
+      <div className="flex flex-col items-center justify-center w-full min-h-screen bg-[#5a7c6b] text-center px-4 py-8">
         <img
           src={img1}
           alt="No Fields"
-          className="w-[400px] h-[400px] mb-6 opacity-70"
+          className="w-[240px] h-[240px] sm:w-[320px] sm:h-[320px] lg:w-[400px] lg:h-[400px] mb-6 opacity-70"
         />
         <h2 className="text-2xl font-semibold text-white">
           Add Farm to See the Weather Report

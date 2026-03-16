@@ -48,10 +48,13 @@ const NAV_ITEMS = [
   { path: "/setting", label: "Setting", Icon: Setting },
 ];
 
+const BREAKPOINT = 850;
+
 const Sidebar = ({ onToggleCollapse }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -80,18 +83,18 @@ const Sidebar = ({ onToggleCollapse }) => {
   const isInitialized = useRef(false);
 
   useEffect(() => {
-    const BREAKPOINT = 850;
-
     const updateSidebar = () => {
       const isTabletOrMobile = window.innerWidth < BREAKPOINT;
 
       if (!isInitialized.current) {
         setIsCollapsed(isTabletOrMobile);
+        setIsMobile(isTabletOrMobile);
         onToggleCollapse(isTabletOrMobile);
         isInitialized.current = true;
         return;
       }
       setIsCollapsed(isTabletOrMobile);
+      setIsMobile(isTabletOrMobile);
       onToggleCollapse(isTabletOrMobile);
     };
 
@@ -111,7 +114,7 @@ const Sidebar = ({ onToggleCollapse }) => {
   }, [onToggleCollapse]);
 
   const handleCollapseToggle = () => {
-    if (window.innerWidth < 850) {
+    if (isMobile) {
       setShowOverlay(!showOverlay);
     } else {
       const newCollapsedState = !isCollapsed;
@@ -123,7 +126,7 @@ const Sidebar = ({ onToggleCollapse }) => {
   const handleNavigation = (path) => {
     navigate(path);
 
-    if (window.innerWidth < 850) {
+    if (isMobile) {
       setShowOverlay(false);
     }
   };
@@ -308,7 +311,7 @@ const Sidebar = ({ onToggleCollapse }) => {
     </motion.div>
   );
 
-  if (window.innerWidth < 850) {
+  if (isMobile) {
     return (
       <div className="sidebar tablet-mobile bg-[#344e41]">
         <div className="collapsed-sidebar">{renderCollapsedNav()}</div>

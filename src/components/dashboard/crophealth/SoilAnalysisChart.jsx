@@ -59,7 +59,10 @@ const NUTRIENT_CONFIG = [
   { symbol: "K", label: "Potassium", key: "K" },
 ];
 
-const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
+const SoilAnalysisChart = ({
+  selectedFieldsDetials = [],
+  isPreparedForPDF = false,
+}) => {
   const farmDetails = selectedFieldsDetials[0] || {};
   const { cropName = "Crop", variety = "", sowingDate } = farmDetails;
 
@@ -100,7 +103,11 @@ const SoilAnalysisChart = ({ selectedFieldsDetials = [] }) => {
   const isFinalHarvest = daysSinceSowing > 98;
 
   return (
-    <div className="w-full px-2 sm:px-4 md:scale-[0.95] md:pl-1">
+    <div
+      className={`w-full px-2 sm:px-4 md:pl-1 ${
+        isPreparedForPDF ? "" : "md:scale-[0.95]"
+      }`}
+    >
       {isFinalHarvest ? (
         <div className="bg-orange-50 p-3 sm:p-4 rounded-lg border border-yellow-500 mb-4 sm:mb-6">
           <span className="block text-sm sm:text-base font-semibold text-orange-800 text-center">

@@ -35,25 +35,17 @@ const MainLayout = () => {
 
   return (
     <>
-      <div style={{ display: "flex", minHeight: "100vh" }}>
+      <div className="flex min-h-screen min-h-[100dvh] w-full">
         {/* Sidebar */}
         <div
-          style={{
-            width: isSidebarCollapsed ? "3.7rem" : "14.9rem",
-            transition: "margin-left 0.3s ease",
-          }}
+          className="flex-shrink-0 transition-[width] duration-300 ease-out"
+          style={{ width: isSidebarCollapsed ? "3.7rem" : "14.9rem" }}
         >
           <Sidebar onToggleCollapse={toggleSidebar} />
         </div>
 
         {/* Main Content */}
-        <main
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            transition: "margin-left 0.3s ease",
-          }}
-        >
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden transition-[margin] duration-300 ease-out safe-area-inset">
           <Outlet />
         </main>
       </div>
