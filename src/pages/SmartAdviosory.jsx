@@ -26,12 +26,19 @@ import {
   fetchAOIs,
   createAOI,
 } from "../redux/slices/weatherSlice";
+import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
+import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherForecast";
 import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
 
 import useIsTablet from "../components/smartadvisory/smartadvisorysidebar/Istablet";
 import img1 from "../assets/image/Group 31.png";
 
-/* ================= HELPERS ================= */
+const getToday = () => new Date().toISOString().split("T")[0];
+const getSixMonthsAgo = () => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 6);
+  return d.toISOString().split("T")[0];
+};
 
 const formatCoordinates = (data) => {
   if (!Array.isArray(data) || !data.length) return [];
@@ -40,12 +47,17 @@ const formatCoordinates = (data) => {
   return coords;
 };
 
-const getToday = () => new Date().toISOString().split("T")[0];
-const getSixMonthsAgo = () => {
-  const d = new Date();
-  d.setMonth(d.getMonth() - 6);
-  return d.toISOString().split("T")[0];
-};
+const EmptyState = ({ onAddField }) => (
+  <div className="flex flex-col items-center justify-center h-screen bg-[#5a7c6b] text-white">
+    <img src={img1} alt="" className="w-[260px] mb-6 opacity-70" />
+    <button
+      onClick={onAddField}
+      className="px-6 py-2.5 bg-white text-[#5a7c6b] rounded-lg font-medium hover:bg-white/90 transition-colors"
+    >
+      Add Field
+    </button>
+  </div>
+);
 
 /* ================= COMPONENT ================= */
 
@@ -59,10 +71,11 @@ const SmartAdvisory = () => {
   const aois = useSelector((s) => s.weather?.aois || []);
 
   const [selectedField, setSelectedField] = useState(null);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const [historicalData, setHistoricalData] = useState(null);
-  const [dateRange, setDateRange] = useState(null);
 
+  /* ---------- AOI + WEATHER (proven flow from Dashboard/FarmReport) ---------- */
+  const { aoiId } = useAoiManagement(selectedField);
+  useWeatherForecast(aoiId);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
@@ -88,34 +101,7 @@ const SmartAdvisory = () => {
     }
   }, [dispatch, selectedField?._id]);
 
-  /* ---------- AOI ---------- */
-  const aoiPayload = useMemo(() => {
-    if (!selectedField?.field?.length) return null;
-    return {
-      name: selectedField._id,
-      geometry: {
-        type: "Polygon",
-        coordinates: [formatCoordinates(selectedField.field)],
-      },
-    };
-  }, [selectedField]);
-
-  useEffect(() => {
-    if (!aoiPayload) return;
-    if (!aois.find((a) => a.name === aoiPayload.name)) {
-      dispatch(createAOI(aoiPayload));
-    }
-  }, [aoiPayload, aois, dispatch]);
-
-  /* ---------- FORECAST ---------- */
-  useEffect(() => {
-    const aoi = aois.find((a) => a.name === selectedField?._id);
-    if (aoi?.id) {
-      dispatch(fetchForecastData({ geometry_id: aoi.id }));
-    }
-  }, [dispatch, aois, selectedField?._id]);
-
-  /* ---------- HISTORICAL ---------- */
+  /* ---------- HISTORICAL (uses aoiId from useAoiManagement) ---------- */
   useEffect(() => {
     if (!selectedField) return;
     const aoi = aois.find((a) => a.name === selectedField._id);
@@ -130,13 +116,7 @@ const SmartAdvisory = () => {
         start_date: startDate,
         end_date: endDate,
       }),
-    )
-      .unwrap()
-      .then((res) => {
-        setHistoricalData(res?.daily || null);
-        setDateRange({ startDate, endDate });
-      })
-      .catch(() => {});
+    );
   }, [dispatch, aois, selectedField]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ---------- SUBSCRIPTION GUARD (SAME AS WEATHER) ---------- */
@@ -162,18 +142,9 @@ const SmartAdvisory = () => {
     setShowPricingOverlay(true);
   }, [selectedField]);
 
-  /* ---------- EMPTY STATE ---------- */
   if (!fields.length) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#5a7c6b] text-white">
-        <img src={img1} alt="" className="w-[260px] mb-6 opacity-70" />
-        <button
-          onClick={() => navigate("/addfield")}
-          className="px-6 py-2 bg-white text-[#5a7c6b] rounded-lg"
-        >
-          Add Field
-        </button>
-      </div>
+      <EmptyState onAddField={() => navigate("/addfield")} />
     );
   }
 
@@ -202,41 +173,41 @@ const SmartAdvisory = () => {
           )}
         </div>
 
-        <div className="flex-1 p-4 overflow-y-auto">
-          <FieldDropdown
-            fields={fields}
-            selectedField={selectedField}
-            setSelectedField={setSelectedField}
-          />
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 pb-8 space-y-4 max-w-7xl mx-auto">
+            <FieldDropdown
+              fields={fields}
+              selectedField={selectedField}
+              setSelectedField={setSelectedField}
+            />
 
-          {selectedField && (
-            <FeatureGuard
-              guard={advisoryGuard}
-              title="Smart Advisory System"
-              onSubscribe={handleSubscribe}
-            >
-              <SmartAdvisoryMap
-                fields={fields}
-                selectedField={selectedField}
-                setSelectedField={setSelectedField}
-              />
+            {selectedField && (
+              <FeatureGuard
+                guard={advisoryGuard}
+                title="Smart Advisory System"
+                onSubscribe={handleSubscribe}
+              >
+                <div className="space-y-4">
+                  <SmartAdvisoryMap
+                    fields={fields}
+                    selectedField={selectedField}
+                    setSelectedField={setSelectedField}
+                  />
 
-              <NDVIChartCard selectedField={selectedField} />
-              <NutrientManagement />
+                  <NDVIChartCard selectedField={selectedField} />
+                  <NutrientManagement />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
-                <WeatherCard
-                  selectedField={selectedField}
-                  historicalData={historicalData}
-                  dateRange={dateRange}
-                />
-                <PestDiseaseCard />
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <WeatherCard aoiId={aoiId} />
+                    <PestDiseaseCard />
+                  </div>
 
-              <Soiltemp />
-              <FarmAdvisoryCard selectedField={selectedField} />
-            </FeatureGuard>
-          )}
+                  <Soiltemp />
+                  <FarmAdvisoryCard selectedField={selectedField} />
+                </div>
+              </FeatureGuard>
+            )}
+          </div>
         </div>
       </div>
     </>

@@ -13,17 +13,48 @@ import { Operation } from "../../../assets/Icons";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import { MoveLeft, MoveRight } from "lucide-react";
 
-const FarmerScheduler = (selectedField) => {
+const DeleteConfirmationModal = ({ onCancel, onConfirm }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl text-center">
+      <h3 className="text-lg font-bold mb-3 text-[#344e41]">Delete Operation?</h3>
+      <p className="text-sm text-gray-600 mb-6">
+        Are you sure you want to delete this operation? This action cannot be undone.
+      </p>
+      <div className="flex justify-center gap-3">
+        <button
+          onClick={onCancel}
+          className="px-5 py-2.5 bg-gray-100 text-[#344e41] font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={onConfirm}
+          className="px-5 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const FarmerScheduler = ({ selectedField: farmFieldId }) => {
   const dispatch = useDispatch();
-  const { operations } = useSelector((state) => state.operation);
+  const { operations, loading } = useSelector((state) => state.operation);
   const calendarRef = useRef(null);
 
-  // const [view, setView] = useState("timeGridThreeDay");
   const [date, setDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(moment());
+  const [operationToDelete, setOperationToDelete] = useState(null);
+
+  useEffect(() => {
+    if (farmFieldId) {
+      dispatch(getOperationsByFarmField({ farmId: farmFieldId }));
+    }
+  }, [dispatch, farmFieldId]);
 
   useEffect(() => {
     const mappedEvents = operations.map((operation) => {
@@ -89,12 +120,14 @@ const FarmerScheduler = (selectedField) => {
   };
 
   const handleSave = useCallback(
-    (newEvent) => {
-      dispatch(getOperationsByFarmField(selectedField._id));
+    () => {
+      if (farmFieldId) {
+        dispatch(getOperationsByFarmField({ farmId: farmFieldId }));
+      }
       setIsModalVisible(false);
       setSelectedEvent(null);
     },
-    [dispatch, selectedField]
+    [dispatch, farmFieldId]
   );
 
   const handleClose = () => {
@@ -122,50 +155,40 @@ const FarmerScheduler = (selectedField) => {
     </div>
   );
 
-  const [operationToDelete, setOperationToDelete] = useState(null);
-
-  //implemented delete functionality
+  // Delete functionality
   const handleConfirmDelete = async () => {
     if (!operationToDelete) return;
     try {
       await dispatch(deleteOperation(operationToDelete.id));
-      dispatch(getOperationsByFarmField({ farmId: selectedField._id }));
+      if (farmFieldId) {
+        dispatch(getOperationsByFarmField({ farmId: farmFieldId }));
+      }
     } catch (err) {
       alert("Failed to delete operation.");
     } finally {
-      setOperationToDelete(null); // close modal
+      setOperationToDelete(null);
     }
   };
 
-  const DeleteConfirmationModal = ({ onCancel, onConfirm }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 max-w-sm w-full shadow-lg text-center">
-        <h3 className="text-lg font-semibold mb-4 text-[#344e41]">
-          Delete Operation?
-        </h3>
-        <p className="text-sm text-gray-600 mb-6">
-          Are you sure you want to delete this operation?
-        </p>
-        <div className="flex justify-center gap-4">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 bg-gray-300 text-[#344e41] font-semibold rounded hover:bg-gray-400"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-700"
-          >
-            Delete
-          </button>
+  if (!farmFieldId) {
+    return (
+      <div className="h-screen bg-[#344e41] text-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <Operation className="text-white/50 text-6xl mx-auto mb-4" />
+          <p className="text-lg">Select a farm from the sidebar to manage operations.</p>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="h-screen bg-[#344e41] text-white overflow-y-auto no-scrollbar p-4">
+    <div className="h-screen bg-[#344e41] text-white overflow-y-auto no-scrollbar p-4 relative">
+      {loading && (
+        <div className="absolute inset-0 bg-[#344e41]/80 z-20 flex items-center justify-center rounded-xl">
+          <div className="animate-pulse text-white/90 font-medium">Loading operations...</div>
+        </div>
+      )}
+
       {/* Header + Navigation */}
       <div className="flex justify-between items-center mb-4">
         <button
@@ -261,8 +284,9 @@ const FarmerScheduler = (selectedField) => {
 
         <div className="bg-[#294036] rounded-xl shadow-lg p-6 mb-8">
           {filteredEvents.length === 0 ? (
-            <div className="text-white text-center text-lg">
-              No operations for this month.
+            <div className="text-white/80 text-center py-8">
+              <p className="text-lg mb-1">No operations for this month.</p>
+              <p className="text-sm">Click on a date in the calendar above to add an operation.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -299,14 +323,16 @@ const FarmerScheduler = (selectedField) => {
                     <span className="font-semibold">Scheduled:</span>{" "}
                     {moment(event.start).format("hh:mm A")}
                   </div>
-                  <div className="text-xs leading-tight">
-                    <span className="font-semibold">Created:</span>{" "}
-                    {moment(event.extendedProps.createdAt).format(
-                      "hh:mm A, MMM D"
-                    )}
-                  </div>
+                  {event.extendedProps?.createdAt && (
+                    <div className="text-xs leading-tight">
+                      <span className="font-semibold">Created:</span>{" "}
+                      {moment(event.extendedProps.createdAt).format(
+                        "hh:mm A, MMM D"
+                      )}
+                    </div>
+                  )}
 
-                  {/* Delete button (no functionality yet) */}
+                  {/* Delete button */}
                   <button
                     className="absolute top-2 right-2 text-white hover:text-red-500 transition"
                     onClick={(e) => {
@@ -324,13 +350,13 @@ const FarmerScheduler = (selectedField) => {
       </div>
 
       {/* Modal */}
-      {isModalVisible && (
+      {isModalVisible && farmFieldId && (
         <EventForm
           visible={isModalVisible}
           onClose={handleClose}
           onSave={handleSave}
           initialData={selectedEvent}
-          selectedField={selectedField}
+          farmId={farmFieldId}
         />
       )}
 

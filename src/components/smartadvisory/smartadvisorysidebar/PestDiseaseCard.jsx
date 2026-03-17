@@ -20,7 +20,7 @@ const PestDiseaseCard = () => {
   );
 
   return (
-    <div className="bg-[#344e41] rounded-lg p-4 text-white w-full shadow-sm flex flex-col gap-2">
+    <div className="bg-[#344e41] rounded-lg p-4 text-white w-full shadow-md border border-white/5 flex flex-col gap-2 min-h-[280px]">
       {/* ================= HEADER ================= */}
       <div className="flex items-center justify-between mb-2">
         <h2 className="font-semibold text-[22px]">Crop Risk</h2>

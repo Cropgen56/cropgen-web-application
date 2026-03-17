@@ -24,6 +24,7 @@ import {
   getOneYearBefore,
   getTodayDate,
 } from "../../../utility/formatDate";
+import IndexChartLoader from "./IndexChartLoader";
 
 const NDVIChartCard = ({ selectedField }) => {
   const dispatch = useDispatch();
@@ -46,10 +47,7 @@ const NDVIChartCard = ({ selectedField }) => {
 
   // Fetch NDVI data when field changes
   useEffect(() => {
-    if (!fieldGeometry || !sowingDate) {
-      console.log("Missing field geometry or sowing date");
-      return;
-    }
+    if (!fieldGeometry || !sowingDate) return;
 
     const params = {
       startDate: getOneYearBefore(getTodayDate()),
@@ -170,7 +168,7 @@ const NDVIChartCard = ({ selectedField }) => {
   // No field selected state
   if (!selectedField) {
     return (
-      <div className="w-full bg-[#2C4C3B] rounded-lg p-4 text-white">
+      <div className="w-full bg-[#2C4C3B] rounded-lg p-4 text-white shadow-md border border-white/5">
         <h2 className="text-2xl font-bold text-[#86D72F] mb-4">NDVI</h2>
         <div className="h-[200px] flex items-center justify-center text-gray-300">
           <div className="text-center">
@@ -185,7 +183,7 @@ const NDVIChartCard = ({ selectedField }) => {
   }
 
   return (
-    <div className="w-full bg-[#2C4C3B] rounded-lg px-3 py-4 text-white mb-2">
+    <div className="w-full bg-[#2C4C3B] rounded-lg px-3 py-4 text-white shadow-md border border-white/5">
       {/* Header Row */}
       <div className="flex flex-col md:flex-row justify-between gap-6">
         {/* Left: NDVI Info */}
@@ -260,10 +258,7 @@ const NDVIChartCard = ({ selectedField }) => {
           <div className="relative w-full">
             {isLoading ? (
               <div className="h-[200px] flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#86D72F]"></div>
-                  <span className="text-gray-300">Loading {index} data...</span>
-                </div>
+                <IndexChartLoader message={`Loading ${index} data...`} />
               </div>
             ) : !hasData ? (
               <div className="h-[200px] flex items-center justify-center">

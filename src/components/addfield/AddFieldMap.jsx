@@ -22,6 +22,8 @@ import { Calender, LeftArrow, RightArrow } from "../../assets/DashboardIcons";
 import "leaflet-geosearch/dist/geosearch.css";
 import FileUploadOverlay from "./FileUploadOverlay";
 
+const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
+
 const AddFieldMap = ({
   setMarkers,
   markers,
@@ -31,11 +33,7 @@ const AddFieldMap = ({
   clearMarkers,
   onToggleSidebar,
 }) => {
-  const [selectedLocation] = useState({
-    lat: 20.5937,
-    lng: 78.9629,
-    name: "Default Location",
-  });
+  const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
   const [selectedIcon, setSelectedIcon] = useState("");
   const [showUploadOverlay, setShowUploadOverlay] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -86,6 +84,26 @@ const AddFieldMap = ({
 
     return () => clearTimeout(timeoutId);
   }, [geojsonLayers, isMapReady]);
+
+  // Fetch user's current location when map loads and center map on it
+  useEffect(() => {
+    if (!isMapReady || !navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setMapCenter({ lat: latitude, lng: longitude });
+        mapRef.current?.flyTo([latitude, longitude], 17, {
+          animate: true,
+          duration: 1,
+        });
+      },
+      () => {
+        // User denied or error — keep default center (India)
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  }, [isMapReady]);
 
   useEffect(() => {
     if (isTabletView) {
@@ -231,7 +249,7 @@ const AddFieldMap = ({
           }`}
         >
           <MapContainer
-            center={[selectedLocation.lat, selectedLocation.lng]}
+            center={[mapCenter.lat, mapCenter.lng]}
             zoom={17}
             zoomControl={true}
             className={`w-full m-0 p-0 relative 

@@ -138,10 +138,12 @@ const EventForm = ({
   onClose,
   onSave,
   initialData,
+  farmId,
   selectedField,
 }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+  const effectiveFarmId = farmId ?? selectedField;
 
   useEffect(() => {
     if (initialData) {
@@ -152,12 +154,11 @@ const EventForm = ({
   }, [initialData, form]);
 
   const handleSubmit = async (values) => {
-    if (!selectedField?.selectedField) {
-      message.error("Invalid or missing FarmField ID");
+    if (!effectiveFarmId) {
+      message.error("Invalid or missing Farm. Please select a farm.");
       return;
     }
 
-    // Add operationDate and operationTime to the form values before submission
     const submissionValues = {
       ...values,
       operationDate: initialData?.date,
@@ -165,23 +166,19 @@ const EventForm = ({
     };
 
     try {
-      const result = await dispatch(
+      await dispatch(
         createOperation({
-          farmId: selectedField?.selectedField,
+          farmId: effectiveFarmId,
           operationData: submissionValues,
         })
       ).unwrap();
 
-      if (result.success) {
-        message.success("Operation created successfully!");
-        onSave(submissionValues);
-        form.resetFields();
-        onClose();
-      } else {
-        message.error("Failed to create operation. Please try again.");
-      }
+      message.success("Operation created successfully!");
+      onSave(submissionValues);
+      form.resetFields();
+      onClose();
     } catch (error) {
-      message.error("An error occurred while creating the operation.");
+      message.error(error?.message || "Failed to create operation. Please try again.");
     }
   };
 

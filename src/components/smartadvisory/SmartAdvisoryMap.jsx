@@ -55,6 +55,15 @@ const MoveMapToField = ({ lat, lng, bounds }) => {
   return null;
 };
 
+const SubscriptionDot = ({ isSubscribed }) => (
+  <span
+    className={`w-2 h-2 rounded-full shrink-0 ${
+      isSubscribed ? "bg-[#28C878]" : "bg-[#EC1C24]"
+    }`}
+    title={isSubscribed ? "Active" : "Inactive"}
+  />
+);
+
 // Simple Circular Loader Component
 const CircularLoader = () => (
   <div className="flex flex-col items-center justify-center">
@@ -78,6 +87,11 @@ const SmartAdvisoryMap = ({
 
   const mapRef = useRef(null);
   const [image, setImage] = useState(null);
+  const [showLegend, setShowLegend] = useState(false);
+
+  const isSelectedFieldSubscribed =
+    selectedField?.subscription?.hasActiveSubscription === true;
+
   // Sort fields in descending order (latest first)
   const sortedFields = useMemo(() => {
     return [...fields].sort((a, b) => {
@@ -90,7 +104,6 @@ const SmartAdvisoryMap = ({
       return fields.indexOf(b) - fields.indexOf(a);
     });
   }, [fields]);
-
 
   const selectedFieldData = useMemo(
     () =>
@@ -126,6 +139,14 @@ const SmartAdvisoryMap = ({
   useEffect(() => {
     dispatch(resetSatelliteState());
   }, [selectedField, dispatch]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".legend-dropdown-wrapper")) setShowLegend(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const defaultCenter = [20.135245, 77.156935];
 
@@ -261,6 +282,50 @@ const SmartAdvisoryMap = ({
             </Listbox>
           </div>
         )}
+
+        {/* Index Legend (like Dashboard Map) */}
+        <div className="legend-dropdown-wrapper relative w-max">
+          <button
+            type="button"
+            onClick={() => setShowLegend(!showLegend)}
+            className="flex items-center whitespace-nowrap bg-[#344e41] outline-none border border-[#344e41] rounded z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer hover:bg-[#2d4339] transition-colors text-sm"
+          >
+            🗺️ Legend
+          </button>
+          {showLegend && indexData?.legend && (
+            <div className="absolute top-full right-0 mt-2 bg-[#344e41] text-white rounded-lg shadow-lg max-w-[300px] max-h-[300px] overflow-y-auto z-[3000] no-scrollbar">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+                <span className="font-semibold text-sm">Index Legend</span>
+                <div className="flex items-center gap-1.5">
+                  <SubscriptionDot isSubscribed={isSelectedFieldSubscribed} />
+                  <span className="text-xs text-gray-300">
+                    {isSelectedFieldSubscribed ? "Active" : ""}
+                  </span>
+                </div>
+              </div>
+              <ul className="divide-y divide-white/10 list-none p-2 no-scrollbar">
+                {indexData.legend.map((item) => (
+                  <li
+                    key={item.label}
+                    className="flex items-center gap-3 p-2 hover:bg-[#5a7c6b] transition-colors rounded"
+                  >
+                    <span
+                      className="w-6 h-4 rounded border border-black/10 shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="flex-1 whitespace-nowrap font-medium text-sm">
+                      {item.label}
+                    </span>
+                    <span className="text-gray-200 text-xs whitespace-nowrap">
+                      {item.hectares?.toFixed(2) || "0.00"} ha (
+                      {item.percent?.toFixed(2) || "0.00"}%)
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Index Dates Selector */}

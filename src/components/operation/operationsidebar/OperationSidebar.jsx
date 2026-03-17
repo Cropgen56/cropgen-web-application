@@ -3,7 +3,6 @@ import { Operation2 } from "../../../assets/Icons";
 import { CiSearch } from "react-icons/ci";
 import { useSelector } from "react-redux";
 import PolygonPreview from "../../polygon/PolygonPreview";
-import { ChevronLeft } from "lucide-react";
 
 const FieldInfo = ({
   title,
@@ -55,14 +54,13 @@ const FieldInfo = ({
 
 const OperationSidebar = ({ setSelectedField, selectedField }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const fields = useSelector((state) => state.farmfield.fields) || [];
 
   const sortedFields = [...fields].reverse();
 
   const filteredFields = sortedFields.filter((field) =>
-    field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
+    field.fieldName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const calculateCentroid = (field) => {
@@ -81,37 +79,25 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
     };
   };
 
-  const formatArea = (acres) => `${(acres * 0.404686).toFixed(2)}h`;
-
-  if (!isSidebarVisible) return null;
+  const formatArea = (acres) => `${((acres ?? 0) * 0.404686).toFixed(2)}h`;
 
   return (
     <div className="w-full sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">
       {/* Header */}
       <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-3">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Operation2 />
-            <h2 className="text-[18px] font-bold text-[#344e41]">Operations</h2>
-          </div>
-
-          <button
-            onClick={() => setIsSidebarVisible(false)}
-            className="text-[#344e41] font-bold"
-          >
-            {/* Close */}
-            <ChevronLeft color="#344E41" />
-          </button>
+        <div className="flex items-center gap-2">
+          <Operation2 />
+          <h2 className="text-[18px] font-bold text-[#344e41]">Operations</h2>
         </div>
 
-        <div className="relative flex items-center mx-auto w-full">
-          <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg" />
+        <div className="relative flex items-center w-full">
+          <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none" />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 text-gray-100 text-sm outline-none bg-[#344e41]"
-            placeholder="Search"
+            className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-200 text-gray-800 text-sm outline-none focus:border-[#344e41] focus:ring-1 focus:ring-[#344e41]/30 transition"
+            placeholder="Search farms..."
           />
         </div>
       </div>

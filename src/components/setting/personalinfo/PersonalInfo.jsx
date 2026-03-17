@@ -9,7 +9,20 @@ import {
 import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { message } from "antd";
 import PersonalInfoSkeleton from "../../Skeleton/PersonalInfoSkeleton";
-import { ArrowLeft, Camera, Loader2, Pencil, X, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  Camera,
+  Loader2,
+  Pencil,
+  X,
+  Save,
+  Home,
+  Sprout,
+  User,
+  Mail,
+  Phone,
+  Building2,
+} from "lucide-react";
 
 const S3_BUCKET_URL =
   process.env.REACT_APP_S3_BUCKET_URL ||
@@ -67,7 +80,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
 
   useEffect(() => {
     if (updateStatus) {
-      const timer = setTimeout(() => setUpdateStatus(null), 1000);
+      const timer = setTimeout(() => setUpdateStatus(null), 2000);
       return () => clearTimeout(timer);
     }
   }, [updateStatus]);
@@ -201,6 +214,16 @@ const PersonalInfo = ({ setShowSidebar }) => {
     return profileImage;
   };
 
+  const StatCard = ({ icon: Icon, value, label }) => (
+    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
+      <Icon className="w-5 h-5 text-white" />
+      <div>
+        <p className="text-lg font-bold text-white leading-tight">{value}</p>
+        <p className="text-xs text-white/80">{label}</p>
+      </div>
+    </div>
+  );
+
   const InputField = ({
     id,
     label,
@@ -210,19 +233,24 @@ const PersonalInfo = ({ setShowSidebar }) => {
     disabled = false,
     readOnly = false,
     placeholder,
+    icon: Icon,
   }) => {
     const isEditable = isEditing && !readOnly;
-    const showEditIcon = isEditing && !readOnly;
 
     return (
-      <div className="flex flex-col w-full gap-1">
+      <div className="group">
         <label
           htmlFor={id}
-          className="text-[15px] text-[#344E41] text-left font-medium"
+          className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5"
         >
           {label}
         </label>
-        <div className="relative w-full">
+        <div className="relative">
+          {Icon && (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#344E41] transition-colors">
+              <Icon className="w-4 h-4" />
+            </div>
+          )}
           <input
             type={type}
             id={id}
@@ -231,17 +259,14 @@ const PersonalInfo = ({ setShowSidebar }) => {
             onChange={onChange}
             disabled={disabled || !isEditable}
             readOnly={readOnly}
-            className={`px-2 py-[0.4rem] border-1 border-[#344E41] rounded outline-none text-[15px] w-full transition-all duration-300 ${readOnly || !isEditing
-                ? "bg-gray-50 cursor-not-allowed text-gray-600"
-                : "bg-white cursor-text pr-8"
-              }`}
+            className={`w-full rounded-xl border-2 py-3 transition-all duration-200 outline-none text-[15px] ${
+              Icon ? "pl-10 pr-4" : "px-4"
+            } ${
+              readOnly || !isEditing
+                ? "bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
+                : "bg-white border-gray-200 hover:border-[#344E41]/40 focus:border-[#344E41] focus:ring-2 focus:ring-[#344E41]/20"
+            }`}
           />
-          {showEditIcon && (
-            <Pencil
-              size={14}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#344E41] pointer-events-none"
-            />
-          )}
         </div>
       </div>
     );
@@ -252,178 +277,211 @@ const PersonalInfo = ({ setShowSidebar }) => {
   }
 
   return (
-    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 lg:p-4 rounded-lg bg-white shadow-md font-inter h-[98%] overflow-y-auto">
-      <div className="flex items-center justify-between text-left px-4 py-1 border-b border-black/40 text-[#344E41]">
-        <h5 className="font-bold">Personal Info</h5>
-        <button
-          onClick={() => setShowSidebar(true)}
-          className="flex items-center gap-1 text-sm text-[#344E41] hover:text-[#1d3039] transition-all duration-300 ease-in-out cursor-pointer"
-        >
-          <ArrowLeft size={18} />
-          Back to Settings
-        </button>
+    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md font-inter min-h-[98%] overflow-y-auto">
+      {/* Header - aligned with Farm Settings, Pricing, Profile */}
+      <div className="px-4 py-2 text-[#344E41] border-b border-black/40">
+        <div className="flex items-center justify-between">
+          <h5 className="text-[18px] font-bold text-[#344E41]">Personal Info</h5>
+          <button
+            onClick={() => setShowSidebar(true)}
+            className="flex items-center gap-1 text-xs text-[#344E41] hover:text-[#1d3039] transition-colors"
+          >
+            <ArrowLeft size={16} />
+            Back to Settings
+          </button>
+        </div>
+        <p className="mt-1 mb-0.5 text-[#344E41] font-medium text-sm leading-[100%]">
+          Manage your profile details and preferences
+        </p>
       </div>
 
-      <div className="py-2 flex flex-col flex-grow gap-2">
-        <div className="flex items-center gap-2 lg:gap-4 flex-row px-2 lg:px-4 pb-4 border-b border-black/40">
-          <div className="relative group">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleAvatarChange}
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              className="hidden"
-            />
+      <div className="px-4 py-6 lg:px-6 space-y-8 overflow-y-auto">
+        {/* Profile hero card */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#344E41] via-[#3d5a4a] to-[#2d4339] shadow-xl">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
 
-            <div
-              onClick={handleAvatarClick}
-              className={`relative w-20 h-20 rounded-full overflow-hidden border-2 border-[#344E41] group-hover:border-[#588157] transition-all duration-300 ${avatarUploading ? "cursor-wait" : "cursor-pointer"
-                }`}
-            >
-              {avatarUploading ? (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#344E41]" />
-                  <span className="text-xs text-[#344E41] mt-1">
-                    {uploadProgress}%
-                  </span>
+          <div className="relative px-6 lg:px-8 py-8 lg:py-10">
+            <div className="flex flex-col sm:flex-row items-center gap-6 lg:gap-8">
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarChange}
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={handleAvatarClick}
+                  disabled={avatarUploading}
+                  className="relative block w-24 h-24 lg:w-28 lg:h-28 rounded-2xl overflow-hidden ring-4 ring-white/30 shadow-2xl hover:ring-white/50 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all disabled:opacity-70 disabled:cursor-wait"
+                >
+                  {avatarUploading ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-white/10">
+                      <Loader2 className="w-8 h-8 animate-spin text-white" />
+                      <span className="text-xs text-white/90 mt-1 font-medium">
+                        {uploadProgress}%
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <img
+                        src={getAvatarUrl()}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = profileImage;
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Camera className="w-8 h-8 text-white" />
+                      </div>
+                    </>
+                  )}
+                </button>
+                <div className="absolute -bottom-1 -right-1 w-9 h-9 bg-white rounded-lg shadow-lg flex items-center justify-center border-2 border-[#344E41]">
+                  <Camera className="w-4 h-4 text-[#344E41]" />
                 </div>
-              ) : (
-                <>
-                  <img
-                    src={getAvatarUrl()}
-                    alt="User profile"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = profileImage;
-                    }}
+              </div>
+
+              {/* Name & stats */}
+              <div className="flex-1 text-center sm:text-left">
+                <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+                  {userProfile?.firstName} {userProfile?.lastName}
+                </h2>
+                <p className="mt-1 text-white/90 font-medium capitalize">
+                  {userProfile?.role}
+                </p>
+                <div className="flex flex-wrap gap-3 mt-4 justify-center sm:justify-start">
+                  <StatCard
+                    icon={Home}
+                    value={fields?.length || 0}
+                    label="Farms"
                   />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <Camera className="w-6 h-6 text-white" />
-                  </div>
-                </>
-              )}
-            </div>
-
-            <button
-              onClick={handleAvatarClick}
-              disabled={avatarUploading}
-              className="absolute bottom-0 right-0 w-6 h-6 bg-white rounded-full border-2 border-[#344E41] flex items-center justify-center shadow-md hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Camera className="w-3 h-3 text-[#344E41]" />
-            </button>
-          </div>
-
-          <div className="flex flex-col items-start gap-2">
-            <h3 className="text-xl font-bold text-[#344E41] capitalize">
-              {userProfile?.firstName} {userProfile?.lastName}
-            </h3>
-            <p className="text-sm font-medium text-[#344E41] capitalize mb-0">
-              {userProfile?.role}
-            </p>
-            <div className="flex flex-wrap gap-2 md:gap-4 lg:gap-4 text-sm text-[#344E41]">
-              <p className="mb-0">Total Farms Marked: {fields?.length || 0}</p>
-              <p className="mb-0">Total Crops Added: {fields?.length || 0}</p>
+                  <StatCard
+                    icon={Sprout}
+                    value={fields?.length || 0}
+                    label="Crops"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <form className="flex flex-col flex-grow gap-2" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2">
-            <InputField
-              id="firstName"
-              label="First Name"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              placeholder="First Name"
-            />
-
-            <InputField
-              id="lastName"
-              label="Last Name"
-              value={formData.lastName}
-              onChange={handleInputChange}
-              placeholder="Last Name"
-            />
-
-            <InputField
-              id="email"
-              label="Email"
-              type="email"
-              value={formData.email}
-              readOnly
-              placeholder="Email"
-            />
-
-            <InputField
-              id="phone"
-              label="Phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              placeholder="Phone"
-            />
-
-            <div className="md:col-span-2">
+        {/* Form card */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <form onSubmit={handleSubmit} className="p-6 lg:p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <InputField
-                id="organization"
-                label="Organization"
-                value={formData.organization}
-                readOnly
-                placeholder="No Organization"
+                id="firstName"
+                label="First Name"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                placeholder="First Name"
+                icon={User}
               />
+              <InputField
+                id="lastName"
+                label="Last Name"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                placeholder="Last Name"
+                icon={User}
+              />
+              <InputField
+                id="email"
+                label="Email"
+                type="email"
+                value={formData.email}
+                readOnly
+                placeholder="Email"
+                icon={Mail}
+              />
+              <InputField
+                id="phone"
+                label="Phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="+91 9876543210"
+                icon={Phone}
+              />
+              <div className="md:col-span-2">
+                <InputField
+                  id="organization"
+                  label="Organization"
+                  value={formData.organization}
+                  readOnly
+                  placeholder="No Organization"
+                  icon={Building2}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="flex justify-center items-center gap-4 mt-4">
-            {!isEditing ? (
-              <button
-                type="button"
-                onClick={handleEnableEdit}
-                className="flex items-center gap-2 bg-[#344E41] px-6 py-2 hover:bg-emerald-900 text-white font-semibold text-base rounded-md cursor-pointer transition ease-in-out duration-300"
-              >
-                <Pencil size={18} />
-                Edit Your Details
-              </button>
-            ) : (
-              <>
+            {/* Action buttons */}
+            <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-center gap-4">
+              {!isEditing ? (
                 <button
                   type="button"
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                  className="flex items-center gap-2 bg-gray-200 px-6 py-2 hover:bg-gray-300 text-gray-700 font-semibold text-base rounded-md cursor-pointer transition ease-in-out duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleEnableEdit}
+                  className="flex items-center gap-2 px-6 py-3 bg-[#344E41] hover:bg-[#2d4339] text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#344E41] focus:ring-offset-2"
                 >
-                  <X size={18} />
-                  Cancel
+                  <Pencil className="w-4 h-4" />
+                  Edit Your Details
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="flex items-center gap-2 bg-[#344E41] px-6 py-2 hover:bg-emerald-900 text-white font-semibold text-base rounded-md cursor-pointer transition ease-in-out duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={18} />
-                      Save Changes
-                    </>
-                  )}
-                </button>
-              </>
-            )}
-          </div>
-
-          {isEditing && (
-            <div className="flex justify-center mt-2">
-              <span className="text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
-                You are in edit mode. Make your changes and click "Save Changes".
-              </span>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    disabled={isSaving}
+                    className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="flex items-center gap-2 px-6 py-3 bg-[#344E41] hover:bg-[#2d4339] text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#344E41] focus:ring-offset-2"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
             </div>
-          )}
-        </form>
+
+            {isEditing && (
+              <div className="mt-4 text-center">
+                <span className="inline-flex items-center gap-2 text-sm text-amber-700 bg-amber-50 px-4 py-2 rounded-xl border border-amber-200">
+                  You're in edit mode — make your changes and click Save.
+                </span>
+              </div>
+            )}
+
+            {updateStatus?.success && (
+              <div className="mt-4 text-center">
+                <span className="inline-flex items-center gap-2 text-sm text-green-700 bg-green-50 px-4 py-2 rounded-xl border border-green-200">
+                  ✓ {updateStatus.message}
+                </span>
+              </div>
+            )}
+          </form>
+        </div>
       </div>
     </div>
   );

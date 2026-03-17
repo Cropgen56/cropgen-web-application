@@ -164,7 +164,7 @@ const Soiltemp = () => {
   );
 
   return (
-    <div className="bg-[#2d473b] text-white rounded-xl shadow-lg p-6 md:p-8 mb-2">
+    <div className="bg-[#2d473b] text-white rounded-lg shadow-md border border-white/5 p-6 md:p-8">
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>

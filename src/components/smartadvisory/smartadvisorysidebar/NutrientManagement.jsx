@@ -86,7 +86,7 @@ const NutrientManagement = ({ isTablet = false }) => {
 
   return (
     <div
-      className={`bg-[#344e41] rounded-lg mb-2 ${
+      className={`bg-[#344e41] rounded-lg shadow-md border border-white/5 ${
         isTablet ? "p-[6px]" : "p-4"
       } text-white w-full flex flex-col`}
     >

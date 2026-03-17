@@ -1,9 +1,10 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import WeatherGraph from "./WeatherGraph";
+import { selectForecastForGeometry } from "../../../redux/slices/weatherSlice";
 
-const WeatherCard = ({ isTablet = false }) => {
-  const forecastData = useSelector((s) => s.weather?.forecastData || s.weather);
+const WeatherCard = ({ isTablet = false, aoiId = null }) => {
+  const forecastData = useSelector(selectForecastForGeometry(aoiId));
 
   // current summary (safe guards)
   const current = (forecastData && forecastData.current) || null;
@@ -25,7 +26,7 @@ const WeatherCard = ({ isTablet = false }) => {
     (current && (current.surface_pressure ?? "N/A")) || "N/A";
 
   return (
-    <div className="bg-[#344e41] rounded-lg p-4 text-white w-full shadow-sm flex flex-col justify-between">
+    <div className="bg-[#344e41] rounded-lg p-4 text-white w-full shadow-md border border-white/5 flex flex-col justify-between min-h-[280px]">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-lg md:text-[22px] font-semibold">Weather</h2>
       </div>
