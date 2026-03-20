@@ -86,7 +86,7 @@ const Dashboard = () => {
             />
           )}
 
-          <ForeCast selectedFieldDetails={selectedFieldDetails} />
+          <ForeCast selectedFieldDetails={selectedFieldDetails} aoiId={aoiId} />
 
           <NdviGraph
             selectedFieldsDetials={

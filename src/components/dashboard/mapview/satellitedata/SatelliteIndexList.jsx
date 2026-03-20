@@ -96,15 +96,15 @@ const SatelliteIndexList = ({
           endDate: selectedDate,
           geometry: [coordinates],
           index,
-        })
+        }),
       );
     },
-    [selectedDate, coordinates, dispatch]
+    [selectedDate, coordinates, dispatch],
   );
 
   const debouncedFetchIndex = useMemo(
     () => debounce(handleFetchIndex, 300),
-    [handleFetchIndex]
+    [handleFetchIndex],
   );
 
   useEffect(() => {
@@ -139,27 +139,13 @@ const SatelliteIndexList = ({
       });
     }
   };
-  
 
   return (
     <div className="w-full mx-auto my-1 shadow-md overflow-hidden">
       <div className="flex items-center gap-1 lg:gap-2 p-1 lg:p-2 relative">
-        {/* Dropdown */}
-        <select className="text-white text-xs bg-[#5a7c6b] font-medium border border-white outline-none rounded-md h-[40px] min-w-[110px] px-2 py-2 lg:min-w-[135px] md:h-[40px] md:px-4 md:py-2 lg:text-sm">
-          <option className="text-xs" value="satellite1">
-            Satellite 1
-          </option>
-          <option className="text-xs" value="satellite2">
-            Satellite 2
-          </option>
-          <option className="text-xs" value="satellite3">
-            Satellite 3
-          </option>
-        </select>
-
         {/* Arrow buttons */}
         <button
-          className="absolute left-[120px] lg:left-[150px] bg-[#344e41] py-1 text-white rounded cursor-pointer z-10"
+          className="absolute left-2 lg:left-4 bg-[#344e41] py-2.5 text-white rounded cursor-pointer z-10"
           onClick={handleArrowLeftClick}
         >
           <ChevronLeft size={24} strokeWidth={2} />
@@ -192,7 +178,7 @@ const SatelliteIndexList = ({
         </div>
 
         <button
-          className="absolute right-2 bg-[#344e41] text-white py-1 rounded cursor-pointer z-10 sm:right-1"
+          className="absolute right-2 bg-[#344e41] text-white py-2.5 rounded cursor-pointer z-10 sm:right-1"
           onClick={handleArrowRightClick}
         >
           <ChevronRight size={24} strokeWidth={2} />

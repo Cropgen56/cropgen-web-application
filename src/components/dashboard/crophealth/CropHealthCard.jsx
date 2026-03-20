@@ -128,12 +128,12 @@ const CropHealth = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-12 gap-y-3 text-sm">
             <Info
               label="Crop"
-              value={cropInfo?.cropName || cropName || "N/A"}
+              value={cropInfo?.cropName || cropName || "-"}
             />
 
             <Info
               label="Crop Age"
-              value={sowingDate ? `${daysFromSowing} days` : "N/A"}
+              value={sowingDate ? `${daysFromSowing} days` : "-"}
             />
 
             <Info label="Area" value={`${totalAreaHectare} Ha`} />
@@ -145,7 +145,7 @@ const CropHealth = ({
                   ? "Loading..."
                   : yieldData
                     ? `${yieldData.standard} ${yieldData.unit}`
-                    : "N/A"
+                    : "-"
               }
             />
 
@@ -156,7 +156,7 @@ const CropHealth = ({
                   ? "Loading..."
                   : yieldData
                     ? `${yieldData.ai} ${yieldData.unit}`
-                    : "N/A"
+                    : "-"
               }
             />
           </div>
@@ -209,7 +209,7 @@ const CropHealth = ({
 const Info = ({ label, value }) => (
   <div className="flex gap-2">
     <span className="font-semibold text-[#344E41]">{label}:</span>
-    <span className="font-semibold text-[#000000]">{value ?? "N/A"}</span>
+    <span className="font-semibold text-[#000000]">{value ?? "-"}</span>
   </div>
 );
 

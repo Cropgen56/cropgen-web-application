@@ -358,20 +358,29 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
       if (!dates.length) return;
 
       const currentStart = dates.findIndex(
-        (d) => d.date === visibleDates[0]?.date
+        (d) => d.isoDate === visibleDates[0]?.isoDate
       );
 
-      if (direction === "next" && currentStart + visibleCount < dates.length) {
-        setVisibleDates(
-          dates.slice(currentStart + visibleCount, currentStart + visibleCount * 2)
-        );
-      } else if (direction === "prev" && currentStart > 0) {
-        setVisibleDates(
-          dates.slice(Math.max(0, currentStart - visibleCount), currentStart)
-        );
+      if (currentStart === -1) return;
+
+      const maxStart = Math.max(0, dates.length - visibleCount);
+      const delta = direction === "next" ? visibleCount : -visibleCount;
+      const nextStartRaw = currentStart + delta;
+      const nextStart = Math.min(maxStart, Math.max(0, nextStartRaw));
+
+      const nextVisibleDates = dates.slice(nextStart, nextStart + visibleCount);
+      setVisibleDates(nextVisibleDates);
+
+      // Keep the highlight meaningful: if the selected date isn't visible after paging,
+      // switch selection to the first visible date.
+      const isSelectedVisible = nextVisibleDates.some(
+        (d) => d.isoDate === selectedDate
+      );
+      if (!isSelectedVisible) {
+        setSelectedDate(nextVisibleDates[0]?.isoDate || "");
       }
     },
-    [dates, visibleDates, visibleCount]
+    [dates, visibleDates, visibleCount, selectedDate]
   );
 
   const handleDateClick = useCallback(
@@ -397,14 +406,22 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
 
   const isPrevDisabled = useMemo(() => {
     if (loading.satelliteDates || !dates.length) return true;
-    const currentStart = dates.findIndex((d) => d.date === visibleDates[0]?.date);
-    return currentStart <= 0;
-  }, [loading.satelliteDates, dates, visibleDates]);
+    const maxStart = Math.max(0, dates.length - visibleCount);
+    const currentStart = dates.findIndex(
+      (d) => d.isoDate === visibleDates[0]?.isoDate
+    );
+    if (currentStart === -1) return true;
+    return currentStart <= 0 || currentStart > maxStart;
+  }, [loading.satelliteDates, dates, visibleDates, visibleCount]);
 
   const isNextDisabled = useMemo(() => {
     if (loading.satelliteDates || !dates.length) return true;
-    const currentStart = dates.findIndex((d) => d.date === visibleDates[0]?.date);
-    return currentStart + visibleCount >= dates.length;
+    const maxStart = Math.max(0, dates.length - visibleCount);
+    const currentStart = dates.findIndex(
+      (d) => d.isoDate === visibleDates[0]?.isoDate
+    );
+    if (currentStart === -1) return true;
+    return currentStart >= maxStart;
   }, [loading.satelliteDates, dates, visibleDates, visibleCount]);
 
   const renderDateItems = () => {

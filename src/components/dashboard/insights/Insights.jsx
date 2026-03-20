@@ -1,6 +1,7 @@
 import React from "react";
 import { FcCheckmark } from "react-icons/fc";
 import { FaXmark } from "react-icons/fa6";
+import { Info } from "lucide-react";
 import {
   Drop,
   SmallDrop,
@@ -95,6 +96,34 @@ const Insight = ({ icon, title, description }) => {
   );
 };
 
+const InsightsSkeletonRow = () => (
+  <div className="flex items-center gap-3 lg:gap-4 py-3 px-4 border-b border-gray-200 last:border-b-0 animate-pulse">
+    <div className="w-8 h-8 bg-gray-200 rounded-full" />
+    <div className="flex-1 min-w-0">
+      <div className="h-4 w-2/3 bg-gray-200 rounded mb-2" />
+      <div className="h-3 w-full bg-gray-200 rounded" />
+    </div>
+    <div className="flex gap-4 ml-auto flex-shrink-0">
+      <div className="w-10 h-10 bg-gray-200 rounded-full" />
+      <div className="w-10 h-10 bg-gray-200 rounded-full" />
+    </div>
+  </div>
+);
+
+const InsightsEmptyState = () => (
+  <div className="p-8 text-center flex flex-col items-center justify-center gap-3 min-h-[160px]">
+    <div className="w-12 h-12 rounded-full bg-[#5a7c6b]/20 flex items-center justify-center">
+      <Info className="w-6 h-6 text-[#344E41]" />
+    </div>
+    <div className="text-gray-900 font-semibold text-sm lg:text-base">
+      No insights available
+    </div>
+    <div className="text-gray-500 text-xs lg:text-sm max-w-[360px]">
+      Your agronomic insights will appear after the next analysis run for this field.
+    </div>
+  </div>
+);
+
 /* ================= MAIN COMPONENT ================= */
 
 const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
@@ -130,11 +159,18 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
   /* ================= CONTENT ================= */
 
   const content = (
-    <div className="flex flex-col rounded-lg shadow-inner bg-white">
+    <div className="flex flex-col rounded-lg shadow-inner bg-white min-h-[220px]">
       {insights.length === 0 ? (
-        <div className="p-6 text-center text-gray-500 text-sm">
-          No insights available
-        </div>
+        // If locked, show a skeleton preview so the premium blur overlay looks good.
+        !bypassPremium && !insightsGuard.hasFeatureAccess ? (
+          <>
+            <InsightsSkeletonRow />
+            <InsightsSkeletonRow />
+            <InsightsSkeletonRow />
+          </>
+        ) : (
+          <InsightsEmptyState />
+        )
       ) : (
         insights.map((insight, index) => <Insight key={index} {...insight} />)
       )}

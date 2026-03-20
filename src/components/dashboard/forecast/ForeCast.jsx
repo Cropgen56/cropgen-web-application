@@ -25,6 +25,8 @@ function ForeCast({
 }) {
   const forecastData = useSelector(selectForecastForGeometry(aoiId)) || {};
 
+  const isLoading = useSelector((state) => state?.weather?.loading);
+
   const forecastGuard = useSubscriptionGuard({
     field: selectedFieldDetails,
     featureKey: "weatherAnalytics",
@@ -74,6 +76,51 @@ function ForeCast({
     weather.temp != null ||
     weather.windspeed != null ||
     (weekForecast.length > 0 && weekForecast.some((d) => d.temp != null));
+
+  // Only show skeleton when user can actually see the forecast.
+  // Otherwise it briefly flashes before the premium locked UI.
+  const shouldShowSkeleton =
+    !isPreparedForPDF &&
+    isLoading &&
+    !hasForecastData &&
+    (bypassPremium || forecastGuard.hasFeatureAccess);
+
+  const skeletonContent = (
+    <div className="flex items-start w-full gap-6 lg:flex-row animate-pulse">
+      {/* Today's weather skeleton */}
+      <div className="flex flex-col items-center flex-shrink-0">
+        <div className="p-[2px] rounded-xl bg-gray-100 shadow-xl">
+          <div className="bg-white rounded-xl p-4 w-[200px] flex flex-col items-center shadow-xl h-full">
+            <h3 className="h-5 w-28 bg-gray-200 rounded mb-4" />
+            <div className="h-12 w-20 bg-gray-200 rounded mb-3" />
+            <div className="h-7 w-24 bg-gray-200 rounded mb-5" />
+            <div className="flex flex-col gap-2 text-xs lg:text-sm w-full">
+              <div className="h-4 w-full bg-gray-200 rounded" />
+              <div className="h-4 w-full bg-gray-200 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Weekly weather skeleton */}
+      <div className="flex flex-col flex-1 w-full min-w-0">
+        <div className="h-6 w-40 bg-gray-200 rounded mb-2 pl-2" />
+        <div className="flex overflow-x-auto no-scrollbar gap-2 py-2 w-full">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="bg-gray-100 rounded-xl min-w-[130px] h-[150px]"
+            >
+              <div className="h-4 w-16 bg-gray-200 rounded mx-auto mt-4" />
+              <div className="h-10 w-10 bg-gray-200 rounded mx-auto mt-4" />
+              <div className="h-6 w-20 bg-gray-200 rounded mx-auto mt-4" />
+              <div className="h-4 w-12 bg-gray-200 rounded mx-auto mt-4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   /* ===== WEATHER DATA CONTENT ===== */
 
@@ -183,7 +230,9 @@ function ForeCast({
 
       {/* Content — blurred when locked, shown normally when accessible */}
       <div className="px-6 py-4">
-        {bypassPremium ? (
+        {shouldShowSkeleton ? (
+          skeletonContent
+        ) : bypassPremium ? (
           weatherContent
         ) : (
           <FeatureGuard guard={forecastGuard} title="Weather Forecast">
