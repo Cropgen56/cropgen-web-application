@@ -11,6 +11,7 @@ import FarmReport from "../pages/FarmReport";
 import PersonaliseCropSchedule from "../pages/PersonaliseCropSchedule";
 import Setting from "../pages/Setting";
 import Operation from "../pages/Operation";
+import CropGenAI from "../pages/CropGenAI";
 import Profile from "../pages/Profile";
 import PageNotFound from "../pages/PageNotFound";
 import AuthLayout from "../pages/AuthLayout";
@@ -32,6 +33,7 @@ const AppRoutes = () => {
           <Route index element={<Dashboard />} />
           <Route path="profile" element={<Profile />} />
           <Route path="cropgen-analytics" element={<Dashboard />} />
+          <Route path="cropgen-ai" element={<CropGenAI />} />
           <Route path="addfield" element={<AddField />} />
           <Route path="weather" element={<Weather />} />
           <Route path="operation" element={<Operation />} />
