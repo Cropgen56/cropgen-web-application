@@ -34,6 +34,8 @@ const AddFieldMap = ({
   onToggleSidebar,
 }) => {
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+  const [hasCenteredOnUser, setHasCenteredOnUser] = useState(false);
+  const [isLocatingUser, setIsLocatingUser] = useState(false);
   const [selectedIcon, setSelectedIcon] = useState("");
   const [showUploadOverlay, setShowUploadOverlay] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -60,6 +62,9 @@ const AddFieldMap = ({
   // Handle GeoJSON bounds - with debounce to prevent jitter
   useEffect(() => {
     if (geojsonLayers.length === 0 || !mapRef.current || !isMapReady) return;
+    // If we already centered on the user's location, keep that as the
+    // map centroid while the user uploads/draws a field.
+    if (hasCenteredOnUser || isLocatingUser) return;
 
     const timeoutId = setTimeout(() => {
       let allBounds = null;
@@ -83,16 +88,19 @@ const AddFieldMap = ({
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [geojsonLayers, isMapReady]);
+  }, [geojsonLayers, isMapReady, hasCenteredOnUser, isLocatingUser]);
 
   // Fetch user's current location when map loads and center map on it
   useEffect(() => {
     if (!isMapReady || !navigator.geolocation) return;
 
+    setIsLocatingUser(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         setMapCenter({ lat: latitude, lng: longitude });
+        setHasCenteredOnUser(true);
+        setIsLocatingUser(false);
         mapRef.current?.flyTo([latitude, longitude], 17, {
           animate: true,
           duration: 1,
@@ -100,6 +108,7 @@ const AddFieldMap = ({
       },
       () => {
         // User denied or error — keep default center (India)
+        setIsLocatingUser(false);
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
@@ -221,6 +230,9 @@ const AddFieldMap = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
+          setMapCenter({ lat: latitude, lng: longitude });
+          setHasCenteredOnUser(true);
+          setIsLocatingUser(false);
           mapRef.current?.flyTo([latitude, longitude], 18, {
             animate: true,
             duration: 1,

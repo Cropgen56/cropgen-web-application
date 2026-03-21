@@ -34,7 +34,7 @@ const Weather = () => {
   const [selectedField, setSelectedField] = useState(null);
   const [historicalData, setHistoricalData] = useState(null);
   const [dateRange, setDateRange] = useState(null);
-  const [isSidebarVisible] = useState(true);
+  const isSidebarVisible = true;
 
   const { aoiId } = useAoiManagement(selectedField);
   useWeatherForecast(aoiId);
@@ -87,12 +87,22 @@ const Weather = () => {
 
     const updatedField = fields.find((f) => f._id === selectedField._id);
 
-    // Only update when subscription actually changes
-    if (
-      updatedField &&
-      JSON.stringify(updatedField.subscription) !==
-        JSON.stringify(selectedField.subscription)
-    ) {
+    if (!updatedField) return;
+
+    // Only update when subscription data relevant to Weather Analytics changes.
+    // Avoid JSON.stringify (expensive) by comparing only what the guard checks.
+    const featureKey = "weatherAnalytics";
+    const updatedSub = updatedField.subscription;
+    const selectedSub = selectedField.subscription;
+
+    const updatedSig = `${updatedSub?.status ?? ""}|${Boolean(
+      updatedSub?.plan?.features?.[featureKey]
+    )}`;
+    const selectedSig = `${selectedSub?.status ?? ""}|${Boolean(
+      selectedSub?.plan?.features?.[featureKey]
+    )}`;
+
+    if (updatedSig !== selectedSig) {
       setSelectedField(updatedField);
     }
   }, [fields, selectedField]);

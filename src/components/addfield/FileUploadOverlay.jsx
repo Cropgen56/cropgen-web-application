@@ -194,20 +194,6 @@ const FileUploadOverlay = ({
 
     if (allMarkers.length > 0) {
       setMarkers(allMarkers);
-
-      // Fit map to bounds
-      if (window.mapRef?.current) {
-        const bounds = L.latLngBounds(allMarkers.map((c) => [c.lat, c.lng]));
-        if (bounds.isValid()) {
-          setTimeout(() => {
-            window.mapRef.current.fitBounds(bounds, {
-              padding: [50, 50],
-              animate: true,
-              duration: 1.5,
-            });
-          }, 100);
-        }
-      }
     }
 
     return parsedGeojsons.length > 0;

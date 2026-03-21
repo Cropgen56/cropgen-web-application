@@ -52,7 +52,6 @@ const SatelliteIndexList = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState("NDVI");
   const dispatch = useDispatch();
-  const { sowingDate = null } = selectedFieldsDetials[0] || {};
   const scrollContainerRef = useRef(null);
 
   // Validate that the geometry is a closed polygon
@@ -82,10 +81,12 @@ const SatelliteIndexList = ({
 
   const debounce = (func, wait) => {
     let timeout;
-    return (...args) => {
+    const debounced = (...args) => {
       clearTimeout(timeout);
       timeout = setTimeout(() => func(...args), wait);
     };
+    debounced.cancel = () => clearTimeout(timeout);
+    return debounced;
   };
 
   const handleFetchIndex = useCallback(
@@ -111,12 +112,11 @@ const SatelliteIndexList = ({
     dispatch(removeSelectedIndexData());
     debouncedFetchIndex(selectedIndex);
     return () => {
-      clearTimeout(debouncedFetchIndex.timeout);
+      debouncedFetchIndex.cancel?.();
     };
   }, [
     selectedIndex,
     selectedDate,
-    sowingDate,
     coordinates,
     debouncedFetchIndex,
     dispatch,

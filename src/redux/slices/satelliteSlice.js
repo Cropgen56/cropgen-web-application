@@ -30,10 +30,40 @@ const generateCacheKey = (prefix, input) => {
   return `api_cache_${prefix}_${Math.abs(hash)}`;
 };
 
+const getSatelliteDatesEffectiveRange = ({ startDate, endDate }) => {
+  const today = endDate || getTodayDate();
+  const sixMonthsBefore = startDate || getSixMonthsBeforeDate();
+  return { startDate: sixMonthsBefore, endDate: today };
+};
+
+const getSatelliteDatesRequestKey = ({ geometry, startDate, endDate }) => {
+  const { startDate: effectiveStart, endDate: effectiveEnd } =
+    getSatelliteDatesEffectiveRange({ startDate, endDate });
+
+  const cacheInput = {
+    geometry: geometry,
+    startDate: effectiveStart,
+    endDate: effectiveEnd,
+  };
+
+  return generateCacheKey("satelliteDates", cacheInput);
+};
+
+const getIndexDataRequestKey = ({ endDate, geometry, index }) => {
+  return generateCacheKey("indexData", { endDate, geometry, index });
+};
+
+const getIndexDataForMapRequestKey = ({ endDate, geometry, index }) => {
+  return generateCacheKey("indexDataForMap", { endDate, geometry, index });
+};
+
 const initialState = {
   satelliteDates: null,
+  latestSatelliteDatesRequestKey: null,
   indexData: null,
+  latestIndexDataRequestKey: null,
   indexDataByType: {},
+  latestIndexDataByTypeRequestKey: {},
   weatherData: null,
   indexTimeSeriesSummary: null,
   waterIndexData: null,
@@ -378,20 +408,27 @@ const satelliteSlice = createSlice({
     clearIndexDataByType: (state) => {
       state.indexDataByType = {};
       state.loading.indexDataByType = {};
+      state.latestIndexDataByTypeRequestKey = {};
     },
     resetSatelliteState: () => initialState,
     clearSatelliteDates: (state) => {
       state.satelliteDates = null;
       state.currentDateRange = { startDate: null, endDate: null };
+      state.latestSatelliteDatesRequestKey = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchSatelliteDates.pending, (state) => {
+      .addCase(fetchSatelliteDates.pending, (state, action) => {
+        const requestKey = getSatelliteDatesRequestKey(action.meta.arg ?? {});
         state.loading.satelliteDates = true;
         state.error = null;
+        state.latestSatelliteDatesRequestKey = requestKey;
       })
       .addCase(fetchSatelliteDates.fulfilled, (state, action) => {
+        const requestKey = getSatelliteDatesRequestKey(action.meta.arg);
+        if (requestKey !== state.latestSatelliteDatesRequestKey) return;
+
         state.loading.satelliteDates = false;
         state.satelliteDates = action.payload;
         state.currentDateRange = {
@@ -400,35 +437,57 @@ const satelliteSlice = createSlice({
         };
       })
       .addCase(fetchSatelliteDates.rejected, (state, action) => {
+        const requestKey = getSatelliteDatesRequestKey(action.meta.arg ?? {});
+        if (requestKey !== state.latestSatelliteDatesRequestKey) return;
+
         state.loading.satelliteDates = false;
         state.error = action.payload;
       })
 
-      .addCase(fetchIndexData.pending, (state) => {
+      .addCase(fetchIndexData.pending, (state, action) => {
+        const requestKey = getIndexDataRequestKey(action.meta.arg ?? {});
         state.loading.indexData = true;
         state.error = null;
+        state.latestIndexDataRequestKey = requestKey;
       })
       .addCase(fetchIndexData.fulfilled, (state, action) => {
+        const requestKey = getIndexDataRequestKey(action.meta.arg);
+        if (requestKey !== state.latestIndexDataRequestKey) return;
+
         state.loading.indexData = false;
         state.indexData = action.payload;
       })
       .addCase(fetchIndexData.rejected, (state, action) => {
+        const requestKey = getIndexDataRequestKey(action.meta.arg ?? {});
+        if (requestKey !== state.latestIndexDataRequestKey) return;
+
         state.loading.indexData = false;
         state.error = action.payload;
       })
 
       .addCase(fetchIndexDataForMap.pending, (state, action) => {
         const index = action.meta.arg.index;
+        const requestKey = getIndexDataForMapRequestKey(action.meta.arg);
         state.loading.indexDataByType[index] = true;
         state.error = null;
+        state.latestIndexDataByTypeRequestKey[index] = requestKey;
       })
       .addCase(fetchIndexDataForMap.fulfilled, (state, action) => {
         const { index, data } = action.payload;
+        const requestKey = getIndexDataForMapRequestKey(action.meta.arg);
+        if (requestKey !== state.latestIndexDataByTypeRequestKey?.[index]) {
+          return;
+        }
+
         state.loading.indexDataByType[index] = false;
         state.indexDataByType[index] = data;
       })
       .addCase(fetchIndexDataForMap.rejected, (state, action) => {
         const index = action.meta.arg?.index;
+        const requestKey = getIndexDataForMapRequestKey(action.meta.arg ?? {});
+        if (index && requestKey !== state.latestIndexDataByTypeRequestKey?.[index]) {
+          return;
+        }
         if (index) {
           state.loading.indexDataByType[index] = false;
         }

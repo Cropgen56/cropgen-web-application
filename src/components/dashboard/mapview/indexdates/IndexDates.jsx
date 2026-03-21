@@ -14,6 +14,7 @@ import { X, AlertCircle } from "lucide-react";
 import DateRangePicker from "./DateRangePicker";
 
 const DATE_FORMAT_OPTIONS = { day: "numeric", month: "short", year: "numeric" };
+const CLOUD_COVER_THRESHOLD = 5; // If cloud > 5%, pick an older date with cloud <= 5%
 
 // Helper functions
 const formatDate = (date) => {
@@ -35,6 +36,28 @@ const toISODateString = (date) => {
   } catch {
     return "";
   }
+};
+
+// `allDates` is expected to be sorted newest -> oldest by `isoDate`.
+const pickLowCloudIsoDate = (allDates, targetIsoDate, threshold) => {
+  if (!Array.isArray(allDates) || allDates.length === 0) return targetIsoDate;
+
+  const targetIndex = allDates.findIndex((d) => d.isoDate === targetIsoDate);
+  const startIndex = targetIndex === -1 ? 0 : targetIndex;
+
+  // Try to find an older date (including target date) with cloud <= threshold.
+  for (let i = startIndex; i < allDates.length; i++) {
+    const cloud = allDates[i]?.value ?? 0;
+    if (cloud <= threshold) return allDates[i].isoDate;
+  }
+
+  // If none match, pick the date with the minimum cloud among older dates.
+  let best = allDates[startIndex];
+  for (let i = startIndex + 1; i < allDates.length; i++) {
+    const cloud = allDates[i]?.value ?? 0;
+    if ((best?.value ?? Infinity) > cloud) best = allDates[i];
+  }
+  return best?.isoDate ?? targetIsoDate;
 };
 
 const getSixMonthsBeforeDate = () => {
@@ -67,8 +90,8 @@ const DateSkeleton = ({ count = 6 }) => (
   </>
 );
 
-// Error Modal Component
-const ErrorModal = ({ isOpen, onClose, message }) => {
+// Modal Component
+const ErrorModal = ({ isOpen, onClose, message, title = "Invalid Date" }) => {
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -108,7 +131,7 @@ const ErrorModal = ({ isOpen, onClose, message }) => {
           <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
             <AlertCircle size={24} className="text-red-400" />
           </div>
-          <h3 className="text-white font-semibold text-lg">Invalid Date</h3>
+          <h3 className="text-white font-semibold text-lg">{title}</h3>
         </div>
 
         <p className="text-gray-300 text-sm mb-5">{message}</p>
@@ -180,6 +203,11 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     message: "",
   });
 
+  const [cloudModal, setCloudModal] = useState({
+    isOpen: false,
+    message: "",
+  });
+
   const currentFieldId = selectedFieldsDetials[0]?._id;
   const prevFieldIdRef = useRef(currentFieldId);
 
@@ -216,6 +244,19 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     [dispatch]
   );
 
+  const debouncedFetchDates = useMemo(() => {
+    let timeout;
+    const debounced = (coords, startDate, endDate) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(
+        () => fetchDatesDirectly(coords, startDate, endDate),
+        400
+      );
+    };
+    debounced.cancel = () => clearTimeout(timeout);
+    return debounced;
+  }, [fetchDatesDirectly]);
+
   // Reset on field change
   useEffect(() => {
     if (currentFieldId && currentFieldId !== prevFieldIdRef.current) {
@@ -234,9 +275,15 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   // Fetch when coordinates or applied dates change
   useEffect(() => {
     if (coordinates.length > 0) {
-      fetchDatesDirectly(coordinates, appliedStartDate, appliedEndDate);
+      debouncedFetchDates(coordinates, appliedStartDate, appliedEndDate);
     }
-  }, [coordinates, appliedStartDate, appliedEndDate, fetchDatesDirectly]);
+    return () => debouncedFetchDates.cancel?.();
+  }, [
+    coordinates,
+    appliedStartDate,
+    appliedEndDate,
+    debouncedFetchDates,
+  ]);
 
   // Responsive visible count
   useEffect(() => {
@@ -279,9 +326,33 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     setVisibleDates(uniqueDates.slice(0, visibleCount));
 
     if (uniqueDates.length > 0 && !selectedDate) {
-      setSelectedDate(uniqueDates[0].isoDate);
+      const bestIso = pickLowCloudIsoDate(
+        uniqueDates,
+        uniqueDates[0].isoDate,
+        CLOUD_COVER_THRESHOLD
+      );
+      setSelectedDate(bestIso);
     }
   }, [satelliteDates, visibleCount, selectedDate]);
+
+  // Enforce "low cloud" selection before index API calls.
+  useEffect(() => {
+    if (!selectedDate || dates.length === 0) return;
+
+    const selectedObj = dates.find((d) => d.isoDate === selectedDate);
+    const selectedCloud = selectedObj?.value ?? 0;
+
+    if (selectedCloud > CLOUD_COVER_THRESHOLD) {
+      const fallbackIso = pickLowCloudIsoDate(
+        dates,
+        selectedDate,
+        CLOUD_COVER_THRESHOLD
+      );
+      if (fallbackIso && fallbackIso !== selectedDate) {
+        setSelectedDate(fallbackIso);
+      }
+    }
+  }, [selectedDate, dates]);
 
   // Scroll to selected date
   useEffect(() => {
@@ -385,11 +456,29 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
 
   const handleDateClick = useCallback(
     (isoDate) => {
-      if (isoDate && isoDate !== selectedDate) {
-        setSelectedDate(isoDate);
+      if (!isoDate || isoDate === selectedDate) return;
+
+      const clickedObj = dates.find((d) => d.isoDate === isoDate);
+      const clickedCloud = clickedObj?.value ?? 0;
+
+      const bestIso = pickLowCloudIsoDate(
+        dates,
+        isoDate,
+        CLOUD_COVER_THRESHOLD
+      );
+
+      // Only show warning when user explicitly clicks a too-cloudy date.
+      if (clickedCloud > CLOUD_COVER_THRESHOLD) {
+        setCloudModal({
+          isOpen: true,
+          message:
+            "This date has too much cloud cover, so the image may not be clear. We selected an older clearer date instead.",
+        });
       }
+
+      if (bestIso && bestIso !== selectedDate) setSelectedDate(bestIso);
     },
-    [selectedDate]
+    [selectedDate, dates]
   );
 
   const toggleCalendar = useCallback(() => {
@@ -402,6 +491,10 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
 
   const closeErrorModal = useCallback(() => {
     setErrorModal({ isOpen: false, message: "" });
+  }, []);
+
+  const closeCloudModal = useCallback(() => {
+    setCloudModal({ isOpen: false, message: "" });
   }, []);
 
   const isPrevDisabled = useMemo(() => {
@@ -463,6 +556,13 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
         isOpen={errorModal.isOpen}
         onClose={closeErrorModal}
         message={errorModal.message}
+      />
+
+      <ErrorModal
+        isOpen={cloudModal.isOpen}
+        onClose={closeCloudModal}
+        message={cloudModal.message}
+        title="Too much cloud"
       />
 
       <SatelliteIndexList
