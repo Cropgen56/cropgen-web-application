@@ -57,6 +57,15 @@ export const useSubscriptionGuard = ({ field, featureKey }) => {
     setShowMembershipModal(false);
   }, [field]);
 
+  const closeMembershipModal = useCallback(() => {
+    setShowMembershipModal(false);
+  }, []);
+
+  const closePricingOverlay = useCallback(() => {
+    setShowPricingOverlay(false);
+    setPricingFieldData(null);
+  }, []);
+
   return {
     hasFeatureAccess,
 
@@ -66,12 +75,9 @@ export const useSubscriptionGuard = ({ field, featureKey }) => {
 
     handleSubscribe,
 
-    closeMembershipModal: () => setShowMembershipModal(false),
+    closeMembershipModal,
 
-    closePricingOverlay: () => {
-      setShowPricingOverlay(false);
-      setPricingFieldData(null);
-    },
+    closePricingOverlay,
 
     setShowMembershipModal,
   };

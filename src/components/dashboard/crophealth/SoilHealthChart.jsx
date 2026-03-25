@@ -12,19 +12,29 @@ const SoilHealthChart = ({
   isPreparedForPDF = false,
   aoiId = null,
 } = {}) => {
-  const forecastData =
-    useSelector((state) => {
-      const fd = state.weather?.forecastData;
-      if (aoiId && fd && typeof fd === "object" && !fd.current && fd[aoiId]) {
-        return fd[aoiId] || {};
-      }
-      return fd || {};
-    }) || {};
+  const forecastData = useSelector((state) => {
+    const fd = state.weather?.forecastData;
+    if (!fd || typeof fd !== "object") return {};
+
+    // Most cases: `fd` is keyed by geometry id, and each entry contains `{ current, forecast, units }`.
+    if (aoiId && fd[aoiId]) return fd[aoiId] || {};
+
+    // If `fd` already has `current` at the root, use it directly.
+    if (fd.current) return fd;
+
+    // Fallback: pick the first geometry entry that has `current`.
+    const firstWithCurrent = Object.values(fd).find(
+      (v) => v && typeof v === "object" && v.current,
+    );
+    return firstWithCurrent || {};
+  });
 
   // Use forecastData.current for latest values
   const latestTemp2cm = forecastData.current?.soil_temperature_surface || "N/A";
   const latestMoisture2cm =
-    forecastData.current?.soil_moisture_surface || "N/A"; // 2cm data
+    forecastData.current?.soil_moisture_2cm ??
+    forecastData.current?.soil_moisture_surface ??
+    "N/A"; // Prefer 2cm; fall back to surface
   const latestTemp5cm = forecastData.current?.soil_temperature_5cm || "N/A";
   const latestMoisture5cm = forecastData.current?.soil_moisture_5cm || "N/A";
   const latestTemp15cm = forecastData.current?.soil_temperature_15cm || "N/A";

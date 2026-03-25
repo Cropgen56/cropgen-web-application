@@ -83,6 +83,7 @@ const Dashboard = () => {
             <CropHealth
               selectedFieldDetails={selectedFieldDetails}
               hasCropHealthAndYield={hasFeature("soilAnalysisAndHealth")}
+              aoiId={aoiId}
             />
           )}
 

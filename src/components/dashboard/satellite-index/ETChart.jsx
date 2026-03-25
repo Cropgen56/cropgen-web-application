@@ -11,13 +11,16 @@ const CLOUD_COLOR_MAIN = "#87CEEB";
 
 const EvapotranspirationChart = ({
   selectedFieldsDetials,
+  forecast = null,
+  units = null,
   bypassPremium = false,
   isPreparedForPDF = false,
   aoiId = null,
 }) => {
   const chartRef = useRef(null);
-  const forecastData =
-    useSelector(selectForecastForGeometry(aoiId)) || {};
+  const forecastDataFromStore = useSelector(
+    aoiId ? selectForecastForGeometry(aoiId) : () => ({})
+  );
 
   const evapotranspirationGuard = useSubscriptionGuard({
     field: selectedFieldsDetials?.[0],
@@ -26,13 +29,21 @@ const EvapotranspirationChart = ({
 
   /* ================= DATA ================= */
 
+  // Prefer the passed forecast payload (Dashboard provides it),
+  // but fall back to Redux when it's rendered without forecast props.
+  const sourceForecast = forecast ?? forecastDataFromStore?.forecast ?? {};
+  const etUnit = units?.evapotranspiration || "mm";
+
   const dateData = useMemo(
-    () => forecastData.forecast?.time || [],
-    [forecastData.forecast?.time],
+    () => (sourceForecast?.time ?? []).slice(0, 16),
+    [sourceForecast?.time],
   );
   const evapotranspirationData = useMemo(
-    () => forecastData.forecast?.evapotranspiration || [],
-    [forecastData.forecast?.evapotranspiration],
+    () =>
+      (sourceForecast?.evapotranspiration ?? [])
+        .slice(0, 16)
+        .map((v) => (v == null ? 0 : Number(v))),
+    [sourceForecast?.evapotranspiration],
   );
 
   const maxEt =
@@ -55,6 +66,12 @@ const EvapotranspirationChart = ({
         ]
       : "N/A";
 
+  const yAxisMax = useMemo(() => {
+    if (evapotranspirationData.length === 0) return 12;
+    const maxVal = Math.max(...evapotranspirationData);
+    return Math.max(12, Math.ceil(maxVal / 2) * 2);
+  }, [evapotranspirationData]);
+
   const option = useMemo(
     () => ({
       tooltip: { trigger: "axis" },
@@ -67,7 +84,7 @@ const EvapotranspirationChart = ({
       },
       xAxis: {
         type: "category",
-        data: dateData.map((d) => d.slice(5)),
+        data: dateData.map((d) => String(d).slice(5)),
         axisLabel: {
           rotate: 45,
           interval: 0,
@@ -78,10 +95,10 @@ const EvapotranspirationChart = ({
       yAxis: {
         type: "value",
         min: 0,
-        max: 12,
+        max: yAxisMax,
         interval: 2,
         axisLabel: {
-          formatter: "{value} mm",
+          formatter: `{value} ${etUnit}`,
           fontWeight: "bold",
           color: "#333",
         },
@@ -99,13 +116,12 @@ const EvapotranspirationChart = ({
         },
       ],
     }),
-    [dateData, evapotranspirationData],
+    [dateData, evapotranspirationData, yAxisMax, etUnit],
   );
 
   /* ===== CHART CONTENT ===== */
 
-  const hasETData =
-    evapotranspirationData.length > 0 && dateData.length > 0;
+  const hasETData = evapotranspirationData.length > 0 && dateData.length > 0;
 
   const chartContent = (
     <div className="w-full bg-white rounded-xl p-2 min-h-[220px]">
@@ -113,6 +129,7 @@ const EvapotranspirationChart = ({
         <ReactECharts
           ref={chartRef}
           option={option}
+          notMerge={true}
           style={{
             width: isPreparedForPDF ? "600px" : "100%",
             height: "220px",
@@ -126,6 +143,7 @@ const EvapotranspirationChart = ({
         <ReactECharts
           ref={chartRef}
           option={option}
+          notMerge={true}
           style={{
             width: isPreparedForPDF ? "600px" : "100%",
             height: "220px",
