@@ -43,40 +43,124 @@ const ENTERPRISE_PLAN = {
   active: true,
 };
 
+/** Match subscription API pricing rows (camelCase or snake_case, currency case-insensitive). */
+function findPricingEntry(pricing, cycle, currency) {
+  if (!Array.isArray(pricing) || pricing.length === 0) return null;
+  const cur = String(currency || "").toUpperCase();
+  const cyc = String(cycle || "").toLowerCase();
+
+  const norm = (p) => ({
+    currency: String(p.currency ?? p.currencyCode ?? "").toUpperCase(),
+    billingCycle: String(
+      p.billingCycle ?? p.billing_cycle ?? ""
+    ).toLowerCase(),
+  });
+
+  const byCycle = pricing.filter((p) => norm(p).billingCycle === cyc);
+  if (byCycle.length === 0) return null;
+
+  const exact = byCycle.find((p) => norm(p).currency === cur);
+  if (exact) return exact;
+
+  // API may only define one currency per billing cycle (e.g. USD only).
+  return byCycle[0];
+}
+
+/**
+ * Backend may send flat amount (amountMinor) or per-acre (pricePerUnitMinor), in minor units.
+ */
+function amountMajorFromEntry(entry) {
+  if (!entry || typeof entry !== "object") {
+    return { value: 0, perAcre: false };
+  }
+
+  if (typeof entry.amountMinor === "number") {
+    return { value: entry.amountMinor / 100, perAcre: false };
+  }
+  if (typeof entry.amount_minor === "number") {
+    return { value: entry.amount_minor / 100, perAcre: false };
+  }
+  if (typeof entry.pricePerUnitMinor === "number") {
+    return { value: entry.pricePerUnitMinor / 100, perAcre: true };
+  }
+  if (typeof entry.price_per_unit_minor === "number") {
+    return { value: entry.price_per_unit_minor / 100, perAcre: true };
+  }
+  if (typeof entry.amount === "number") {
+    return { value: entry.amount, perAcre: false };
+  }
+  if (typeof entry.price === "number") {
+    return { value: entry.price, perAcre: false };
+  }
+
+  return { value: 0, perAcre: false };
+}
+
+function buildPriceTier(pricing, cycle, currency) {
+  const entry = findPricingEntry(pricing, cycle, currency);
+  const { value, perAcre } = amountMajorFromEntry(entry);
+  const displayCurrency =
+    entry && String(entry.currency ?? entry.currencyCode ?? "").trim()
+      ? String(entry.currency ?? entry.currencyCode).toUpperCase()
+      : String(currency || "").toUpperCase();
+  return { value, perAcre, displayCurrency };
+}
+
 function transformApiData(apiData) {
   if (!Array.isArray(apiData)) return [];
 
-  const plans = apiData.map((plan) => {
-    const pricing = plan.pricing || [];
-    const getPrice = (cycle, currency) =>
-      pricing.find((p) => p.billingCycle === cycle && p.currency === currency)
-        ?.amountMinor / 100 || 0;
+  const plans = apiData
+    .filter(
+      (plan) =>
+        (plan.platform == null ||
+          plan.platform === "" ||
+          plan.platform === "web") &&
+        plan.active !== false &&
+        plan.isInternal !== true
+    )
+    .map((plan) => {
+      const pricing = plan.pricing || [];
 
-    const features = Object.entries(FEATURE_DISPLAY_NAMES).map(
-      ([key, name]) => ({
-        name,
-        enabled: !!(plan.features?.[key] ?? false),
-      })
-    );
+      const features = Object.entries(FEATURE_DISPLAY_NAMES).map(
+        ([key, name]) => ({
+          name,
+          enabled: !!(plan.features?.[key] ?? false),
+        })
+      );
 
-    return {
-      ...plan,
-      prices: {
-        monthly: {
-          INR: getPrice("monthly", "INR"),
-          USD: getPrice("monthly", "USD"),
+      return {
+        ...plan,
+        prices: {
+          monthly: {
+            INR: buildPriceTier(pricing, "monthly", "INR"),
+            USD: buildPriceTier(pricing, "monthly", "USD"),
+          },
+          yearly: {
+            INR: buildPriceTier(pricing, "yearly", "INR"),
+            USD: buildPriceTier(pricing, "yearly", "USD"),
+          },
         },
-        yearly: {
-          INR: getPrice("yearly", "INR"),
-          USD: getPrice("yearly", "USD"),
-        },
-      },
-      features,
-    };
-  });
+        features,
+      };
+    });
 
   plans.push(ENTERPRISE_PLAN);
   return plans.filter((p) => p.active !== false);
+}
+
+function formatPlanPrice(value, currency) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "0";
+  if (currency === "INR") {
+    return n.toLocaleString("en-IN", {
+      maximumFractionDigits: n % 1 === 0 ? 0 : 2,
+      minimumFractionDigits: 0,
+    });
+  }
+  return n.toLocaleString("en-US", {
+    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function PlanCard({
@@ -99,8 +183,15 @@ function PlanCard({
   const frontFeatures = sortedFeatures.slice(0, frontCount);
   const backFeatures = sortedFeatures.slice(frontCount);
 
-  const price = plan.prices?.[billing]?.[currency] || 0;
-  const symbol = currency === "INR" ? "₹" : "$";
+  const tier = plan.prices?.[billing]?.[currency] || {
+    value: 0,
+    perAcre: false,
+    displayCurrency: currency,
+  };
+  const price = tier.value ?? 0;
+  const perAcre = !!tier.perAcre;
+  const displayCurrency = tier.displayCurrency || currency;
+  const symbol = displayCurrency === "INR" ? "₹" : "$";
 
   const handleSubscribe = (e) => {
     e.stopPropagation();
@@ -270,11 +361,28 @@ function PlanCard({
         >
           <h3 className="text-[24px] font-extrabold mb-0">{plan.name}</h3>
           <p className="text-xs mb-0">{plan.description}</p>
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-baseline gap-2 flex-wrap">
             <p className="text-[20px] font-bold text-[#344E41] mb-0">
-              {price === 0 ? "Free" : `${symbol}${price}`}
+              {price === 0 ? (
+                "Free"
+              ) : (
+                <>
+                  {symbol}
+                  {formatPlanPrice(price, displayCurrency)}
+                  {perAcre ? (
+                    <span className="text-sm font-semibold text-[#344E41]/80">
+                      /acre
+                    </span>
+                  ) : null}
+                </>
+              )}
             </p>
             <span className="text-sm text-gray-500">/{billing}</span>
+            {displayCurrency !== currency && price !== 0 ? (
+              <span className="text-[10px] text-gray-400 w-full">
+                Priced in {displayCurrency}
+              </span>
+            ) : null}
           </div>
 
           <hr className="border-t border-1 border-[#344E41] my-2" />
