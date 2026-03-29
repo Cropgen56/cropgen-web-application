@@ -10,8 +10,6 @@ import EvapotranspirationDashboard from "../components/dashboard/satellite-index
 import Insights from "../components/dashboard/insights/Insights";
 import PlantGrowthActivity from "../components/dashboard/PlantGrowthActivity";
 
-import PaymentSuccessModal from "../components/subscription/PaymentSuccessModal";
-
 import { useFarmFields } from "../components/dashboard/hooks/useFarmFields";
 import { useSelectedField } from "../components/dashboard/hooks/useSelectedField";
 import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
@@ -32,19 +30,25 @@ const Dashboard = () => {
   const { aoiId } = useAoiManagement(selectedFieldDetails);
   const { forecast, units } = useWeatherForecast(aoiId);
 
-  /* ================= ADVISORY (CALL ONLY ONCE PER FIELD) ================= */
-  const lastFetchedFieldIdRef = useRef(null);
+  /* ================= ADVISORY (refetch when field or subscription access changes) ================= */
+  const lastAdvisoryKeyRef = useRef(null);
 
   useEffect(() => {
     const fieldId = selectedFieldDetails?._id;
     if (!fieldId) return;
 
-    // ✅ Prevent duplicate API calls
-    if (lastFetchedFieldIdRef.current === fieldId) return;
+    const subActive =
+      selectedFieldDetails?.subscription?.hasActiveSubscription === true;
+    const key = `${fieldId}:${subActive}`;
+    if (lastAdvisoryKeyRef.current === key) return;
+    lastAdvisoryKeyRef.current = key;
 
-    lastFetchedFieldIdRef.current = fieldId;
     dispatch(fetchSmartAdvisory({ fieldId }));
-  }, [dispatch, selectedFieldDetails?._id]);
+  }, [
+    dispatch,
+    selectedFieldDetails?._id,
+    selectedFieldDetails?.subscription?.hasActiveSubscription,
+  ]);
 
   /* ================= SUBSCRIPTION HELPERS ================= */
   const isSubscribed =
@@ -62,9 +66,6 @@ const Dashboard = () => {
   /* ================= RENDER ================= */
   return (
     <div className="dashboard min-h-screen w-full overflow-y-auto p-2 lg:p-4">
-      {/* Payment success handled globally */}
-      <PaymentSuccessModal />
-
       {/* MAP */}
       <MapView
         selectedField={selectedField}

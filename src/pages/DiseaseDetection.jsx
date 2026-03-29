@@ -132,7 +132,6 @@ const DiseaseDetection = () => {
           >
             <PricingOverlay
               onClose={handleClosePricing}
-              userArea={pricingFieldData.areaInHectares}
               selectedField={pricingFieldData}
             />
           </motion.div>

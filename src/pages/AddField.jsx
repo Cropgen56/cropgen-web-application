@@ -19,10 +19,35 @@ const AddField = () => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const [selectedField, setSelectedField] = useState(null);
+  /** When set, map opens centered on the user (browser geolocation). */
+  const [initialMapCenter, setInitialMapCenter] = useState(null);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userId = useSelector((state) => state?.auth?.user?.id);
+
+  /* ================= DEFAULT MAP: USER LOCATION ================= */
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setInitialMapCenter({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => {
+        /* Denied or error — AddFieldMap keeps its default center */
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 12000,
+        maximumAge: 0,
+      },
+    );
+  }, []);
 
   /* ================= RESPONSIVE ================= */
 
@@ -188,6 +213,7 @@ const AddField = () => {
               isTabletView={isTabletView}
               onToggleSidebar={toggleSidebar}
               showUploadOverlay={showOverlay}
+              initialMapCenter={initialMapCenter}
             />
           </div>
 
@@ -233,6 +259,7 @@ const AddField = () => {
               toggleAddMarkers={toggleAddMarkers}
               clearMarkers={clearMarkers}
               onToggleSidebar={toggleSidebar}
+              initialMapCenter={initialMapCenter}
             />
           </div>
         </div>

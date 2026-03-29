@@ -5,6 +5,20 @@ import {
   fetchAllSubscriptions,
 } from "../../api/subscriptionApi";
 
+function apiErrorMessage(error, fallback = "Something went wrong") {
+  const data = error?.response?.data;
+  if (typeof data?.message === "string" && data.message.trim()) {
+    return data.message;
+  }
+  if (Array.isArray(data?.errors) && data.errors.length) {
+    return data.errors.map(String).join("; ");
+  }
+  if (error?.message && !error.message.startsWith("Request failed")) {
+    return error.message;
+  }
+  return fallback;
+}
+
 /* -------------------- THUNKS -------------------- */
 
 export const fetchSubscriptions = createAsyncThunk(
@@ -13,7 +27,7 @@ export const fetchSubscriptions = createAsyncThunk(
     try {
       return await fetchAllSubscriptions();
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(apiErrorMessage(error, "Failed to load plans"));
     }
   },
 );
@@ -24,7 +38,9 @@ export const createUserSubscription = createAsyncThunk(
     try {
       return await createSubscription(payload);
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(
+        apiErrorMessage(error, "Subscription failed. Please try again."),
+      );
     }
   },
 );
@@ -35,7 +51,9 @@ export const verifyUserSubscriptionPayment = createAsyncThunk(
     try {
       return await verifySubscriptionPayment(subscriptionId, paymentData);
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(
+        apiErrorMessage(error, "Payment verification failed."),
+      );
     }
   },
 );
@@ -100,21 +118,9 @@ const subscriptionSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(verifyUserSubscriptionPayment.fulfilled, (state, action) => {
+      .addCase(verifyUserSubscriptionPayment.fulfilled, (state) => {
         state.loading = false;
-
-        if (action.payload?.success) {
-          const data = action.payload.data || {};
-
-          state.paymentSuccess = {
-            fieldName: data.fieldName,
-            planName: data.planName,
-            features: data.features || [],
-            daysLeft: data.daysLeft,
-            transactionId: data.transactionId,
-            subscriptionId: data.subscriptionId,
-          };
-        }
+        /* paymentSuccess is set in PricingOverlay after unwrap + merged with trial metadata */
       })
       .addCase(verifyUserSubscriptionPayment.rejected, (state, action) => {
         state.loading = false;

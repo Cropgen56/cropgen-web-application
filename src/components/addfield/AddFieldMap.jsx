@@ -32,6 +32,8 @@ const AddFieldMap = ({
   toggleAddMarkers,
   clearMarkers,
   onToggleSidebar,
+  /** Set from parent (AddField) after browser geolocation — default map view. */
+  initialMapCenter = null,
 }) => {
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
   const [hasCenteredOnUser, setHasCenteredOnUser] = useState(false);
@@ -90,29 +92,25 @@ const AddFieldMap = ({
     return () => clearTimeout(timeoutId);
   }, [geojsonLayers, isMapReady, hasCenteredOnUser, isLocatingUser]);
 
-  // Fetch user's current location when map loads and center map on it
+  // Center on user location from parent (single geolocation request on Add Field page)
   useEffect(() => {
-    if (!isMapReady || !navigator.geolocation) return;
+    if (!initialMapCenter) return;
 
-    setIsLocatingUser(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setMapCenter({ lat: latitude, lng: longitude });
-        setHasCenteredOnUser(true);
-        setIsLocatingUser(false);
-        mapRef.current?.flyTo([latitude, longitude], 17, {
-          animate: true,
-          duration: 1,
-        });
+    setMapCenter(initialMapCenter);
+    setHasCenteredOnUser(true);
+    setIsLocatingUser(false);
+
+    if (!isMapReady || !mapRef.current) return;
+
+    mapRef.current.flyTo(
+      [initialMapCenter.lat, initialMapCenter.lng],
+      17,
+      {
+        animate: true,
+        duration: 0.75,
       },
-      () => {
-        // User denied or error — keep default center (India)
-        setIsLocatingUser(false);
-      },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
     );
-  }, [isMapReady]);
+  }, [initialMapCenter, isMapReady]);
 
   useEffect(() => {
     if (isTabletView) {

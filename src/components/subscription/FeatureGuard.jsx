@@ -46,7 +46,6 @@ const FeatureGuard = ({ guard, title, children }) => {
           >
             <PricingOverlay
               onClose={guard.closePricingOverlay}
-              userArea={guard.pricingFieldData.areaInHectares}
               selectedField={guard.pricingFieldData}
             />
           </motion.div>

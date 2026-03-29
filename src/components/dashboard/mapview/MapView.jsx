@@ -223,7 +223,7 @@ const FarmMap = ({
 
   return (
     <div
-      className={`flex flex-col items-center w-full relative h-[75vh] ${fields?.length === 0 ? "h-[98vh]" : "lg:h-[85vh]${"}`}
+      className={`flex flex-col items-center w-full relative h-[75vh] ${fields?.length === 0 ? "h-[98vh]" : "lg:h-[85vh]"}`}
     >
       <MapContainer
         center={
