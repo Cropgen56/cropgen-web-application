@@ -184,7 +184,8 @@ export const uploadAvatar = createAsyncThunk(
   },
 );
 
-const initialState = {
+/** Used by store for SSR-safe hydration from localStorage */
+export const authInitialState = {
   user: null,
   token: null,
   userDetails: null,
@@ -200,12 +201,14 @@ const initialState = {
   avatarUploadProgress: 0,
 };
 
+const initialState = authInitialState;
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     logout: (state) => {
-      Object.assign(state, initialState);
+      Object.assign(state, authInitialState);
     },
     decodeToken: (state) => {
       if (!state.token) return;
@@ -238,7 +241,7 @@ const authSlice = createSlice({
       state.status = "succeeded";
       state.error = null;
     },
-    resetAuthState: () => initialState,
+    resetAuthState: () => authInitialState,
     clearError: (state) => {
       state.error = null;
     },

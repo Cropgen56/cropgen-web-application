@@ -144,7 +144,7 @@ const CropHealth = ({
                 advisoryLoading
                   ? "Loading..."
                   : yieldData
-                    ? `${yieldData.standard} ${yieldData.unit}`
+                    ? `${yieldData.standard} ${yieldData.unit} ( Total )`
                     : "-"
               }
             />

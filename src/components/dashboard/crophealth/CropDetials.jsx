@@ -30,7 +30,9 @@ const CropDetials = ({ cropDetials, daysFromSowing, totalArea, cropYield }) => {
           </div>
           <div className="flex gap-2">
             <span className="font-semibold">Standard Yield Data :-</span>
-            <span className="text-black font-medium">{yieldVal}</span>
+            <span className="text-black font-medium">
+              {yieldVal !== "N/A" ? `${yieldVal} ( Total )` : yieldVal}
+            </span>
           </div>
         </div>
       </div>
