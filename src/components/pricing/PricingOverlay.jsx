@@ -166,11 +166,11 @@ function transformApiData(
         missing: disabled,
         isTrialPlan,
         trialDays:
-          platform === "web"
-            ? 7
-            : plan.trialDays >= 1
-              ? plan.trialDays
-              : 7,
+          isTrialPlan && plan.trialDays >= 1
+            ? plan.trialDays
+            : isTrialPlan
+              ? 7
+              : 0,
         active: plan.active,
         isEnterprise: false,
         unavailableForBilling,
@@ -271,6 +271,11 @@ export default function PricingOverlay({ onClose, selectedField }) {
       ),
     [subscriptions, billing, selectedField, displayCurrency],
   );
+
+  const headerTrialDays = useMemo(() => {
+    const p = plans.find((pl) => pl.isTrialPlan && pl.trialDays > 0);
+    return p?.trialDays ?? null;
+  }, [plans]);
 
   const groups = useMemo(() => {
     const arr = [];
@@ -419,7 +424,7 @@ export default function PricingOverlay({ onClose, selectedField }) {
 
     const description =
       checkoutKind === "subscription" && trialDaysLeft != null
-        ? "Save payment — full plan amount in INR only after your 7-day trial ends."
+        ? `Save payment — full plan amount in INR only after your ${trialDaysLeft}-day trial ends.`
         : checkoutKind === "subscription"
           ? "CropGen subscription"
           : "Farm subscription";
@@ -541,17 +546,37 @@ export default function PricingOverlay({ onClose, selectedField }) {
         {/* Currency + billing — compact; details on demand */}
         <div className="shrink-0 space-y-2 border-b border-white/10 px-3 py-2.5 sm:space-y-2.5 sm:px-4 sm:py-3 md:px-6">
           <div className="mx-auto max-w-2xl px-0.5 text-center">
-            <p className="text-[11px] leading-snug text-white/90 sm:text-xs md:text-sm">
-              <strong className="text-white">7-day free trial</strong> on this
-              field — one <strong className="text-white">Razorpay (INR)</strong>{" "}
-              checkout, then the <strong className="text-white">full plan</strong>{" "}
-              after the trial. <strong className="text-white">Monthly</strong> /{" "}
-              <strong className="text-white">Yearly</strong> applies after that.
-              <span className="text-white/70">
-                {" "}
-                USD/INR toggle is display only (per acre × area).
-              </span>
-            </p>
+            {headerTrialDays ? (
+              <p className="text-[11px] leading-snug text-white/90 sm:text-xs md:text-sm">
+                <strong className="text-white">
+                  {headerTrialDays}-day free trial
+                </strong>{" "}
+                on this field — one{" "}
+                <strong className="text-white">Razorpay (INR)</strong>{" "}
+                checkout, then the{" "}
+                <strong className="text-white">full plan</strong> after the
+                trial. <strong className="text-white">Monthly</strong> /{" "}
+                <strong className="text-white">Yearly</strong> applies after
+                that.
+                <span className="text-white/70">
+                  {" "}
+                  USD/INR toggle is display only (per acre × area).
+                </span>
+              </p>
+            ) : (
+              <p className="text-[11px] leading-snug text-white/90 sm:text-xs md:text-sm">
+                One{" "}
+                <strong className="text-white">Razorpay (INR)</strong> checkout
+                for this field.{" "}
+                <strong className="text-white">Monthly</strong> /{" "}
+                <strong className="text-white">Yearly</strong> applies
+                immediately based on your selection.
+                <span className="text-white/70">
+                  {" "}
+                  USD/INR toggle is display only (per acre × area).
+                </span>
+              </p>
+            )}
             {showBillingDetails ? (
               <div className="mt-2 space-y-1.5 text-left text-[11px] leading-relaxed text-white/80 sm:text-xs">
                 <p>

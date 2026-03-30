@@ -128,10 +128,13 @@ export default function PlanCard({
   const mainTotal = cur === "INR" ? priceDualBlock.inrTotal : priceDualBlock.usdTotal;
   const mainUnit = cur === "INR" ? priceDualBlock.inrUnit : priceDualBlock.usdUnit;
   const mainLabel = cur === "INR" ? "INR" : "USD";
-  /** Web pricing overlay: trial length comes from transform (7 days on web). */
-  const trialDaysShown = plan.trialDays >= 1 ? plan.trialDays : 7;
+  /** Web pricing overlay: trial length comes from transform (0 when no trial). */
+  const trialDaysShown = plan.trialDays >= 1 ? plan.trialDays : 0;
   const showTrialStylePricing =
-    !plan.unavailableForBilling && !plan.trialDisabled;
+    plan.isTrialPlan &&
+    trialDaysShown > 0 &&
+    !plan.unavailableForBilling &&
+    !plan.trialDisabled;
 
   /* ================= NORMAL PLAN ================= */
 
