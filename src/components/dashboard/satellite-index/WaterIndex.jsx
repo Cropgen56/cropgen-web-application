@@ -49,6 +49,7 @@ const WaterIndex = ({
   });
 
   const scrollRef = useRef(null);
+  const lastRequestKeyRef = useRef(null);
 
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
@@ -62,8 +63,11 @@ const WaterIndex = ({
   }, [field, sowingDate, index]);
 
   useEffect(() => {
-    if (!fetchParams) return;
+    const requestKey = fetchParams ? JSON.stringify(fetchParams) : null;
+    if (!fetchParams || !requestKey) return;
+    if (lastRequestKeyRef.current === requestKey) return;
 
+    lastRequestKeyRef.current = requestKey;
     dispatch(fetchWaterIndexData(fetchParams));
   }, [dispatch, fetchParams]);
 
@@ -80,6 +84,8 @@ const WaterIndex = ({
         month: "short",
         day: "2-digit",
       }),
+      rawDate: item.date,
+      status: item.status || "Unknown",
       [index]: item.value,
     }));
   }, [waterIndexData, index]);
@@ -132,17 +138,31 @@ const WaterIndex = ({
     [summaryData],
   );
 
-  const tooltipFormatter = useCallback(
-    (value) => [value.toFixed(3), index],
+  const renderTooltip = useCallback(
+    ({ active, payload, label }) => {
+      if (!active || !payload?.length) return null;
+
+      const point = payload[0]?.payload;
+      const value = payload[0]?.value;
+
+      return (
+        <div className="rounded-md border border-gray-200 bg-white px-3 py-2 shadow-md">
+          <p className="text-sm font-medium text-gray-800">{`Date: ${label}`}</p>
+          <p className="text-sm font-semibold text-sky-700">
+            {`${index}: ${Number(value).toFixed(3)}`}
+          </p>
+          <p className="text-xs text-gray-600">{`Status: ${point?.status || "Unknown"}`}</p>
+        </div>
+      );
+    },
     [index],
   );
-
-  const labelFormatter = useCallback((label) => `Date: ${label}`, []);
 
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
   const isLoading = loading?.waterIndexData || false;
   const hasData = chartData.length > 0;
+  const showInitialLoader = isLoading && !hasData && !isPreparedForPDF;
 
   const indexDescriptions = {
     NDMI: "NDMI values can be used to monitor vegetation water content and drought conditions over time.",
@@ -160,7 +180,7 @@ const WaterIndex = ({
       ref={scrollRef}
       className="w-full overflow-x-auto pr-6 bg-white rounded-xl p-2 min-h-[180px]"
     >
-      {isLoading && !isPreparedForPDF ? (
+      {showInitialLoader ? (
         <div
           className="text-center"
           style={{
@@ -186,32 +206,36 @@ const WaterIndex = ({
           </div>
         </div>
       ) : (
-        <ResponsiveContainer
-          width={isPreparedForPDF ? chartConfig.width : chartConfig.width}
-          height={180}
-        >
-          <LineChart data={chartData}>
-            <CartesianGrid stroke="rgba(0,0,0,0.1)" />
-            <XAxis dataKey="date" interval={chartConfig.interval} />
-            <YAxis
-              domain={yAxisConfig.domain}
-              ticks={yAxisConfig.ticks}
-              tickFormatter={tickFormatter}
-            />
-            <Tooltip
-              formatter={tooltipFormatter}
-              labelFormatter={labelFormatter}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey={index}
-              stroke={WATER_COLOR_MAIN}
-              strokeWidth={3}
-              dot={{ r: 3 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="relative">
+          {isLoading && hasData ? (
+            <div className="absolute right-2 top-1 z-10 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-sky-700 shadow-sm">
+              Updating...
+            </div>
+          ) : null}
+          <ResponsiveContainer
+            width={isPreparedForPDF ? chartConfig.width : chartConfig.width}
+            height={180}
+          >
+            <LineChart data={chartData}>
+              <CartesianGrid stroke="rgba(0,0,0,0.1)" />
+              <XAxis dataKey="date" interval={chartConfig.interval} />
+              <YAxis
+                domain={yAxisConfig.domain}
+                ticks={yAxisConfig.ticks}
+                tickFormatter={tickFormatter}
+              />
+              <Tooltip content={renderTooltip} />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey={index}
+                stroke={WATER_COLOR_MAIN}
+                strokeWidth={3}
+                dot={{ r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       )}
     </div>
   );

@@ -46,8 +46,11 @@ const FieldInfo = ({
   </div>
 );
 
-const SmartAdvisorySidebar = ({ setSelectedField, setIsSidebarVisible }) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+const SmartAdvisorySidebar = ({
+  selectedField,
+  setSelectedField,
+  setIsSidebarVisible,
+}) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const fields = useSelector((state) => state.farmfield.fields) || [];
@@ -109,9 +112,9 @@ const SmartAdvisorySidebar = ({ setSelectedField, setIsSidebarVisible }) => {
       <div className="overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
         <h2 className="font-bold text-[#344e41] text-[18px] p-2">All Farms</h2>
         {filteredFields.length > 0 ? (
-          filteredFields.map((field, index) => {
+          filteredFields.map((field) => {
             const { lat, lon } = calculateCentroid(field.field);
-            const isSelected = selectedIndex === index;
+            const isSelected = field._id === selectedField?._id;
             const isSubscribed = field.subscription?.hasActiveSubscription ?? false;
 
             return (
@@ -125,7 +128,6 @@ const SmartAdvisorySidebar = ({ setSelectedField, setIsSidebarVisible }) => {
                 coordinates={field.field}
                 isSubscribed={isSubscribed}
                 onClick={() => {
-                  setSelectedIndex(index);
                   setSelectedField(field);
                   setIsSidebarVisible(false);
                 }}

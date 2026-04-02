@@ -40,11 +40,6 @@ export default function SatelliteIndexScroll() {
 
   return (
     <div className="flex items-center space-x-2 px-2 py-1 rounded-md bg-transparent">
-      {/* Dropdown Label */}
-      <div className="bg-[#5A7C6B] text-white font-semibold px-3 py-[6px] rounded-md text-[11px] shadow-sm">
-        Satellite 1 ▾
-      </div>
-
       {/* Scrollable Index Buttons */}
       <div
         ref={containerRef}

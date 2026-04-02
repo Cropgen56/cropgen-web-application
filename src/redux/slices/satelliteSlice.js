@@ -4,8 +4,47 @@ import { get, set, del, keys } from "idb-keyval";
 
 const SATELLITE_API_KEY =
   process.env.REACT_APP_SATELLITE_API || "CROPGEN_230498adklfjadsljf";
-const SATELLITE_BASE_URL =
-  process.env.REACT_APP_API_URL_SATELLITE || "https://server.cropgenapp.com";
+
+/** Python FastAPI base (e.g. …/v4/api — paths like /availability/, /calculate/index). */
+function getSatelliteApiBase() {
+  const raw = process.env.REACT_APP_API_URL_SATELLITE?.trim();
+  const prodFallback = "https://server.cropgenapp.com/v4/api";
+  const localPython = "http://127.0.0.1:8001/v4/api";
+  const browserHost =
+    typeof window !== "undefined" ? window.location.hostname : "";
+  const isLocalBrowser =
+    browserHost === "localhost" || browserHost === "127.0.0.1";
+
+  // In local browser sessions, always call the Python satellite server directly.
+  if (isLocalBrowser) {
+    return localPython;
+  }
+
+  if (raw) {
+    if (/(localhost|127\.0\.0\.1):7070/.test(raw)) {
+      return prodFallback;
+    }
+    if (
+      /127\.0\.0\.1:8001\/api\/?$/.test(raw) ||
+      /localhost:8001\/api\/?$/.test(raw)
+    ) {
+      return localPython;
+    }
+    let base = raw.replace(/\/$/, "");
+    if (/\/v1\/api$/.test(base)) {
+      base = base.replace(/\/v1\/api$/, "/v4/api");
+    }
+    return base;
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    return localPython;
+  }
+
+  return prodFallback;
+}
+
+const SATELLITE_BASE_URL = getSatelliteApiBase();
 
 function arraysEqual(a, b) {
   return a.length === b.length && a.every((val, index) => val === b[index]);
@@ -20,6 +59,8 @@ const getSixMonthsBeforeDate = () => {
 const getTodayDate = () => new Date().toISOString().split("T")[0];
 
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
+const TIMESERIES_MAX_POINTS = 36;
+const SATELLITE_REQUEST_TIMEOUT_MS = 20000;
 
 const generateCacheKey = (prefix, input) => {
   const inputStr = JSON.stringify(input);
@@ -57,6 +98,34 @@ const getIndexDataForMapRequestKey = ({ endDate, geometry, index }) => {
   return generateCacheKey("indexDataForMap", { endDate, geometry, index });
 };
 
+const getIndexTimeSeriesSummaryRequestKey = ({
+  startDate,
+  endDate,
+  geometry,
+  index,
+}) => {
+  return generateCacheKey("indexTimeSeriesSummary", {
+    startDate,
+    endDate,
+    geometry,
+    index,
+  });
+};
+
+const getWaterIndexDataRequestKey = ({
+  startDate,
+  endDate,
+  geometry,
+  index,
+}) => {
+  return generateCacheKey("waterIndexData", {
+    startDate,
+    endDate,
+    geometry,
+    index,
+  });
+};
+
 const initialState = {
   satelliteDates: null,
   latestSatelliteDatesRequestKey: null,
@@ -66,7 +135,9 @@ const initialState = {
   latestIndexDataByTypeRequestKey: {},
   weatherData: null,
   indexTimeSeriesSummary: null,
+  latestIndexTimeSeriesSummaryRequestKey: null,
   waterIndexData: null,
+  latestWaterIndexDataRequestKey: null,
   error: null,
   loading: {
     satelliteDates: false,
@@ -126,7 +197,7 @@ export const fetchSatelliteDates = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${SATELLITE_BASE_URL}/v4/api/availability/`,
+        `${SATELLITE_BASE_URL}/availability/`,
         payload,
         { headers: { "x-api-key": SATELLITE_API_KEY } },
       );
@@ -144,7 +215,7 @@ export const fetchSatelliteDates = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const fetchIndexData = createAsyncThunk(
@@ -181,7 +252,7 @@ export const fetchIndexData = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${SATELLITE_BASE_URL}/v4/api/calculate/index`,
+        `${SATELLITE_BASE_URL}/calculate/index`,
         payload,
         { headers: { "x-api-key": SATELLITE_API_KEY } },
       );
@@ -191,7 +262,7 @@ export const fetchIndexData = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const fetchIndexDataForMap = createAsyncThunk(
@@ -228,7 +299,7 @@ export const fetchIndexDataForMap = createAsyncThunk(
       };
 
       const response = await axios.post(
-        `${SATELLITE_BASE_URL}/v4/api/calculate/index`,
+        `${SATELLITE_BASE_URL}/calculate/index`,
         payload,
         { headers: { "x-api-key": SATELLITE_API_KEY } },
       );
@@ -241,7 +312,7 @@ export const fetchIndexDataForMap = createAsyncThunk(
         error: error.response?.data || error.message,
       });
     }
-  }
+  },
 );
 
 export const fetchWeatherData = createAsyncThunk(
@@ -263,7 +334,7 @@ export const fetchWeatherData = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
-  }
+  },
 );
 
 export const fetchIndexTimeSeriesSummary = createAsyncThunk(
@@ -298,7 +369,7 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
       }
 
       const response = await axios.post(
-        `${SATELLITE_BASE_URL}/v4/api/timeseries/vegetation/vegetation`,
+        `${SATELLITE_BASE_URL}/timeseries/vegetation/vegetation`,
         {
           geometry: {
             type: "Polygon",
@@ -309,9 +380,12 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
           index: index,
           provider: "both",
           satellite: "s2",
-          max_items: 200,
+          max_items: TIMESERIES_MAX_POINTS,
         },
-        { headers: { "x-api-key": SATELLITE_API_KEY } },
+        {
+          headers: { "x-api-key": SATELLITE_API_KEY },
+          timeout: SATELLITE_REQUEST_TIMEOUT_MS,
+        },
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -354,7 +428,7 @@ export const fetchWaterIndexData = createAsyncThunk(
       }
 
       const response = await axios.post(
-        `${SATELLITE_BASE_URL}/v4/api/timeseries/water/water`,
+        `${SATELLITE_BASE_URL}/timeseries/water/water`,
         {
           geometry: {
             type: "Polygon",
@@ -365,9 +439,12 @@ export const fetchWaterIndexData = createAsyncThunk(
           index: index,
           provider: "both",
           satellite: "s2",
-          max_items: 200,
+          max_items: TIMESERIES_MAX_POINTS,
         },
-        { headers: { "x-api-key": SATELLITE_API_KEY } },
+        {
+          headers: { "x-api-key": SATELLITE_API_KEY },
+          timeout: SATELLITE_REQUEST_TIMEOUT_MS,
+        },
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });
@@ -384,14 +461,14 @@ export const clearSatelliteDatesCache = createAsyncThunk(
     try {
       const allKeys = await keys();
       const satelliteKeys = allKeys.filter((key) =>
-        key.toString().includes("satelliteDates")
+        key.toString().includes("satelliteDates"),
       );
       await Promise.all(satelliteKeys.map((key) => del(key)));
       return true;
     } catch (error) {
       return false;
     }
-  }
+  },
 );
 
 // ========== Slice ==========
@@ -485,7 +562,10 @@ const satelliteSlice = createSlice({
       .addCase(fetchIndexDataForMap.rejected, (state, action) => {
         const index = action.meta.arg?.index;
         const requestKey = getIndexDataForMapRequestKey(action.meta.arg ?? {});
-        if (index && requestKey !== state.latestIndexDataByTypeRequestKey?.[index]) {
+        if (
+          index &&
+          requestKey !== state.latestIndexDataByTypeRequestKey?.[index]
+        ) {
           return;
         }
         if (index) {
@@ -507,28 +587,50 @@ const satelliteSlice = createSlice({
         state.error = action.payload;
       })
 
-      .addCase(fetchIndexTimeSeriesSummary.pending, (state) => {
+      .addCase(fetchIndexTimeSeriesSummary.pending, (state, action) => {
+        const requestKey = getIndexTimeSeriesSummaryRequestKey(
+          action.meta.arg ?? {},
+        );
         state.loading.indexTimeSeriesSummary = true;
         state.error = null;
+        state.latestIndexTimeSeriesSummaryRequestKey = requestKey;
       })
       .addCase(fetchIndexTimeSeriesSummary.fulfilled, (state, action) => {
+        const requestKey = getIndexTimeSeriesSummaryRequestKey(
+          action.meta.arg ?? {},
+        );
+        if (requestKey !== state.latestIndexTimeSeriesSummaryRequestKey) return;
+
         state.loading.indexTimeSeriesSummary = false;
         state.indexTimeSeriesSummary = action.payload;
       })
       .addCase(fetchIndexTimeSeriesSummary.rejected, (state, action) => {
+        const requestKey = getIndexTimeSeriesSummaryRequestKey(
+          action.meta.arg ?? {},
+        );
+        if (requestKey !== state.latestIndexTimeSeriesSummaryRequestKey) return;
+
         state.loading.indexTimeSeriesSummary = false;
         state.error = action.payload;
       })
 
-      .addCase(fetchWaterIndexData.pending, (state) => {
+      .addCase(fetchWaterIndexData.pending, (state, action) => {
+        const requestKey = getWaterIndexDataRequestKey(action.meta.arg ?? {});
         state.loading.waterIndexData = true;
         state.error = null;
+        state.latestWaterIndexDataRequestKey = requestKey;
       })
       .addCase(fetchWaterIndexData.fulfilled, (state, action) => {
+        const requestKey = getWaterIndexDataRequestKey(action.meta.arg ?? {});
+        if (requestKey !== state.latestWaterIndexDataRequestKey) return;
+
         state.loading.waterIndexData = false;
         state.waterIndexData = action.payload;
       })
       .addCase(fetchWaterIndexData.rejected, (state, action) => {
+        const requestKey = getWaterIndexDataRequestKey(action.meta.arg ?? {});
+        if (requestKey !== state.latestWaterIndexDataRequestKey) return;
+
         state.loading.waterIndexData = false;
         state.error = action.payload;
       })

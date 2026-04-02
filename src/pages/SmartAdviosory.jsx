@@ -30,7 +30,6 @@ import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement
 import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherForecast";
 import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
 
-import useIsTablet from "../components/smartadvisory/smartadvisorysidebar/Istablet";
 import img1 from "../assets/image/Group 31.png";
 
 const getToday = () => new Date().toISOString().split("T")[0];
@@ -39,6 +38,13 @@ const getSixMonthsAgo = () => {
   d.setMonth(d.getMonth() - 6);
   return d.toISOString().split("T")[0];
 };
+
+/** Same order as SmartAdvisorySidebar: newest first */
+const sortFieldsNewestFirst = (list) =>
+  [...(list || [])].sort(
+    (a, b) =>
+      new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+  );
 
 const formatCoordinates = (data) => {
   if (!Array.isArray(data) || !data.length) return [];
@@ -64,13 +70,16 @@ const EmptyState = ({ onAddField }) => (
 const SmartAdvisory = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isTablet = useIsTablet();
-
   const user = useSelector((s) => s.auth?.user);
   const fields = useSelector((s) => s.farmfield?.fields || []);
   const aois = useSelector((s) => s.weather?.aois || []);
 
   const [selectedField, setSelectedField] = useState(null);
+
+  const fieldsSorted = useMemo(
+    () => sortFieldsNewestFirst(fields),
+    [fields],
+  );
 
   /* ---------- AOI + WEATHER (proven flow from Dashboard/FarmReport) ---------- */
   const { aoiId } = useAoiManagement(selectedField);
@@ -87,12 +96,18 @@ const SmartAdvisory = () => {
     }
   }, [dispatch, user?.id]);
 
-  /* ---------- AUTO SELECT ---------- */
+  /* ---------- Default to first field in sidebar order (newest first) ---------- */
   useEffect(() => {
-    if (isTablet && fields.length && !selectedField) {
-      setSelectedField(fields[fields.length - 1]);
+    if (!fieldsSorted.length) return;
+    if (!selectedField) {
+      setSelectedField(fieldsSorted[0]);
+      return;
     }
-  }, [isTablet, fields, selectedField]);
+    const stillExists = fieldsSorted.some((f) => f._id === selectedField._id);
+    if (!stillExists) {
+      setSelectedField(fieldsSorted[0]);
+    }
+  }, [fieldsSorted, selectedField]);
 
   /* ---------- FETCH ADVISORY ---------- */
   useEffect(() => {
@@ -167,6 +182,7 @@ const SmartAdvisory = () => {
         <div className="hidden lg:flex">
           {isSidebarVisible && (
             <SmartAdvisorySidebar
+              selectedField={selectedField}
               setSelectedField={setSelectedField}
               setIsSidebarVisible={setIsSidebarVisible}
             />

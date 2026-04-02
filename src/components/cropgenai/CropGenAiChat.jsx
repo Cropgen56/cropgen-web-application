@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import {
   Send,
@@ -7,10 +8,18 @@ import {
   Wifi,
   WifiOff,
   MessageCircle,
+  User,
+  Globe,
+  X,
 } from "lucide-react";
 import { useCropGenAiChat } from "../../hooks/useCropGenAiChat";
 
-export default function CropGenAiChat() {
+export default function CropGenAiChat({ variant = "page", onClose = null }) {
+  const userName = useSelector((state) => {
+    const u = state.auth?.user || state.auth?.userDetails;
+    return [u?.firstName, u?.lastName].filter(Boolean).join(" ") || "";
+  });
+
   const {
     messages,
     status,
@@ -19,10 +28,14 @@ export default function CropGenAiChat() {
     send,
     resetConversation,
     agentUrl,
+    mode,
   } = useCropGenAiChat();
+
+  const isLoggedIn = mode === "app";
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
   const scrollRef = useRef(null);
+  const isWidget = variant === "widget";
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -39,69 +52,181 @@ export default function CropGenAiChat() {
     status === "connecting" && !error && messages.length === 0;
 
   return (
-    <div className="relative z-[1] mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-3xl flex-col px-3 py-4 sm:px-5 sm:py-6 font-poppins">
+    <div
+      className={`relative z-[1] flex w-full flex-col font-poppins ${
+        isWidget
+          ? "h-full max-h-full px-0 py-0"
+          : "mx-auto h-[100dvh] max-h-[100dvh] max-w-3xl px-3 py-4 sm:px-5 sm:py-6"
+      }`}
+    >
       {/* Single glass panel — everything inside for focus */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-white/[0.14] bg-[#16241c]/75 shadow-[0_28px_90px_-24px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+      <div
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden border border-white/[0.14] bg-[#16241c]/75 backdrop-blur-xl ${
+          isWidget
+            ? "h-full rounded-[1.4rem] shadow-[0_24px_80px_-28px_rgba(0,0,0,0.72)]"
+            : "rounded-[1.75rem] shadow-[0_28px_90px_-24px_rgba(0,0,0,0.55)]"
+        }`}
+      >
         {/* Top bar */}
-        <header className="shrink-0 border-b border-white/[0.08] px-4 pb-4 pt-5 sm:px-6 sm:pt-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex min-w-0 gap-3.5">
-              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#86d72f]/25 to-[#5a7c6b]/40 shadow-inner ring-1 ring-white/15">
-                <Sparkles
-                  className="h-6 w-6 text-[#e8f8c8]"
-                  strokeWidth={1.75}
-                />
-                <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-[#344e41] ring-2 ring-[#16241c]">
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-[#86d72f] shadow-[0_0_6px_#86d72f]" : "bg-amber-400"}`}
-                  />
-                </span>
+        <header
+          className={`shrink-0 border-b border-white/[0.08] ${
+            isWidget
+              ? "px-4 pb-3 pt-4 sm:px-5"
+              : "px-4 pb-4 pt-5 sm:px-6 sm:pt-6"
+          }`}
+        >
+          {isWidget ? (
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#86d72f]/25 to-[#5a7c6b]/40 shadow-inner ring-1 ring-white/15">
+                    <Sparkles
+                      className="h-5 w-5 text-[#e8f8c8]"
+                      strokeWidth={1.75}
+                    />
+                    <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-[#344e41] ring-2 ring-[#16241c]">
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-[#86d72f] shadow-[0_0_6px_#86d72f]" : "bg-amber-400"}`}
+                      />
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h1 className="truncate whitespace-nowrap text-xl font-semibold tracking-tight text-[#f8faf9]">
+                        CropGen AI
+                      </h1>
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/[0.07] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-[#c4e0d4]">
+                        {isLoggedIn ? (
+                          <>
+                            <User className="h-3 w-3" />
+                            {userName || "My Farm"}
+                          </>
+                        ) : (
+                          <>
+                            <Globe className="h-3 w-3" />
+                            General
+                          </>
+                        )}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm leading-5 text-[#b5cfc4]">
+                      {isLoggedIn
+                        ? "Personalised farm advice, crop insights, and quick recommendations."
+                        : "Ask about crops, pests, irrigation, and weather."}
+                    </p>
+                  </div>
+                </div>
+                {onClose ? (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] text-[#eef4f0] transition hover:bg-white/10"
+                    aria-label="Close CropGen AI"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : null}
               </div>
-              <div className="min-w-0 pt-0.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-[1.35rem] font-semibold tracking-tight text-[#f8faf9] sm:text-2xl">
-                    CropGen AI
-                  </h1>
-                  <span className="rounded-full bg-white/[0.07] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-[#c4e0d4]">
-                    Farm assistant
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
+                    connected
+                      ? "bg-[#1c3228] text-[#b8f0c0] ring-1 ring-[#86d72f]/35"
+                      : "bg-[#3a3228] text-[#fde68a] ring-1 ring-amber-500/30"
+                  }`}
+                >
+                  {connected ? (
+                    <Wifi className="h-3.5 w-3.5" />
+                  ) : (
+                    <WifiOff className="h-3.5 w-3.5" />
+                  )}
+                  {connected
+                    ? "Connected"
+                    : status === "connecting"
+                      ? "Connecting…"
+                      : "Offline"}
+                </span>
+                <button
+                  type="button"
+                  onClick={resetConversation}
+                  disabled={!connected}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-medium text-[#eef4f0] transition hover:bg-white/10 disabled:opacity-40"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  New chat
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 gap-3.5">
+                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#86d72f]/25 to-[#5a7c6b]/40 shadow-inner ring-1 ring-white/15">
+                  <Sparkles
+                    className="h-6 w-6 text-[#e8f8c8]"
+                    strokeWidth={1.75}
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-[#344e41] ring-2 ring-[#16241c]">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-[#86d72f] shadow-[0_0_6px_#86d72f]" : "bg-amber-400"}`}
+                    />
                   </span>
                 </div>
-                <p className="mt-1.5 max-w-md text-[13px] leading-relaxed text-[#b5cfc4] sm:text-sm">
-                  Guidance on crops, soil, and weather — not a replacement for
-                  your agronomist on critical calls.
-                </p>
+                <div className="min-w-0 pt-0.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-[1.35rem] font-semibold tracking-tight text-[#f8faf9] sm:text-2xl">
+                      CropGen AI
+                    </h1>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.07] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-[#c4e0d4]">
+                      {isLoggedIn ? (
+                        <>
+                          <User className="h-3 w-3" /> {userName || "My Farm"}
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="h-3 w-3" /> General
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 max-w-md text-[13px] leading-relaxed text-[#b5cfc4] sm:text-sm">
+                    {isLoggedIn
+                      ? "Personalised advice for your farms — ask about pests, irrigation, growth, yield."
+                      : "Guidance on crops, soil, and weather — not a replacement for your agronomist on critical calls."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-wrap items-center gap-2 sm:pt-1">
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
+                    connected
+                      ? "bg-[#1c3228] text-[#b8f0c0] ring-1 ring-[#86d72f]/35"
+                      : "bg-[#3a3228] text-[#fde68a] ring-1 ring-amber-500/30"
+                  }`}
+                >
+                  {connected ? (
+                    <Wifi className="h-3.5 w-3.5" />
+                  ) : (
+                    <WifiOff className="h-3.5 w-3.5" />
+                  )}
+                  {connected
+                    ? "Connected"
+                    : status === "connecting"
+                      ? "Connecting…"
+                      : "Offline"}
+                </span>
+                <button
+                  type="button"
+                  onClick={resetConversation}
+                  disabled={!connected}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-medium text-[#eef4f0] transition hover:bg-white/10 disabled:opacity-40"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  New chat
+                </button>
               </div>
             </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-2 sm:pt-1">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium ${
-                  connected
-                    ? "bg-[#1c3228] text-[#b8f0c0] ring-1 ring-[#86d72f]/35"
-                    : "bg-[#3a3228] text-[#fde68a] ring-1 ring-amber-500/30"
-                }`}
-              >
-                {connected ? (
-                  <Wifi className="h-3.5 w-3.5" />
-                ) : (
-                  <WifiOff className="h-3.5 w-3.5" />
-                )}
-                {connected
-                  ? "Connected"
-                  : status === "connecting"
-                    ? "Connecting…"
-                    : "Offline"}
-              </span>
-              <button
-                type="button"
-                onClick={resetConversation}
-                disabled={!connected}
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-medium text-[#eef4f0] transition hover:bg-white/10 disabled:opacity-40"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                New chat
-              </button>
-            </div>
-          </div>
+          )}
         </header>
 
         {error && (
@@ -123,7 +248,9 @@ export default function CropGenAiChat() {
         {/* Messages */}
         <div
           ref={scrollRef}
-          className="cropgen-ai-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6"
+          className={`cropgen-ai-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain ${
+            isWidget ? "px-4 py-4 sm:px-5" : "px-4 py-5 sm:px-6"
+          }`}
         >
           {showConnecting && (
             <div className="flex flex-col items-center justify-center gap-4 py-16">
@@ -131,7 +258,9 @@ export default function CropGenAiChat() {
                 <div className="h-8 w-8 animate-pulse rounded-full bg-[#5a7c6b]/50" />
                 <div className="absolute inset-0 animate-ping rounded-full bg-[#86d72f]/20" />
               </div>
-              <p className="text-sm text-[#a8c9b8]">Connecting to CropGen AI…</p>
+              <p className="text-sm text-[#a8c9b8]">
+                Connecting to CropGen AI…
+              </p>
             </div>
           )}
 
@@ -199,7 +328,9 @@ export default function CropGenAiChat() {
         {/* Composer */}
         <form
           onSubmit={onSubmit}
-          className="shrink-0 border-t border-white/[0.08] bg-[#121c17]/90 p-3 sm:p-4"
+          className={`shrink-0 border-t border-white/[0.08] bg-[#121c17]/90 ${
+            isWidget ? "p-3" : "p-3 sm:p-4"
+          }`}
         >
           <div className="flex items-end gap-2 rounded-2xl border border-[#5a7c6b]/30 bg-[#1e2e26]/95 p-2 pl-3 shadow-inner transition focus-within:border-[#86d72f]/40 focus-within:ring-2 focus-within:ring-[#86d72f]/15">
             <label className="sr-only" htmlFor="cropgen-ai-input">

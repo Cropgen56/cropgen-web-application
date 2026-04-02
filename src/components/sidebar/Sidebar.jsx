@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AddFieldIcon,
   CropAnalysisIcon,
-  CropGenAiIcon,
   DieaseDetaction,
   SoilReportIcon,
   FarmReport,
@@ -46,7 +45,6 @@ const NAV_ITEMS = [
   { path: "/smart-advisory", label: "Smart Advisory", Icon: SmartAdvisory },
   { path: "/soil-report", label: "Soil Report", Icon: SoilReportIcon },
   { path: "/farm-report", label: "Farm Report", Icon: FarmReport },
-  { path: "/cropgen-ai", label: "CropGen AI", Icon: CropGenAiIcon },
   { path: "/setting", label: "Setting", Icon: Setting },
 ];
 

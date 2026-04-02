@@ -40,6 +40,11 @@ const AddFarm = ({ selectedFarm }) => {
     typeOfIrrigation: selectedFarm?.typeOfIrrigation || "",
     typeOfFarming: selectedFarm?.typeOfFarming || "",
   });
+  const [mapCenter, setMapCenter] = useState(() =>
+    selectedFarm?.field?.length > 0
+      ? [selectedFarm.field[0].lat, selectedFarm.field[0].lng]
+      : [20.135245, 77.156935]
+  );
 
   useEffect(() => {
     setFormData({
@@ -51,6 +56,12 @@ const AddFarm = ({ selectedFarm }) => {
       typeOfFarming: selectedFarmState.typeOfFarming || "",
     });
     setPolygonCoordinates(selectedFarmState.field || []);
+    if (selectedFarmState?.field?.length > 0) {
+      setMapCenter([
+        selectedFarmState.field[0].lat,
+        selectedFarmState.field[0].lng,
+      ]);
+    }
   }, [selectedFarmState]);
 
   useEffect(() => {
@@ -71,6 +82,26 @@ const AddFarm = ({ selectedFarm }) => {
   useEffect(() => {
     dispatch(fetchCrops());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (selectedFarmState?.field?.length > 0) return;
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setMapCenter([latitude, longitude]);
+      },
+      (error) => {
+        console.warn("Unable to fetch current location for AddFarm:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000,
+      }
+    );
+  }, [selectedFarmState?._id, selectedFarmState?.field]);
 
   const handleFarmChange = (value) => {
     setFormData((prev) => ({ ...prev, farmName: value }));
@@ -133,16 +164,16 @@ const AddFarm = ({ selectedFarm }) => {
     }
   };
 
-  const defaultCenter = [20.135245, 77.156935];
-
-  const MoveMapToField = ({ coordinates }) => {
+  const MoveMapToField = ({ coordinates, fallbackCenter }) => {
     const map = useMap();
     useEffect(() => {
       if (coordinates.length > 0) {
         const bounds = coordinates.map((c) => [c.lat, c.lng]);
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+      } else if (fallbackCenter?.length === 2) {
+        map.setView(fallbackCenter, 15, { animate: true });
       }
-    }, [coordinates, map]);
+    }, [coordinates, fallbackCenter, map]);
     return null;
   };
 
@@ -182,7 +213,7 @@ const AddFarm = ({ selectedFarm }) => {
           center={
             polygonCoordinates?.length > 0
               ? [polygonCoordinates[0].lat, polygonCoordinates[0].lng]
-              : defaultCenter
+              : mapCenter
           }
           zoom={15}
           className="w-full h-full rounded-lg"
@@ -197,7 +228,10 @@ const AddFarm = ({ selectedFarm }) => {
               pathOptions={{ color: "yellow", fillOpacity: 0.2 }}
             />
           )}
-          <MoveMapToField coordinates={polygonCoordinates} />
+          <MoveMapToField
+            coordinates={polygonCoordinates}
+            fallbackCenter={mapCenter}
+          />
         </MapContainer>
       </div>
 
@@ -375,7 +409,7 @@ const AddFarm = ({ selectedFarm }) => {
                 center={
                   polygonCoordinates?.length > 0 && polygonCoordinates[0]?.lat
                     ? [polygonCoordinates[0].lat, polygonCoordinates[0].lng]
-                    : defaultCenter
+                    : mapCenter
                 }
                 zoom={15}
                 className="w-full h-full rounded-lg"
@@ -394,7 +428,10 @@ const AddFarm = ({ selectedFarm }) => {
                     pathOptions={{ color: "yellow", fillOpacity: 0.2 }}
                   />
                 )}
-                <MoveMapToField coordinates={polygonCoordinates} />
+                <MoveMapToField
+                  coordinates={polygonCoordinates}
+                  fallbackCenter={mapCenter}
+                />
               </MapContainer>
             </div>
           </div>

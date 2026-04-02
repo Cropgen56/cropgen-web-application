@@ -77,6 +77,7 @@ const NDVIChartCard = ({ selectedField }) => {
       }),
       [index]: parseFloat(item.value?.toFixed(2) || 0),
       rawDate: item.date,
+      status: item.status || "Unknown",
     }));
   }, [indexTimeSeriesSummary, index]);
 
@@ -294,15 +295,29 @@ const NDVIChartCard = ({ selectedField }) => {
                         tickFormatter={(value) => value.toFixed(1)}
                       />
                       <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#47664D",
-                          border: "none",
-                          color: "white",
-                          borderRadius: "8px",
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload?.length) return null;
+                          const point = payload[0]?.payload;
+                          const value = payload[0]?.value;
+
+                          return (
+                            <div
+                              style={{
+                                backgroundColor: "#47664D",
+                                border: "none",
+                                color: "white",
+                                borderRadius: "8px",
+                                padding: "10px 12px",
+                              }}
+                            >
+                              <div>{`Date: ${label}`}</div>
+                              <div>{`${index}: ${Number(value).toFixed(3)}`}</div>
+                              <div style={{ fontSize: "12px", opacity: 0.9 }}>
+                                {`Status: ${point?.status || "Unknown"}`}
+                              </div>
+                            </div>
+                          );
                         }}
-                        labelStyle={{ color: "white" }}
-                        formatter={(value) => [value.toFixed(3), index]}
-                        labelFormatter={(label) => `Date: ${label}`}
                       />
                       <Legend
                         verticalAlign="top"

@@ -25,8 +25,6 @@ function ForeCast({
 }) {
   const forecastData = useSelector(selectForecastForGeometry(aoiId)) || {};
 
-  console.log(forecastData);
-
   const isLoading = useSelector((state) => state?.weather?.loading);
 
   const forecastGuard = useSubscriptionGuard({

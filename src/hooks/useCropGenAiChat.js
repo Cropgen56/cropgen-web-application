@@ -1,21 +1,16 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useSelector } from "react-redux";
 import { io } from "socket.io-client";
 
 const nextId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
-/**
- * cropgen-website chatbot uses `NEXT_PUBLIC_AGENT` + path `/v3/socket.io` (see ChatWindow.jsx).
- * This app uses CRA vars — set REACT_APP_CROPGEN_AGENT_URL to the same origin as NEXT_PUBLIC_AGENT.
- * Production default matches other services on server.cropgenapp.com.
- */
 const AGENT_URL =
   process.env.REACT_APP_CROPGEN_AGENT_URL ||
   process.env.REACT_APP_AGENT_URL ||
   "https://server.cropgenapp.com";
 const SOCKET_PATH = "/v3/socket.io";
 
-/** Skip onboarding: auto-send "3" (general crop advice) when server sends welcome or reset-only prompts. */
 function shouldAutoRouteToGeneral(text) {
   const t = String(text ?? "").toLowerCase();
   return (
@@ -25,73 +20,79 @@ function shouldAutoRouteToGeneral(text) {
   );
 }
 
-/** Same intro is sometimes sent twice (socket + model echo) — skip if already shown. */
 const INTRO_MARKER = "satellite-based crop monitoring platform";
 
 function shouldSkipDuplicateAssistant(text, existing) {
   const t = String(text ?? "");
   if (!t) return true;
-  if (existing.some((x) => x.role === "assistant" && x.text === t)) {
-    return true;
-  }
+  if (existing.some((x) => x.role === "assistant" && x.text === t)) return true;
   if (!t.toLowerCase().includes(INTRO_MARKER)) return false;
   return existing.some(
-    (x) =>
-      x.role === "assistant" &&
-      x.text.toLowerCase().includes(INTRO_MARKER),
+    (x) => x.role === "assistant" && x.text.toLowerCase().includes(INTRO_MARKER),
   );
 }
 
 /**
- * Socket.IO chat against cropgen-agent.
- * Automatically enters general crop-advice mode (option 3) without showing role selection.
+ * Unified hook — auto-detects logged-in vs public visitor.
+ * Logged-in users connect to /app namespace with JWT.
+ * Visitors connect to /public namespace with auto-skip onboarding.
  */
 export function useCropGenAiChat() {
+  const token = useSelector((state) => state.auth?.token);
+  const isLoggedIn = !!token;
+  const mode = isLoggedIn ? "app" : "public";
+
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState("disconnected");
   const [error, setError] = useState(null);
   const [awaitingReply, setAwaitingReply] = useState(false);
   const socketRef = useRef(null);
+  const modeRef = useRef(mode);
 
   useEffect(() => {
+    modeRef.current = mode;
+    setMessages([]);
     setStatus("connecting");
     setError(null);
+    setAwaitingReply(false);
 
-    /** Avoid emitting auto "3" twice if welcome/reset is duplicated (e.g. dev reconnect). */
     let autoSkipSent = false;
 
-    const socket = io(AGENT_URL, {
+    const socketOpts = {
       path: SOCKET_PATH,
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 8,
       reconnectionDelay: 800,
-    });
+    };
+
+    if (mode === "app") {
+      socketOpts.auth = { token };
+    }
+
+    const namespace = mode === "app" ? "/app" : "/public";
+    const socket = io(`${AGENT_URL}${namespace}`, socketOpts);
     socketRef.current = socket;
 
     socket.on("connect", () => {
       setStatus("connected");
       setError(null);
+      if (mode === "app") setAwaitingReply(true);
     });
 
     socket.on("connect_error", (err) => {
       setStatus("error");
-      setError(
-        err?.message ||
-          "Cannot reach CropGen AI. Set REACT_APP_CROPGEN_AGENT_URL (same origin as website NEXT_PUBLIC_AGENT) or run cropgen-agent locally.",
-      );
+      setError(err?.message || "Cannot reach CropGen AI.");
     });
 
     socket.on("disconnect", (reason) => {
-      if (reason === "io server disconnect") {
-        setStatus("disconnected");
-      }
+      if (reason === "io server disconnect") setStatus("disconnected");
     });
 
     socket.on("ai_response", (msg) => {
       const text = String(msg ?? "");
 
-      if (shouldAutoRouteToGeneral(text)) {
+      if (mode === "public" && shouldAutoRouteToGeneral(text)) {
         const t = text.toLowerCase();
         if (t.includes("conversation reset") || t.includes("let's start fresh")) {
           autoSkipSent = false;
@@ -106,9 +107,8 @@ export function useCropGenAiChat() {
 
       setAwaitingReply(false);
       setMessages((m) => {
-        if (shouldSkipDuplicateAssistant(text, m)) {
-          return m;
-        }
+        if (mode === "public" && shouldSkipDuplicateAssistant(text, m)) return m;
+        if (m.some((x) => x.role === "assistant" && x.text === text)) return m;
         return [...m, { id: nextId(), role: "assistant", text }];
       });
     });
@@ -118,7 +118,7 @@ export function useCropGenAiChat() {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, []);
+  }, [mode, token]);
 
   const send = useCallback((text) => {
     const t = String(text ?? "").trim();
@@ -135,9 +135,7 @@ export function useCropGenAiChat() {
 
   const resetConversation = useCallback(() => {
     const s = socketRef.current;
-    if (s?.connected) {
-      s.emit("reset_conversation");
-    }
+    if (s?.connected) s.emit("reset_conversation");
     setMessages([]);
     setAwaitingReply(true);
   }, []);
@@ -150,5 +148,6 @@ export function useCropGenAiChat() {
     send,
     resetConversation,
     agentUrl: AGENT_URL,
+    mode,
   };
 }

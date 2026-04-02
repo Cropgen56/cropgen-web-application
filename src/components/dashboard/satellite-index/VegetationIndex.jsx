@@ -47,19 +47,31 @@ const NdviGraph = ({
   });
 
   const scrollRef = useRef(null);
+  const lastRequestKeyRef = useRef(null);
+
+  const fetchParams = useMemo(() => {
+    if (!field || !sowingDate) return null;
+
+    return {
+      startDate: getOneYearBefore(getTodayDate()),
+      endDate: getTodayDate(),
+      geometry: field,
+      index,
+    };
+  }, [field, sowingDate, index]);
+
+  const requestKey = useMemo(
+    () => (fetchParams ? JSON.stringify(fetchParams) : null),
+    [fetchParams],
+  );
 
   useEffect(() => {
-    if (!field || !sowingDate) return;
+    if (!fetchParams || !requestKey) return;
+    if (lastRequestKeyRef.current === requestKey) return;
 
-    dispatch(
-      fetchIndexTimeSeriesSummary({
-        startDate: getOneYearBefore(getTodayDate()),
-        endDate: getTodayDate(),
-        geometry: field,
-        index,
-      }),
-    );
-  }, [dispatch, field, sowingDate, index]);
+    lastRequestKeyRef.current = requestKey;
+    dispatch(fetchIndexTimeSeriesSummary(fetchParams));
+  }, [dispatch, fetchParams, requestKey]);
 
   const chartData = useMemo(() => {
     let timeseries =
@@ -74,6 +86,8 @@ const NdviGraph = ({
         month: "short",
         day: "2-digit",
       }),
+      rawDate: item.date,
+      status: item.status || "Unknown",
       [index]: item.value,
     }));
   }, [indexTimeSeriesSummary, index]);
@@ -126,17 +140,31 @@ const NdviGraph = ({
     [summaryData],
   );
 
-  const tooltipFormatter = useCallback(
-    (value) => [value.toFixed(3), index],
+  const renderTooltip = useCallback(
+    ({ active, payload, label }) => {
+      if (!active || !payload?.length) return null;
+
+      const point = payload[0]?.payload;
+      const value = payload[0]?.value;
+
+      return (
+        <div className="rounded-md border border-gray-200 bg-white px-3 py-2 shadow-md">
+          <p className="text-sm font-medium text-gray-800">{`Date: ${label}`}</p>
+          <p className="text-sm font-semibold text-green-600">
+            {`${index}: ${Number(value).toFixed(3)}`}
+          </p>
+          <p className="text-xs text-gray-600">{`Status: ${point?.status || "Unknown"}`}</p>
+        </div>
+      );
+    },
     [index],
   );
-
-  const labelFormatter = useCallback((label) => `Date: ${label}`, []);
 
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
   const isLoading = loading?.indexTimeSeriesSummary || false;
   const hasData = chartData.length > 0;
+  const showInitialLoader = isLoading && !hasData && !isPreparedForPDF;
 
   /* ================= CHART SECTION ================= */
 
@@ -145,7 +173,7 @@ const NdviGraph = ({
       ref={scrollRef}
       className="overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
     >
-      {isLoading && !isPreparedForPDF ? (
+      {showInitialLoader ? (
         <div
           className="text-center text-green-600"
           style={{
@@ -159,7 +187,7 @@ const NdviGraph = ({
           <LoadingSpinner size={48} color="#22c55e" />
           <strong>Loading Vegetation Index...</strong>
         </div>
-      ) : isLoading && isPreparedForPDF ? (
+      ) : isLoading && !hasData && isPreparedForPDF ? (
         <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-800 mb-1">
@@ -182,35 +210,39 @@ const NdviGraph = ({
           </div>
         </div>
       ) : (
-        <ResponsiveContainer
-          width={isPreparedForPDF ? chartConfig.width : chartConfig.width}
-          height={180}
-        >
-          <LineChart
-            data={chartData}
-            margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
+        <div className="relative">
+          {isLoading && hasData ? (
+            <div className="absolute right-2 top-1 z-10 rounded-full bg-white/90 px-3 py-1 text-xs font-medium text-green-700 shadow-sm">
+              Updating...
+            </div>
+          ) : null}
+          <ResponsiveContainer
+            width={isPreparedForPDF ? chartConfig.width : chartConfig.width}
+            height={180}
           >
-            <CartesianGrid stroke="rgba(0,0,0,0.1)" />
-            <XAxis dataKey="date" interval={chartConfig.interval} />
-            <YAxis
-              domain={yAxisConfig.domain}
-              ticks={yAxisConfig.ticks}
-              tickFormatter={tickFormatter}
-            />
-            <Tooltip
-              formatter={tooltipFormatter}
-              labelFormatter={labelFormatter}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey={index}
-              stroke="#22c55e"
-              strokeWidth={3}
-              dot={{ r: 3 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+            <LineChart
+              data={chartData}
+              margin={{ top: 5, right: 15, left: 15, bottom: 5 }}
+            >
+              <CartesianGrid stroke="rgba(0,0,0,0.1)" />
+              <XAxis dataKey="date" interval={chartConfig.interval} />
+              <YAxis
+                domain={yAxisConfig.domain}
+                ticks={yAxisConfig.ticks}
+                tickFormatter={tickFormatter}
+              />
+              <Tooltip content={renderTooltip} />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey={index}
+                stroke="#22c55e"
+                strokeWidth={3}
+                dot={{ r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       )}
     </div>
   );

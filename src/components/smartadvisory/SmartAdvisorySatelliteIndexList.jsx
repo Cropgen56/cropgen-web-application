@@ -143,13 +143,6 @@ const SmartAdvisorySatelliteIndexList = ({
   return (
     <div className="w-full mx-auto shadow-md overflow-hidden">
       <div className="flex items-center gap-1 p-1 relative bg-[#5a7c6b] rounded-t-md">
-        {/* Dropdown - Compact */}
-        <select className="text-white text-[10px] bg-[#344e41] font-medium border border-white/30 outline-none rounded h-[28px] min-w-[70px] px-1">
-          <option value="satellite1">Sat 1</option>
-          <option value="satellite2">Sat 2</option>
-          <option value="satellite3">Sat 3</option>
-        </select>
-
         {/* Left Arrow */}
         <button
           className="bg-[#344e41] p-0.5 text-white rounded cursor-pointer z-10 flex-shrink-0"
