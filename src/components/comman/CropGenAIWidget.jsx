@@ -76,10 +76,10 @@ const CropGenAIWidget = () => {
           backgroundColor: fabExpanded ? "#22362b" : "#1b2d24",
           color: "#f5fbf7",
         }}
-        className={`fixed bottom-5 right-5 z-[9996] flex items-center overflow-hidden rounded-full border border-white/15 text-left shadow-[0_18px_40px_-16px_rgba(0,0,0,0.55)] ring-1 ring-[#86d72f]/20 will-change-[max-width] transition-[max-width,gap,padding,background-color] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#86d72f]/50 sm:bottom-6 sm:right-6 ${
+        className={`fixed bottom-5 right-5 z-[9996] flex items-center overflow-hidden border border-white/15 text-left shadow-[0_18px_40px_-16px_rgba(0,0,0,0.55)] ring-1 ring-[#86d72f]/20 will-change-[max-width] transition-[max-width,gap,padding,background-color,border-radius] duration-[380ms] ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#86d72f]/50 sm:bottom-6 sm:right-6 ${
           fabExpanded
-            ? "max-w-[min(20rem,calc(100vw-2.5rem))] gap-3 px-4 py-3"
-            : "max-w-[4.25rem] gap-0 py-2.5 pl-2.5 pr-2.5"
+            ? "max-w-[min(20rem,calc(100vw-2.5rem))] gap-3 rounded-full px-4 py-3"
+            : "h-[4.25rem] w-[4.25rem] max-w-[4.25rem] shrink-0 justify-center rounded-full p-0"
         }`}
         aria-expanded={fabExpanded}
         aria-label="Open CropGen AI"
