@@ -17,8 +17,7 @@ import {
 } from "recharts";
 
 import { MdDownload } from "react-icons/md";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchIndexTimeSeriesSummary } from "../../../redux/slices/satelliteSlice";
+import { fetchVegetationTimeSeriesSummary } from "../../../api/satelliteTimeseries";
 import {
   getDaysAgo,
   getOneYearBefore,
@@ -27,11 +26,9 @@ import {
 import IndexChartLoader from "./IndexChartLoader";
 
 const NDVIChartCard = ({ selectedField }) => {
-  const dispatch = useDispatch();
-
-  // Get data from Redux
-  const { indexTimeSeriesSummary = null, loading } =
-    useSelector((state) => state.satellite) || {};
+  const [indexTimeSeriesSummary, setIndexTimeSeriesSummary] = useState(null);
+  const [seriesLoading, setSeriesLoading] = useState(false);
+  const seriesRequestIdRef = useRef(0);
 
   const [index, setIndex] = useState("NDVI");
 
@@ -45,7 +42,6 @@ const NDVIChartCard = ({ selectedField }) => {
   const fieldGeometry = selectedField?.field;
   const sowingDate = selectedField?.sowingDate;
 
-  // Fetch NDVI data when field changes
   useEffect(() => {
     if (!fieldGeometry || !sowingDate) return;
 
@@ -56,8 +52,23 @@ const NDVIChartCard = ({ selectedField }) => {
       index,
     };
 
-    dispatch(fetchIndexTimeSeriesSummary(params));
-  }, [dispatch, fieldGeometry, sowingDate, index]);
+    const id = ++seriesRequestIdRef.current;
+    setSeriesLoading(true);
+
+    fetchVegetationTimeSeriesSummary(params)
+      .then((data) => {
+        if (seriesRequestIdRef.current !== id) return;
+        setIndexTimeSeriesSummary(data);
+      })
+      .catch(() => {
+        if (seriesRequestIdRef.current !== id) return;
+        setIndexTimeSeriesSummary(null);
+      })
+      .finally(() => {
+        if (seriesRequestIdRef.current !== id) return;
+        setSeriesLoading(false);
+      });
+  }, [fieldGeometry, sowingDate, index]);
 
   // Process chart data
   const chartData = useMemo(() => {
@@ -152,7 +163,7 @@ const NDVIChartCard = ({ selectedField }) => {
     };
   }, []);
 
-  const isLoading = loading?.indexTimeSeriesSummary || false;
+  const isLoading = seriesLoading;
   const hasData = chartData.length > 0;
 
   // Format change value for display

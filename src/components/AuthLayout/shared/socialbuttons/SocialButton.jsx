@@ -27,7 +27,7 @@ function SocialButtons() {
         {
           token: credential,
         },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       if (res.data.success) {
@@ -37,7 +37,7 @@ function SocialButtons() {
             user: res.data.user,
             role: res.data.role,
             onboardingRequired: res.data.onboardingRequired,
-          })
+          }),
         );
         navigate("/cropgen-analytics");
         dispatch(decodeToken());

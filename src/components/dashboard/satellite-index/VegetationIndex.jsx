@@ -15,8 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchIndexTimeSeriesSummary } from "../../../redux/slices/satelliteSlice";
+import { fetchVegetationTimeSeriesSummary } from "../../../api/satelliteTimeseries";
 import {
   getDaysAgo,
   getOneYearBefore,
@@ -35,10 +34,8 @@ const NdviGraph = ({
   isPreparedForPDF = false,
 }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
-  const { indexTimeSeriesSummary = null, loading } =
-    useSelector((state) => state.satellite) || {};
-
-  const dispatch = useDispatch();
+  const [indexTimeSeriesSummary, setIndexTimeSeriesSummary] = useState(null);
+  const [seriesLoading, setSeriesLoading] = useState(false);
   const [index, setIndex] = useState("NDVI");
 
   const vegetationGuard = useSubscriptionGuard({
@@ -47,7 +44,7 @@ const NdviGraph = ({
   });
 
   const scrollRef = useRef(null);
-  const lastRequestKeyRef = useRef(null);
+  const seriesRequestIdRef = useRef(0);
 
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
@@ -67,11 +64,24 @@ const NdviGraph = ({
 
   useEffect(() => {
     if (!fetchParams || !requestKey) return;
-    if (lastRequestKeyRef.current === requestKey) return;
 
-    lastRequestKeyRef.current = requestKey;
-    dispatch(fetchIndexTimeSeriesSummary(fetchParams));
-  }, [dispatch, fetchParams, requestKey]);
+    const id = ++seriesRequestIdRef.current;
+    setSeriesLoading(true);
+
+    fetchVegetationTimeSeriesSummary(fetchParams)
+      .then((data) => {
+        if (seriesRequestIdRef.current !== id) return;
+        setIndexTimeSeriesSummary(data);
+      })
+      .catch(() => {
+        if (seriesRequestIdRef.current !== id) return;
+        setIndexTimeSeriesSummary(null);
+      })
+      .finally(() => {
+        if (seriesRequestIdRef.current !== id) return;
+        setSeriesLoading(false);
+      });
+  }, [fetchParams, requestKey]);
 
   const chartData = useMemo(() => {
     let timeseries =
@@ -162,7 +172,7 @@ const NdviGraph = ({
 
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
-  const isLoading = loading?.indexTimeSeriesSummary || false;
+  const isLoading = seriesLoading;
   const hasData = chartData.length > 0;
   const showInitialLoader = isLoading && !hasData && !isPreparedForPDF;
 

@@ -15,8 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchWaterIndexData } from "../../../redux/slices/satelliteSlice";
+import { fetchWaterIndexTimeSeries } from "../../../api/satelliteTimeseries";
 import {
   getDaysAgo,
   getOneYearBefore,
@@ -37,10 +36,8 @@ const WaterIndex = ({
   isPreparedForPDF = false,
 }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
-  const { waterIndexData = null, loading } =
-    useSelector((state) => state.satellite) || {};
-
-  const dispatch = useDispatch();
+  const [waterIndexData, setWaterIndexData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [index, setIndex] = useState("NDMI");
 
   const waterIndexGuard = useSubscriptionGuard({
@@ -49,7 +46,7 @@ const WaterIndex = ({
   });
 
   const scrollRef = useRef(null);
-  const lastRequestKeyRef = useRef(null);
+  const seriesRequestIdRef = useRef(0);
 
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
@@ -62,14 +59,31 @@ const WaterIndex = ({
     };
   }, [field, sowingDate, index]);
 
-  useEffect(() => {
-    const requestKey = fetchParams ? JSON.stringify(fetchParams) : null;
-    if (!fetchParams || !requestKey) return;
-    if (lastRequestKeyRef.current === requestKey) return;
+  const requestKey = useMemo(
+    () => (fetchParams ? JSON.stringify(fetchParams) : null),
+    [fetchParams],
+  );
 
-    lastRequestKeyRef.current = requestKey;
-    dispatch(fetchWaterIndexData(fetchParams));
-  }, [dispatch, fetchParams]);
+  useEffect(() => {
+    if (!fetchParams || !requestKey) return;
+
+    const id = ++seriesRequestIdRef.current;
+    setIsLoading(true);
+
+    fetchWaterIndexTimeSeries(fetchParams)
+      .then((data) => {
+        if (seriesRequestIdRef.current !== id) return;
+        setWaterIndexData(data);
+      })
+      .catch(() => {
+        if (seriesRequestIdRef.current !== id) return;
+        setWaterIndexData(null);
+      })
+      .finally(() => {
+        if (seriesRequestIdRef.current !== id) return;
+        setIsLoading(false);
+      });
+  }, [fetchParams, requestKey]);
 
   const chartData = useMemo(() => {
     let timeseries =
@@ -160,7 +174,6 @@ const WaterIndex = ({
 
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
-  const isLoading = loading?.waterIndexData || false;
   const hasData = chartData.length > 0;
   const showInitialLoader = isLoading && !hasData && !isPreparedForPDF;
 

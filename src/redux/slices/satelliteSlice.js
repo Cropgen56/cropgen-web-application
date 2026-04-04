@@ -1,6 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { get, set, del, keys } from "idb-keyval";
+import {
+  fetchVegetationTimeSeriesSummary,
+  fetchWaterIndexTimeSeries,
+} from "../../api/satelliteTimeseries";
 
 const SATELLITE_API_KEY =
   process.env.REACT_APP_SATELLITE_API || "CROPGEN_230498adklfjadsljf";
@@ -10,16 +14,11 @@ function getSatelliteApiBase() {
   const raw = process.env.REACT_APP_API_URL_SATELLITE?.trim();
   const prodFallback = "https://server.cropgenapp.com/v4/api";
   const localPython = "http://127.0.0.1:8001/v4/api";
-  const browserHost =
-    typeof window !== "undefined" ? window.location.hostname : "";
-  const isLocalBrowser =
-    browserHost === "localhost" || browserHost === "127.0.0.1";
 
-  // In local browser sessions, always call the Python satellite server directly.
-  if (isLocalBrowser) {
-    return localPython;
-  }
-
+  // 1) Honor REACT_APP_API_URL_SATELLITE first — including production URLs while the
+  //    dev server runs on localhost (e.g. env-cmd -f .env.production npm start).
+  //    Previously we forced 127.0.0.1:8001 whenever hostname was localhost, which
+  //    ignored .env.production and broke production satellite calls.
   if (raw) {
     if (/(localhost|127\.0\.0\.1):7070/.test(raw)) {
       return prodFallback;
@@ -37,6 +36,7 @@ function getSatelliteApiBase() {
     return base;
   }
 
+  // 2) No satellite URL in env: default local Python only in development builds.
   if (process.env.NODE_ENV === "development") {
     return localPython;
   }
@@ -45,10 +45,6 @@ function getSatelliteApiBase() {
 }
 
 const SATELLITE_BASE_URL = getSatelliteApiBase();
-
-function arraysEqual(a, b) {
-  return a.length === b.length && a.every((val, index) => val === b[index]);
-}
 
 const getSixMonthsBeforeDate = () => {
   const date = new Date();
@@ -59,8 +55,6 @@ const getSixMonthsBeforeDate = () => {
 const getTodayDate = () => new Date().toISOString().split("T")[0];
 
 const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
-const TIMESERIES_MAX_POINTS = 36;
-const SATELLITE_REQUEST_TIMEOUT_MS = 20000;
 
 const generateCacheKey = (prefix, input) => {
   const inputStr = JSON.stringify(input);
@@ -339,57 +333,9 @@ export const fetchWeatherData = createAsyncThunk(
 
 export const fetchIndexTimeSeriesSummary = createAsyncThunk(
   "satellite/fetchIndexTimeSeriesSummary",
-  async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
+  async (args, { rejectWithValue }) => {
     try {
-      const input = { startDate, endDate, geometry, index };
-      const cacheKey = generateCacheKey("indexTimeSeriesSummary", input);
-      const cached = await get(cacheKey);
-      const now = Date.now();
-
-      if (cached && now - cached.timestamp < CACHE_TTL) {
-        return cached.data;
-      }
-
-      if (!startDate || !endDate || !geometry || !index) {
-        return rejectWithValue("Missing required parameters");
-      }
-
-      const coordinates = geometry?.map(({ lat, lng }) => {
-        if (typeof lat !== "number" || typeof lng !== "number") {
-          throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
-        }
-        return [lng, lat];
-      });
-
-      if (
-        coordinates.length > 0 &&
-        !arraysEqual(coordinates[0], coordinates[coordinates.length - 1])
-      ) {
-        coordinates.push(coordinates[0]);
-      }
-
-      const response = await axios.post(
-        `${SATELLITE_BASE_URL}/timeseries/vegetation/vegetation`,
-        {
-          geometry: {
-            type: "Polygon",
-            coordinates: [coordinates],
-          },
-          start_date: startDate,
-          end_date: endDate,
-          index: index,
-          provider: "both",
-          satellite: "s2",
-          max_items: TIMESERIES_MAX_POINTS,
-        },
-        {
-          headers: { "x-api-key": SATELLITE_API_KEY },
-          timeout: SATELLITE_REQUEST_TIMEOUT_MS,
-        },
-      );
-
-      await set(cacheKey, { data: response.data, timestamp: now });
-      return response.data;
+      return await fetchVegetationTimeSeriesSummary(args);
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
@@ -398,57 +344,9 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
 
 export const fetchWaterIndexData = createAsyncThunk(
   "satellite/fetchWaterIndexData",
-  async ({ startDate, endDate, geometry, index }, { rejectWithValue }) => {
+  async (args, { rejectWithValue }) => {
     try {
-      const input = { startDate, endDate, geometry, index };
-      const cacheKey = generateCacheKey("fetchWaterIndexData", input);
-      const cached = await get(cacheKey);
-      const now = Date.now();
-
-      if (cached && now - cached.timestamp < CACHE_TTL) {
-        return cached.data;
-      }
-
-      if (!startDate || !endDate || !geometry || !index) {
-        return rejectWithValue("Missing required parameters");
-      }
-
-      const coordinates = geometry?.map(({ lat, lng }) => {
-        if (typeof lat !== "number" || typeof lng !== "number") {
-          throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
-        }
-        return [lng, lat];
-      });
-
-      if (
-        coordinates.length > 0 &&
-        !arraysEqual(coordinates[0], coordinates[coordinates.length - 1])
-      ) {
-        coordinates.push(coordinates[0]);
-      }
-
-      const response = await axios.post(
-        `${SATELLITE_BASE_URL}/timeseries/water/water`,
-        {
-          geometry: {
-            type: "Polygon",
-            coordinates: [coordinates],
-          },
-          start_date: startDate,
-          end_date: endDate,
-          index: index,
-          provider: "both",
-          satellite: "s2",
-          max_items: TIMESERIES_MAX_POINTS,
-        },
-        {
-          headers: { "x-api-key": SATELLITE_API_KEY },
-          timeout: SATELLITE_REQUEST_TIMEOUT_MS,
-        },
-      );
-
-      await set(cacheKey, { data: response.data, timestamp: now });
-      return response.data;
+      return await fetchWaterIndexTimeSeries(args);
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
