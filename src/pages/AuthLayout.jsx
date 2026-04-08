@@ -155,7 +155,13 @@ const AuthLayout = () => {
                   <img
                     src={laptop}
                     alt="Laptop"
-                    className="absolute left-[-6rem] top-1/2 -translate-y-1/2 z-40 w-80 lg:w-[500px] xl:w-[600px] max-w-full"
+                    className="absolute z-40 h-auto max-w-none -translate-y-1/2 object-contain"
+                    style={{
+                      top: "50%",
+                      left: "50%",
+                      width: "clamp(320px, 42vw, 620px)",
+                      transform: "translate(-56%, -50%)",
+                    }}
                   />
                 </div>
               </div>
@@ -256,10 +262,11 @@ const AuthLayout = () => {
                 <img
                   src={laptop}
                   alt="Laptop"
-                  className="absolute top-1/2 -translate-y-1/2 z-30 max-w-full"
+                  className="absolute top-1/2 z-30 h-auto -translate-y-1/2 object-contain"
                   style={{
                     width: `${responsiveSizes.laptopWidth}px`,
-                    left: `-${responsiveSizes.laptopWidth * 0.08}px`
+                    left: "50%",
+                    transform: "translate(-52%, -50%)",
                   }}
                 />
 

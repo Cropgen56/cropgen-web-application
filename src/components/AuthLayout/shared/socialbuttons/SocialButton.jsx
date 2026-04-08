@@ -10,6 +10,7 @@ import {
 import { FcGoogle } from "react-icons/fc";
 
 const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+const AUTH_EMAIL_CLIENT_BRAND = "cropgen";
 
 function SocialButtons() {
   const navigate = useNavigate();
@@ -26,8 +27,15 @@ function SocialButtons() {
         `${process.env.REACT_APP_API_URL}/api/auth/google`,
         {
           token: credential,
+          clientBrand: AUTH_EMAIL_CLIENT_BRAND,
         },
-        { withCredentials: true },
+        {
+          withCredentials: true,
+          headers: {
+            "X-Client-Brand": AUTH_EMAIL_CLIENT_BRAND,
+            "X-Client-App": "cropgen_web",
+          },
+        },
       );
 
       if (res.data.success) {

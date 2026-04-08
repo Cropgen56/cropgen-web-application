@@ -19,6 +19,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    config.headers["X-Client-App"] = "cropgen_web";
     const token = store?.getState()?.auth?.token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

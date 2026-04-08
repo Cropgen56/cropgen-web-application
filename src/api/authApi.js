@@ -3,6 +3,17 @@ import api from "./api.js";
 
 const AUTH_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:7070/v1";
+const AUTH_EMAIL_CLIENT_BRAND = "cropgen";
+const authBrandPayload = (body) => ({
+  ...body,
+  clientBrand: AUTH_EMAIL_CLIENT_BRAND,
+});
+const authBrandConfig = {
+  headers: {
+    "X-Client-Brand": AUTH_EMAIL_CLIENT_BRAND,
+    "X-Client-App": "cropgen_web",
+  },
+};
 
 // Refresh token — uses raw axios + httpOnly cookie, no Bearer header needed
 export const refreshToken = async () => {
@@ -12,7 +23,10 @@ export const refreshToken = async () => {
       {},
       {
         withCredentials: true,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Client-App": "cropgen_web",
+        },
       },
     );
     return response.data;
@@ -29,7 +43,10 @@ export const logoutUserApi = async () => {
       {},
       {
         withCredentials: true,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Client-App": "cropgen_web",
+        },
       },
     );
     return response.data;
@@ -57,7 +74,8 @@ export const updateUser = async ({ id, updateData }) => {
 export const sendOtp = async (otpData) => {
   const response = await axios.post(
     `${AUTH_BASE_URL}/api/auth/otp`,
-    otpData,
+    authBrandPayload(otpData),
+    authBrandConfig,
   );
   return response.data;
 };
@@ -66,8 +84,8 @@ export const sendOtp = async (otpData) => {
 export const verifyOtp = async ({ email, otp }) => {
   const response = await axios.post(
     `${AUTH_BASE_URL}/api/auth/verify`,
-    { email, otp },
-    { withCredentials: true },
+    authBrandPayload({ email, otp }),
+    { withCredentials: true, ...authBrandConfig },
   );
   return response.data;
 };
@@ -81,7 +99,15 @@ export const completeUserProfile = async ({
   phone,
   role,
 }) => {
-  const payload = { terms, organizationCode, firstName, lastName, phone, role };
+  const payload = {
+    terms,
+    organizationCode,
+    firstName,
+    lastName,
+    phone,
+    role,
+    clientBrand: AUTH_EMAIL_CLIENT_BRAND,
+  };
   const cleanPayload = Object.fromEntries(
     Object.entries(payload).filter(([, value]) => value !== undefined),
   );
