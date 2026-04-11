@@ -65,7 +65,16 @@ const SatelliteIndexList = ({
   const coordinates = useMemo(() => {
     const field = selectedFieldsDetials[0]?.field;
     if (!field || field.length < 3) {
-      console.warn("Invalid geometry provided: insufficient points", field);
+      if (
+        Array.isArray(field) &&
+        field.length > 0 &&
+        field.length < 3
+      ) {
+        console.warn(
+          "Invalid geometry provided: insufficient points for a polygon",
+          field,
+        );
+      }
       return [];
     }
 

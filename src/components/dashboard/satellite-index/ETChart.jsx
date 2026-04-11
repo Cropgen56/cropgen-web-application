@@ -18,8 +18,8 @@ const EvapotranspirationChart = ({
   aoiId = null,
 }) => {
   const chartRef = useRef(null);
-  const forecastDataFromStore = useSelector(
-    aoiId ? selectForecastForGeometry(aoiId) : () => ({})
+  const forecastDataFromStore = useSelector((state) =>
+    aoiId ? selectForecastForGeometry(aoiId)(state) : null,
   );
 
   const evapotranspirationGuard = useSubscriptionGuard({

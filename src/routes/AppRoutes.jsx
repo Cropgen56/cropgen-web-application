@@ -18,7 +18,10 @@ import ProtectedRoute from "../authroute/ProtectedRoute";
 
 const AppRoutes = () => {
   return (
-    <Router basename="/">
+    <Router
+      basename="/"
+      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+    >
       <Routes>
         {/* Main Site Routes */}
         <Route
