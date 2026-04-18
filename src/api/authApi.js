@@ -4,6 +4,8 @@ import api from "./api.js";
 const AUTH_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:7070/v1";
 const AUTH_EMAIL_CLIENT_BRAND = "cropgen";
+const AUTH_CLIENT_APP = "cropgen_web";
+export const CROPGEN_REFRESH_STORAGE_KEY = "cropgen_refresh_jwt";
 const authBrandPayload = (body) => ({
   ...body,
   clientBrand: AUTH_EMAIL_CLIENT_BRAND,
@@ -11,21 +13,25 @@ const authBrandPayload = (body) => ({
 const authBrandConfig = {
   headers: {
     "X-Client-Brand": AUTH_EMAIL_CLIENT_BRAND,
-    "X-Client-App": "cropgen_web",
+    "X-Client-App": AUTH_CLIENT_APP,
   },
 };
 
 // Refresh token — uses raw axios + httpOnly cookie, no Bearer header needed
 export const refreshToken = async () => {
   try {
+    const stored =
+      typeof window !== "undefined"
+        ? sessionStorage.getItem(CROPGEN_REFRESH_STORAGE_KEY)
+        : null;
     const response = await axios.post(
       `${AUTH_BASE_URL}/api/auth/refresh`,
-      {},
+      stored ? { refreshToken: stored } : {},
       {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
-          "X-Client-App": "cropgen_web",
+          "X-Client-App": AUTH_CLIENT_APP,
         },
       },
     );
@@ -45,7 +51,7 @@ export const logoutUserApi = async () => {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
-          "X-Client-App": "cropgen_web",
+          "X-Client-App": AUTH_CLIENT_APP,
         },
       },
     );
@@ -90,6 +96,34 @@ export const verifyOtp = async ({ email, otp }) => {
   return response.data;
 };
 
+// WhatsApp OTP — cropgen routes stay distinct from biodrops routes.
+export const sendWhatsappOtp = async (payload) => {
+  const response = await axios.post(
+    `${AUTH_BASE_URL}/api/auth/send-otp`,
+    authBrandPayload(payload),
+    authBrandConfig,
+  );
+  return response.data;
+};
+
+export const verifyWhatsappOtp = async ({ phone, otp }) => {
+  const response = await axios.post(
+    `${AUTH_BASE_URL}/api/auth/verify-otp`,
+    authBrandPayload({ phone, otp }),
+    { withCredentials: true, ...authBrandConfig },
+  );
+  return response.data;
+};
+
+export const resendWhatsappOtp = async ({ phone }) => {
+  const response = await axios.post(
+    `${AUTH_BASE_URL}/api/auth/resend-otp`,
+    authBrandPayload({ phone }),
+    authBrandConfig,
+  );
+  return response.data;
+};
+
 // Complete user profile — token injected by api interceptor
 export const completeUserProfile = async ({
   terms,
@@ -97,7 +131,12 @@ export const completeUserProfile = async ({
   firstName,
   lastName,
   phone,
+  language,
   role,
+  country,
+  state,
+  city,
+  village,
 }) => {
   const payload = {
     terms,
@@ -105,7 +144,12 @@ export const completeUserProfile = async ({
     firstName,
     lastName,
     phone,
+    language,
     role,
+    country,
+    state,
+    city,
+    village,
     clientBrand: AUTH_EMAIL_CLIENT_BRAND,
   };
   const cleanPayload = Object.fromEntries(

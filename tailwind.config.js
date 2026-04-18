@@ -3,6 +3,31 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}", "./public/index.html"],
   theme: {
     extend: {
+      colors: {
+        /** Ember green — aligned with biodrops map / dashboard chrome */
+        ember: {
+          sidebar: "#0B5D3D",
+          "sidebar-hover": "#094A35",
+          surface: "#0B5D3D",
+          "surface-muted": "#073628",
+          primary: "#3DA660",
+          "primary-hover": "#2D8B5E",
+          accent: "#8CC63F",
+          "light-lime": "#D4E8A8",
+          card: "#F8FBFA",
+          border: "#E0E8E4",
+          text: "#1F1F1F",
+          "text-secondary": "#555555",
+          success: "#2FA377",
+          warning: "#F5A623",
+          error: "#DC3545",
+          info: "#0099CC",
+          disabled: "#CCCCCC",
+          "chat-dark": "#1E2E26",
+          "chat-bubble-mid": "#073628",
+          "gradient-mid": "#052A1C",
+        },
+      },
       fontFamily: {
         poppins: ["Poppins", "sans-serif"],
         inter: ["Inter", "sans-serif"],

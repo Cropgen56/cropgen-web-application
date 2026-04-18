@@ -3,15 +3,14 @@ import L from "leaflet";
 import {
   MapContainer,
   TileLayer,
-  Marker,
-  Popup,
   Polygon,
+  Polyline,
+  CircleMarker,
   GeoJSON,
   useMapEvents,
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import {
   BackButtonIcon,
   CurrentLocation,
@@ -23,6 +22,9 @@ import "leaflet-geosearch/dist/geosearch.css";
 import FileUploadOverlay from "./FileUploadOverlay";
 
 const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
+
+/** Clicks within this many CSS pixels of the first vertex close the ring (no extra point). */
+const SNAP_CLOSE_FIRST_VERTEX_PX = 32;
 
 const AddFieldMap = ({
   setMarkers,
@@ -43,8 +45,19 @@ const AddFieldMap = ({
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [geojsonLayers, setGeojsonLayers] = useState([]);
   const [isMapReady, setIsMapReady] = useState(false);
+  /** Cursor position while drawing — drives rubber-band preview (GEE-style). */
+  const [drawPreview, setDrawPreview] = useState(null);
 
   const mapRef = useRef(null);
+  const drawPreviewRaf = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (drawPreviewRaf.current) {
+        cancelAnimationFrame(drawPreviewRaf.current);
+      }
+    };
+  }, []);
 
   // Map Controller - only sets ref, no side effects
   const MapController = () => {
@@ -122,42 +135,17 @@ const AddFieldMap = ({
     }
   }, [isTabletView, showUploadOverlay, onToggleSidebar]);
 
-  const plusCursorBase64 =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAARVBMVEUAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////8+tjvlAAAAHXRSTlMAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHxxS/qf0AAAAqUlEQVQ4y8WSSQ7DIAxFH1oQUb7/f9ERnMbdKYvDoYc2V0F+5koZP+waXQzXcFqIjg4IDR4DofEZ4BLRZbkF6CYHhXkg2w2U5CEo0BNZ0vpslsrK5HAbJXyugEEYZPvboR1xyHcRpsZhYrEdd84l1AFLShTI6wqC1fZTigHkCgnAiRH9sK91cLRE0q3H1/gInV7axjjXcxE8xeJ3X/O4q5Y+JyxbcAAAAASUVORK5CYII=";
+  useEffect(() => {
+    if (!isAddingMarkers) setDrawPreview(null);
+  }, [isAddingMarkers]);
 
   const CursorUpdater = ({ isAddingMarkers }) => {
     const map = useMap();
     useEffect(() => {
-      map.getContainer().style.cursor = isAddingMarkers
-        ? `url("${plusCursorBase64}") 24 24, crosshair`
-        : "";
+      map.getContainer().style.cursor = isAddingMarkers ? "crosshair" : "";
     }, [isAddingMarkers, map]);
     return null;
   };
-
-  const yellowMarkerIcon = new L.divIcon({
-    className: "yellow-marker",
-    html: `<div style="
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 20px;
-      font-weight: bold;
-      color: yellow;
-      background-color: rgba(0, 0, 0, 0.4);
-      border-radius: 50%;
-      width: 22px;
-      height: 22px;
-      border: 2px solid yellow;
-      box-shadow: 0 0 4px rgba(0,0,0,0.2);
-    ">
-      +
-    </div>`,
-    iconSize: [25, 25],
-    iconAnchor: [12, 12],
-    shadowUrl: markerShadow,
-    shadowSize: [41, 41],
-  });
 
   const clearAllMarkers = () => {
     setMarkers([]);
@@ -165,17 +153,46 @@ const AddFieldMap = ({
     setSelectedFiles([]);
   };
 
-  const Markers = () => {
+  const DrawingInteraction = () => {
+    const map = useMap();
+
     useMapEvents({
       click: (e) => {
-        if (isAddingMarkers) {
-          const { lat, lng } = e.latlng;
-          setMarkers((currentMarkers) =>
-            currentMarkers.length > 12
-              ? [...currentMarkers.slice(1), { lat, lng }]
-              : [...currentMarkers, { lat, lng }],
+        if (!isAddingMarkers) return;
+
+        const first = markers[0];
+        if (first && markers.length >= 3) {
+          const clickPt = map.latLngToContainerPoint(e.latlng);
+          const firstPt = map.latLngToContainerPoint(
+            L.latLng(first.lat, first.lng),
           );
+          const pxDist = Math.hypot(
+            clickPt.x - firstPt.x,
+            clickPt.y - firstPt.y,
+          );
+          if (pxDist <= SNAP_CLOSE_FIRST_VERTEX_PX) {
+            toggleAddMarkers();
+            return;
+          }
         }
+
+        const { lat, lng } = e.latlng;
+        setMarkers((currentMarkers) => [...currentMarkers, { lat, lng }]);
+      },
+      mousemove: (e) => {
+        if (!isAddingMarkers) return;
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        if (drawPreviewRaf.current) {
+          cancelAnimationFrame(drawPreviewRaf.current);
+        }
+        drawPreviewRaf.current = requestAnimationFrame(() => {
+          drawPreviewRaf.current = null;
+          setDrawPreview({ lat, lng });
+        });
+      },
+      mouseout: () => {
+        if (isAddingMarkers) setDrawPreview(null);
       },
     });
     return null;
@@ -283,18 +300,34 @@ const AddFieldMap = ({
             />
 
             {markers.map((marker, idx) => (
-              <Marker
+              <CircleMarker
                 key={idx}
-                position={[marker.lat, marker.lng]}
-                icon={yellowMarkerIcon}
-              >
-                <Popup>
-                  Marker at [{marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}]
-                </Popup>
-              </Marker>
+                center={[marker.lat, marker.lng]}
+                radius={5}
+                pathOptions={{
+                  color: "#ca8a04",
+                  weight: 2,
+                  fillColor: "#fef08a",
+                  fillOpacity: 1,
+                }}
+              />
             ))}
 
-            {markers.length > 0 && (
+            {/* Open path while drawing — no fill, no edge back to first point */}
+            {isAddingMarkers && markers.length >= 2 && (
+              <Polyline
+                positions={markers.map((marker) => [marker.lat, marker.lng])}
+                pathOptions={{
+                  color: "#eab308",
+                  weight: 2.5,
+                  dashArray: "4, 6",
+                  opacity: 0.95,
+                }}
+              />
+            )}
+
+            {/* Filled polygon only after drawing mode is off (field boundary finalized) */}
+            {!isAddingMarkers && markers.length >= 3 && (
               <Polygon
                 positions={markers.map((marker) => [marker.lat, marker.lng])}
                 pathOptions={{
@@ -307,7 +340,37 @@ const AddFieldMap = ({
               />
             )}
 
-            <Markers />
+            {!isAddingMarkers && markers.length === 2 && (
+              <Polyline
+                positions={markers.map((marker) => [marker.lat, marker.lng])}
+                pathOptions={{
+                  color: "#eab308",
+                  weight: 2.5,
+                  dashArray: "4, 6",
+                  opacity: 0.95,
+                }}
+              />
+            )}
+
+            {isAddingMarkers && drawPreview && markers.length > 0 && (
+              <Polyline
+                positions={[
+                  [
+                    markers[markers.length - 1].lat,
+                    markers[markers.length - 1].lng,
+                  ],
+                  [drawPreview.lat, drawPreview.lng],
+                ]}
+                pathOptions={{
+                  color: "#fde047",
+                  weight: 2,
+                  dashArray: "6 5",
+                  opacity: 0.95,
+                }}
+              />
+            )}
+
+            <DrawingInteraction />
             <SearchField onLocationSelect={() => {}} />
             <CursorUpdater isAddingMarkers={isAddingMarkers} />
 

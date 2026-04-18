@@ -15,14 +15,13 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { fetchWaterIndexTimeSeries } from "../../../api/satelliteTimeseries";
 import {
   getDaysAgo,
-  getOneYearBefore,
   getTodayDate,
 } from "../../../utility/formatDate";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
+import { fetchWaterTimeseries } from "../../../api/satelliteTimeseriesApi";
 
 import IndexPremiumWrapper from "../../subscription/PremiumIndexWrapper";
 import FeatureGuard from "../../subscription/FeatureGuard";
@@ -38,6 +37,7 @@ const WaterIndex = ({
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
   const [waterIndexData, setWaterIndexData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [index, setIndex] = useState("NDMI");
 
   const waterIndexGuard = useSubscriptionGuard({
@@ -46,44 +46,54 @@ const WaterIndex = ({
   });
 
   const scrollRef = useRef(null);
-  const seriesRequestIdRef = useRef(0);
+  const lastRequestKeyRef = useRef(null);
+  const abortRef = useRef(null);
+
+  const getSixMonthsBefore = useCallback((dateStr) => {
+    const d = dateStr ? new Date(dateStr) : new Date();
+    d.setMonth(d.getMonth() - 6);
+    return d.toISOString().split("T")[0];
+  }, []);
 
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
 
+    const today = getTodayDate();
     return {
-      startDate: getOneYearBefore(getTodayDate()),
-      endDate: getTodayDate(),
+      startDate: getSixMonthsBefore(today),
+      endDate: today,
       geometry: field,
       index,
     };
-  }, [field, sowingDate, index]);
-
-  const requestKey = useMemo(
-    () => (fetchParams ? JSON.stringify(fetchParams) : null),
-    [fetchParams],
-  );
+  }, [field, sowingDate, index, getSixMonthsBefore]);
 
   useEffect(() => {
+    const requestKey = fetchParams ? JSON.stringify(fetchParams) : null;
     if (!fetchParams || !requestKey) return;
+    if (lastRequestKeyRef.current === requestKey) return;
 
-    const id = ++seriesRequestIdRef.current;
+    lastRequestKeyRef.current = requestKey;
+
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setError(null);
     setIsLoading(true);
 
-    fetchWaterIndexTimeSeries(fetchParams)
-      .then((data) => {
-        if (seriesRequestIdRef.current !== id) return;
+    fetchWaterTimeseries({ ...fetchParams, signal: controller.signal })
+      .then(({ data }) => {
         setWaterIndexData(data);
+        setIsLoading(false);
       })
-      .catch(() => {
-        if (seriesRequestIdRef.current !== id) return;
-        setWaterIndexData(null);
-      })
-      .finally(() => {
-        if (seriesRequestIdRef.current !== id) return;
+      .catch((e) => {
+        if (controller.signal.aborted) return;
+        setError(e?.message || "Failed to load water timeseries");
         setIsLoading(false);
       });
-  }, [fetchParams, requestKey]);
+
+    return () => controller.abort();
+  }, [fetchParams]);
 
   const chartData = useMemo(() => {
     let timeseries =
@@ -211,10 +221,12 @@ const WaterIndex = ({
         <div className="bg-white/90 rounded-lg p-4 mx-auto mt-2 max-w-md">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-800 mb-1">
-              No Data Available
+              {error ? "Failed to Load" : "No Data Available"}
             </h3>
             <p className="text-sm text-gray-500">
-              We couldn't find any data for the selected field and time range.
+              {error
+                ? error
+                : "We couldn't find any data for the selected field and time range."}
             </p>
           </div>
         </div>

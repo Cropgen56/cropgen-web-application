@@ -15,7 +15,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { fetchVegetationTimeSeriesSummary } from "../../../api/satelliteTimeseries";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchIndexTimeSeriesSummary } from "../../../redux/slices/satelliteSlice";
 import {
   getDaysAgo,
   getOneYearBefore,
@@ -34,8 +35,10 @@ const NdviGraph = ({
   isPreparedForPDF = false,
 }) => {
   const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
-  const [indexTimeSeriesSummary, setIndexTimeSeriesSummary] = useState(null);
-  const [seriesLoading, setSeriesLoading] = useState(false);
+  const { indexTimeSeriesSummary = null, loading } =
+    useSelector((state) => state.satellite) || {};
+
+  const dispatch = useDispatch();
   const [index, setIndex] = useState("NDVI");
 
   const vegetationGuard = useSubscriptionGuard({
@@ -44,7 +47,7 @@ const NdviGraph = ({
   });
 
   const scrollRef = useRef(null);
-  const seriesRequestIdRef = useRef(0);
+  const lastRequestKeyRef = useRef(null);
 
   const fetchParams = useMemo(() => {
     if (!field || !sowingDate) return null;
@@ -64,24 +67,11 @@ const NdviGraph = ({
 
   useEffect(() => {
     if (!fetchParams || !requestKey) return;
+    if (lastRequestKeyRef.current === requestKey) return;
 
-    const id = ++seriesRequestIdRef.current;
-    setSeriesLoading(true);
-
-    fetchVegetationTimeSeriesSummary(fetchParams)
-      .then((data) => {
-        if (seriesRequestIdRef.current !== id) return;
-        setIndexTimeSeriesSummary(data);
-      })
-      .catch(() => {
-        if (seriesRequestIdRef.current !== id) return;
-        setIndexTimeSeriesSummary(null);
-      })
-      .finally(() => {
-        if (seriesRequestIdRef.current !== id) return;
-        setSeriesLoading(false);
-      });
-  }, [fetchParams, requestKey]);
+    lastRequestKeyRef.current = requestKey;
+    dispatch(fetchIndexTimeSeriesSummary(fetchParams));
+  }, [dispatch, fetchParams, requestKey]);
 
   const chartData = useMemo(() => {
     let timeseries =
@@ -160,7 +150,7 @@ const NdviGraph = ({
       return (
         <div className="rounded-md border border-gray-200 bg-white px-3 py-2 shadow-md">
           <p className="text-sm font-medium text-gray-800">{`Date: ${label}`}</p>
-          <p className="text-sm font-semibold text-green-600">
+          <p className="text-sm font-semibold text-ember-primary">
             {`${index}: ${Number(value).toFixed(3)}`}
           </p>
           <p className="text-xs text-gray-600">{`Status: ${point?.status || "Unknown"}`}</p>
@@ -172,7 +162,7 @@ const NdviGraph = ({
 
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
-  const isLoading = seriesLoading;
+  const isLoading = loading?.indexTimeSeriesSummary || false;
   const hasData = chartData.length > 0;
   const showInitialLoader = isLoading && !hasData && !isPreparedForPDF;
 
@@ -185,7 +175,7 @@ const NdviGraph = ({
     >
       {showInitialLoader ? (
         <div
-          className="text-center text-green-600"
+          className="text-center text-ember-primary"
           style={{
             minHeight: "180px",
             display: "flex",
@@ -283,9 +273,9 @@ const NdviGraph = ({
           {/* LEFT PANEL */}
           <div className="w-full lg:w-1/4 flex flex-col items-center justify-center">
             <div className="bg-white rounded-xl p-2 lg:p-3 flex flex-col items-center shadow-md border border-gray-200 h-full w-full justify-around">
-              <h2 className="text-xl font-bold text-green-600">{index}</h2>
+              <h2 className="text-xl font-bold text-ember-primary">{index}</h2>
 
-              <button className="bg-green-100 text-green-600 px-3 py-1 text-sm font-semibold rounded mt-1 border border-green-200 hover:bg-green-200 transition-all">
+              <button className="bg-green-100 text-ember-primary px-3 py-1 text-sm font-semibold rounded mt-1 border border-green-200 hover:bg-green-200 transition-all">
                 +0.15
               </button>
 

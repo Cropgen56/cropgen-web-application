@@ -131,12 +131,12 @@ const CustomDatePickerInline = ({ value, onChange, placeholder, maxDate, minDate
             h-7 w-7 rounded text-xs flex items-center justify-center
             transition-all duration-150
             ${isSelected
-              ? 'bg-[#28C878] text-white font-bold'
+                ? 'bg-ember-success text-white font-bold'
               : isToday
-                ? 'bg-[#5a7c6b] text-white'
+                ? 'bg-ember-sidebar-hover text-white'
                 : isDisabled
                   ? 'text-gray-500 cursor-not-allowed'
-                  : 'text-white hover:bg-[#5a7c6b]'
+                  : 'text-white hover:bg-ember-sidebar-hover'
             }
           `}
         >
@@ -156,16 +156,16 @@ const CustomDatePickerInline = ({ value, onChange, placeholder, maxDate, minDate
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={`
-            w-full px-3 py-2.5 bg-[#2a3d33] text-white rounded-md
-            border border-[#5a7c6b] outline-none
+            w-full px-3 py-2.5 bg-ember-chat-dark text-white rounded-md
+            border border-ember-surface outline-none
             flex items-center justify-between
-            hover:bg-[#344e41] transition-all duration-200
-            focus:ring-2 focus:ring-[#28C878] focus:border-transparent
+            hover:bg-ember-sidebar transition-all duration-200
+            focus:ring-2 focus:ring-ember-success focus:border-transparent
             ${!value ? 'text-gray-400' : 'text-white'}
           `}
         >
           <span className="flex items-center gap-2">
-            <Calendar size={14} className="text-[#28C878]" />
+            <Calendar size={14} className="text-ember-success" />
             <span className="truncate text-sm">
               {value ? formatDisplayDate(value) : placeholder}
             </span>
@@ -173,12 +173,12 @@ const CustomDatePickerInline = ({ value, onChange, placeholder, maxDate, minDate
         </button>
 
         {isOpen && (
-          <div className="absolute z-[1400] w-60 mt-1 bg-[#344E41] border border-[#5a7c6b] rounded-lg shadow-xl p-3">
+          <div className="absolute z-[1400] w-60 mt-1 bg-ember-sidebar border border-ember-surface rounded-lg shadow-xl p-3">
             <div className="flex items-center justify-between mb-3 text-white">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="p-1 hover:bg-[#5a7c6b] rounded transition-colors"
+                className="p-1 hover:bg-ember-sidebar-hover rounded transition-colors"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -188,7 +188,7 @@ const CustomDatePickerInline = ({ value, onChange, placeholder, maxDate, minDate
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="p-1 hover:bg-[#5a7c6b] rounded transition-colors"
+                className="p-1 hover:bg-ember-sidebar-hover rounded transition-colors"
               >
                 <ChevronRight size={18} />
               </button>
@@ -206,7 +206,7 @@ const CustomDatePickerInline = ({ value, onChange, placeholder, maxDate, minDate
               {renderCalendar()}
             </div>
 
-            <div className="mt-3 pt-2 border-t border-[#5a7c6b]">
+            <div className="mt-3 pt-2 border-t border-ember-surface">
               <button
                 type="button"
                 onClick={() => {
@@ -214,7 +214,7 @@ const CustomDatePickerInline = ({ value, onChange, placeholder, maxDate, minDate
                   setCurrentMonth(today.getMonth());
                   setCurrentYear(today.getFullYear());
                 }}
-                className="w-full py-1.5 text-xs text-white bg-[#5a7c6b] hover:bg-[#6b8d7c] rounded transition-colors"
+                className="w-full py-1.5 text-xs text-white bg-ember-surface hover:bg-ember-sidebar-hover rounded transition-colors"
               >
                 Go to Today
               </button>
@@ -253,18 +253,18 @@ const DateRangePicker = ({
   return (
     <div
       ref={pickerRef}
-      className="absolute bottom-full left-0 mb-2 bg-[#344e41] rounded-xl shadow-2xl border border-[#5a7c6b] p-4 z-[1300] min-w-[300px]"
+      className="absolute bottom-full left-0 mb-2 bg-ember-sidebar rounded-xl shadow-2xl border border-ember-surface p-4 z-[1300] min-w-[300px]"
       style={{ animation: "slideUp 0.2s ease-out" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Calendar size={20} className="text-[#28C878]" />
+          <Calendar size={20} className="text-ember-success" />
           <h3 className="text-white font-semibold text-sm">Select Date Range</h3>
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-[#5a7c6b] rounded"
+          className="text-gray-400 hover:text-white transition-colors p-1 hover:bg-ember-sidebar-hover rounded"
           type="button"
         >
           <X size={18} />
@@ -293,14 +293,14 @@ const DateRangePicker = ({
 
       {/* Selected Range Display */}
       {startDate && endDate && (
-        <div className="mt-3 p-2.5 bg-[#2a3d33] rounded-lg">
+        <div className="mt-3 p-2.5 bg-ember-chat-dark rounded-lg">
           <p className="text-[11px] text-gray-400 text-center">
             Selected Range:{" "}
-            <span className="text-[#28C878] font-medium">
+            <span className="text-ember-success font-medium">
               {formatDate(startDate)}
             </span>
             {" → "}
-            <span className="text-[#28C878] font-medium">
+            <span className="text-ember-success font-medium">
               {formatDate(endDate)}
             </span>
           </p>
@@ -308,11 +308,11 @@ const DateRangePicker = ({
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-2 mt-4 pt-3 border-t border-[#5a7c6b]">
+      <div className="flex gap-2 mt-4 pt-3 border-t border-ember-surface">
         <button
           type="button"
           onClick={onReset}
-          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-[#5a7c6b] hover:bg-[#6b8d7c] text-white text-sm rounded-lg transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-ember-surface hover:bg-ember-sidebar-hover text-white text-sm rounded-lg transition-colors"
         >
           <RefreshCw size={14} />
           Reset
@@ -321,7 +321,7 @@ const DateRangePicker = ({
           type="button"
           onClick={onApply}
           disabled={isLoading || !startDate || !endDate}
-          className="flex-1 px-3 py-2.5 bg-[#28C878] hover:bg-[#22b06a] text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 px-3 py-2.5 bg-ember-success hover:bg-ember-primary text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <span className="flex items-center justify-center gap-1.5">

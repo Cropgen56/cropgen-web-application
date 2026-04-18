@@ -17,6 +17,14 @@ import "leaflet/dist/leaflet.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Crosshair,
+  Sparkles,
+  Stethoscope,
+  Waves,
+} from "lucide-react";
 import { fetchweatherData } from "../../../redux/slices/weatherSlice";
 import { resetSatelliteState } from "../../../redux/slices/satelliteSlice";
 import LogoFlipLoader from "../../comman/loading/LogoFlipLoader";
@@ -88,6 +96,104 @@ const calculatePolygonBounds = (coordinates) => {
   ];
 };
 
+const parseColorToRgb = (value) => {
+  if (!value || typeof value !== "string") return null;
+  const trimmed = value.trim();
+
+  if (trimmed.startsWith("#")) {
+    const hex = trimmed.slice(1);
+    if (hex.length === 3) {
+      return {
+        r: parseInt(`${hex[0]}${hex[0]}`, 16),
+        g: parseInt(`${hex[1]}${hex[1]}`, 16),
+        b: parseInt(`${hex[2]}${hex[2]}`, 16),
+      };
+    }
+    if (hex.length >= 6) {
+      return {
+        r: parseInt(hex.slice(0, 2), 16),
+        g: parseInt(hex.slice(2, 4), 16),
+        b: parseInt(hex.slice(4, 6), 16),
+      };
+    }
+  }
+
+  const rgbMatch = trimmed.match(
+    /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/,
+  );
+  if (rgbMatch) {
+    return {
+      r: Number(rgbMatch[1]),
+      g: Number(rgbMatch[2]),
+      b: Number(rgbMatch[3]),
+    };
+  }
+
+  return null;
+};
+
+const getClosestLegendItem = (rgb, legendItems = []) => {
+  if (!rgb || !legendItems.length) return null;
+
+  let closest = null;
+  let minDistance = Number.POSITIVE_INFINITY;
+
+  legendItems.forEach((item) => {
+    const itemRgb = parseColorToRgb(item?.color);
+    if (!itemRgb) return;
+    const distance = Math.sqrt(
+      (rgb.r - itemRgb.r) ** 2 + (rgb.g - itemRgb.g) ** 2 + (rgb.b - itemRgb.b) ** 2,
+    );
+    if (distance < minDistance) {
+      minDistance = distance;
+      closest = item;
+    }
+  });
+
+  return closest;
+};
+
+const buildLegendInsight = (item) => {
+  const label = (item?.label || "").toLowerCase();
+  if (label.includes("poor") || label.includes("very low")) {
+    return {
+      title: "Crop Stress Detected",
+      cause: "Low vegetation vigor / possible moisture stress",
+      action:
+        "Inspect irrigation uniformity and apply corrective nutrients within 48 hours",
+    };
+  }
+  if (label.includes("low")) {
+    return {
+      title: "Field Performance Dropping",
+      cause: "Below-target crop vigor in this pocket",
+      action:
+        "Scout this patch and compare with neighboring rows in the next visit",
+    };
+  }
+  if (label.includes("moderate") || label.includes("medium")) {
+    return {
+      title: "Moderate Crop Variation",
+      cause: "Mixed crop response across the sampled area",
+      action:
+        "Monitor this section and validate with ground observations before intervention",
+    };
+  }
+  if (label.includes("good") || label.includes("high")) {
+    return {
+      title: "Healthy Growth Zone",
+      cause: "Strong vegetation response in this area",
+      action: "Maintain the current irrigation and nutrition schedule",
+    };
+  }
+  return {
+    title: "Satellite Insight Available",
+    cause: "Index color indicates a measurable crop variation",
+    action:
+      "Review this area in detail and compare with the full legend report",
+  };
+};
+
 const MoveMapToField = ({ lat, lng, bounds }) => {
   const map = useMap();
   useEffect(() => {
@@ -124,8 +230,12 @@ const FarmMap = ({
   const { indexData, loading } = useSelector((state) => state?.satellite);
 
   const mapRef = useRef(null);
+  const mapWrapperRef = useRef(null);
+  const imageCanvasRef = useRef(null);
   const [image, setImage] = useState(null);
   const [showLegend, setShowLegend] = useState(false);
+  const [hoveredLegendItem, setHoveredLegendItem] = useState(null);
+  const [hoverPanelPosition, setHoverPanelPosition] = useState({ x: 0, y: 0 });
 
   // Sort fields in descending order (latest first)
   const sortedFields = useMemo(() => {
@@ -184,6 +294,86 @@ const FarmMap = ({
     );
   }, [indexData]);
 
+  useEffect(() => {
+    setHoveredLegendItem(null);
+  }, [image, selectedField, indexData?.legend]);
+
+  useEffect(() => {
+    if (!image) {
+      imageCanvasRef.current = null;
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = image;
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const context = canvas.getContext("2d");
+      if (!context) return;
+      context.drawImage(img, 0, 0);
+      imageCanvasRef.current = canvas;
+    };
+  }, [image]);
+
+  const handleOverlayHover = useCallback(
+    (e) => {
+      if (!polygonBounds || !imageCanvasRef.current || !indexData?.legend?.length) return;
+
+      const [southWest, northEast] = polygonBounds;
+      const [minLat, minLng] = southWest;
+      const [maxLat, maxLng] = northEast;
+      const { lat, lng } = e.latlng || {};
+      if (lat == null || lng == null) return;
+      if (
+        lat < minLat ||
+        lat > maxLat ||
+        lng < minLng ||
+        lng > maxLng ||
+        maxLng === minLng ||
+        maxLat === minLat
+      ) {
+        setHoveredLegendItem(null);
+        return;
+      }
+
+      const normalizedX = (lng - minLng) / (maxLng - minLng);
+      const normalizedY = (maxLat - lat) / (maxLat - minLat);
+      const canvas = imageCanvasRef.current;
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      const sampleX = Math.min(
+        canvas.width - 1,
+        Math.max(0, Math.round(normalizedX * (canvas.width - 1))),
+      );
+      const sampleY = Math.min(
+        canvas.height - 1,
+        Math.max(0, Math.round(normalizedY * (canvas.height - 1))),
+      );
+      const [r, g, b, a] = context.getImageData(sampleX, sampleY, 1, 1).data;
+      if (a === 0) {
+        setHoveredLegendItem(null);
+        return;
+      }
+
+      const matchedLegendItem = getClosestLegendItem({ r, g, b }, indexData.legend);
+      setHoveredLegendItem(matchedLegendItem);
+
+      const wrapperRect = mapWrapperRef.current?.getBoundingClientRect();
+      const { clientX, clientY } = e.originalEvent || {};
+      if (wrapperRect && clientX != null && clientY != null) {
+        setHoverPanelPosition({
+          x: Math.min(wrapperRect.width - 16, Math.max(16, clientX - wrapperRect.left)),
+          y: Math.min(wrapperRect.height - 16, Math.max(16, clientY - wrapperRect.top)),
+        });
+      }
+    },
+    [polygonBounds, indexData?.legend],
+  );
+
   const fetchWeatherData = useCallback(() => {
     if (!centroid.lat || !centroid.lng) return;
     const lastFetchTime = localStorage.getItem("lastFetchTime");
@@ -220,9 +410,15 @@ const FarmMap = ({
   }, [selectedField, dispatch]);
 
   const defaultCenter = [20.135245, 77.156935];
+  const mapWrapperWidth = mapWrapperRef.current?.clientWidth || 900;
+  const hoveredInsight = useMemo(
+    () => (hoveredLegendItem ? buildLegendInsight(hoveredLegendItem) : null),
+    [hoveredLegendItem],
+  );
 
   return (
     <div
+      ref={mapWrapperRef}
       className={`flex flex-col items-center w-full relative h-[75vh] ${fields?.length === 0 ? "h-[98vh]" : "lg:h-[85vh]"}`}
     >
       <MapContainer
@@ -289,7 +485,13 @@ const FarmMap = ({
                 bounds={polygonBounds}
                 opacity={1}
                 zIndex={400}
+                interactive={true}
                 className="leaflet-image-overlay-custom"
+                eventHandlers={{
+                  mouseover: handleOverlayHover,
+                  mousemove: handleOverlayHover,
+                  mouseout: () => setHoveredLegendItem(null),
+                }}
               />
             )}
           </>
@@ -315,7 +517,7 @@ const FarmMap = ({
             >
               <div className="relative">
                 {/* Updated Listbox Button with subscription dot */}
-                <Listbox.Button className="bg-[#344e41] text-white rounded border px-3 py-1.5 cursor-pointer w-full">
+                <Listbox.Button className="bg-[#344e41] text-white rounded border border-[#344e41] px-3 py-1.5 cursor-pointer w-full shadow-md">
                   <div className="flex items-center gap-2">
                     <SubscriptionDot isSubscribed={isSelectedFieldSubscribed} />
                     <span className="truncate">
@@ -327,7 +529,7 @@ const FarmMap = ({
                 {/* Updated Listbox Options with subscription dots */}
                 <Listbox.Options
                   className="absolute mt-1 w-full bg-[#344e41] rounded-lg shadow-lg 
-                     text-white z-50 border border-green-900 
+                     text-white z-50 border border-[#344e41] 
                      max-h-[300px] overflow-y-auto no-scrollbar"
                 >
                   {sortedFields.map((field) => {
@@ -361,9 +563,8 @@ const FarmMap = ({
           <strong
             onClick={() => {
               setShowLegend(!showLegend);
-              console.log(indexData?.legend);
             }}
-            className="flex items-center whitespace-nowrap bg-[#344e41] outline-none border border-[#344e41] rounded z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer"
+            className="flex items-center whitespace-nowrap bg-[#344e41] outline-none border border-[#344e41] rounded z-[3000] text-white px-3 py-1.5 font-normal cursor-pointer shadow-md"
           >
             🗺️ Legend
           </strong>
@@ -404,6 +605,104 @@ const FarmMap = ({
           )}
         </div>
       </div>
+      {hoveredLegendItem && (
+        <div
+          className="absolute pointer-events-none z-[2500] w-[430px] max-w-[calc(100%-20px)] overflow-hidden rounded-[18px] bg-[#fbf5e9] text-[#1f2937] shadow-[0_16px_36px_rgba(15,23,42,0.16)]"
+          style={{
+            left: Math.max(
+              220,
+              Math.min(hoverPanelPosition.x + 18, mapWrapperWidth - 220),
+            ),
+            top: Math.max(84, hoverPanelPosition.y - 8),
+            transform: "translate(-50%, -100%)",
+          }}
+        >
+          <div className="absolute inset-y-0 left-0 w-[10px] bg-gradient-to-b from-[#ffb300] via-[#ff8a00] to-[#ff5c45]" />
+          <div className="absolute bottom-[-6px] left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white shadow-[0_10px_20px_rgba(15,23,42,0.1)]" />
+          <div className="relative px-4 pb-3 pt-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#fff1c9] shadow-[0_6px_14px_rgba(245,158,11,0.16)]">
+                <AlertTriangle
+                  size={17}
+                  strokeWidth={2.2}
+                  className="text-[#f59e0b]"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#0f766e]">
+                  Smart Satellite Insight
+                </p>
+                <h4 className="mt-0.5 text-[14px] font-bold leading-tight text-slate-900">
+                  {hoveredInsight?.title}
+                </h4>
+              </div>
+              <div className="rounded-[12px] border border-slate-200/80 bg-white px-2.5 py-2 shadow-[0_6px_14px_rgba(15,23,42,0.05)]">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-5 w-5 rounded-md border border-black/10 shadow-sm"
+                    style={{ backgroundColor: hoveredLegendItem.color }}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold leading-none text-slate-900">
+                      {hoveredLegendItem.label}
+                    </p>
+                    <p className="mt-1 text-[8px] leading-none text-slate-500">
+                      {hoveredLegendItem.hectares?.toFixed(2) || "0.00"} ha
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-[1.05fr_1.1fr] gap-3">
+              <div className="rounded-[14px] border border-slate-200/80 bg-white px-3 py-2.5 shadow-[0_6px_14px_rgba(15,23,42,0.05)]">
+                <div className="flex items-center gap-2 text-slate-800">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500">
+                    <Crosshair size={14} />
+                  </div>
+                  <p className="text-[11px] font-medium leading-4">
+                    {hoveredLegendItem.hectares?.toFixed(2) || "0.00"} ha in{" "}
+                    {selectedFieldObj?.fieldName || "selected field"}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-[14px] border border-emerald-200 bg-gradient-to-r from-[#f3fff8] to-[#eefcf5] px-3 py-2.5">
+                <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-[#0f766e]">
+                  <Waves size={12} /> Recommended
+                </p>
+                <p className="mt-1.5 text-[11px] font-medium leading-4 text-slate-900">
+                  {hoveredInsight?.action}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200/80 pt-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                  Possible Cause
+                </p>
+                <div className="mt-1 flex items-center gap-2 text-[11px] font-semibold text-slate-900">
+                  <Sparkles size={14} className="shrink-0 text-[#f59e0b]" />
+                  <span className="truncate">{hoveredInsight?.cause}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1.5 text-[10px] font-semibold text-[#0f766e]">
+                  <Stethoscope size={12} />
+                  <span>
+                    {hoveredLegendItem.percent?.toFixed(2) || "0.00"}%
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0f766e] px-3 py-2 text-[11px] font-semibold text-white shadow-[0_8px_16px_rgba(15,118,110,0.22)]"
+                >
+                  <span>View Report</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <IndexDates selectedFieldsDetials={selectedFieldsDetials} />
     </div>
   );

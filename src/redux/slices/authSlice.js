@@ -4,10 +4,14 @@ import {
   updateUser,
   sendOtp,
   verifyOtp,
+  sendWhatsappOtp,
+  verifyWhatsappOtp,
+  resendWhatsappOtp,
   completeUserProfile,
   refreshToken,
   logoutUserApi,
   getAvatarPresignedUrl,
+  CROPGEN_REFRESH_STORAGE_KEY,
 } from "../../api/authApi";
 import { decodeJWT } from "../../utility/decodetoken";
 
@@ -90,7 +94,7 @@ export const sendotp = createAsyncThunk(
   "auth/sendOtp",
   async (otpdata, { rejectWithValue }) => {
     try {
-      const response = await sendOtp(otpdata);
+      const response = await sendOtp(otpdata, otpdata?.authFlow);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "OTP sending failed");
@@ -100,9 +104,9 @@ export const sendotp = createAsyncThunk(
 
 export const verifyuserotp = createAsyncThunk(
   "auth/verifyotp",
-  async ({ email, otp }, { rejectWithValue }) => {
+  async ({ email, otp, authFlow }, { rejectWithValue }) => {
     try {
-      const response = await verifyOtp({ email, otp });
+      const response = await verifyOtp({ email, otp }, authFlow);
       return response;
     } catch (error) {
       return rejectWithValue(error.response?.data || "OTP verification failed");
@@ -110,23 +114,126 @@ export const verifyuserotp = createAsyncThunk(
   },
 );
 
+// WhatsApp OTP (phone) — Biodrops web app
+export const sendWhatsappOtpThunk = createAsyncThunk(
+  "auth/sendWhatsappOtp",
+  async (data, { rejectWithValue }) => {
+    try {
+      const response = await sendWhatsappOtp(data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "OTP sending failed");
+    }
+  },
+);
+
+export const verifyWhatsappOtpThunk = createAsyncThunk(
+  "auth/verifyWhatsappOtp",
+  async ({ phone, otp }, { rejectWithValue }) => {
+    try {
+      const response = await verifyWhatsappOtp({ phone, otp });
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "OTP verification failed");
+    }
+  },
+);
+
+export const resendWhatsappOtpThunk = createAsyncThunk(
+  "auth/resendWhatsappOtp",
+  async ({ phone }, { rejectWithValue }) => {
+    try {
+      const response = await resendWhatsappOtp({ phone });
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || "OTP resend failed");
+    }
+  },
+);
+
 export const completeProfile = createAsyncThunk(
   "auth/completeProfile",
   async (
-    { terms, organizationCode, firstName, lastName, phone, role },
+    {
+      terms,
+      organizationCode,
+      firstName,
+      lastName,
+      phone,
+      language,
+      role,
+      country,
+      state,
+      city,
+      village,
+    },
     { rejectWithValue },
   ) => {
     try {
+      // #region agent log
+      fetch("http://127.0.0.1:7816/ingest/2f2e2976-5f6e-4ec5-a3c9-5521133e72c2", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "304cd3",
+        },
+        body: JSON.stringify({
+          sessionId: "304cd3",
+          runId: "signup-profile-debug",
+          hypothesisId: "H1",
+          location: "authSlice.js:completeProfileThunk:beforeApi",
+          message: "Complete profile thunk payload snapshot",
+          data: {
+            hasFirstName: Boolean(firstName),
+            firstNameLength: String(firstName || "").trim().length,
+            hasLastName: Boolean(lastName),
+            lastNameLength: String(lastName || "").trim().length,
+            hasPhone: Boolean(phone),
+            hasCountry: Boolean(country),
+            hasLanguage: Boolean(language),
+            hasOrganizationCode: Boolean(organizationCode),
+            termsAccepted: terms === true,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       const response = await completeUserProfile({
         terms,
         organizationCode,
         firstName,
         lastName,
         phone,
+        language,
         role,
+        country,
+        state,
+        city,
+        village,
       });
       return response;
     } catch (error) {
+      // #region agent log
+      fetch("http://127.0.0.1:7816/ingest/2f2e2976-5f6e-4ec5-a3c9-5521133e72c2", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Debug-Session-Id": "304cd3",
+        },
+        body: JSON.stringify({
+          sessionId: "304cd3",
+          runId: "signup-profile-debug",
+          hypothesisId: "H4",
+          location: "authSlice.js:completeProfileThunk:catch",
+          message: "Complete profile API rejected",
+          data: {
+            status: error?.response?.status || null,
+            responseMessage: error?.response?.data?.message || null,
+          },
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
+      // #endregion
       return rejectWithValue(
         error.response?.data || { message: "Profile completion failed" },
       );
@@ -208,6 +315,13 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.removeItem(CROPGEN_REFRESH_STORAGE_KEY);
+        } catch {
+          /* ignore */
+        }
+      }
       Object.assign(state, authInitialState);
     },
     decodeToken: (state) => {
@@ -216,7 +330,8 @@ const authSlice = createSlice({
         const userData = decodeJWT(state.token);
         state.user = {
           id: userData.id,
-          email: userData.email || userData.sub,
+          email: userData.email || userData.sub || null,
+          phone: userData.phone || null,
           role: userData.role,
           organizationCode: userData.organizationCode,
         };
@@ -263,6 +378,16 @@ const authSlice = createSlice({
         state.isAuthenticated = !!action.payload.accessToken;
         state.onboardingRequired = action.payload.onboardingRequired || false;
         state.error = null;
+        if (typeof window !== "undefined" && action.payload.refreshToken) {
+          try {
+            sessionStorage.setItem(
+              CROPGEN_REFRESH_STORAGE_KEY,
+              action.payload.refreshToken,
+            );
+          } catch {
+            /* ignore */
+          }
+        }
       })
       .addCase(refreshAccessToken.rejected, (state, action) => {
         state.refreshPending = false;
@@ -272,6 +397,13 @@ const authSlice = createSlice({
         state.user = null;
         state.role = null;
         state.onboardingRequired = false;
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.removeItem(CROPGEN_REFRESH_STORAGE_KEY);
+          } catch {
+            /* ignore */
+          }
+        }
       })
 
       .addCase(getUserProfileData.pending, (state) => {
@@ -331,6 +463,52 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(verifyuserotp.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      .addCase(verifyWhatsappOtpThunk.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(verifyWhatsappOtpThunk.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        const responseData = action.payload?.data || {};
+        const {
+          accessToken,
+          user,
+          role,
+          onboardingRequired,
+          refreshToken: refreshJwt,
+        } = action.payload;
+        const resolvedAccessToken = accessToken || responseData.accessToken || null;
+        const resolvedUser = user || responseData.user || null;
+        const resolvedRole = role || responseData.role || resolvedUser?.role || null;
+        const resolvedOnboardingRequired =
+          onboardingRequired ??
+          responseData.onboardingRequired ??
+          responseData.user?.onboardingRequired ??
+          false;
+        const resolvedRefreshToken =
+          refreshJwt || responseData.refreshToken || null;
+        state.token = resolvedAccessToken;
+        state.user = resolvedUser;
+        state.role = resolvedRole;
+        state.isAuthenticated = !!resolvedAccessToken;
+        state.onboardingRequired = resolvedOnboardingRequired;
+        state.error = null;
+        if (typeof window !== "undefined" && resolvedRefreshToken) {
+          try {
+            sessionStorage.setItem(
+              CROPGEN_REFRESH_STORAGE_KEY,
+              resolvedRefreshToken,
+            );
+          } catch {
+            /* ignore */
+          }
+        }
+      })
+      .addCase(verifyWhatsappOtpThunk.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })

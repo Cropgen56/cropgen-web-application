@@ -12,21 +12,78 @@ import {
 } from "../../redux/slices/satelliteSlice";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+/** Same labels / hints / icons as dashboard `SatelliteIndexList` (biodrops-aligned). */
 const index_name_mapping = {
-  NDVI: "Crop Health",
-  EVI: "Improved Health",
-  EVI2: "Health (Simple)",
-  SAVI: "Early Stage",
-  MSAVI: "Dry Land",
-  NDMI: "Water Content",
-  NDWI: "Water Level",
-  SMI: "Soil Moisture",
-  CCC: "Leaf Green",
-  NITROGEN: "Nitrogen",
-  SOC: "Soil Fertility",
-  NDRE: "Crop Stress",
-  RECI: "Leaf Rich",
-  TRUE_COLOR: "True Color",
+  TRUE_COLOR: {
+    label: "Field View",
+    hint: "See anytime",
+    icon: "📸",
+  },
+  NDVI: {
+    label: "Crop Health",
+    hint: "Weekly check",
+    icon: "🌿",
+  },
+  EVI: {
+    label: "Crop Health (Dense)",
+    hint: "Thick crops",
+    icon: "🌿",
+  },
+  EVI2: {
+    label: "Crop Health (Simple)",
+    hint: "Quick check",
+    icon: "🌿",
+  },
+  SAVI: {
+    label: "Early Stage Health",
+    hint: "Just sowed",
+    icon: "🌱",
+  },
+  MSAVI: {
+    label: "Dry Land Health",
+    hint: "Dry / sparse field",
+    icon: "🏜️",
+  },
+  NDMI: {
+    label: "Water in Leaves",
+    hint: "Check irrigation",
+    icon: "💧",
+  },
+  NDWI: {
+    label: "Plant Water Level",
+    hint: "Plant thirst",
+    icon: "🪣",
+  },
+  SMI: {
+    label: "Soil Moisture",
+    hint: "Before watering",
+    icon: "🌍",
+  },
+  CCC: {
+    label: "Leaf Greenness",
+    hint: "Nutrient check",
+    icon: "🍃",
+  },
+  NITROGEN: {
+    label: "Nitrogen Level",
+    hint: "Before fertilizing",
+    icon: "🧪",
+  },
+  SOC: {
+    label: "Soil Fertility",
+    hint: "Soil audit",
+    icon: "🪱",
+  },
+  NDRE: {
+    label: "Crop Stress / Maturity",
+    hint: "Disease / Harvest",
+    icon: "⚠️",
+  },
+  RECI: {
+    label: "Leaf Richness",
+    hint: "Mid-late season",
+    icon: "🌾",
+  },
 };
 
 const indices = [
@@ -55,7 +112,6 @@ const SmartAdvisorySatelliteIndexList = ({
   const { sowingDate = null } = selectedFieldsDetials[0] || {};
   const scrollContainerRef = useRef(null);
 
-  // Validate that the geometry is a closed polygon
   const validateGeometry = (field) => {
     if (!field || field.length < 3) return false;
     const first = field[0];
@@ -69,23 +125,21 @@ const SmartAdvisorySatelliteIndexList = ({
       console.warn("Invalid geometry provided: insufficient points", field);
       return [];
     }
-
-    // Map to [lng, lat] format
     let coords = field.map(({ lat, lng }) => [lng, lat]);
-
     if (!validateGeometry(field)) {
       coords = [...coords, coords[0]];
     }
-
     return coords;
   }, [selectedFieldsDetials]);
 
   const debounce = (func, wait) => {
     let timeout;
-    return (...args) => {
+    const debounced = (...args) => {
       clearTimeout(timeout);
       timeout = setTimeout(() => func(...args), wait);
     };
+    debounced.cancel = () => clearTimeout(timeout);
+    return debounced;
   };
 
   const handleFetchIndex = useCallback(
@@ -96,22 +150,22 @@ const SmartAdvisorySatelliteIndexList = ({
           endDate: selectedDate,
           geometry: [coordinates],
           index,
-        })
+        }),
       );
     },
-    [selectedDate, coordinates, dispatch]
+    [selectedDate, coordinates, dispatch],
   );
 
   const debouncedFetchIndex = useMemo(
     () => debounce(handleFetchIndex, 300),
-    [handleFetchIndex]
+    [handleFetchIndex],
   );
 
   useEffect(() => {
     dispatch(removeSelectedIndexData());
     debouncedFetchIndex(selectedIndex);
     return () => {
-      clearTimeout(debouncedFetchIndex.timeout);
+      debouncedFetchIndex.cancel?.();
     };
   }, [
     selectedIndex,
@@ -124,65 +178,81 @@ const SmartAdvisorySatelliteIndexList = ({
 
   const handleArrowRightClick = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: 150,
-        behavior: "smooth",
-      });
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
     }
   };
 
   const handleArrowLeftClick = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: -150,
-        behavior: "smooth",
-      });
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
     }
   };
 
   return (
-    <div className="w-full mx-auto shadow-md overflow-hidden">
-      <div className="flex items-center gap-1 p-1 relative bg-[#5a7c6b] rounded-t-md">
-        {/* Left Arrow */}
+    <div className="w-full mx-auto my-1 shadow-md overflow-hidden">
+      <div className="flex items-center gap-1 lg:gap-2 p-1 lg:p-2 relative">
         <button
-          className="bg-[#344e41] p-0.5 text-white rounded cursor-pointer z-10 flex-shrink-0"
+          type="button"
+          className="absolute left-2 lg:left-4 bg-ember-sidebar py-2.5 text-white rounded cursor-pointer z-10"
           onClick={handleArrowLeftClick}
         >
-          <ChevronLeft size={16} strokeWidth={2} />
+          <ChevronLeft size={24} strokeWidth={2} />
         </button>
 
-        {/* Scrollable Index Buttons */}
-        <div className="relative flex-1 overflow-hidden">
+        <div className="relative flex-1 overflow-hidden px-[40px]">
           <div
-            className="flex gap-1 flex-nowrap overflow-x-auto scroll-smooth no-scrollbar"
+            className="flex gap-1 lg:gap-2 flex-nowrap overflow-x-auto scroll-smooth no-scrollbar"
             ref={scrollContainerRef}
           >
-            {indices.map((index) => (
-              <button
-                key={index}
-                className={`flex-shrink-0 rounded text-white font-medium px-2 py-1 text-[10px] h-[28px] whitespace-nowrap transition-all duration-200 ease-in-out
-                  ${
-                    selectedIndex === index
-                      ? "bg-[#344e41]"
-                      : "bg-[#5a7c6b] hover:bg-[#4a6b5a] border border-white/20"
-                  }`}
-                onClick={() => {
-                  dispatch(removeSelectedIndexData());
-                  setSelectedIndex(index);
-                }}
-              >
-                {index_name_mapping[index] || index}
-              </button>
-            ))}
+            {indices.map((index) => {
+              const meta = index_name_mapping[index];
+              const isSelected = selectedIndex === index;
+
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => {
+                    dispatch(removeSelectedIndexData());
+                    setSelectedIndex(index);
+                  }}
+                  className={`
+                    flex-shrink-0 rounded text-white font-medium
+                    px-3 py-1.5 text-xs lg:text-sm
+                    flex flex-col items-center justify-center gap-0.5
+                    min-w-[110px] h-[58px]
+                    transition-all duration-300 ease-in-out
+                    border-b-2
+                    ${
+                      isSelected
+                        ? "bg-ember-sidebar brightness-75 border-white/60 shadow-inner"
+                        : "bg-ember-surface hover:bg-ember-surface-muted border-transparent hover:brightness-90"
+                    }
+                  `}
+                >
+                  <span className="text-base leading-none">{meta?.icon}</span>
+                  <span className="leading-tight text-center text-[11px] lg:text-xs font-semibold whitespace-nowrap">
+                    {meta?.label || index}
+                  </span>
+                  <span
+                    className={`text-[9px] lg:text-[10px] leading-none whitespace-nowrap font-normal
+                      ${isSelected ? "text-white/80" : "text-white/50"}
+                    `}
+                  >
+                    {meta?.hint}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Right Arrow */}
         <button
-          className="bg-[#344e41] p-0.5 text-white rounded cursor-pointer z-10 flex-shrink-0"
+          type="button"
+          className="absolute right-2 bg-ember-sidebar text-white py-3 rounded cursor-pointer z-10 sm:right-1"
           onClick={handleArrowRightClick}
         >
-          <ChevronRight size={16} strokeWidth={2} />
+          <ChevronRight size={24} strokeWidth={2} />
         </button>
       </div>
     </div>

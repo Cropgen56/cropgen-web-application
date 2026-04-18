@@ -1,36 +1,49 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Operation2 } from "../../../assets/Icons";
 import { CiSearch } from "react-icons/ci";
-import { ChevronDown } from "lucide-react";
-import { useSelector, useDispatch } from "react-redux";
+import { FileText, Download } from "lucide-react";
+import { useSelector } from "react-redux";
 import PolygonPreview from "../../polygon/PolygonPreview";
-import { fetchSatelliteDates } from "../../../redux/slices/satelliteSlice";
 
-const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates, isSubscribed }) => (
+const SIDEBAR_BG = "#344e41";
+const SIDEBAR_HOVER = "#5a7c6b";
+
+const FieldInfo = ({
+  title,
+  area,
+  lat,
+  lon,
+  isSelected,
+  onClick,
+  coordinates,
+  isSubscribed,
+}) => (
   <div
-    className={`flex items-center gap-1.5 md:gap-2.5 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
-      isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
+    className={`flex items-center gap-1.5 md:gap-2.5 border-b border-white/15 py-3 px-2 cursor-pointer transition-colors ${
+      isSelected ? "bg-white/10" : "bg-transparent hover:bg-white/5"
     }`}
     onClick={onClick}
   >
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
-    <div className="flex-grow">
-      <div className="flex items-center justify-between mb-1">
-        <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
+    <div className="flex-grow min-w-0">
+      <div className="flex items-center justify-between mb-1 gap-1">
+        <h4
+          className={`text-base truncate ${isSelected ? "text-white" : "text-white/90"}`}
+        >
           {title.length > 8 ? `${title.slice(0, 8)}...` : title}
         </h4>
         <div
-          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
             isSubscribed
-              ? "bg-[#DAFFED] text-[#28C878] border border-[#28C878]/30"
-              : "bg-[#FFDEDF] text-[#EC1C24] border border-[#EC1C24]/30"
+              ? "bg-emerald-400/20 text-emerald-100 border border-emerald-300/40"
+              : "bg-red-500/20 text-red-100 border border-red-300/40"
           }`}
         >
           {isSubscribed ? "Subscribed" : "Unsubscribed"}
         </div>
       </div>
-      <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
-      <div className="flex gap-4 text-xs text-[#a2a2a2]">
+      <p className="text-xs text-white/70 mb-1">{area}</p>
+      <div className="flex gap-4 text-xs text-white/60">
         <p>{lat} N</p>
         <p>{lon} E</p>
       </div>
@@ -38,102 +51,43 @@ const FieldInfo = ({ title, area, lat, lon, isSelected, onClick, coordinates, is
   </div>
 );
 
-const CustomDropdown = ({ label, value, onChange, options, placeholder }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = React.useRef(null);
-
-  React.useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setIsOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleSelect = (option) => {
-    onChange(option);
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="flex flex-col gap-1" ref={dropdownRef}>
-      <label className="font-semibold text-[#344e41]">{label}</label>
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className={`w-full px-3 py-2 bg-[#344E41] text-white rounded-md border border-[#344e41] flex items-center justify-between hover:bg-[#2b3e33] transition-all duration-200 focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50 ${
-            !value ? "text-gray-300" : "text-white"
-          }`}
-        >
-          <span className="truncate">{value || placeholder}</span>
-          <ChevronDown size={20} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-        </button>
-        {isOpen && (
-          // <div className="absolute z-50 w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded-md shadow-lg max-h-60 overflow-auto">
-            <div className="absolute z-50 w-full bottom-full mb-1 bg-[#344E41] border border-[#2b3e33] rounded-md shadow-lg max-h-60 overflow-auto">
-
-            {options.length > 0 ? (
-              options.map((option, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleSelect(option)}
-                  className={`px-3 py-2 cursor-pointer text-white hover:bg-[#2b3e33] ${
-                    value === option ? "bg-[#2b3e33]" : ""
-                  } ${index !== options.length - 1 ? "border-b border-[#2b3e33]/30" : ""}`}
-                >
-                  {option}
-                </div>
-              ))
-            ) : (
-              <div className="px-3 py-2 text-gray-300">No options available</div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const cropOptions = [
-  "Barley", "Wheat", "Pearl Millet", "Sorghum", "Finger Millet", "Chickpea", "Red Gram",
-  "Green Gram", "Black Gram", "Lentil", "Field Pea", "Horse Gram", "Cowpea", "Groundnut",
-  "Mustard", "Soybean", "Sunflower", "Sesame", "Linseed", "Castor", "Safflower", "Niger",
-  "Sugarcane", "Cotton", "Jute", "Tobacco", "Potato", "Tomato", "Brinjal", "Cabbage",
-  "Cauliflower", "Onion", "Garlic", "Okra", "Carrot", "Radish", "Spinach", "Methi",
-  "Green Peas", "Bitter Gourd", "Bottle Gourd", "Pumpkin", "Cucumber", "Beans", "Mango",
-  "Banana", "Guava", "Apple", "Papaya", "Orange", "Lemon", "Pomegranate", "Grapes",
-  "Pineapple", "Watermelon", "Muskmelon", "Turmeric", "Ginger", "Coriander", "Cumin",
-  "Black Pepper", "Red Chilies", "Tea", "Coffee", "Coconut", "Arecanut", "Rubber",
-  "Dragon Fruit", "Sponge Gourd", "Snake Gourd", "Ash Gourd", "Drumstick", "Chili",
-  "Chia", "Rice", "Kiwi", "Amla", "Capsicum", "Other"
-];
-
-const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelectedField, setReportData, downloadPDF }) => {
+const SoilReportSidebar = ({
+  selectedOperation,
+  setSelectedOperation,
+  setSelectedField,
+  onGenerateReport,
+  downloadPDF,
+  reportReady,
+}) => {
   const [selectedFieldId, setSelectedFieldId] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const [currentCrop, setCurrentCrop] = useState("");
-  const [nextCrop, setNextCrop] = useState("");
-  const [reportGenerated, setReportGenerated] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const dispatch = useDispatch();
 
   const fields = useSelector((state) => state.farmfield.fields) || [];
+
+  useEffect(() => {
+    if (selectedOperation?._id) {
+      setSelectedFieldId(selectedOperation._id);
+    }
+  }, [selectedOperation?._id]);
 
   if (!isSidebarVisible) return null;
 
   const sortedFields = [...fields].reverse();
-  const filteredFields = sortedFields.filter((field) =>
-    field.fieldName.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFields = sortedFields.filter((f) =>
+    (f.fieldName || "").toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const calculateCentroid = (polygon) => {
     if (!polygon || polygon.length === 0) return { lat: 0, lon: 0 };
     const total = polygon.reduce(
       (acc, point) => ({ lat: acc.lat + point.lat, lng: acc.lng + point.lng }),
-      { lat: 0, lng: 0 }
+      { lat: 0, lng: 0 },
     );
-    return { lat: (total.lat / polygon.length).toFixed(3), lon: (total.lng / polygon.length).toFixed(3) };
+    return {
+      lat: (total.lat / polygon.length).toFixed(3),
+      lon: (total.lng / polygon.length).toFixed(3),
+    };
   };
 
   const formatArea = (acres) => `${acres ? Number(acres).toFixed(3) : 0} acres`;
@@ -141,41 +95,58 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelecte
   const selectedFieldObj = fields.find((f) => f._id === selectedFieldId);
 
   return (
-    <div className="sm:min-w-[250px] sm:max-w-[20vw] m-0 p-0 bg-white shadow-md flex flex-col h-screen relative overflow-y-auto">
-      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-3">
+    <div
+      className="sm:min-w-[280px] sm:max-w-[22vw] m-0 p-0 shadow-xl flex flex-col h-screen relative overflow-y-auto text-white"
+      style={{ backgroundColor: SIDEBAR_BG }}
+    >
+      <div
+        className="flex flex-col border-b border-white/15 gap-2 px-3 py-3"
+        style={{ backgroundColor: SIDEBAR_BG }}
+      >
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Operation2 />
-            <p className="text-[18px] font-bold text-[#344e41] m-0">Soil Report</p>
+            <p className="text-[18px] font-bold m-0 tracking-tight">CropGen</p>
           </div>
-          <div
-            className="cursor-pointer"
+          <button
+            type="button"
+            aria-label="Hide sidebar"
+            className="cursor-pointer p-1 rounded-md hover:bg-white/10 transition-colors"
             onClick={() => setIsSidebarVisible(false)}
           >
-            <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 30 30"
+              fill="none"
+              className="text-white"
+            >
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M10.3662 15.8835C10.1319 15.6491 10.0002 14.9998 10.0002 14.9998C10.0002 14.6683 10.1319 14.3504 10.3662 14.116L17.4375 7.04478C17.6732 6.81708 17.989 6.69109 18.3167 6.69393C18.6445 6.69678 18.958 6.82824 19.1898 7.06C19.4215 7.29176 19.553 7.60528 19.5558 7.93303C19.5587 8.26077 19.4327 8.57652 19.205 8.81228L13.0175 14.9998L19.205 21.1873C19.4327 21.423 19.5587 21.7388 19.5558 22.0665C19.553 22.3943 19.4215 22.7078 19.1898 22.9395C18.958 23.1713 18.6445 23.3028 18.3167 23.3056C17.989 23.3085 17.6732 23.1825 17.4375 22.9548L10.3662 15.8835Z"
-                fill="#344E41"
+                fill="currentColor"
               />
             </svg>
-          </div>
+          </button>
         </div>
         <div className="relative flex items-center mx-auto w-full">
-          <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg" />
+          <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 text-lg pointer-events-none" />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 text-gray-100 text-sm outline-none bg-[#344e41] focus:border-none"
-            placeholder="Search"
+            className="w-full pl-10 pr-3 py-2.5 rounded-[10px] border border-white/20 text-white text-sm outline-none placeholder:text-white/50 focus:border-white/40"
+            style={{ backgroundColor: SIDEBAR_HOVER }}
+            placeholder="Search farm"
           />
         </div>
       </div>
 
-      <h2 className="px-4 pt-2 text-[18px] font-bold text-[#344e41]">All Farms</h2>
-      <div className="flex flex-col overflow-y-auto no-scrollbar">
+      <h2 className="px-4 pt-3 text-[15px] font-bold text-white/90 uppercase tracking-wide">
+        Farm list
+      </h2>
+      <div className="flex flex-col overflow-y-auto no-scrollbar flex-1">
         {filteredFields.map((field) => {
           const { lat, lon } = calculateCentroid(field.field);
           const isSelected = selectedFieldId === field._id;
@@ -195,9 +166,6 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelecte
                 setSelectedFieldId(field._id);
                 setSelectedOperation(field);
                 setSelectedField(field);
-                setCurrentCrop("");
-                setNextCrop("");
-                setReportGenerated(false);
               }}
             />
           );
@@ -205,53 +173,33 @@ const SoilReportSidebar = ({ selectedOperation, setSelectedOperation, setSelecte
       </div>
 
       {selectedFieldId && selectedFieldObj && (
-        <div className="mt-3 p-3 flex flex-col gap-3 text-[#344e41]">
-          <h4 className="font-bold">Crop Details</h4>
-
-          <CustomDropdown
-            label="Current Crop"
-            value={currentCrop}
-            onChange={setCurrentCrop}
-            options={[...cropOptions].sort((a, b) => a.localeCompare(b))}
-            placeholder="Select Crop"
-          />
-
-          <CustomDropdown
-            label="Next Crop"
-            value={nextCrop}
-            onChange={setNextCrop}
-            options={[...cropOptions].sort((a, b) => a.localeCompare(b))}
-            placeholder="Select Crop"
-          />
-
-          {!reportGenerated ? (
+        <div className="mt-auto p-4 border-t border-white/15 space-y-3 bg-black/10">
+          <div className="rounded-[12px] bg-white/10 border border-white/15 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wider text-white/60 font-semibold">
+              Selected field
+            </p>
+            <p className="text-sm font-bold text-white truncate">
+              {selectedFieldObj.fieldName || selectedFieldObj.farmName}
+            </p>
+          </div>
+          {!reportReady ? (
             <button
-            disabled={true}
-              onClick={() => {
-                setReportData({
-                  field: selectedFieldObj.farmName || "",
-                  current: currentCrop,
-                  nextcrop: nextCrop,
-                  lat: selectedFieldObj.field?.[0]?.lat,
-                  lng: selectedFieldObj.field?.[0]?.lng,
-                  geometry: selectedFieldObj.field,
-                });
-                dispatch(fetchSatelliteDates(selectedFieldObj.field));
-                setReportGenerated(true);
-              }}
-              className="bg-[#344e41] hover:bg-[#2b3e33] transition-all duration-200 rounded-md px-3 py-2 text-gray-200 mt-10 cursor-pointer"
+              type="button"
+              onClick={() => onGenerateReport(selectedFieldObj)}
+              className="w-full flex items-center justify-center gap-2 font-semibold text-[#0D6B45] rounded-[12px] px-3 py-3 bg-white hover:bg-gray-100 transition-colors shadow-lg"
             >
+              <FileText size={18} />
               Generate Report
             </button>
           ) : (
-            <div className="w-full flex justify-center p-4">
-              <button
-                onClick={downloadPDF}
-                className="bg-[#344e41] hover:bg-[#2b3e33] cursor-pointer transition-all duration-200 rounded-md px-10 py-2 text-gray-200 mt-4"
-              >
-                Download Report
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={downloadPDF}
+              className="w-full flex items-center justify-center gap-2 font-semibold text-white rounded-[12px] px-3 py-3 border-2 border-white/40 hover:bg-white/10 transition-colors"
+            >
+              <Download size={18} />
+              Download PDF
+            </button>
           )}
         </div>
       )}

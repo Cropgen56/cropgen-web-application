@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { refreshAccessToken, logout } from "../redux/slices/authSlice";
 import { decodeJWT } from "../utility/decodetoken";
@@ -8,6 +9,17 @@ const REFRESH_BEFORE_EXPIRY_SECONDS = 3300;
 const AuthAutoRefresh = ({ children }) => {
   const dispatch = useDispatch();
   const { token, isAuthenticated } = useSelector((state) => state.auth);
+  const bootstrapTriedRef = useRef(false);
+
+  useEffect(() => {
+    // On app bootstrap, try one silent refresh from httpOnly cookie.
+    // This keeps users signed in across reloads within refresh-token lifetime.
+    if (bootstrapTriedRef.current || token) return;
+    bootstrapTriedRef.current = true;
+    dispatch(refreshAccessToken()).catch(() => {
+      // Ignore at bootstrap: unauthenticated users are expected here.
+    });
+  }, [dispatch, token]);
 
   useEffect(() => {
     if (!isAuthenticated || !token) return;

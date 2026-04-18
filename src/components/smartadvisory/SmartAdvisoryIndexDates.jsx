@@ -231,12 +231,16 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
         selectedFieldsDetials={selectedFieldsDetials}
         selectedDate={selectedDate}
       />
-      <div className="flex items-center gap-2 w-full px-2 bg-[#5a7c6b] rounded-md">
+      <div className="flex items-center gap-2 w-full px-2 bg-ember-surface rounded-md relative">
         <div className="relative flex items-center">
           <button
             type="button"
             onClick={toggleCalendar}
-            className="bg-transparent border-none cursor-pointer"
+            className={`bg-transparent border-none cursor-pointer p-1 rounded transition-colors ${
+              isCalendarVisible
+                ? "bg-ember-sidebar"
+                : "hover:bg-ember-sidebar/50"
+            }`}
             aria-label="Toggle calendar"
           >
             <Calender />
@@ -268,14 +272,19 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
             ? Array.from({ length: visibleCount }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="h-[30px] min-w-[80px] rounded-xl bg-[#344e41]/50 animate-pulse"
-                />
+                  className="flex flex-col items-center rounded px-4 py-2.5 min-w-[90px] bg-ember-sidebar/50 animate-pulse"
+                >
+                  <div className="h-3 w-16 bg-ember-surface rounded mb-1.5" />
+                  <div className="h-3 w-14 bg-ember-surface rounded" />
+                </div>
               ))
             : visibleDates.map((dateItem) => (
                 <div
                   key={dateItem.isoDate}
-                  className={`flex flex-col items-center text-white cursor-pointer rounded px-3 py-2 min-w-[80px] ${
-                    dateItem.isoDate === selectedDate ? "bg-[#344e41]" : "bg-transparent"
+                  className={`flex flex-col items-center text-white cursor-pointer rounded px-4 py-2.5 min-w-[90px] transition-colors ${
+                    dateItem.isoDate === selectedDate
+                      ? "bg-ember-sidebar brightness-75 shadow-inner"
+                      : "bg-transparent hover:bg-ember-sidebar/50"
                   }`}
                   onClick={() => handleDateClick(dateItem.isoDate)}
                   role="option"

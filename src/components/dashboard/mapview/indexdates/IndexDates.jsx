@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Calender,
@@ -14,7 +20,7 @@ import { X, AlertCircle } from "lucide-react";
 import DateRangePicker from "./DateRangePicker";
 
 const DATE_FORMAT_OPTIONS = { day: "numeric", month: "short", year: "numeric" };
-const CLOUD_COVER_THRESHOLD = 5; // If cloud > 5%, pick an older date with cloud <= 5%
+const CLOUD_COVER_THRESHOLD = 5;
 
 // Helper functions
 const formatDate = (date) => {
@@ -38,20 +44,14 @@ const toISODateString = (date) => {
   }
 };
 
-// `allDates` is expected to be sorted newest -> oldest by `isoDate`.
 const pickLowCloudIsoDate = (allDates, targetIsoDate, threshold) => {
   if (!Array.isArray(allDates) || allDates.length === 0) return targetIsoDate;
-
   const targetIndex = allDates.findIndex((d) => d.isoDate === targetIsoDate);
   const startIndex = targetIndex === -1 ? 0 : targetIndex;
-
-  // Try to find an older date (including target date) with cloud <= threshold.
   for (let i = startIndex; i < allDates.length; i++) {
     const cloud = allDates[i]?.value ?? 0;
     if (cloud <= threshold) return allDates[i].isoDate;
   }
-
-  // If none match, pick the date with the minimum cloud among older dates.
   let best = allDates[startIndex];
   for (let i = startIndex + 1; i < allDates.length; i++) {
     const cloud = allDates[i]?.value ?? 0;
@@ -65,13 +65,12 @@ const getSixMonthsBeforeDate = () => {
   date.setMonth(date.getMonth() - 6);
   return date.toISOString().split("T")[0];
 };
-
 const getTodayDate = () => new Date().toISOString().split("T")[0];
 
 const areArraysEqual = (arr1, arr2) => {
   if (!arr1 || !arr2 || arr1.length !== arr2.length) return false;
   return arr1.every(
-    (item, idx) => item.lat === arr2[idx].lat && item.lng === arr2[idx].lng
+    (item, idx) => item.lat === arr2[idx].lat && item.lng === arr2[idx].lng,
   );
 };
 
@@ -81,10 +80,10 @@ const DateSkeleton = ({ count = 6 }) => (
     {Array.from({ length: count }).map((_, idx) => (
       <div
         key={idx}
-        className="flex flex-col items-center rounded px-4 py-2.5 min-w-[90px] bg-[#344e41]/50 animate-pulse"
+        className="flex flex-col items-center rounded px-4 py-2.5 min-w-[90px] bg-ember-sidebar/50 animate-pulse"
       >
-        <div className="h-3 w-16 bg-[#5a7c6b] rounded mb-1.5" />
-        <div className="h-3 w-14 bg-[#5a7c6b] rounded" />
+        <div className="h-3 w-16 bg-ember-surface rounded mb-1.5" />
+        <div className="h-3 w-14 bg-ember-surface rounded" />
       </div>
     ))}
   </>
@@ -96,22 +95,18 @@ const ErrorModal = ({ isOpen, onClose, message, title = "Invalid Date" }) => {
 
   useEffect(() => {
     if (!isOpen) return;
-
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
         onClose();
       }
     };
-
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         onClose();
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
@@ -124,7 +119,7 @@ const ErrorModal = ({ isOpen, onClose, message, title = "Invalid Date" }) => {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
       <div
         ref={modalRef}
-        className="bg-[#344e41] rounded-lg shadow-xl border border-[#5a7c6b] p-5 max-w-sm w-[90%] mx-4"
+        className="bg-ember-sidebar rounded-lg shadow-xl border border-ember-surface p-5 max-w-sm w-[90%] mx-4"
         style={{ animation: "scaleIn 0.2s ease-out" }}
       >
         <div className="flex items-center gap-3 mb-4">
@@ -133,9 +128,7 @@ const ErrorModal = ({ isOpen, onClose, message, title = "Invalid Date" }) => {
           </div>
           <h3 className="text-white font-semibold text-lg">{title}</h3>
         </div>
-
         <p className="text-gray-300 text-sm mb-5">{message}</p>
-
         <button
           type="button"
           onClick={onClose}
@@ -144,7 +137,6 @@ const ErrorModal = ({ isOpen, onClose, message, title = "Invalid Date" }) => {
           Got it
         </button>
       </div>
-
       <style>{`
         @keyframes scaleIn {
           from {
@@ -212,7 +204,9 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   const prevFieldIdRef = useRef(currentFieldId);
 
   const isDefaultRange = useMemo(() => {
-    return appliedStartDate === defaultStartDate && appliedEndDate === defaultEndDate;
+    return (
+      appliedStartDate === defaultStartDate && appliedEndDate === defaultEndDate
+    );
   }, [appliedStartDate, appliedEndDate, defaultStartDate, defaultEndDate]);
 
   const coordinates = useMemo(() => {
@@ -232,16 +226,15 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   const fetchDatesDirectly = useCallback(
     (coords, startDate, endDate) => {
       if (!coords || coords.length === 0) return;
-
       dispatch(
         fetchSatelliteDates({
           geometry: coords,
           startDate: startDate,
           endDate: endDate,
-        })
+        }),
       );
     },
-    [dispatch]
+    [dispatch],
   );
 
   const debouncedFetchDates = useMemo(() => {
@@ -250,14 +243,13 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
       clearTimeout(timeout);
       timeout = setTimeout(
         () => fetchDatesDirectly(coords, startDate, endDate),
-        400
+        400,
       );
     };
     debounced.cancel = () => clearTimeout(timeout);
     return debounced;
   }, [fetchDatesDirectly]);
 
-  // Reset on field change
   useEffect(() => {
     if (currentFieldId && currentFieldId !== prevFieldIdRef.current) {
       prevFieldIdRef.current = currentFieldId;
@@ -272,20 +264,13 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     }
   }, [currentFieldId, defaultStartDate, defaultEndDate, dispatch]);
 
-  // Fetch when coordinates or applied dates change
   useEffect(() => {
     if (coordinates.length > 0) {
       debouncedFetchDates(coordinates, appliedStartDate, appliedEndDate);
     }
     return () => debouncedFetchDates.cancel?.();
-  }, [
-    coordinates,
-    appliedStartDate,
-    appliedEndDate,
-    debouncedFetchDates,
-  ]);
+  }, [coordinates, appliedStartDate, appliedEndDate, debouncedFetchDates]);
 
-  // Responsive visible count
   useEffect(() => {
     const handleResize = () => {
       setVisibleCount(window.innerWidth < 1024 ? 5 : 6);
@@ -295,17 +280,14 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Process satellite dates
   useEffect(() => {
     const items = satelliteDates?.items || [];
-
     if (!items.length) {
       setDates([]);
       setVisibleDates([]);
       if (selectedDate) setSelectedDate("");
       return;
     }
-
     const dateMap = new Map();
     items.forEach((item) => {
       const isoDate = toISODateString(item.date);
@@ -317,11 +299,9 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
         });
       }
     });
-
     const uniqueDates = Array.from(dateMap.values()).sort(
-      (a, b) => new Date(b.isoDate) - new Date(a.isoDate)
+      (a, b) => new Date(b.isoDate) - new Date(a.isoDate),
     );
-
     setDates(uniqueDates);
     setVisibleDates(uniqueDates.slice(0, visibleCount));
 
@@ -329,24 +309,21 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
       const bestIso = pickLowCloudIsoDate(
         uniqueDates,
         uniqueDates[0].isoDate,
-        CLOUD_COVER_THRESHOLD
+        CLOUD_COVER_THRESHOLD,
       );
       setSelectedDate(bestIso);
     }
   }, [satelliteDates, visibleCount, selectedDate]);
 
-  // Enforce "low cloud" selection before index API calls.
   useEffect(() => {
     if (!selectedDate || dates.length === 0) return;
-
     const selectedObj = dates.find((d) => d.isoDate === selectedDate);
     const selectedCloud = selectedObj?.value ?? 0;
-
     if (selectedCloud > CLOUD_COVER_THRESHOLD) {
       const fallbackIso = pickLowCloudIsoDate(
         dates,
         selectedDate,
-        CLOUD_COVER_THRESHOLD
+        CLOUD_COVER_THRESHOLD,
       );
       if (fallbackIso && fallbackIso !== selectedDate) {
         setSelectedDate(fallbackIso);
@@ -354,15 +331,19 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     }
   }, [selectedDate, dates]);
 
-  // Scroll to selected date
   useEffect(() => {
     if (selectedDate && dates.length > 0) {
       const selectedIndex = dates.findIndex((d) => d.isoDate === selectedDate);
       if (selectedIndex !== -1) {
-        const pageStart = Math.floor(selectedIndex / visibleCount) * visibleCount;
-        const newVisibleDates = dates.slice(pageStart, pageStart + visibleCount);
-
-        const isInCurrentView = visibleDates.some((d) => d.isoDate === selectedDate);
+        const pageStart =
+          Math.floor(selectedIndex / visibleCount) * visibleCount;
+        const newVisibleDates = dates.slice(
+          pageStart,
+          pageStart + visibleCount,
+        );
+        const isInCurrentView = visibleDates.some(
+          (d) => d.isoDate === selectedDate,
+        );
         if (!isInCurrentView && newVisibleDates.length > 0) {
           setVisibleDates(newVisibleDates);
         }
@@ -372,43 +353,46 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
 
   const handleApplyDateRange = useCallback(() => {
     if (!customStartDate || !customEndDate) return;
-
     const today = getTodayDate();
-
     if (customStartDate > customEndDate) {
       setErrorModal({
         isOpen: true,
-        message: "Start date cannot be after end date. Please select a valid date range.",
+        message:
+          "Start date cannot be after end date. Please select a valid date range.",
       });
       return;
     }
-
     if (customStartDate === customEndDate) {
       setErrorModal({
         isOpen: true,
-        message: "Start date and end date cannot be the same. Please select different dates to view satellite data.",
+        message:
+          "Start date and end date cannot be the same. Please select different dates to view satellite data.",
       });
       return;
     }
-
     if (customEndDate > today) {
       setErrorModal({
         isOpen: true,
-        message: "End date cannot be in the future. Please select a valid date.",
+        message:
+          "End date cannot be in the future. Please select a valid date.",
       });
       return;
     }
-
     setAppliedStartDate(customStartDate);
     setAppliedEndDate(customEndDate);
     setSelectedDate("");
     setIsCalendarVisible(false);
     dispatch(clearSatelliteDates());
-
     if (coordinates.length > 0) {
       fetchDatesDirectly(coordinates, customStartDate, customEndDate);
     }
-  }, [customStartDate, customEndDate, coordinates, fetchDatesDirectly, dispatch]);
+  }, [
+    customStartDate,
+    customEndDate,
+    coordinates,
+    fetchDatesDirectly,
+    dispatch,
+  ]);
 
   const handleResetDateRange = useCallback(() => {
     setCustomStartDate(defaultStartDate);
@@ -418,56 +402,50 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     setSelectedDate("");
     setIsCalendarVisible(false);
     dispatch(clearSatelliteDates());
-
     if (coordinates.length > 0) {
       fetchDatesDirectly(coordinates, defaultStartDate, defaultEndDate);
     }
-  }, [defaultStartDate, defaultEndDate, coordinates, fetchDatesDirectly, dispatch]);
+  }, [
+    defaultStartDate,
+    defaultEndDate,
+    coordinates,
+    fetchDatesDirectly,
+    dispatch,
+  ]);
 
   const handleArrowClick = useCallback(
     (direction) => {
       if (!dates.length) return;
-
       const currentStart = dates.findIndex(
-        (d) => d.isoDate === visibleDates[0]?.isoDate
+        (d) => d.isoDate === visibleDates[0]?.isoDate,
       );
-
       if (currentStart === -1) return;
-
       const maxStart = Math.max(0, dates.length - visibleCount);
       const delta = direction === "next" ? visibleCount : -visibleCount;
       const nextStartRaw = currentStart + delta;
       const nextStart = Math.min(maxStart, Math.max(0, nextStartRaw));
-
       const nextVisibleDates = dates.slice(nextStart, nextStart + visibleCount);
       setVisibleDates(nextVisibleDates);
-
-      // Keep the highlight meaningful: if the selected date isn't visible after paging,
-      // switch selection to the first visible date.
       const isSelectedVisible = nextVisibleDates.some(
-        (d) => d.isoDate === selectedDate
+        (d) => d.isoDate === selectedDate,
       );
       if (!isSelectedVisible) {
         setSelectedDate(nextVisibleDates[0]?.isoDate || "");
       }
     },
-    [dates, visibleDates, visibleCount, selectedDate]
+    [dates, visibleDates, visibleCount, selectedDate],
   );
 
   const handleDateClick = useCallback(
     (isoDate) => {
       if (!isoDate || isoDate === selectedDate) return;
-
       const clickedObj = dates.find((d) => d.isoDate === isoDate);
       const clickedCloud = clickedObj?.value ?? 0;
-
       const bestIso = pickLowCloudIsoDate(
         dates,
         isoDate,
-        CLOUD_COVER_THRESHOLD
+        CLOUD_COVER_THRESHOLD,
       );
-
-      // Only show warning when user explicitly clicks a too-cloudy date.
       if (clickedCloud > CLOUD_COVER_THRESHOLD) {
         setCloudModal({
           isOpen: true,
@@ -475,24 +453,20 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
             "This date has too much cloud cover, so the image may not be clear. We selected an older clearer date instead.",
         });
       }
-
       if (bestIso && bestIso !== selectedDate) setSelectedDate(bestIso);
     },
-    [selectedDate, dates]
+    [selectedDate, dates],
   );
 
   const toggleCalendar = useCallback(() => {
     setIsCalendarVisible((prev) => !prev);
   }, []);
-
   const closeCalendar = useCallback(() => {
     setIsCalendarVisible(false);
   }, []);
-
   const closeErrorModal = useCallback(() => {
     setErrorModal({ isOpen: false, message: "" });
   }, []);
-
   const closeCloudModal = useCallback(() => {
     setCloudModal({ isOpen: false, message: "" });
   }, []);
@@ -501,34 +475,63 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     if (loading.satelliteDates || !dates.length) return true;
     const maxStart = Math.max(0, dates.length - visibleCount);
     const currentStart = dates.findIndex(
-      (d) => d.isoDate === visibleDates[0]?.isoDate
+      (d) => d.isoDate === visibleDates[0]?.isoDate,
     );
     if (currentStart === -1) return true;
     return currentStart <= 0 || currentStart > maxStart;
   }, [loading.satelliteDates, dates, visibleDates, visibleCount]);
-
   const isNextDisabled = useMemo(() => {
     if (loading.satelliteDates || !dates.length) return true;
     const maxStart = Math.max(0, dates.length - visibleCount);
     const currentStart = dates.findIndex(
-      (d) => d.isoDate === visibleDates[0]?.isoDate
+      (d) => d.isoDate === visibleDates[0]?.isoDate,
     );
     if (currentStart === -1) return true;
     return currentStart >= maxStart;
   }, [loading.satelliteDates, dates, visibleDates, visibleCount]);
 
+  // The skeleton loader is only shown *over* the date strip, not the rest (arrows, calendar, etc).
   const renderDateItems = () => {
-    if (loading.satelliteDates || visibleDates.length === 0) {
+    if (loading.satelliteDates) {
       return <DateSkeleton count={visibleCount} />;
     }
-
+    if (visibleDates.length === 0) {
+      return (
+        <div className="flex flex-col items-center w-full text-xs text-gray-400 opacity-80 px-2 py-4">
+          <div className="flex flex-row gap-2 w-full justify-center items-center">
+            {/* Loader */}
+            <svg
+              className="animate-spin h-6 w-6 text-[#28C878]"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            <span>Loading satellite dates…</span>
+          </div>
+        </div>
+      );
+    }
     return visibleDates.map((dateItem) => (
       <div
         key={dateItem.isoDate}
         className={`flex flex-col items-center text-white cursor-pointer rounded px-4 py-2.5 min-w-[90px] transition-colors ${
           dateItem.isoDate === selectedDate
-            ? "bg-[#344e41]"
-            : "bg-transparent hover:bg-[#344e41]/50"
+            ? "bg-ember-sidebar brightness-75 shadow-inner"
+            : "bg-transparent hover:bg-ember-sidebar/50"
         }`}
         onClick={() => handleDateClick(dateItem.isoDate)}
         role="option"
@@ -557,33 +560,31 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
         onClose={closeErrorModal}
         message={errorModal.message}
       />
-
       <ErrorModal
         isOpen={cloudModal.isOpen}
         onClose={closeCloudModal}
         message={cloudModal.message}
         title="Too much cloud"
       />
-
       <SatelliteIndexList
         selectedFieldsDetials={selectedFieldsDetials}
         selectedDate={selectedDate}
       />
-
-      <div className="flex items-center gap-2 w-full px-2 bg-[#5a7c6b] rounded-md relative">
+      <div className="flex items-center gap-2 w-full px-2 bg-ember-surface rounded-md relative">
         <div className="relative flex items-center">
           <button
             type="button"
             onClick={toggleCalendar}
             className={`bg-transparent border-none cursor-pointer p-1 rounded transition-colors ${
-              isCalendarVisible ? "bg-[#344e41]" : "hover:bg-[#344e41]/50"
+              isCalendarVisible
+                ? "bg-ember-sidebar"
+                : "hover:bg-ember-sidebar/50"
             }`}
             aria-label="Toggle calendar"
             title="Select date range"
           >
             <Calender />
           </button>
-
           {isCalendarVisible && (
             <DateRangePicker
               startDate={customStartDate}
@@ -597,7 +598,6 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
             />
           )}
         </div>
-
         {!isDefaultRange && (
           <DateRangeBadge
             startDate={appliedStartDate}
@@ -605,7 +605,6 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
             onClear={handleResetDateRange}
           />
         )}
-
         <button
           type="button"
           onClick={() => handleArrowClick("prev")}
@@ -614,11 +613,10 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
         >
           <LeftArrow />
         </button>
-
+        {/* Only put the skeleton loader here, over the date items */}
         <div className="flex gap-2 overflow-x-auto w-full justify-between py-[5px] scrollbar-hide scroll-smooth">
           {renderDateItems()}
         </div>
-
         <button
           type="button"
           onClick={() => handleArrowClick("next")}
@@ -635,6 +633,6 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
 export default React.memo(IndexSelector, (prev, next) =>
   areArraysEqual(
     prev.selectedFieldsDetials[0]?.field,
-    next.selectedFieldsDetials[0]?.field
-  )
+    next.selectedFieldsDetials[0]?.field,
+  ),
 );

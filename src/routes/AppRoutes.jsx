@@ -50,6 +50,9 @@ const AppRoutes = () => {
           <Route path="*" element={<PageNotFound />} />
         </Route>
         <Route path="/login" element={<AuthLayout />} />
+        <Route path="/signup" element={<AuthLayout />} />
+        <Route path="/signup/language" element={<AuthLayout />} />
+        <Route path="/signup/account" element={<AuthLayout />} />
       </Routes>
     </Router>
   );
