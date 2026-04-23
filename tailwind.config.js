@@ -6,12 +6,12 @@ module.exports = {
       colors: {
         /** Ember green — aligned with biodrops map / dashboard chrome */
         ember: {
-          sidebar: "#0B5D3D",
-          "sidebar-hover": "#094A35",
-          surface: "#0B5D3D",
-          "surface-muted": "#073628",
-          primary: "#3DA660",
-          "primary-hover": "#2D8B5E",
+          sidebar: "#344E41",
+          "sidebar-hover": "#2B4035",
+          surface: "#344E41",
+          "surface-muted": "#4A6A5A",
+          primary: "#344E41",
+          "primary-hover": "#2B4035",
           accent: "#8CC63F",
           "light-lime": "#D4E8A8",
           card: "#F8FBFA",

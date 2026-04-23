@@ -49,11 +49,14 @@ export default function SatelliteIndexScroll() {
           <div
             key={index}
             onClick={() => handleSelect(index)}
-            className={`min-w-[60px] px-3 py-[6px] text-[11px] font-bold uppercase rounded-md text-center cursor-pointer whitespace-nowrap transition-all
-              ${index === activeIndex
-                ? "bg-[#344E41] text-white shadow-[inset_0_0_6px_rgba(0,0,0,0.4)]"
-                : "bg-[#5A7C6B] text-white shadow-sm"
-              }`}
+            className={`min-w-[60px] px-3 py-[6px] text-[11px] font-bold uppercase rounded-md text-center cursor-pointer whitespace-nowrap transition-all text-white
+              ${index === activeIndex ? "shadow-[inset_0_0_6px_rgba(0,0,0,0.4)]" : "shadow-sm"}`}
+            style={{
+              backgroundColor:
+                index === activeIndex
+                  ? "var(--cg-primary)"
+                  : "var(--cg-surface-muted)",
+            }}
           >
             {label}
           </div>
@@ -63,7 +66,8 @@ export default function SatelliteIndexScroll() {
       {/* Right Arrow Button */}
       <button
         onClick={scrollToNext}
-        className="bg-[#5A7C6B] hover:bg-[#6e9c83] transition-colors text-white p-1 rounded-md shadow-sm"
+        className="transition-colors text-white p-1 rounded-md shadow-sm"
+        style={{ backgroundColor: "var(--cg-surface-muted)" }}
       >
         <ChevronRight size={14} />
       </button>

@@ -421,8 +421,14 @@ const SignupLogin = () => {
     ).then((res) => {
       setVerifyingOtp(false);
       if (res.meta.requestStatus === "fulfilled") {
+        const responseData = res.payload?.data || {};
+        const requiresOnboarding =
+          res.payload?.onboardingRequired ??
+          responseData.onboardingRequired ??
+          responseData.user?.onboardingRequired ??
+          false;
         setOtpVerified(true);
-        if (res.payload && res.payload.onboardingRequired === false) {
+        if (!requiresOnboarding || !isSignupAccount) {
           clearOnboarding();
           navigate("/cropgen-analytics");
         } else {

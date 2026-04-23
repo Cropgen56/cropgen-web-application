@@ -53,7 +53,7 @@
   height: 100%;
   z-index: 9999;
   border-right: 1px solid #ddd;
-  background-color: #344e41 !important;
+  background-color: var(--cg-primary) !important;
   overflow: hidden;
   width: 240px !important;
   transition: width 0.3s ease;
@@ -89,7 +89,7 @@
 /* ===== PROFILE CARD STYLES ===== */
 .card {
   margin: 5px auto 10px auto; /* Reduced top margin significantly */
-  background-color: #5a7c6b !important;
+  background-color: var(--cg-surface-muted) !important;
   cursor: pointer;
   transition: transform 0.2s ease;
   border: none !important;
@@ -102,7 +102,7 @@
 }
 
 .profile-card {
-  background: #5a7c6b !important;
+  background: var(--cg-surface-muted) !important;
   border: none !important;
   border-radius: 12px !important;
 }
@@ -151,7 +151,7 @@
   font-size: 1rem !important; /* Slightly smaller */
   font-weight: 700 !important;
   line-height: 1.3;
-  color: #f8f8f8 !important;
+  color: var(--cg-text-on-primary) !important;
   margin-top: 4px; /* Reduced margin */
 }
 
@@ -203,7 +203,7 @@ nav li {
   font-size: 0.9rem;
   font-weight: 700 !important;
   line-height: 1.8rem; /* Slightly reduced */
-  color: #f5f5f5 !important;
+  color: var(--cg-text-on-primary) !important;
   cursor: pointer;
   display: flex !important;
   align-items: center;
@@ -229,7 +229,7 @@ nav li svg {
 
 nav a {
   text-decoration: none;
-  color: #f5f5f5;
+  color: var(--cg-text-on-primary);
   font-weight: 700 !important;
 }
 
@@ -238,7 +238,7 @@ nav a {
   flex-shrink: 0;
   padding: 8px 10px; /* Reduced from 15px to 8px */
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: #344e41;
+  background-color: var(--cg-primary);
   margin-top: auto;
 }
 
@@ -296,7 +296,7 @@ nav a {
   height: 100vh;
   width: 60px;
   z-index: 1000;
-  background: var(--sidebar-bg-color);
+  background: var(--cg-primary);
 }
 
 .collapsed-sidebar .sidebar-nav {

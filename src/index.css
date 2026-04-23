@@ -5,6 +5,15 @@
 /* Import Poppins font */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
+/* CropGen shared brand colors */
+:root {
+  --cg-primary: #344e41;
+  --cg-primary-hover: #2b4035;
+  --cg-surface: #344e41;
+  --cg-surface-muted: #4a6a5a;
+  --cg-text-on-primary: #f8f8f8;
+}
+
 /* Global styles */
 /* Responsive & optimization base */
 * {

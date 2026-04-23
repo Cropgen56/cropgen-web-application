@@ -313,7 +313,10 @@ const Sidebar = ({ onToggleCollapse }) => {
 
   if (isMobile) {
     return (
-      <div className="sidebar tablet-mobile bg-[#344e41]">
+      <div
+        className="sidebar tablet-mobile"
+        style={{ backgroundColor: "var(--cg-primary)" }}
+      >
         <div className="collapsed-sidebar">{renderCollapsedNav()}</div>
 
         <Offcanvas
