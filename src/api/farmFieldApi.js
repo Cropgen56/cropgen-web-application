@@ -12,6 +12,7 @@ export const addFieldAPI = async ({
   farmName,
   acre,
   typeOfFarming,
+  isBarrenLand,
 }) => {
   try {
     const response = await api.post(
@@ -25,6 +26,7 @@ export const addFieldAPI = async ({
         farmName,
         acre,
         typeOfFarming,
+        isBarrenLand,
       }
     );
     return response.data;

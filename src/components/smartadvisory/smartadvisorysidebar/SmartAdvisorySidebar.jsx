@@ -4,6 +4,7 @@ import { CiSearch } from "react-icons/ci";
 import { useSelector } from "react-redux";
 import PolygonPreview from "../../polygon/PolygonPreview";
 import { ChevronLeft } from "lucide-react";
+import SubscriptionStatusBadge from "../../comman/SubscriptionStatusBadge";
 
 const FieldInfo = ({
   title,
@@ -22,20 +23,14 @@ const FieldInfo = ({
     onClick={onClick}
   >
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
-    <div className="flex-grow">
-      <div className="flex items-center justify-between mb-1">
-        <h4 className={`text-base ${isSelected ? "text-white" : "text-[#344e41]"}`}>
-          {title.length > 8 ? `${title.slice(0, 8)}...` : title}
-        </h4>
-        <div
-          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
-            isSubscribed
-              ? "bg-[#DAFFED] text-[#28C878] border border-[#28C878]/30"
-              : "bg-[#FFDEDF] text-[#EC1C24] border border-[#EC1C24]/30"
-          }`}
+    <div className="flex-grow min-w-0">
+      <div className="flex items-center gap-1.5 mb-1 min-w-0">
+        <h4
+          className={`text-base min-w-0 flex-1 truncate ${isSelected ? "text-white" : "text-[#344e41]"}`}
         >
-          {isSubscribed ? "Subscribed" : "Unsubscribed"}
-        </div>
+          {title}
+        </h4>
+        <SubscriptionStatusBadge isSubscribed={isSubscribed} />
       </div>
       <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
       <div className="flex gap-4 text-xs text-[#a2a2a2]">

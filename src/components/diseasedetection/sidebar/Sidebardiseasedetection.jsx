@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { CiSearch } from "react-icons/ci";
 import { DieaseDetactiondark } from "../../../assets/Icons";
 import PolygonPreview from "../../polygon/PolygonPreview";
+import SubscriptionStatusBadge from "../../comman/SubscriptionStatusBadge";
 
 const FieldInfo = ({
   title,
@@ -22,26 +23,16 @@ const FieldInfo = ({
   >
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
 
-    <div className="flex-grow">
-      <div className="flex items-center justify-between mb-1">
+    <div className="flex-grow min-w-0">
+      <div className="flex items-center gap-1.5 mb-1 min-w-0">
         <h4
-          className={`text-base ${
+          className={`text-base min-w-0 flex-1 truncate ${
             isSelected ? "text-white" : "text-[#344e41]"
           }`}
         >
-          {title.length > 8 ? `${title.slice(0, 8)}...` : title}
+          {title}
         </h4>
-
-        {/* SUBSCRIPTION BADGE */}
-        <div
-          className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
-            isSubscribed
-              ? "bg-[#DAFFED] text-[#28C878] border border-[#28C878]/30"
-              : "bg-[#FFDEDF] text-[#EC1C24] border border-[#EC1C24]/30"
-          }`}
-        >
-          {isSubscribed ? "Subscribed" : "Unsubscribed"}
-        </div>
+        <SubscriptionStatusBadge isSubscribed={isSubscribed} />
       </div>
 
       <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>

@@ -8,6 +8,8 @@ import * as turf from "@turf/turf";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import PricingOverlay from "../components/pricing/PricingOverlay";
+import FieldStatusOverlay from "../components/addfield/FieldStatusOverlay";
+import LandStatusGate from "../components/addfield/LandStatusGate";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
@@ -19,6 +21,10 @@ const AddField = () => {
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const [selectedField, setSelectedField] = useState(null);
+  /** null until user picks on gate; then 'crop' | 'barren' */
+  const [fieldLandType, setFieldLandType] = useState(null);
+  const [showFieldStatusOverlay, setShowFieldStatusOverlay] = useState(false);
+
   /** When set, map opens centered on the user (browser geolocation). */
   const [initialMapCenter, setInitialMapCenter] = useState(null);
 
@@ -65,7 +71,22 @@ const AddField = () => {
 
   /* ================= MAP ACTIONS ================= */
 
-  const toggleAddMarkers = () => setIsAddingMarkers((prev) => !prev);
+  const toggleAddMarkers = () => {
+    setIsAddingMarkers((prev) => !prev);
+  };
+
+  const handleFieldStatusConfirm = (type) => {
+    setFieldLandType(type);
+    setShowFieldStatusOverlay(false);
+  };
+
+  const handleFieldStatusDismiss = () => {
+    setShowFieldStatusOverlay(false);
+  };
+
+  const openFieldStatusForChange = () => {
+    setShowFieldStatusOverlay(true);
+  };
 
   const clearMarkers = () => setMarkers([]);
 
@@ -96,6 +117,7 @@ const AddField = () => {
     typeOfIrrigation,
     farmName,
     typeOfFarming,
+    isBarrenLand,
   }) => {
     if (markers.length === 0) {
       message.error("No markers added. Please add markers first.");
@@ -118,6 +140,7 @@ const AddField = () => {
           acre: areaInAcres,
           typeOfFarming,
           areaInHectares,
+          isBarrenLand,
         }),
       ).unwrap();
 
@@ -157,13 +180,6 @@ const AddField = () => {
     }
   };
 
-  /* ================= CURRENT AREA ================= */
-
-  const getCurrentArea = () => {
-    if (markers.length < 3) return 0;
-    return acresToHectares(calculateArea(markers));
-  };
-
   const getMapHeight = () => {
     if (isMobileView) return "35vh";
     return "40vh";
@@ -178,6 +194,92 @@ const AddField = () => {
 
   return (
     <div className="relative w-full min-h-screen h-[100dvh] overflow-hidden bg-[#f8faf8]">
+      {fieldLandType === null ? (
+        <LandStatusGate onConfirm={(t) => setFieldLandType(t)} />
+      ) : (
+        <>
+          <FieldStatusOverlay
+            open={showFieldStatusOverlay && !showOverlay}
+            allowDismiss
+            onDismiss={handleFieldStatusDismiss}
+            onConfirm={handleFieldStatusConfirm}
+          />
+
+          {isTabletView ? (
+            <div className="w-full min-h-screen flex flex-col">
+              <div
+                className={`relative w-full flex-shrink-0 border-b border-ember-sidebar/20 shadow-sm ${
+                  showOverlay ? "h-screen z-[30]" : "z-0"
+                }`}
+                style={{ height: showOverlay ? "100vh" : getMapHeight() }}
+              >
+                <AddFieldMap
+                  markers={markers}
+                  setMarkers={setMarkers}
+                  isAddingMarkers={isAddingMarkers}
+                  toggleAddMarkers={toggleAddMarkers}
+                  clearMarkers={clearMarkers}
+                  isTabletView={isTabletView}
+                  onToggleSidebar={toggleSidebar}
+                  showUploadOverlay={showOverlay}
+                  initialMapCenter={initialMapCenter}
+                />
+              </div>
+
+              <AnimatePresence>
+                {isSidebarVisible && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 16 }}
+                    transition={{ duration: 0.3 }}
+                    className={`w-full flex-grow overflow-y-auto bg-white rounded-t-2xl -mt-4 relative z-20 shadow-[0_-4px_20px_rgba(52,78,65,0.08)] ${
+                      showOverlay ? "z-10" : "z-20"
+                    }`}
+                    style={{ minHeight: getSidebarHeight() }}
+                  >
+                    <div className="pt-4 pb-6 px-4 sm:px-6">
+                      <AddFieldSidebar
+                        saveFarm={saveFarm}
+                        markers={markers}
+                        isTabletView={true}
+                        fieldLandType={fieldLandType}
+                        isDrawingField={isAddingMarkers}
+                        onRequestChangeFieldStatus={openFieldStatusForChange}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="w-full h-screen flex overflow-hidden">
+              <div className="hidden sm:block flex-shrink-0 border-r border-ember-sidebar/15 bg-white shadow-sm">
+                <AddFieldSidebar
+                  saveFarm={saveFarm}
+                  markers={markers}
+                  fieldLandType={fieldLandType}
+                  isDrawingField={isAddingMarkers}
+                  onRequestChangeFieldStatus={openFieldStatusForChange}
+                />
+              </div>
+
+              <div className="flex-1 min-w-0 relative">
+                <AddFieldMap
+                  markers={markers}
+                  setMarkers={setMarkers}
+                  isAddingMarkers={isAddingMarkers}
+                  toggleAddMarkers={toggleAddMarkers}
+                  clearMarkers={clearMarkers}
+                  onToggleSidebar={toggleSidebar}
+                  initialMapCenter={initialMapCenter}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
       <AnimatePresence>
         {showOverlay && selectedField && (
           <motion.div
@@ -186,7 +288,7 @@ const AddField = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 z-[10100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
           >
             <PricingOverlay
               onClose={handleClosePricing}
@@ -195,75 +297,6 @@ const AddField = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {isTabletView ? (
-        <div className="w-full min-h-screen flex flex-col">
-          <div
-            className={`relative w-full flex-shrink-0 border-b border-[#344e41]/20 shadow-sm ${
-              showOverlay ? "h-screen z-[30]" : "z-0"
-            }`}
-            style={{ height: showOverlay ? "100vh" : getMapHeight() }}
-          >
-            <AddFieldMap
-              markers={markers}
-              setMarkers={setMarkers}
-              isAddingMarkers={isAddingMarkers}
-              toggleAddMarkers={toggleAddMarkers}
-              clearMarkers={clearMarkers}
-              isTabletView={isTabletView}
-              onToggleSidebar={toggleSidebar}
-              showUploadOverlay={showOverlay}
-              initialMapCenter={initialMapCenter}
-            />
-          </div>
-
-          <AnimatePresence>
-            {isSidebarVisible && (
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 16 }}
-                transition={{ duration: 0.3 }}
-                className={`w-full flex-grow overflow-y-auto bg-white rounded-t-2xl -mt-4 relative z-20 shadow-[0_-4px_20px_rgba(52,78,65,0.08)] ${
-                  showOverlay ? "z-10" : "z-20"
-                }`}
-                style={{ minHeight: getSidebarHeight() }}
-              >
-                <div className="pt-4 pb-6 px-4 sm:px-6">
-                  <AddFieldSidebar
-                    saveFarm={saveFarm}
-                    markers={markers}
-                    isTabletView={true}
-                    currentArea={getCurrentArea()}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      ) : (
-        <div className="w-full h-screen flex overflow-hidden">
-          <div className="hidden sm:block flex-shrink-0 border-r border-[#344e41]/15 bg-white shadow-sm">
-            <AddFieldSidebar
-              saveFarm={saveFarm}
-              markers={markers}
-              currentArea={getCurrentArea()}
-            />
-          </div>
-
-          <div className="flex-1 min-w-0 relative">
-            <AddFieldMap
-              markers={markers}
-              setMarkers={setMarkers}
-              isAddingMarkers={isAddingMarkers}
-              toggleAddMarkers={toggleAddMarkers}
-              clearMarkers={clearMarkers}
-              onToggleSidebar={toggleSidebar}
-              initialMapCenter={initialMapCenter}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

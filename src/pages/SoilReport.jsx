@@ -40,6 +40,30 @@ const SoilReport = () => {
     if (userId) dispatch(getFarmFields(userId));
   }, [dispatch, userId]);
 
+  // #region agent log
+  useEffect(() => {
+    fetch("http://127.0.0.1:7904/ingest/32eac84f-dd56-4cc2-9343-d9dd7fb0d851", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "011770",
+      },
+      body: JSON.stringify({
+        sessionId: "011770",
+        runId: "run1",
+        hypothesisId: "A",
+        location: "SoilReport.jsx:getFarmFields-effect",
+        message: "userId and fields fetch trigger",
+        data: {
+          hasUserId: Boolean(userId),
+          fieldsLen: fields.length,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [userId, fields.length]);
+  // #endregion
+
   useEffect(() => {
     if (fields?.length > 0 && !selectedField) {
       const lastField = fields[fields.length - 1];
@@ -95,6 +119,24 @@ const SoilReport = () => {
 
   const handleGenerateReport = useCallback((field) => {
     if (!field) return;
+    // #region agent log
+    fetch("http://127.0.0.1:7904/ingest/32eac84f-dd56-4cc2-9343-d9dd7fb0d851", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "011770",
+      },
+      body: JSON.stringify({
+        sessionId: "011770",
+        runId: "run1",
+        hypothesisId: "E",
+        location: "SoilReport.jsx:handleGenerateReport",
+        message: "generate report invoked",
+        data: { fieldId: field?._id ?? null },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
     setSelectedField(field);
     setSelectedOperation(field);
     setReportData({
@@ -176,6 +218,69 @@ const SoilReport = () => {
       ),
     [selectedField],
   );
+
+  // #region agent log
+  useEffect(() => {
+    fetch("http://127.0.0.1:7904/ingest/32eac84f-dd56-4cc2-9343-d9dd7fb0d851", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "011770",
+      },
+      body: JSON.stringify({
+        sessionId: "011770",
+        runId: "run1",
+        hypothesisId: "B-C-E",
+        location: "SoilReport.jsx:subscription-selection",
+        message: "selection and premium gate",
+        data: {
+          fieldsLen: fields.length,
+          selectedId: selectedField?._id ?? null,
+          operationId: selectedOperation?._id ?? null,
+          idsMatch:
+            (selectedField?._id ?? "") === (selectedOperation?._id ?? ""),
+          hasSubscription,
+          reportReady: Boolean(reportData),
+          soilReportFeature: Boolean(
+            selectedField?.subscription?.plan?.features?.soilReportGeneration,
+          ),
+          hasActiveSub: Boolean(
+            selectedField?.subscription?.hasActiveSubscription,
+          ),
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [
+    fields.length,
+    selectedField?._id,
+    selectedOperation?._id,
+    hasSubscription,
+    reportData,
+  ]);
+  // #endregion
+
+  // #region agent log
+  useEffect(() => {
+    if (fields.length !== 0) return;
+    fetch("http://127.0.0.1:7904/ingest/32eac84f-dd56-4cc2-9343-d9dd7fb0d851", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Debug-Session-Id": "011770",
+      },
+      body: JSON.stringify({
+        sessionId: "011770",
+        runId: "run1",
+        hypothesisId: "A",
+        location: "SoilReport.jsx:empty-fields",
+        message: "empty fields — add farm screen",
+        data: { hasUserId: Boolean(userId) },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+  }, [fields.length, userId]);
+  // #endregion
 
   if (fields.length === 0) {
     return (

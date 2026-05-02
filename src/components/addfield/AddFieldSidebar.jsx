@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   ArrowLeft,
   ChevronDown,
@@ -10,7 +10,14 @@ import { message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCrops } from "../../redux/slices/cropSlice";
 
-const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
+const AddFieldSidebar = ({
+  saveFarm,
+  markers,
+  isTabletView,
+  fieldLandType = "crop",
+  isDrawingField = false,
+  onRequestChangeFieldStatus,
+}) => {
   const [farmName, setFarmName] = useState("");
   const [cropName, setCropName] = useState("");
   const [variety, setVariety] = useState("");
@@ -30,48 +37,118 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
     dispatch(fetchCrops());
   }, [dispatch]);
 
-  const handleAddField = () => {
-    const today = new Date();
-    if (!farmName.trim()) return message.error("Please enter the Farm Name.");
-    if (!cropName.trim()) return message.error("Please select a Crop Name.");
-    if (!variety.trim()) return message.error("Please enter the Variety.");
-    if (!sowingDate.trim())
-      return message.error("Please select the Sowing Date.");
-    if (new Date(sowingDate) > today)
-      return message.error("Sowing Date cannot be in the future.");
-    if (!typeOfIrrigation.trim())
-      return message.error("Please select the Type of Irrigation.");
-    if (markers.length === 0) return message.warning("Please add Field !.");
+  useEffect(() => {
+    setSowingDate("");
+  }, [fieldLandType]);
 
-    saveFarm({
-      markers,
+  const handleAddField = useCallback(
+    (landTypeOverride) => {
+      const landType =
+        landTypeOverride === "crop" || landTypeOverride === "barren"
+          ? landTypeOverride
+          : fieldLandType;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const sowing = sowingDate.trim() ? new Date(sowingDate) : null;
+      if (sowing) sowing.setHours(0, 0, 0, 0);
+
+      if (!farmName.trim())
+        return message.error("Please enter the Farm Name.");
+      if (!cropName.trim()) return message.error("Please select a Crop Name.");
+      if (!variety.trim()) return message.error("Please enter the Variety.");
+      if (!sowingDate.trim()) {
+        return message.error(
+          landType === "barren"
+            ? "Please select the expected sowing date."
+            : "Please select the sowing date.",
+        );
+      }
+      if (landType === "crop" && sowing > today)
+        return message.error("Sowing date cannot be in the future.");
+      if (landType === "barren" && sowing < today)
+        return message.error("Expected sowing date cannot be in the past.");
+      if (!typeOfIrrigation.trim())
+        return message.error("Please select the Type of Irrigation.");
+      if (markers.length === 0) return message.warning("Please add Field !.");
+
+      saveFarm({
+        markers,
+        cropName,
+        variety,
+        sowingDate,
+        typeOfIrrigation,
+        farmName,
+        typeOfFarming,
+        isBarrenLand: landType === "barren",
+      });
+
+      setFarmName("");
+      setCropName("");
+      setVariety("");
+      setSowingDate("");
+      setTypeOfIrrigation("");
+      setTypeOfFarming("");
+    },
+    [
+      fieldLandType,
+      farmName,
       cropName,
       variety,
       sowingDate,
       typeOfIrrigation,
-      farmName,
       typeOfFarming,
-    });
+      markers,
+      saveFarm,
+    ],
+  );
 
-    setFarmName("");
-    setCropName("");
-    setVariety("");
-    setSowingDate("");
-    setTypeOfIrrigation("");
-    setTypeOfFarming("");
-  };
+  const fieldStatusSummary = (
+    <div className="rounded-lg border border-[#0b5d3d]/18 bg-[#f4faf6] px-3 py-2.5 mb-2 sm:mb-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <span className="text-xs font-semibold text-ember-sidebar">
+          Field status
+        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`text-xs font-medium px-2.5 py-1 rounded-full text-white ${
+              fieldLandType === "barren" ? "bg-[#436b52]" : "bg-ember-sidebar"
+            }`}
+          >
+            {fieldLandType === "barren" ? "Barren land" : "Crop in field"}
+          </span>
+          {!isDrawingField && (
+            <button
+              type="button"
+              onClick={() => onRequestChangeFieldStatus?.()}
+              className="text-xs font-semibold text-ember-sidebar underline underline-offset-2 hover:text-ember-sidebar-hover"
+            >
+              Change
+            </button>
+          )}
+        </div>
+      </div>
+      <p className="text-[11px] sm:text-xs text-gray-600 mt-1.5 leading-snug">
+        {fieldLandType === "barren"
+          ? "Use expected sowing date below (today or future)."
+          : "Use actual sowing date below (today or earlier)."}
+      </p>
+    </div>
+  );
 
   if (!isSidebarVisible) return null;
 
   return (
     <>
       {isTabletView ? (
-        <div className="flex-1 flex flex-col justify-start items-center px-2 sm:px-4 pb-4 text-[#344e41] z-[9999] h-full overflow-y-auto no-scrollbar">
+        <div className="flex-1 flex flex-col justify-start items-center px-2 sm:px-4 pb-4 text-ember-sidebar z-[9999] h-full overflow-y-auto no-scrollbar">
           <div className="flex justify-center items-start p-1 sm:p-2 w-full min-h-min">
             <div className="w-full max-w-6xl bg-white shadow-lg rounded-xl p-3 sm:p-4 md:p-6 mx-auto">
-              <h5 className="text-[#344e41] mb-3 sm:mb-4 md:mb-6 text-center text-base sm:text-lg font-bold">
+              <h5 className="text-ember-sidebar mb-3 sm:mb-4 md:mb-6 text-center text-base sm:text-lg font-bold">
                 Crop Details
               </h5>
+
+              {fieldStatusSummary}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 <FormInput
@@ -96,11 +173,20 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   placeholder="Enter crop variety"
                 />
                 <CustomDatePicker
-                  label="Sowing Date"
+                  label={
+                    fieldLandType === "barren"
+                      ? "Expected sowing date"
+                      : "Sowing date"
+                  }
                   value={sowingDate}
                   onChange={setSowingDate}
-                  placeholder="Select sowing date"
-                  maxDate={new Date()}
+                  placeholder={
+                    fieldLandType === "barren"
+                      ? "Select expected sowing date"
+                      : "Select sowing date"
+                  }
+                  maxDate={fieldLandType === "crop" ? new Date() : undefined}
+                  minDate={fieldLandType === "barren" ? new Date() : undefined}
                 />
                 <AutocompleteDropdown
                   label="Type Of Irrigation"
@@ -120,8 +206,8 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
 
               <div className="mt-3 sm:mt-4 md:mt-6">
                 <button
-                  className="w-full h-9 sm:h-10 md:h-11 bg-[#344e41] hover:bg-[#2b3e33] text-white font-semibold text-sm sm:text-base rounded-md transition-all duration-300"
-                  onClick={handleAddField}
+                  className="w-full h-9 sm:h-10 md:h-11 bg-ember-sidebar hover:bg-ember-sidebar-hover text-white font-semibold text-sm sm:text-base rounded-md transition-all duration-300"
+                  onClick={() => handleAddField()}
                 >
                   Add Field
                 </button>
@@ -131,22 +217,23 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
         </div>
       ) : (
         <div className="sm:min-w-[250px] sm:max-w-[20vw] m-0 p-0 h-full overflow-hidden flex flex-col">
-          <div className="flex flex-row justify-between items-center border-b border-[#344e41] p-2.5 cursor-pointer flex-shrink-0">
-            <h2 className="flex items-center gap-1 text-base text-[#344e41]">
+          <div className="flex flex-row justify-between items-center border-b border-ember-sidebar p-2.5 cursor-pointer flex-shrink-0">
+            <h2 className="flex items-center gap-1 text-base text-ember-sidebar">
               All Fields
             </h2>
             <ArrowLeft
               size={20}
-              color="#344E41"
+              color="#0B5D3D"
               strokeWidth={2}
               onClick={toggleSidebarVisibility}
             />
           </div>
 
           <div className="flex flex-col flex-1 overflow-hidden">
-            <form className="p-3 text-[#344e41] flex-1 overflow-y-auto no-scrollbar">
-              <h5 className="text-[#344e41] mb-3">Crop Details</h5>
+            <form className="p-3 text-ember-sidebar flex-1 overflow-y-auto no-scrollbar">
+              <h5 className="text-ember-sidebar mb-3">Crop Details</h5>
               <div className="flex flex-col gap-2 no-scrollbar">
+                {fieldStatusSummary}
                 <FormInput
                   label="Farm Name"
                   value={farmName}
@@ -169,11 +256,20 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
                   placeholder="Enter crop variety"
                 />
                 <CustomDatePicker
-                  label="Sowing Date"
+                  label={
+                    fieldLandType === "barren"
+                      ? "Expected sowing date"
+                      : "Sowing date"
+                  }
                   value={sowingDate}
                   onChange={setSowingDate}
-                  placeholder="Select sowing date"
-                  maxDate={new Date()}
+                  placeholder={
+                    fieldLandType === "barren"
+                      ? "Select expected sowing date"
+                      : "Select sowing date"
+                  }
+                  maxDate={fieldLandType === "crop" ? new Date() : undefined}
+                  minDate={fieldLandType === "barren" ? new Date() : undefined}
                 />
                 <AutocompleteDropdown
                   label="Type Of Irrigation"
@@ -194,8 +290,8 @@ const AddFieldSidebar = ({ saveFarm, markers, isTabletView }) => {
 
             <footer className="flex justify-center p-3 flex-shrink-0 border-t border-gray-200">
               <button
-                className="border-none outline-none rounded-md bg-[#344e41] text-white font-semibold w-3/4 h-9 transition-all duration-400 ease-in-out hover:bg-[#2b3e33]"
-                onClick={handleAddField}
+                className="border-none outline-none rounded-md bg-ember-sidebar text-white font-semibold w-3/4 h-9 transition-all duration-400 ease-in-out hover:bg-ember-sidebar-hover"
+                onClick={() => handleAddField()}
               >
                 Add Field
               </button>
@@ -221,12 +317,19 @@ const FormInput = ({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="border border-[#344e41] w-full outline-none rounded px-2 sm:px-3 py-1.5 sm:py-2 text-sm bg-[#344E41] text-white placeholder-gray-300 focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50"
+      className="border border-ember-sidebar w-full outline-none rounded px-2 sm:px-3 py-1.5 sm:py-2 text-sm bg-ember-sidebar text-white placeholder-gray-300 focus:ring-2 focus:ring-ember-sidebar focus:ring-opacity-50"
     />
   </div>
 );
 
-const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
+const CustomDatePicker = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  maxDate,
+  minDate,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -301,9 +404,19 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
   };
 
   const isDateDisabled = (day) => {
-    if (!maxDate) return false;
     const checkDate = new Date(currentYear, currentMonth, day);
-    return checkDate > maxDate;
+    checkDate.setHours(0, 0, 0, 0);
+    if (maxDate) {
+      const max = new Date(maxDate);
+      max.setHours(0, 0, 0, 0);
+      if (checkDate > max) return true;
+    }
+    if (minDate) {
+      const min = new Date(minDate);
+      min.setHours(0, 0, 0, 0);
+      if (checkDate < min) return true;
+    }
+    return false;
   };
 
   const renderCalendar = () => {
@@ -339,12 +452,12 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
             transition-all duration-150
             ${
               isSelected
-                ? "bg-white text-[#344E41] font-bold"
+                ? "bg-white text-ember-sidebar font-bold"
                 : isToday
-                  ? "bg-[#4a6b5a] text-white"
+                  ? "bg-ember-surface-muted text-white"
                   : isDisabled
                     ? "text-gray-500 cursor-not-allowed"
-                    : "text-white hover:bg-[#2b3e33]"
+                    : "text-white hover:bg-ember-sidebar-hover"
             }
           `}
         >
@@ -364,11 +477,11 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={`
-            w-full px-2 sm:px-3 py-1.5 sm:py-2 bg-[#344E41] text-white rounded
-            border border-[#344e41] outline-none
+            w-full px-2 sm:px-3 py-1.5 sm:py-2 bg-ember-sidebar text-white rounded
+            border border-ember-sidebar outline-none
             flex items-center justify-between
-            hover:bg-[#2b3e33] transition-all duration-200
-            focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
+            hover:bg-ember-sidebar-hover transition-all duration-200
+            focus:ring-2 focus:ring-ember-sidebar focus:ring-opacity-50
             ${!value ? "text-gray-300" : "text-white"}
           `}
         >
@@ -385,13 +498,13 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
         </button>
 
         {isOpen && (
-          // <div className="absolute z-[10000] w-56 mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl p-2">
-          <div className="fixed z-[10000] bottom-6 w-56 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl p-2">
+          // <div className="absolute z-[10000] w-56 mt-1 bg-ember-sidebar border border-ember-sidebar-hover rounded shadow-xl p-2">
+          <div className="fixed z-[10000] bottom-6 w-56 bg-ember-sidebar border border-ember-sidebar-hover rounded shadow-xl p-2">
             <div className="flex items-center justify-between mb-2 text-white">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="p-0.5 hover:bg-[#2b3e33] rounded transition-colors"
+                className="p-0.5 hover:bg-ember-sidebar-hover rounded transition-colors"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -401,7 +514,7 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="p-0.5 hover:bg-[#2b3e33] rounded transition-colors"
+                className="p-0.5 hover:bg-ember-sidebar-hover rounded transition-colors"
               >
                 <ChevronRight size={16} />
               </button>
@@ -420,7 +533,7 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
 
             <div className="grid grid-cols-7 gap-0.5">{renderCalendar()}</div>
 
-            <div className="mt-2 pt-2 border-t border-[#2b3e33]">
+            <div className="mt-2 pt-2 border-t border-ember-sidebar-hover">
               <button
                 type="button"
                 onClick={() => {
@@ -429,7 +542,7 @@ const CustomDatePicker = ({ label, value, onChange, placeholder, maxDate }) => {
                   setCurrentYear(today.getFullYear());
                   handleDateSelect(today.getDate());
                 }}
-                className="w-full py-1 text-xs text-white bg-[#2b3e33] hover:bg-[#253429] rounded transition-colors"
+                className="w-full py-1 text-xs text-white bg-ember-sidebar-hover hover:bg-ember-sidebar rounded transition-colors"
               >
                 Today
               </button>
@@ -522,11 +635,11 @@ const AutocompleteDropdown = ({
             onFocus={handleInputFocus}
             placeholder={placeholder}
             className={`
-              w-full px-2 sm:px-3 py-1.5 sm:py-2 bg-[#344E41] text-white rounded
-              border border-[#344e41] outline-none
+              w-full px-2 sm:px-3 py-1.5 sm:py-2 bg-ember-sidebar text-white rounded
+              border border-ember-sidebar outline-none
               placeholder-gray-300 text-sm
-              hover:bg-[#2b3e33] transition-all duration-200
-              focus:ring-2 focus:ring-[#344e41] focus:ring-opacity-50
+              hover:bg-ember-sidebar-hover transition-all duration-200
+              focus:ring-2 focus:ring-ember-sidebar focus:ring-opacity-50
               pr-10
             `}
           />
@@ -543,8 +656,8 @@ const AutocompleteDropdown = ({
         </div>
 
         {isOpen && (
-          <div className="absolute z-[10000] w-full mt-1 bg-[#344E41] border border-[#2b3e33] rounded shadow-xl max-h-48 sm:max-h-60 overflow-auto">
-            {/* // <div className="absolute z-50 w-full bottom-full mb-1 bg-[#344E41] border border-[#2b3e33] rounded-md shadow-lg max-h-60 overflow-auto"> */}
+          <div className="absolute z-[10000] w-full mt-1 bg-ember-sidebar border border-ember-sidebar-hover rounded shadow-xl max-h-48 sm:max-h-60 overflow-auto">
+            {/* // <div className="absolute z-50 w-full bottom-full mb-1 bg-ember-sidebar border border-ember-sidebar-hover rounded-md shadow-lg max-h-60 overflow-auto"> */}
 
             {filteredOptions.length > 0 ? (
               filteredOptions.map((option, index) => (
@@ -553,9 +666,9 @@ const AutocompleteDropdown = ({
                   onClick={() => handleSelect(option)}
                   className={`
                     px-2 sm:px-3 py-1.5 sm:py-2 cursor-pointer text-white text-sm
-                    hover:bg-[#2b3e33] transition-colors duration-150
-                    ${value === option ? "bg-[#2b3e33] font-semibold" : ""}
-                    ${index !== filteredOptions.length - 1 ? "border-b border-[#2b3e33]" : ""}
+                    hover:bg-ember-sidebar-hover transition-colors duration-150
+                    ${value === option ? "bg-ember-sidebar-hover font-semibold" : ""}
+                    ${index !== filteredOptions.length - 1 ? "border-b border-ember-sidebar-hover" : ""}
                   `}
                 >
                   {formatOptionDisplay(option)}

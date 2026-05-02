@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import SubscriptionStatusBadge from "../../comman/SubscriptionStatusBadge";
 
 const FieldDropdown = ({ fields, selectedField, setSelectedField }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,21 +20,17 @@ const FieldDropdown = ({ fields, selectedField, setSelectedField }) => {
       {/* Selected Field Header */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3"
+        className="w-full flex min-w-0 items-center justify-between gap-2 px-3 py-2.5 sm:px-4 sm:py-3"
       >
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-[#344e41]">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <span className="text-sm font-medium text-[#344e41] truncate">
             {selectedField?.fieldName || "Select field"}
           </span>
-          <span
-            className={`px-2 py-0.5 rounded-full text-[9px] font-semibold ${
-              isSubscribed
-                ? "bg-[#DAFFED] text-[#28C878]"
-                : "bg-[#FFDEDF] text-[#EC1C24]"
-            }`}
-          >
-            {isSubscribed ? "Active" : "Inactive"}
-          </span>
+          <SubscriptionStatusBadge
+            isSubscribed={isSubscribed}
+            mode="active"
+            className="shrink-0"
+          />
         </div>
         <ChevronDown
           className={`w-4 h-4 text-[#344e41] transition-transform duration-200 ${

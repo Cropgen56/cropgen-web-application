@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 import PolygonPreview from "../../polygon/PolygonPreview";
+import SubscriptionStatusBadge from "../../comman/SubscriptionStatusBadge";
 import FarmSkeletonLoader from "../../Skeleton/FarmSkeletonLoader";
 
 import mapLocation from "../../../assets/image/setting/map-location.svg";
@@ -19,9 +20,9 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
     className="relative flex flex-col bg-white rounded-lg shadow-sm border border-[#344E41]/20 transition-all duration-300 ease-in-out hover:shadow-md hover:border-[#344E41]/40 overflow-hidden cursor-pointer"
   >
     {/* Header */}
-    <div className="flex items-start justify-between px-3 py-2 bg-[#344E41]/5 border-b border-[#344E41]/10">
-      <div className="text-left">
-        <span className="block font-bold text-[#344E41] text-base leading-tight">
+    <div className="flex items-start justify-between gap-2 px-3 py-2 bg-[#344E41]/5 border-b border-[#344E41]/10 min-w-0">
+      <div className="text-left min-w-0 flex-1">
+        <span className="block font-bold text-[#344E41] text-base leading-tight truncate">
           {farm.fieldName}
         </span>
         <span className="block text-xs font-semibold text-[#344E41]/70 mt-0.5">
@@ -29,14 +30,7 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
         </span>
       </div>
 
-      <div
-        className={`px-2 py-1 rounded-full text-[10px] font-bold ${isSubscribed
-            ? "bg-[#DAFFED] text-[#28C878] border border-[#28C878]/30"
-            : "bg-[#FFDEDF] text-[#EC1C24] border border-[#EC1C24]/30"
-          }`}
-      >
-        {isSubscribed ? "Subscribed" : "Unsubscribed"}
-      </div>
+      <SubscriptionStatusBadge isSubscribed={isSubscribed} className="self-center" />
     </div>
 
     {/* Map Preview */}
@@ -148,14 +142,14 @@ const AllFarms = ({ onAddFarmClick }) => {
   return (
     <div className="flex flex-col flex-grow gap-3 py-2 h-[calc(100vh-100px)]">
       {/* Tabs */}
-      <div className="flex justify-start bg-[#E6F8EF] rounded-lg gap-1.5 py-1.5 px-2 w-fit">
+      <div className="flex flex-wrap justify-start bg-[#E6F8EF] rounded-lg gap-1 py-1 px-1.5 sm:gap-1.5 sm:py-1.5 sm:px-2 w-fit max-w-full">
         {["all", "subscribed", "unsubscribed"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all duration-500 ease-in-out ${activeTab === tab
+            className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-all duration-500 ease-in-out sm:px-3 sm:py-1.5 sm:rounded-lg sm:text-sm ${activeTab === tab
                 ? "bg-[#344E41] text-[#fff] border border-[#344E41] font-bold"
-                : "text-black hover:text-[#344E41] font-semibold"
+                : "text-black hover:text-[#344E41]"
               }`}
           >
             {tab === "all"
