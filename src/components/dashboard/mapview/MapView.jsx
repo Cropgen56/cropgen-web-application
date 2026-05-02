@@ -21,14 +21,203 @@ import {
   AlertTriangle,
   ArrowRight,
   Crosshair,
+  Orbit,
   Sparkles,
   Stethoscope,
   Waves,
 } from "lucide-react";
 import { fetchweatherData } from "../../../redux/slices/weatherSlice";
 import { resetSatelliteState } from "../../../redux/slices/satelliteSlice";
-import LogoFlipLoader from "../../comman/loading/LogoFlipLoader";
 import IndexDates from "./indexdates/IndexDates";
+
+// ─── Satellite Scan Loader ───────────────────────────────────────────────────
+
+const SCAN_STEPS = [
+  { icon: "🛰️", label: "Connecting to satellite..." },
+  { icon: "📡", label: "Acquiring field coordinates..." },
+  { icon: "🌍", label: "Processing spectral bands..." },
+  { icon: "🧮", label: "Computing index values..." },
+  { icon: "🗺️", label: "Rendering layer overlay..." },
+];
+
+const SatelliteScanLoader = () => {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const stepInterval = setInterval(() => {
+      setStepIndex((prev) => (prev + 1) % SCAN_STEPS.length);
+    }, 900);
+    return () => clearInterval(stepInterval);
+  }, []);
+
+  useEffect(() => {
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 95) return 95;
+        return prev + Math.random() * 4;
+      });
+    }, 400);
+    return () => clearInterval(progressInterval);
+  }, []);
+
+  return (
+    <div className="relative flex flex-col items-center justify-center w-full h-full gap-0 overflow-hidden">
+      {/* ── Grid overlay ─────────────────────────────── */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(52,211,153,0.07) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(52,211,153,0.07) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      {/* ── Corner brackets ──────────────────────────── */}
+      {[
+        "top-4 left-4 border-t-2 border-l-2",
+        "top-4 right-4 border-t-2 border-r-2",
+        "bottom-4 left-4 border-b-2 border-l-2",
+        "bottom-4 right-4 border-b-2 border-r-2",
+      ].map((cls, i) => (
+        <div
+          key={i}
+          className={`absolute w-6 h-6 border-emerald-400/60 ${cls}`}
+        />
+      ))}
+
+      {/* ── Horizontal scan line ─────────────────────── */}
+      <motion.div
+        className="absolute left-0 right-0 h-[2px] z-10 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent 0%, rgba(52,211,153,0.15) 20%, rgba(52,211,153,0.9) 50%, rgba(52,211,153,0.15) 80%, transparent 100%)",
+          boxShadow: "0 0 18px 4px rgba(52,211,153,0.35)",
+        }}
+        initial={{ top: "10%" }}
+        animate={{ top: ["10%", "88%", "10%"] }}
+        transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* ── Glow trail below scan line ───────────────── */}
+      <motion.div
+        className="absolute left-0 right-0 h-24 pointer-events-none z-[9]"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(52,211,153,0.08), transparent)",
+        }}
+        initial={{ top: "10%" }}
+        animate={{ top: ["10%", "88%", "10%"] }}
+        transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* ── Satellite icon orbiting ──────────────────── */}
+      <motion.div
+        className="relative flex items-center justify-center"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+        style={{ width: 100, height: 100 }}
+      >
+        {/* Orbit ring */}
+        <div
+          className="absolute inset-0 rounded-full border border-emerald-400/25"
+          style={{ boxShadow: "0 0 20px rgba(52,211,153,0.1)" }}
+        />
+        {/* Satellite dot on orbit */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.9)]" />
+      </motion.div>
+
+      {/* ── Center satellite icon ────────────────────── */}
+      <div
+        className="absolute flex items-center justify-center w-12 h-12 rounded-2xl bg-emerald-900/60 border border-emerald-400/30"
+        style={{ boxShadow: "0 0 24px rgba(52,211,153,0.2)" }}
+      >
+        <Orbit size={22} className="text-emerald-300" />
+      </div>
+
+      {/* ── Data points pulsing on grid ──────────────── */}
+      {[
+        { top: "28%", left: "22%" },
+        { top: "55%", left: "68%" },
+        { top: "40%", left: "45%" },
+        { top: "70%", left: "30%" },
+        { top: "22%", left: "72%" },
+      ].map((pos, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400"
+          style={{ ...pos, boxShadow: "0 0 6px rgba(52,211,153,0.8)" }}
+          animate={{ opacity: [0, 1, 0], scale: [0.5, 1.4, 0.5] }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            delay: i * 0.38,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+
+      {/* ── Info panel (top center) ───────────────── */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex justify-center px-4 pt-4">
+        <div className="w-full max-w-lg flex flex-col gap-2.5">
+        {/* Step indicator */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={stepIndex}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center justify-center gap-2.5 flex-wrap"
+          >
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-900/70 border border-emerald-400/30 text-sm">
+              {SCAN_STEPS[stepIndex].icon}
+            </div>
+            <span className="text-emerald-100 text-xs font-medium tracking-wide">
+              {SCAN_STEPS[stepIndex].label}
+            </span>
+            {/* Blinking cursor */}
+            <motion.span
+              className="w-1 h-3.5 rounded-sm bg-emerald-400 inline-block"
+              animate={{ opacity: [1, 0, 1] }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+            />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Progress bar */}
+        <div className="w-full h-[3px] rounded-full bg-white/10 overflow-hidden">
+          <motion.div
+            className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
+            style={{ width: `${Math.min(progress, 95)}%` }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          />
+        </div>
+
+        {/* Step dots */}
+        <div className="flex items-center justify-center gap-1.5">
+          {SCAN_STEPS.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1 rounded-full transition-all duration-500 ${
+                i === stepIndex
+                  ? "w-4 bg-emerald-400"
+                  : i < stepIndex
+                    ? "w-1.5 bg-emerald-700"
+                    : "w-1.5 bg-white/20"
+              }`}
+            />
+          ))}
+        </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Tutorial Overlay ────────────────────────────────────────────────────────
 
 const TutorialOverlay = ({ show, onAddField }) => {
   if (!show) return null;
@@ -434,20 +623,19 @@ const FarmMap = ({
         ref={mapRef}
         maxZoom={20}
       >
+        {/* ── Satellite Scan Overlay ── */}
         <AnimatePresence>
           {loading.indexData && (
             <motion.div
-              key="map-loader"
+              key="satellite-scan-overlay"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-[1000] rounded-2xl"
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="absolute inset-0 z-[1000] rounded-2xl overflow-hidden"
+              style={{ background: "rgba(5, 20, 14, 0.82)" }}
             >
-              <LogoFlipLoader />
-              <p className="text-white text-sm mt-4 font-medium animate-pulse">
-                Almost there… optimizing your field insights
-              </p>
+              <SatelliteScanLoader />
             </motion.div>
           )}
         </AnimatePresence>

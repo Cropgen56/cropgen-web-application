@@ -50,20 +50,22 @@ const Setting = () => {
   };
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#f3f6f4] font-inter">
-      <div className="h-full w-full overflow-hidden px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-4">
-        <div className="h-full w-full rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <div className="h-screen w-full overflow-hidden bg-ember-card font-inter">
+      <div className="h-full w-full overflow-hidden p-2 sm:p-3 lg:p-4">
+        <div className="h-full w-full rounded-2xl border border-ember-border bg-white shadow-sm overflow-hidden">
           <div className="h-full grid grid-cols-1 lg:grid-cols-[290px_minmax(0,1fr)]">
-            <aside className="border-r border-gray-200 bg-gradient-to-b from-[#f8fbf9] to-white p-3 sm:p-4">
+            <aside className="border-r border-ember-border bg-gradient-to-b from-ember-card to-white p-3 sm:p-4">
               <div className="flex items-center gap-3 p-2.5">
-                <div className="w-10 h-10 rounded-xl bg-[#0D6B45]/10 text-[#0D6B45] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-ember-sidebar/10 text-ember-sidebar flex items-center justify-center">
                   <Settings size={20} />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-[#0D6B45] leading-tight">
+                  <h1 className="text-lg font-bold text-ember-primary leading-tight">
                     Settings
                   </h1>
-                  <p className="text-xs text-gray-500">Account and farm controls</p>
+                  <p className="text-xs text-ember-text-secondary">
+                    Account and farm controls
+                  </p>
                 </div>
               </div>
 
@@ -78,8 +80,8 @@ const Setting = () => {
                       onClick={() => setSelectedOption(option.id)}
                       className={`text-left min-w-[200px] lg:min-w-0 lg:w-full rounded-xl border px-3 py-3 transition-all ${
                         isActive
-                          ? "border-[#0D6B45] bg-[#0D6B45] text-white shadow-sm"
-                          : "border-gray-200 bg-white text-[#0D6B45] hover:bg-[#eef6f1]"
+                          ? "border-ember-sidebar bg-ember-sidebar text-white shadow-sm"
+                          : "border-ember-border bg-white text-ember-primary hover:bg-ember-sidebar/5"
                       } ${option.id !== SETTINGS_OPTIONS[SETTINGS_OPTIONS.length - 1].id ? "lg:mb-3" : ""}`}
                     >
                       <div className="flex items-center gap-2">
@@ -100,7 +102,7 @@ const Setting = () => {
             </aside>
 
             <section className="min-h-0 flex flex-col">
-              <div className="flex-1 min-h-0 overflow-y-auto bg-[#f8fbf9] px-1.5 py-1.5 sm:px-2.5 sm:py-2.5">
+              <div className="flex-1 min-h-0 overflow-y-auto bg-ember-card px-1.5 py-1.5 sm:px-2.5 sm:py-2.5">
                 {renderContent()}
               </div>
             </section>

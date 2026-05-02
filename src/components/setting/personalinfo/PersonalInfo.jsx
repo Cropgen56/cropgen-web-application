@@ -247,7 +247,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
         </label>
         <div className="relative">
           {Icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#344E41] transition-colors">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-ember-primary transition-colors">
               <Icon className="w-4 h-4" />
             </div>
           )}
@@ -264,7 +264,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
             } ${
               readOnly || !isEditing
                 ? "bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
-                : "bg-white border-gray-200 hover:border-[#344E41]/40 focus:border-[#344E41] focus:ring-2 focus:ring-[#344E41]/20"
+                : "bg-white border-gray-200 hover:border-ember-primary/40 focus:border-ember-primary focus:ring-2 focus:ring-ember-primary/20"
             }`}
           />
         </div>
@@ -279,25 +279,25 @@ const PersonalInfo = ({ setShowSidebar }) => {
   return (
     <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md font-inter min-h-[98%] overflow-y-auto">
       {/* Header - aligned with Farm Settings, Pricing, Profile */}
-      <div className="px-4 py-2 text-[#344E41] border-b border-black/40">
+      <div className="px-4 py-2 text-ember-primary border-b border-ember-border/50">
         <div className="flex items-center justify-between">
-          <h5 className="text-[18px] font-bold text-[#344E41]">Personal Info</h5>
+          <h5 className="text-[18px] font-bold text-ember-primary">Personal Info</h5>
           <button
             onClick={() => setShowSidebar(true)}
-            className="flex items-center gap-1 text-xs text-[#344E41] hover:text-[#1d3039] transition-colors"
+            className="flex items-center gap-1 text-xs text-ember-primary hover:text-ember-primary-hover transition-colors"
           >
             <ArrowLeft size={16} />
             Back to Settings
           </button>
         </div>
-        <p className="mt-1 mb-0.5 text-[#344E41] font-medium text-sm leading-[100%]">
+        <p className="mt-1 mb-0.5 text-ember-primary font-medium text-sm leading-[100%]">
           Manage your profile details and preferences
         </p>
       </div>
 
       <div className="px-4 py-6 lg:px-6 space-y-8 overflow-y-auto">
         {/* Profile hero card */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#344E41] via-[#3d5a4a] to-[#2d4339] shadow-xl">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-ember-sidebar via-ember-surface-muted to-ember-sidebar-hover shadow-xl">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -343,8 +343,8 @@ const PersonalInfo = ({ setShowSidebar }) => {
                     </>
                   )}
                 </button>
-                <div className="absolute -bottom-1 -right-1 w-9 h-9 bg-white rounded-lg shadow-lg flex items-center justify-center border-2 border-[#344E41]">
-                  <Camera className="w-4 h-4 text-[#344E41]" />
+                <div className="absolute -bottom-1 -right-1 w-9 h-9 bg-white rounded-lg shadow-lg flex items-center justify-center border-2 border-ember-sidebar">
+                  <Camera className="w-4 h-4 text-ember-sidebar" />
                 </div>
               </div>
 
@@ -428,7 +428,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
                 <button
                   type="button"
                   onClick={handleEnableEdit}
-                  className="flex items-center gap-2 px-6 py-3 bg-[#344E41] hover:bg-[#2d4339] text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#344E41] focus:ring-offset-2"
+                  className="flex items-center gap-2 px-6 py-3 bg-ember-primary hover:bg-ember-primary-hover text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-ember-primary focus:ring-offset-2"
                 >
                   <Pencil className="w-4 h-4" />
                   Edit Your Details
@@ -447,7 +447,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-6 py-3 bg-[#344E41] hover:bg-[#2d4339] text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#344E41] focus:ring-offset-2"
+                    className="flex items-center gap-2 px-6 py-3 bg-ember-primary hover:bg-ember-primary-hover text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ember-primary focus:ring-offset-2"
                   >
                     {isSaving ? (
                       <>

@@ -40,7 +40,7 @@ function FormattedMessage({ text, variant }) {
           return (
             <strong
               key={`b-${index}`}
-              className={isUser ? "font-bold text-white" : "font-bold text-[#111]"}
+              className={isUser ? "font-bold text-white" : "font-bold text-ember-text"}
             >
               {clean}
             </strong>
@@ -103,13 +103,13 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
       }`}
     >
       <div
-        className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.4rem] border border-[#d9e5e2] bg-white shadow-[0_24px_80px_-28px_rgba(0,0,0,0.15)] sm:rounded-[1.75rem] ${
+        className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.4rem] border border-ember-border bg-white shadow-[0_24px_80px_-28px_rgba(0,0,0,0.15)] sm:rounded-[1.75rem] ${
           isWidget ? "h-full" : ""
         }`}
       >
-        {/* Header — aligned with mobile CropgenBotScreen (#075A53) */}
+        {/* Header — dashboard ember green */}
         <header
-          className={`shrink-0 bg-[#075A53] text-white ${
+          className={`shrink-0 bg-ember-sidebar text-white ${
             isWidget ? "px-4 pb-3 pt-4 sm:px-5" : "px-4 pb-4 pt-5 sm:px-6 sm:pt-6"
           }`}
         >
@@ -122,9 +122,9 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
                       className="h-5 w-5 text-white"
                       strokeWidth={1.75}
                     />
-                    <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-[#075A53] ring-2 ring-[#075A53]">
+                    <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-ember-sidebar ring-2 ring-ember-sidebar">
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-[#86d72f] shadow-[0_0_6px_#86d72f]" : "bg-amber-300"}`}
+                        className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-ember-accent shadow-[0_0_6px_rgba(140,198,63,0.85)]" : "bg-amber-300"}`}
                       />
                     </span>
                   </div>
@@ -204,9 +204,9 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
                     className="h-6 w-6 text-white"
                     strokeWidth={1.75}
                   />
-                  <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-[#075A53] ring-2 ring-[#075A53]">
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-ember-sidebar ring-2 ring-ember-sidebar">
                     <span
-                      className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-[#86d72f] shadow-[0_0_6px_#86d72f]" : "bg-amber-300"}`}
+                      className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-ember-accent shadow-[0_0_6px_rgba(140,198,63,0.85)]" : "bg-amber-300"}`}
                     />
                   </span>
                 </div>
@@ -269,8 +269,8 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
 
         {/* Farm chips — mobile CropgenBotScreen */}
         {showFarmChips && (
-          <div className="shrink-0 border-b border-[#e0ebe8] bg-[#f4faf8] px-3 py-2 sm:px-4">
-            <p className="mb-2 text-xs font-semibold text-[#075A53]">
+          <div className="shrink-0 border-b border-ember-border bg-ember-card px-3 py-2 sm:px-4">
+            <p className="mb-2 text-xs font-semibold text-ember-primary">
               Discussing farm
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -279,8 +279,8 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
                 onClick={() => setActiveFarm("__all__")}
                 className={`shrink-0 rounded-full border px-3.5 py-2 text-[13px] font-medium transition ${
                   selectedFarmId === "__all__"
-                    ? "border-[#075A53] bg-[#e8f5f3] font-bold text-[#075A53]"
-                    : "border-[#d9e5e2] bg-white text-[#333]"
+                    ? "border-ember-sidebar bg-ember-sidebar/10 font-bold text-ember-primary"
+                    : "border-ember-border bg-white text-ember-text"
                 }`}
               >
                 All farms
@@ -297,8 +297,8 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
                     onClick={() => setActiveFarm(id)}
                     className={`max-w-[200px] shrink-0 truncate rounded-full border px-3.5 py-2 text-[13px] font-medium transition ${
                       sel
-                        ? "border-[#075A53] bg-[#e8f5f3] font-bold text-[#075A53]"
-                        : "border-[#d9e5e2] bg-white text-[#333]"
+                        ? "border-ember-sidebar bg-ember-sidebar/10 font-bold text-ember-primary"
+                        : "border-ember-border bg-white text-ember-text"
                     }`}
                   >
                     {label}
@@ -328,21 +328,21 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
         {/* Chat body — light panel like mobile */}
         <div
           ref={scrollRef}
-          className={`cropgen-ai-scroll min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-[#f4faf8] ${
+          className={`cropgen-ai-scroll min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-ember-card ${
             isWidget ? "px-3 py-3 sm:px-4" : "px-3 py-4 sm:px-5"
           }`}
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20px 20px, rgba(7,90,83,0.04) 1px, transparent 0)",
+              "radial-gradient(circle at 20px 20px, rgba(52,78,65,0.05) 1px, transparent 0)",
           }}
         >
           {showConnecting && (
             <div className="flex flex-col items-center justify-center gap-4 py-16">
               <div className="relative">
-                <div className="h-8 w-8 animate-pulse rounded-full bg-[#075A53]/20" />
-                <div className="absolute inset-0 animate-ping rounded-full bg-[#075A53]/15" />
+                <div className="h-8 w-8 animate-pulse rounded-full bg-ember-sidebar/20" />
+                <div className="absolute inset-0 animate-ping rounded-full bg-ember-sidebar/15" />
               </div>
-              <p className="text-sm text-[#5a7c6b]">
+              <p className="text-sm text-ember-text-secondary">
                 Connecting to CropGen AI…
               </p>
             </div>
@@ -359,16 +359,16 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
               }`}
             >
               {m.role === "assistant" && (
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#ebebeb] bg-white">
-                  <Bot className="h-5 w-5 text-[#0a3d2f]" strokeWidth={2} />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ember-border bg-white">
+                  <Bot className="h-5 w-5 text-ember-sidebar" strokeWidth={2} />
                 </div>
               )}
               {m.role === "assistant" ? (
                 <div className="max-w-[min(100%,74vw)] sm:max-w-[min(100%,28rem)]">
                   <div
-                    className={`rounded-xl border border-[#ebebeb] bg-white px-3 py-2.5 text-[13px] leading-relaxed text-[#111] shadow-[0_2px_4px_rgba(0,0,0,0.08)] ${
+                    className={`rounded-xl border border-ember-border bg-white px-3 py-2.5 text-[13px] leading-relaxed text-ember-text shadow-[0_2px_4px_rgba(0,0,0,0.08)] ${
                       m.kind === "farm_context"
-                        ? "border-[#075A53]/30 bg-[#f0faf8]"
+                        ? "border-ember-sidebar/30 bg-ember-card"
                         : "rounded-tl-none"
                     }`}
                   >
@@ -376,7 +376,7 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
                   </div>
                 </div>
               ) : (
-                <div className="max-w-[min(100%,74vw)] rounded-xl rounded-tr-none bg-[#075A53] px-3 py-2.5 text-[13px] leading-relaxed text-white shadow-[0_4px_4px_rgba(0,0,0,0.13)] sm:max-w-[min(100%,28rem)]">
+                <div className="max-w-[min(100%,74vw)] rounded-xl rounded-tr-none bg-ember-sidebar px-3 py-2.5 text-[13px] leading-relaxed text-white shadow-[0_4px_4px_rgba(0,0,0,0.13)] sm:max-w-[min(100%,28rem)]">
                   <FormattedMessage text={m.text} variant="user" />
                 </div>
               )}
@@ -385,13 +385,13 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
 
           {awaitingReply && (
             <div className="flex items-end gap-2">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#ebebeb] bg-white">
-                <Bot className="h-5 w-5 text-[#0a3d2f]" strokeWidth={2} />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ember-border bg-white">
+                <Bot className="h-5 w-5 text-ember-sidebar" strokeWidth={2} />
               </div>
               <div className="flex h-6 items-end gap-1.5 px-1">
-                <span className="cropgen-typing-dot h-2 w-2 rounded-full bg-[#0a3d2f]" />
-                <span className="cropgen-typing-dot cropgen-typing-dot-d1 h-2 w-2 rounded-full bg-[#0a3d2f]" />
-                <span className="cropgen-typing-dot cropgen-typing-dot-d2 h-2 w-2 rounded-full bg-[#0a3d2f]" />
+                <span className="cropgen-typing-dot h-2 w-2 rounded-full bg-ember-sidebar" />
+                <span className="cropgen-typing-dot cropgen-typing-dot-d1 h-2 w-2 rounded-full bg-ember-sidebar" />
+                <span className="cropgen-typing-dot cropgen-typing-dot-d2 h-2 w-2 rounded-full bg-ember-sidebar" />
               </div>
             </div>
           )}
@@ -401,7 +401,7 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
         {/* Composer — mobile-style input row */}
         <form
           onSubmit={onSubmit}
-          className="shrink-0 border-t border-[#D9D9D9] bg-white px-3 py-2.5 sm:px-4 sm:py-3"
+          className="shrink-0 border-t border-ember-border bg-white px-3 py-2.5 sm:px-4 sm:py-3"
         >
           <div className="flex items-center gap-2">
             <div className="relative min-h-[40px] flex-1">
@@ -418,19 +418,19 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
                 }}
                 placeholder="Type your message…"
                 disabled={!connected || awaitingReply}
-                className="min-h-[40px] w-full resize-none rounded-full border border-[#075A53] bg-white py-2.5 pl-4 pr-4 text-sm text-[#333] placeholder:text-[#999] focus:border-[#075A53] focus:outline-none focus:ring-2 focus:ring-[#075A53]/20 disabled:opacity-50"
+                className="min-h-[40px] w-full resize-none rounded-full border border-ember-sidebar bg-white py-2.5 pl-4 pr-4 text-sm text-ember-text placeholder:text-ember-text-secondary/70 focus:border-ember-sidebar focus:outline-none focus:ring-2 focus:ring-ember-sidebar/20 disabled:opacity-50"
               />
             </div>
             <button
               type="submit"
               disabled={!connected || awaitingReply || !input.trim()}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0a3d2f] text-white shadow-md transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ember-sidebar text-white shadow-md transition hover:bg-ember-primary-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
               aria-label="Send message"
             >
               <Send className="h-5 w-5" strokeWidth={2.25} />
             </button>
           </div>
-          <p className="mt-2 text-center text-[11px] text-[#6B7280]">
+          <p className="mt-2 text-center text-[11px] text-ember-text-secondary">
             Enter to send · Shift+Enter for new line
           </p>
         </form>
@@ -439,17 +439,17 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
       <style>{`
         .cropgen-ai-scroll {
           scrollbar-width: thin;
-          scrollbar-color: rgba(7, 90, 83, 0.35) rgba(244, 250, 248, 0.9);
+          scrollbar-color: rgba(52, 78, 65, 0.35) rgba(248, 251, 250, 0.95);
         }
         .cropgen-ai-scroll::-webkit-scrollbar {
           width: 7px;
         }
         .cropgen-ai-scroll::-webkit-scrollbar-track {
-          background: rgba(244, 250, 248, 0.9);
+          background: rgba(248, 251, 250, 0.95);
           border-radius: 8px;
         }
         .cropgen-ai-scroll::-webkit-scrollbar-thumb {
-          background: rgba(7, 90, 83, 0.35);
+          background: rgba(52, 78, 65, 0.35);
           border-radius: 8px;
         }
         @keyframes cropgen-typing-bounce {

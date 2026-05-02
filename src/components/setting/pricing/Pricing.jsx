@@ -481,34 +481,41 @@ const Pricing = ({ setShowSidebar }) => {
   const plans = useMemo(() => transformApiData(subscriptions), [subscriptions]);
   const maxIndex = Math.max(plans.length - cardsPerView, 0);
 
+  useEffect(() => {
+    setIndex((i) => Math.min(i, maxIndex));
+  }, [maxIndex]);
+
+  const slidePercent =
+    plans.length > 0 ? 100 / plans.length : 0;
+
   return (
     <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md font-inter h-[98%] overflow-y-auto">
-      <div className="px-4 py-2 text-[#344E41] border-b border-black/40">
+      <div className="px-4 py-2 text-ember-primary border-b border-ember-border/50">
         <div className="flex items-center justify-between">
-          <h5 className="text-[18px] font-bold text-[#344E41]">Pricing & Plans</h5>
+          <h5 className="text-[18px] font-bold text-ember-primary">Pricing & Plans</h5>
           <button
             onClick={() => setShowSidebar(true)}
-            className="flex items-center gap-1 text-xs text-[#344E41] hover:text-[#1d3039] transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-xs text-ember-primary hover:text-ember-primary-hover transition-colors cursor-pointer"
           >
             <ArrowLeft size={16} />
             Back to Settings
           </button>
         </div>
-        <p className="mt-1 mb-0.5 text-[#344E41] font-medium text-sm leading-[100%]">
+        <p className="mt-1 mb-0.5 text-ember-primary font-medium text-sm leading-[100%]">
           Choose the plan that best fits your farm needs.
         </p>
       </div>
 
       <div className="flex justify-between sm:justify-end sm:gap-4 mt-3 items-center w-full">
-        <div className="flex rounded-md border overflow-hidden">
+        <div className="flex rounded-md border border-ember-border overflow-hidden">
           {["monthly", "yearly"].map((b) => (
             <button
               key={b}
               onClick={() => setBilling(b)}
               className={`px-2 sm:px-4 py-1.5 text-sm transition-all ease-in-out duration-500 ${
                 billing === b
-                  ? "bg-[#344E41] text-white"
-                  : "bg-white text-gray-600 hover:text-[#344E41]"
+                  ? "bg-ember-sidebar text-white"
+                  : "bg-white text-ember-text-secondary hover:text-ember-primary"
               }`}
             >
               {b}
@@ -516,15 +523,15 @@ const Pricing = ({ setShowSidebar }) => {
           ))}
         </div>
 
-        <div className="flex rounded-md border overflow-hidden">
+        <div className="flex rounded-md border border-ember-border overflow-hidden">
           {["INR", "USD"].map((c) => (
             <button
               key={c}
               onClick={() => setCurrency(c)}
               className={`px-2 sm:px-4 py-1.5 text-sm transition-all ease-in-out duration-500 ${
                 currency === c
-                  ? "bg-[#344E41] text-white"
-                  : "bg-white text-gray-600 hover:text-[#344E41]"
+                  ? "bg-ember-sidebar text-white"
+                  : "bg-white text-ember-text-secondary hover:text-ember-primary"
               }`}
             >
               {c}
@@ -533,29 +540,37 @@ const Pricing = ({ setShowSidebar }) => {
         </div>
       </div>
 
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden min-h-[min(460px,70vh)]">
         <button
+          type="button"
           onClick={() => setIndex((i) => Math.max(i - 1, 0))}
-          disabled={index === 0}
+          disabled={index === 0 || plans.length === 0}
           className={`absolute left-1 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full p-1 shadow-[0_2px_6px_rgba(0,0,0,0.3)]
-    ${index === 0 ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
+    ${index === 0 || plans.length === 0 ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
         >
           <ChevronLeft />
         </button>
 
-        <div className="overflow-hidden">
+        <div className="overflow-hidden mx-10">
           <div
-            className="flex gap-4 transition-transform duration-300 my-4"
+            className="flex transition-transform duration-300 ease-out my-4"
             style={{
-              transform: `translateX(-${index * (100 / cardsPerView)}%)`,
-              width: `${(plans.length * 100) / cardsPerView}%`,
+              /* % is relative to this track's width; one card = 100/plans.length % of track */
+              transform: `translateX(-${index * slidePercent}%)`,
+              width:
+                plans.length > 0
+                  ? `${(plans.length * 100) / cardsPerView}%`
+                  : "100%",
             }}
           >
             {plans.map((plan) => (
               <div
                 key={plan._id}
-                className="flex justify-center"
-                style={{ width: `${100 / plans.length}%` }}
+                className="flex shrink-0 justify-center px-2 box-border"
+                style={{
+                  width:
+                    plans.length > 0 ? `${100 / plans.length}%` : undefined,
+                }}
               >
                 <PlanCard plan={plan} billing={billing} currency={currency} />
               </div>
@@ -564,11 +579,14 @@ const Pricing = ({ setShowSidebar }) => {
         </div>
 
         <button
+          type="button"
           onClick={() => setIndex((i) => Math.min(i + 1, maxIndex))}
-          disabled={index === maxIndex}
+          disabled={index === maxIndex || plans.length === 0}
           className={`absolute right-1 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full p-1 shadow-[0_2px_6px_rgba(0,0,0,0.3)]
     ${
-      index === maxIndex ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"
+      index === maxIndex || plans.length === 0
+        ? "opacity-40 cursor-not-allowed"
+        : "hover:bg-gray-100"
     }`}
         >
           <ChevronRight />
