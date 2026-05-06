@@ -86,7 +86,7 @@ const AuthLayout = () => {
     <div className="relative w-full h-screen overflow-hidden font-poppins">
       {!isSmallTablet ? (
         <div className="flex flex-row w-full h-full">
-          <div className="w-1/2 relative h-full bg-[#344E41]">
+          <div className="relative h-full w-1/2 bg-[#344E41]">
             {/* Desktop Logo - Original size, moved up */}
             <div className="absolute top-2 left-4 lg:top-3 lg:left-6 flex items-center gap-2 z-50">
               <img src={logo} alt="Logo" className="h-12 lg:h-16 w-auto" />

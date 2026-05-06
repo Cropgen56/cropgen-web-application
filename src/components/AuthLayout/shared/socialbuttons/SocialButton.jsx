@@ -83,7 +83,7 @@ function SocialButtons() {
               ${
                 isLoading
                   ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-[#344E41] hover:bg-emerald-900 text-white"
+                  : "bg-[#0D4D44] hover:opacity-95 text-white"
               }`}
           >
             <FcGoogle className="text-lg bg-white rounded-full p-0.5" />

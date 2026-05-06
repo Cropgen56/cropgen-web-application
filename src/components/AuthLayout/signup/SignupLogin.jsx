@@ -1225,7 +1225,7 @@ const SignupLogin = () => {
                     })
                   }
                   onKeyDown={handlePhoneFieldKeyDown}
-                  className="h-12 min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-[#F2F2F2] px-4 text-base text-gray-900 outline-none placeholder:text-gray-400 transition-colors focus:border-[#2E7D32] focus:ring-0"
+                  className="h-12 min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-[#F2F2F2] px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 transition-colors focus:border-[#2E7D32] focus:ring-0 sm:px-4"
                 />
               </div>
               <button
