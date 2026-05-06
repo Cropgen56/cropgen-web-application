@@ -15,6 +15,7 @@ import Profile from "../pages/Profile";
 import PageNotFound from "../pages/PageNotFound";
 import AuthLayout from "../pages/AuthLayout";
 import ProtectedRoute from "../authroute/ProtectedRoute";
+import { AUTH_ROUTES } from "../config/brand";
 
 const AppRoutes = () => {
   return (
@@ -49,10 +50,10 @@ const AppRoutes = () => {
           <Route path="setting" element={<Setting />} />
           <Route path="*" element={<PageNotFound />} />
         </Route>
-        <Route path="/login" element={<AuthLayout />} />
-        <Route path="/signup" element={<AuthLayout />} />
-        <Route path="/signup/language" element={<AuthLayout />} />
-        <Route path="/signup/account" element={<AuthLayout />} />
+        <Route path={AUTH_ROUTES.login} element={<AuthLayout />} />
+        <Route path={AUTH_ROUTES.signup} element={<AuthLayout />} />
+        <Route path={AUTH_ROUTES.signupLanguage} element={<AuthLayout />} />
+        <Route path={AUTH_ROUTES.signupAccount} element={<AuthLayout />} />
       </Routes>
     </Router>
   );

@@ -13,3 +13,9 @@ export const APP_TAGLINE = "Precision Agriculture Solutions";
 
 export const DEFAULT_ORGANIZATION_CODE = "CROPGEN";
 export const AUTH_EMAIL_CLIENT_BRAND = "cropgen";
+export const AUTH_ROUTES = {
+  login: "/login",
+  signup: "/signup",
+  signupLanguage: "/signup/language",
+  signupAccount: "/signup/account",
+};

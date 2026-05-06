@@ -8,10 +8,9 @@ import {
   decodeToken,
 } from "../../../../redux/slices/authSlice";
 import { FcGoogle } from "react-icons/fc";
+import { AUTH_EMAIL_CLIENT_BRAND } from "../../../../config/brand";
 
 const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-const AUTH_EMAIL_CLIENT_BRAND = "cropgen";
-
 function SocialButtons() {
   const navigate = useNavigate();
   const dispatch = useDispatch();

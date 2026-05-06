@@ -5,6 +5,7 @@ import { refreshAccessToken, logout } from "../redux/slices/authSlice";
 import { isTokenValid } from "../utility/token";
 import LogoFlipLoader from "../components/comman/loading/LogoFlipLoader";
 import { motion, AnimatePresence } from "framer-motion";
+import { AUTH_ROUTES } from "../config/brand";
 
 const ProtectedRoute = ({ children }) => {
   const auth = useSelector((state) => state.auth);
@@ -71,7 +72,7 @@ const ProtectedRoute = ({ children }) => {
     !!auth?.token && isTokenValid(auth.token) && auth.isAuthenticated;
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to={AUTH_ROUTES.login} replace state={{ from: location }} />;
   }
 
   // Auth OK -> render protected content

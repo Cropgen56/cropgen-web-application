@@ -17,6 +17,7 @@ import {
   APP_LOGO_URL,
   APP_NAME,
   DEFAULT_ORGANIZATION_CODE,
+  AUTH_ROUTES,
 } from "../../../config/brand";
 import { getCountries, getLanguages } from "../../../api/locationApi";
 import {
@@ -33,6 +34,7 @@ import {
   Lock,
   MessageCircle,
 } from "lucide-react";
+import worldCountries from "world-countries";
 
 const phoneOk = (v) => /^\+\d{10,12}$/.test(String(v).trim());
 const digitsOnly = (v) => String(v || "").replace(/\D/g, "");
@@ -40,7 +42,35 @@ const normalizeDialCode = (v) => digitsOnly(v).slice(0, 4);
 const buildE164 = (dialCode, localNumber) =>
   `+${normalizeDialCode(dialCode)}${digitsOnly(localNumber)}`;
 
-const datasetByIso2 = new Map();
+const iso2ToFlagCdn = (iso2) => {
+  const code = String(iso2 || "").toLowerCase();
+  if (!/^[a-z]{2}$/.test(code)) return "";
+  return `https://flagcdn.com/w20/${code}.png`;
+};
+
+const worldCountriesList = Array.isArray(worldCountries)
+  ? worldCountries
+  : Array.isArray(worldCountries?.default)
+    ? worldCountries.default
+    : [];
+
+const datasetByIso2 = new Map(
+  worldCountriesList.map((c) => {
+    const iso2 = String(c.cca2 || "").toUpperCase();
+    const root = c.idd?.root || "";
+    const suffix = c.idd?.suffixes?.[0] || "";
+    const dialCode = normalizeDialCode(`${root}${suffix}`);
+    return [
+      iso2,
+      {
+        iso2,
+        name: c.name?.common || iso2,
+        dialCode,
+        flag: c.flag || "",
+      },
+    ];
+  }),
+);
 
 const ONBOARDING_KEY = "cropgen_signup_onboarding";
 
@@ -55,12 +85,6 @@ const FALLBACK_LANGUAGES = [
   { code: "es", label: "Spanish", native: "Español" },
   { code: "fr", label: "French", native: "Français" },
 ];
-
-const iso2ToFlagCdn = (iso2) => {
-  const code = String(iso2 || "").toLowerCase();
-  if (!/^[a-z]{2}$/.test(code)) return "";
-  return `https://flagcdn.com/w20/${code}.png`;
-};
 
 const LANG_ICONS = [
   Languages,
@@ -155,10 +179,10 @@ const SignupLogin = () => {
   const location = useLocation();
   const { onboardingRequired } = useSelector((state) => state.auth);
 
-  const isLogin = location.pathname === "/login";
-  const isSignupCountry = location.pathname === "/signup";
-  const isSignupLanguage = location.pathname === "/signup/language";
-  const isSignupAccount = location.pathname === "/signup/account";
+  const isLogin = location.pathname === AUTH_ROUTES.login;
+  const isSignupCountry = location.pathname === AUTH_ROUTES.signup;
+  const isSignupLanguage = location.pathname === AUTH_ROUTES.signupLanguage;
+  const isSignupAccount = location.pathname === AUTH_ROUTES.signupAccount;
 
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
@@ -214,13 +238,13 @@ const SignupLogin = () => {
 
   useEffect(() => {
     if (isSignupLanguage && !readOnboarding().country) {
-      navigate("/signup", { replace: true });
+      navigate(AUTH_ROUTES.signup, { replace: true });
     }
   }, [isSignupLanguage, navigate]);
 
   useEffect(() => {
     if (isSignupAccount && !readOnboarding().language) {
-      navigate("/signup/language", { replace: true });
+      navigate(AUTH_ROUTES.signupLanguage, { replace: true });
     }
   }, [isSignupAccount, navigate]);
 
@@ -264,7 +288,7 @@ const SignupLogin = () => {
     return () => {
       active = false;
     };
-  }, [isSignupCountry]);
+  }, [isSignupCountry, isSignupAccount, isLogin]);
 
   useEffect(() => {
     if (!isSignupAccount) return;
@@ -324,13 +348,19 @@ const SignupLogin = () => {
     flagUrl: c.flagUrl,
   }));
 
-  const countryDialOptions = normalizedCountries
-    .filter((c) => c.dialCode)
-    .map((c) => ({
-      value: c.dialCode,
-      label: `+${c.dialCode}`,
-      flagUrl: c.flagUrl,
-    }));
+  /** Full international dial list (same source as Biodrops); not tied to location API. */
+  const countryDialOptions = useMemo(
+    () =>
+      Array.from(datasetByIso2.values())
+        .filter((c) => c.dialCode)
+        .map((c) => ({
+          value: c.dialCode,
+          label: `+${c.dialCode}`,
+          flagUrl: iso2ToFlagCdn(c.iso2),
+          optionKey: `${c.iso2}-${c.dialCode}`,
+        })),
+    [],
+  );
 
   const handleOtpChange = (value, index) => {
     if (/^\d?$/.test(value)) {
@@ -586,7 +616,7 @@ const SignupLogin = () => {
       countryLabel: label,
       dialCode: dialCode || formData.dialCode,
     });
-    navigate("/signup/language");
+    navigate(AUTH_ROUTES.signupLanguage);
   };
 
   const goLanguageContinue = () => {
@@ -599,7 +629,7 @@ const SignupLogin = () => {
       language: selectedLanguage,
       languageLabel: lang?.label || selectedLanguage,
     });
-    navigate("/signup/account");
+    navigate(AUTH_ROUTES.signupAccount);
   };
 
   if (isSignupCountry) {
@@ -667,7 +697,7 @@ const SignupLogin = () => {
           <p className="mt-6 text-center text-sm text-[#666666]">
             Already have an account?{" "}
             <Link
-              to="/login"
+              to={AUTH_ROUTES.login}
               className="font-semibold hover:underline"
               style={{ color: PRIMARY }}
             >
@@ -770,7 +800,7 @@ const SignupLogin = () => {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate(AUTH_ROUTES.signup)}
               className="mt-2.5 w-full text-center text-[15px] font-medium hover:underline"
               style={{ color: PRIMARY }}
             >
@@ -834,11 +864,7 @@ const SignupLogin = () => {
                         onChange={(dialValue) =>
                           setFormData({ ...formData, dialCode: dialValue })
                         }
-                        options={
-                          countryDialOptions.length
-                            ? countryDialOptions
-                            : [{ value: "91", label: "+91" }]
-                        }
+                        options={countryDialOptions}
                         placeholder="+Code"
                         inputClassName="w-full h-11 rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 text-sm outline-none pr-10"
                       />
@@ -1175,15 +1201,8 @@ const SignupLogin = () => {
                     onChange={(dialValue) =>
                       setFormData({ ...formData, dialCode: dialValue })
                     }
-                    options={
-                      isLogin
-                        ? [{ value: "91", label: "🇮🇳 +91" }]
-                        : countryDialOptions.length
-                          ? countryDialOptions
-                          : [{ value: "91", label: "🇮🇳 +91" }]
-                    }
+                    options={countryDialOptions}
                     placeholder="+Code"
-                    disabled={isLogin}
                     inputClassName="w-full h-12 rounded-xl border-2 border-gray-200 bg-[#F2F2F2] px-3 pr-10 text-sm text-gray-900 outline-none transition-colors focus:border-[#2E7D32] focus:ring-0"
                   />
                 </div>
@@ -1227,7 +1246,7 @@ const SignupLogin = () => {
               <p className="mt-6 text-center text-sm text-gray-500">
                 New to {APP_NAME}?{" "}
                 <Link
-                  to="/signup"
+                  to={AUTH_ROUTES.signup}
                   className="font-semibold hover:underline"
                   style={{ color: PRIMARY }}
                 >
@@ -1441,7 +1460,7 @@ const AuthAutocompleteDropdown = ({
               {filteredOptions.length > 0 ? (
                 filteredOptions.map((opt, index) => (
                   <div
-                    key={opt.value}
+                    key={opt.optionKey || `${opt.value}-${index}`}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleSelect(opt.value)}
                     className={`cursor-pointer px-3 py-2 text-sm text-emerald-900 transition-colors duration-150 hover:bg-emerald-50 ${

@@ -6,6 +6,7 @@ import { resetOperationState } from "../redux/slices/operationSlice";
 import { resetSatelliteState } from "../redux/slices/satelliteSlice";
 import { logoutUserApi } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
+import { AUTH_ROUTES } from "../config/brand";
 
 const useLogout = () => {
   const dispatch = useDispatch();
@@ -29,7 +30,7 @@ const useLogout = () => {
       dispatch(resetSatelliteState());
       dispatch(resetOperationState());
 
-      navigate("/login");
+      navigate(AUTH_ROUTES.login);
 
       return { success: true };
     } catch (error) {
