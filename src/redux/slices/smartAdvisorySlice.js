@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import api from "../../api/api";
+import { updateAdvisoryActivityProgressAPI } from "../../api/smartAdvisoryApi";
 
 const BASE_URL = process.env.REACT_APP_SMART_ADVISORY;
 
@@ -23,6 +24,24 @@ export const fetchSmartAdvisory = createAsyncThunk(
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
   },
+);
+
+export const updateAdvisoryActivityProgress = createAsyncThunk(
+  "smartAdvisory/updateActivityProgress",
+  async ({ advisoryId, activityType, progress }, thunkAPI) => {
+    try {
+      const data = await updateAdvisoryActivityProgressAPI({
+        advisoryId,
+        activityType,
+        progress,
+      });
+      return data.advisory;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || err.message || "Failed to update progress"
+      );
+    }
+  }
 );
 
 /* =====================================================
@@ -59,6 +78,9 @@ const smartAdvisorySlice = createSlice({
     whatsappSending: false,
     whatsappSuccess: false,
     whatsappError: null,
+
+    progressUpdating: null,
+    progressError: null,
   },
 
   reducers: {
@@ -84,6 +106,20 @@ const smartAdvisorySlice = createSlice({
       .addCase(fetchSmartAdvisory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      .addCase(updateAdvisoryActivityProgress.pending, (state, action) => {
+        state.progressUpdating = action.meta.arg.activityType;
+        state.progressError = null;
+      })
+      .addCase(updateAdvisoryActivityProgress.fulfilled, (state, action) => {
+        state.progressUpdating = null;
+        state.advisory = action.payload;
+        state.exists = true;
+      })
+      .addCase(updateAdvisoryActivityProgress.rejected, (state, action) => {
+        state.progressUpdating = null;
+        state.progressError = action.payload;
       })
 
       /* ---------- WhatsApp ---------- */

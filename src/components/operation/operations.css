@@ -1,0 +1,160 @@
+/* Operations page — FullCalendar */
+.operations-calendar {
+  width: 100%;
+  min-width: 0;
+}
+
+.operations-calendar .fc {
+  --fc-border-color: rgba(255, 255, 255, 0.12);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: rgba(255, 255, 255, 0.05);
+  --fc-today-bg-color: rgba(140, 198, 63, 0.15);
+  --fc-event-border-color: transparent;
+  font-family: "Poppins", sans-serif;
+  width: 100% !important;
+}
+
+.operations-calendar .fc-view-harness {
+  min-height: 0 !important;
+}
+
+.operations-calendar .fc-scrollgrid {
+  width: 100% !important;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.operations-calendar .fc-scrollgrid-sync-table {
+  width: 100% !important;
+}
+
+.operations-calendar .fc-col-header-cell-cushion,
+.operations-calendar .fc-daygrid-day-number {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.operations-calendar .fc-daygrid-day {
+  transition: background-color 0.15s ease;
+}
+
+.operations-calendar .fc-daygrid-day:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.operations-calendar .fc-day-today .fc-daygrid-day-number {
+  background: var(--ember-accent);
+  color: #344e41;
+  border-radius: 6px;
+  min-width: 22px;
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px;
+  font-size: 11px;
+}
+
+.operations-calendar .fc-daygrid-event {
+  border-radius: 4px;
+  margin: 1px;
+  border: none !important;
+  font-size: 10px;
+}
+
+.operations-calendar .fc-daygrid-day-frame {
+  min-height: 52px;
+}
+
+@media (min-width: 640px) {
+  .operations-calendar .fc-daygrid-day-frame {
+    min-height: 64px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .operations-calendar .fc-daygrid-day-frame {
+    min-height: 56px;
+  }
+}
+
+/* Operation form modal */
+.operation-form-modal .ant-modal {
+  max-width: calc(100vw - 24px) !important;
+  padding-bottom: 0;
+  top: 16px;
+}
+
+@media (min-width: 640px) {
+  .operation-form-modal .ant-modal {
+    top: 32px;
+  }
+}
+
+.operation-form-modal .ant-modal-content {
+  border-radius: 14px;
+  overflow: hidden;
+  padding: 0;
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+}
+
+.operation-form-modal .ant-modal-body {
+  padding: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.operation-form-modal .operation-form-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.operation-form-modal .ant-form-item {
+  margin-bottom: 14px;
+}
+
+.operation-form-modal .ant-form-item-label > label {
+  color: var(--ember-sidebar) !important;
+  font-weight: 500;
+  font-size: 0.8rem;
+  height: auto;
+}
+
+.operation-form-modal .ant-input,
+.operation-form-modal .ant-input-number,
+.operation-form-modal .ant-select-selector,
+.operation-form-modal .ant-input-affix-wrapper {
+  border-radius: 8px !important;
+  border-color: var(--ember-border) !important;
+}
+
+.operation-form-modal .ant-input:focus,
+.operation-form-modal .ant-select-focused .ant-select-selector {
+  border-color: var(--ember-sidebar) !important;
+  box-shadow: 0 0 0 2px rgba(11, 93, 61, 0.1) !important;
+}
+
+/* Premium lock wrapper must fill operations panel */
+.operations-page-content {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Operation details (read-only) modal */
+.operation-details-modal .ant-modal-content {
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.operation-details-modal .ant-modal-body {
+  padding: 0;
+}

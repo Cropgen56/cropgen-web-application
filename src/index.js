@@ -12,9 +12,11 @@ import ClarityScript from "./ClarityScript";
 import GtagScript from "./GtagScript";
 import AuthAutoRefresh from "./authroute/AuthAutoRefresh";
 import { attachStore, setUnauthorizedHandler } from "./api/api.js";
+import { attachSmartAdvisoryStore } from "./api/smartAdvisoryApi";
 import { logout } from "./redux/slices/authSlice";
 
 attachStore(store);
+attachSmartAdvisoryStore(store);
 setUnauthorizedHandler(() => store.dispatch(logout()));
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

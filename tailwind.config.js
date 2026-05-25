@@ -18,6 +18,7 @@ module.exports = {
           border: "#E0E8E4",
           text: "#1F1F1F",
           "text-secondary": "#555555",
+          "text-tertiary": "#999999",
           success: "#2FA377",
           warning: "#F5A623",
           error: "#DC3545",

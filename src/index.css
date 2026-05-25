@@ -12,6 +12,21 @@
   --cg-surface: #344e41;
   --cg-surface-muted: #4a6a5a;
   --cg-text-on-primary: #f8f8f8;
+
+  /* Ember theme (operations, forms, modals — matches main sidebar) */
+  --ember-sidebar: #344e41;
+  --ember-sidebar-hover: #2b4035;
+  --ember-surface: #344e41;
+  --ember-surface-muted: #4a6a5a;
+  --ember-primary: #3da660;
+  --ember-primary-hover: #2d8b5e;
+  --ember-accent: #8cc63f;
+  --ember-light-lime: #d4e8a8;
+  --ember-card: #f8fbfa;
+  --ember-border: #e0e8e4;
+  --ember-text: #1f1f1f;
+  --ember-text-secondary: #555555;
+  --ember-text-tertiary: #999999;
 }
 
 /* Global styles */

@@ -4,11 +4,11 @@ import { getFarmFields } from "../redux/slices/farmSlice";
 import OperationSidebar from "../components/operation/operationsidebar/OperationSidebar";
 import Calendar from "../components/operation/operationcalender/OperationCalender";
 import { useNavigate } from "react-router-dom";
-import img1 from "../assets/image/Group 31.png";
+import SimpleLoader from "../components/comman/loading/SimpleLoader";
 import FieldDropdown from "../components/comman/FieldDropdown";
-
 import FeatureGuard from "../components/subscription/FeatureGuardComponent";
 import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
+import { Sprout, Plus } from "lucide-react";
 
 const Operation = () => {
   const dispatch = useDispatch();
@@ -16,12 +16,9 @@ const Operation = () => {
 
   const user = useSelector((state) => state?.auth?.user);
   const fields = useSelector((state) => state?.farmfield?.fields);
-
   const userId = user?.id;
 
   const [selectedField, setSelectedField] = useState(null);
-
-  /* ---------- FETCH FIELDS (UNCHANGED) ---------- */
 
   useEffect(() => {
     if (userId) {
@@ -35,53 +32,53 @@ const Operation = () => {
     }
   }, [fields, selectedField]);
 
-  /* ---------- SUBSCRIPTION LOGIC (COMMON) ---------- */
-
   const subscriptionGuard = useSubscriptionGuard({
     field: selectedField,
     featureKey: "farmOperationsManagement",
   });
 
-  /* ---------- EMPTY STATE (UNCHANGED UI) ---------- */
-
   if (fields?.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center w-full h-screen bg-[#5a7c6b] text-center px-4">
-        <img
-          src={img1}
-          alt="No Fields"
-          className="w-[400px] h-[400px] mb-6 opacity-70"
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-gradient-to-br from-[#344e41] to-[#2b4035] text-center px-6">
+        <SimpleLoader
+          size="lg"
+          variant="brandMark"
+          className="mb-8 h-44 w-44 sm:h-52 sm:w-52"
         />
-        <h2 className="text-2xl font-semibold text-white">
-          Add Farm to make an Operation
-        </h2>
+        <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-5">
+          <Sprout className="text-white/80" size={32} />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">No Farms Yet</h2>
+        <p className="text-white/60 text-sm max-w-md mb-6">
+          Add a farm field to start scheduling tillage, sowing, spraying, and other operations.
+        </p>
         <button
           onClick={() => navigate("/addfield")}
-          className="mt-6 px-5 py-2 rounded-lg bg-white text-[#5a7c6b] font-medium hover:bg-gray-200 transition"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-ember-sidebar font-semibold hover:bg-emerald-50 transition shadow-lg"
         >
-          Add Field
+          <Plus size={18} />
+          Add Farm Field
         </button>
       </div>
     );
   }
 
-  /* ---------- MAIN UI (UNCHANGED STRUCTURE) ---------- */
-
   return (
-    <div className="w-full h-full m-0 p-0 flex">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+    <div className="h-screen w-full flex overflow-hidden bg-[#344e41]">
+      {/* Desktop farm sidebar */}
+      <div className="hidden lg:block h-full shrink-0">
         <OperationSidebar
           setSelectedField={setSelectedField}
           selectedField={selectedField}
-          hasSubscription={subscriptionGuard.hasFeatureAccess}
         />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 bg-[#5a7c6b] h-screen overflow-y-auto">
-        {/* Mobile Dropdown */}
-        <div className="lg:hidden p-3">
+      {/* Main panel — single scroll container */}
+      <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
+        <div className="lg:hidden shrink-0 z-20 bg-[#344e41] px-3 py-2.5 border-b border-white/10">
+          <p className="text-emerald-100/70 text-[10px] uppercase tracking-wider font-semibold mb-1.5">
+            Farm Operations
+          </p>
           <FieldDropdown
             fields={fields}
             selectedField={selectedField}
@@ -89,12 +86,17 @@ const Operation = () => {
           />
         </div>
 
-        <FeatureGuard
-          guard={subscriptionGuard}
-          title="Farm Operations Management"
-        >
-          <Calendar selectedField={selectedField?._id} />
-        </FeatureGuard>
+        <div className="operations-page-content flex-1 min-h-0 overflow-hidden">
+          <FeatureGuard
+            guard={subscriptionGuard}
+            title="Farm Operations Management"
+          >
+            <Calendar
+              selectedField={selectedField?._id}
+              fieldName={selectedField?.fieldName}
+            />
+          </FeatureGuard>
+        </div>
       </div>
     </div>
   );
