@@ -8,10 +8,10 @@ import {
   Crown,
   ChevronLeft,
   ChevronRight,
-  ArrowLeft,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSubscriptions } from "../../../redux/slices/subscriptionSlice";
+import SettingsPanel from "../SettingsPanel";
 
 const FEATURE_DISPLAY_NAMES = {
   satelliteImagery: "Satellite Imagery",
@@ -43,7 +43,6 @@ const ENTERPRISE_PLAN = {
   active: true,
 };
 
-/** Match subscription API pricing rows (camelCase or snake_case, currency case-insensitive). */
 function findPricingEntry(pricing, cycle, currency) {
   if (!Array.isArray(pricing) || pricing.length === 0) return null;
   const cur = String(currency || "").toUpperCase();
@@ -62,13 +61,9 @@ function findPricingEntry(pricing, cycle, currency) {
   const exact = byCycle.find((p) => norm(p).currency === cur);
   if (exact) return exact;
 
-  // API may only define one currency per billing cycle (e.g. USD only).
   return byCycle[0];
 }
 
-/**
- * Backend may send flat amount (amountMinor) or per-acre (pricePerUnitMinor), in minor units.
- */
 function amountMajorFromEntry(entry) {
   if (!entry || typeof entry !== "object") {
     return { value: 0, perAcre: false };
@@ -206,7 +201,7 @@ function PlanCard({
 
   if (isEnterprise) {
     return (
-      <div className="w-[320px] h-[450px]" style={{ perspective: 1000 }}>
+      <div className="w-[320px] h-[450px] flex-shrink-0" style={{ perspective: 1000 }}>
         <motion.div
           onClick={() => setFlipped((s) => !s)}
           animate={{ rotateY: flipped ? 180 : 0 }}
@@ -220,11 +215,11 @@ function PlanCard({
           className="cursor-pointer"
         >
           <div
-            className="absolute inset-0 p-6 flex flex-col rounded-2xl bg-gradient-to-br from-[#1a2e22] via-[#344E41] to-[#2d4a3a] text-white border-2 border-[#E1FFF0]/30"
+            className="absolute inset-0 p-6 flex flex-col rounded-2xl bg-gradient-to-br from-[#0a2e22] via-ember-sidebar to-ember-gradient-mid text-white border-2 border-[#E1FFF0]/30"
             style={{ backfaceVisibility: "hidden" }}
           >
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#E1FFF0] to-[#a8e6cf] text-[#344E41] text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-[0_2px_6px_rgba(0,0,0,0.3)]">
-              <Crown size={12} className="text-[#344E41]" />
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#E1FFF0] to-[#a8e6cf] text-ember-sidebar text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-[0_2px_6px_rgba(0,0,0,0.3)]">
+              <Crown size={12} className="text-ember-sidebar" />
               ENTERPRISE
             </span>
 
@@ -282,7 +277,7 @@ function PlanCard({
               </button>
               <button
                 onClick={handleContact}
-                className="flex-1 py-2 rounded-2xl font-bold text-xs bg-[#E1FFF0] text-[#344E41] hover:bg-white transition-all duration-500 ease-in-out flex items-center justify-center gap-1"
+                className="flex-1 py-2 rounded-2xl font-bold text-xs bg-[#E1FFF0] text-ember-sidebar hover:bg-white transition-all duration-500 ease-in-out flex items-center justify-center gap-1"
               >
                 Contact Us
                 <ArrowRight size={14} />
@@ -291,7 +286,7 @@ function PlanCard({
           </div>
 
           <div
-            className="absolute inset-0 rounded-2xl shadow-xl p-6 flex flex-col bg-gradient-to-br from-[#1a2e22] via-[#344E41] to-[#2d4a3a] text-white border-2 border-[#E1FFF0]/30"
+            className="absolute inset-0 rounded-2xl shadow-xl p-6 flex flex-col bg-gradient-to-br from-[#0a2e22] via-ember-sidebar to-ember-gradient-mid text-white border-2 border-[#E1FFF0]/30"
             style={{
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
@@ -329,7 +324,7 @@ function PlanCard({
               </button>
               <button
                 onClick={handleContact}
-                className="flex-1 py-2 rounded-2xl font-bold text-xs bg-[#E1FFF0] text-[#344E41] hover:bg-white transition-all duration-500 ease-in-out flex items-center justify-center gap-1"
+                className="flex-1 py-2 rounded-2xl font-bold text-xs bg-[#E1FFF0] text-ember-sidebar hover:bg-white transition-all duration-500 ease-in-out flex items-center justify-center gap-1"
               >
                 Contact Us
                 <ArrowRight size={14} />
@@ -342,7 +337,10 @@ function PlanCard({
   }
 
   return (
-    <div className="w-[300px] h-[450px]" style={{ perspective: 1000 }}>
+    <div
+      className="h-[min(400px,72vh)] w-[min(280px,82vw)] flex-shrink-0 sm:h-[420px] sm:w-[260px] md:w-[280px]"
+      style={{ perspective: 1000 }}
+    >
       <motion.div
         onClick={() => setFlipped((s) => !s)}
         animate={{ rotateY: flipped ? 180 : 0 }}
@@ -356,13 +354,13 @@ function PlanCard({
         className="cursor-pointer"
       >
         <div
-          className="absolute inset-0 rounded-2xl px-4 py-3 flex flex-col gap-2 bg-white text-black border-1 border-[#344E41]"
+          className="absolute inset-0 rounded-2xl px-4 py-3 flex flex-col gap-2 bg-white text-black border-1 border-ember-sidebar"
           style={{ backfaceVisibility: "hidden" }}
         >
-          <h3 className="text-[24px] font-extrabold mb-0">{plan.name}</h3>
+          <h3 className="mb-0 text-lg font-extrabold sm:text-xl">{plan.name}</h3>
           <p className="text-xs mb-0">{plan.description}</p>
           <div className="flex items-baseline gap-2 flex-wrap">
-            <p className="text-[20px] font-bold text-[#344E41] mb-0">
+            <p className="text-[20px] font-bold text-ember-sidebar mb-0">
               {price === 0 ? (
                 "Free"
               ) : (
@@ -370,7 +368,7 @@ function PlanCard({
                   {symbol}
                   {formatPlanPrice(price, displayCurrency)}
                   {perAcre ? (
-                    <span className="text-sm font-semibold text-[#344E41]/80">
+                    <span className="text-sm font-semibold text-ember-sidebar/80">
                       /acre
                     </span>
                   ) : null}
@@ -385,7 +383,7 @@ function PlanCard({
             ) : null}
           </div>
 
-          <hr className="border-t border-1 border-[#344E41] my-2" />
+          <hr className="border-t border-1 border-ember-sidebar my-2" />
 
           <div className="flex-1 flex flex-col gap-2 text-[11px] font-semibold overflow-hidden">
             {frontFeatures.map((f, idx) => (
@@ -412,7 +410,7 @@ function PlanCard({
             </button>
             <button
               onClick={handleSubscribe}
-              className="flex-1 py-2 rounded-2xl font-bold text-xs bg-[#344E41] text-white hover:bg-[#2b3e33] transition-all duration-500 ease-in-out"
+              className="flex-1 py-2 rounded-2xl font-bold text-xs bg-ember-sidebar text-white hover:bg-ember-sidebar-hover transition-all duration-500 ease-in-out"
             >
               Subscribe
             </button>
@@ -420,7 +418,7 @@ function PlanCard({
         </div>
 
         <div
-          className="absolute inset-0 rounded-2xl px-4 py-3 flex flex-col gap-2 bg-white text-black border-1 border-[#344E41]"
+          className="absolute inset-0 rounded-2xl px-4 py-3 flex flex-col gap-2 bg-white text-black border-1 border-ember-sidebar"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           <h3 className="text-[18px] font-bold mb-2">
@@ -460,62 +458,60 @@ const Pricing = ({ setShowSidebar }) => {
   );
   const [billing, setBilling] = useState("monthly");
   const [currency, setCurrency] = useState("INR");
-  const [index, setIndex] = useState(0);
-  const [cardsPerView, setCardsPerView] = useState(1);
+  const scrollContainerRef = React.useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   useEffect(() => {
     dispatch(fetchSubscriptions());
   }, [dispatch]);
 
-  useEffect(() => {
-    const update = () => {
-      if (window.innerWidth < 640) setCardsPerView(1);
-      else if (window.innerWidth < 1024) setCardsPerView(2);
-      else setCardsPerView(3);
-    };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-
   const plans = useMemo(() => transformApiData(subscriptions), [subscriptions]);
-  const maxIndex = Math.max(plans.length - cardsPerView, 0);
+
+  const checkScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
 
   useEffect(() => {
-    setIndex((i) => Math.min(i, maxIndex));
-  }, [maxIndex]);
+    checkScroll();
+    window.addEventListener("resize", checkScroll);
+    return () => window.removeEventListener("resize", checkScroll);
+  }, [plans]);
 
-  const slidePercent =
-    plans.length > 0 ? 100 / plans.length : 0;
+  const scroll = (direction) => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 350; // Card width + gap
+      scrollContainerRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+      setTimeout(checkScroll, 300);
+    }
+  };
 
   return (
-    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md font-inter h-[98%] overflow-y-auto">
-      <div className="px-4 py-2 text-ember-primary border-b border-ember-border/50">
-        <div className="flex items-center justify-between">
-          <h5 className="text-[18px] font-bold text-ember-primary">Pricing & Plans</h5>
-          <button
-            onClick={() => setShowSidebar(true)}
-            className="flex items-center gap-1 text-xs text-ember-primary hover:text-ember-primary-hover transition-colors cursor-pointer"
-          >
-            <ArrowLeft size={16} />
-            Back to Settings
-          </button>
-        </div>
-        <p className="mt-1 mb-0.5 text-ember-primary font-medium text-sm leading-[100%]">
-          Choose the plan that best fits your farm needs.
-        </p>
-      </div>
-
-      <div className="flex justify-between sm:justify-end sm:gap-4 mt-3 items-center w-full">
-        <div className="flex rounded-md border border-ember-border overflow-hidden">
+    <SettingsPanel
+      title="Pricing & Plans"
+      description="Choose the plan that best fits your farm needs."
+      onBack={setShowSidebar}
+      className="h-full bg-[#f8fbf9]"
+    >
+      <div className="mx-auto w-full max-w-6xl">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex overflow-hidden rounded-md border border-gray-200 text-xs">
           {["monthly", "yearly"].map((b) => (
             <button
               key={b}
+              type="button"
               onClick={() => setBilling(b)}
-              className={`px-2 sm:px-4 py-1.5 text-sm transition-all ease-in-out duration-500 ${
+              className={`px-2.5 py-1 capitalize transition-colors sm:px-3 sm:py-1.5 ${
                 billing === b
                   ? "bg-ember-sidebar text-white"
-                  : "bg-white text-ember-text-secondary hover:text-ember-primary"
+                  : "bg-white text-gray-600 hover:text-ember-sidebar"
               }`}
             >
               {b}
@@ -523,15 +519,16 @@ const Pricing = ({ setShowSidebar }) => {
           ))}
         </div>
 
-        <div className="flex rounded-md border border-ember-border overflow-hidden">
+        <div className="flex overflow-hidden rounded-md border border-gray-200 text-xs">
           {["INR", "USD"].map((c) => (
             <button
               key={c}
+              type="button"
               onClick={() => setCurrency(c)}
-              className={`px-2 sm:px-4 py-1.5 text-sm transition-all ease-in-out duration-500 ${
+              className={`px-2.5 py-1 transition-colors sm:px-3 sm:py-1.5 ${
                 currency === c
                   ? "bg-ember-sidebar text-white"
-                  : "bg-white text-ember-text-secondary hover:text-ember-primary"
+                  : "bg-white text-gray-600 hover:text-ember-sidebar"
               }`}
             >
               {c}
@@ -540,59 +537,55 @@ const Pricing = ({ setShowSidebar }) => {
         </div>
       </div>
 
-      <div className="relative overflow-hidden min-h-[min(460px,70vh)]">
-        <button
-          type="button"
-          onClick={() => setIndex((i) => Math.max(i - 1, 0))}
-          disabled={index === 0 || plans.length === 0}
-          className={`absolute left-1 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full p-1 shadow-[0_2px_6px_rgba(0,0,0,0.3)]
-    ${index === 0 || plans.length === 0 ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
-        >
-          <ChevronLeft />
-        </button>
-
-        <div className="overflow-hidden mx-10">
-          <div
-            className="flex transition-transform duration-300 ease-out my-4"
-            style={{
-              /* % is relative to this track's width; one card = 100/plans.length % of track */
-              transform: `translateX(-${index * slidePercent}%)`,
-              width:
-                plans.length > 0
-                  ? `${(plans.length * 100) / cardsPerView}%`
-                  : "100%",
-            }}
+      <div className="relative">
+        {/* Left Scroll Button */}
+        {canScrollLeft && (
+          <button
+            onClick={() => scroll("left")}
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full p-2 shadow-[0_2px_6px_rgba(0,0,0,0.3)] hover:bg-gray-100 transition-colors"
+            aria-label="Scroll left"
           >
+            <ChevronLeft size={20} />
+          </button>
+        )}
+
+        {/* Scrollable Container */}
+        <div
+          ref={scrollContainerRef}
+          onScroll={checkScroll}
+          className="scrollbar-hide my-3 overflow-x-auto overflow-y-hidden sm:my-4"
+          style={{
+            scrollBehavior: "smooth",
+            msOverflowStyle: "none",
+            scrollbarWidth: "none",
+          }}
+        >
+          <div className="flex gap-4 pb-2">
             {plans.map((plan) => (
-              <div
+              <PlanCard
                 key={plan._id}
-                className="flex shrink-0 justify-center px-2 box-border"
-                style={{
-                  width:
-                    plans.length > 0 ? `${100 / plans.length}%` : undefined,
-                }}
-              >
-                <PlanCard plan={plan} billing={billing} currency={currency} />
-              </div>
+                plan={plan}
+                billing={billing}
+                currency={currency}
+              />
             ))}
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIndex((i) => Math.min(i + 1, maxIndex))}
-          disabled={index === maxIndex || plans.length === 0}
-          className={`absolute right-1 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full p-1 shadow-[0_2px_6px_rgba(0,0,0,0.3)]
-    ${
-      index === maxIndex || plans.length === 0
-        ? "opacity-40 cursor-not-allowed"
-        : "hover:bg-gray-100"
-    }`}
-        >
-          <ChevronRight />
-        </button>
+        {/* Right Scroll Button */}
+        {canScrollRight && (
+          <button
+            onClick={() => scroll("right")}
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full p-2 shadow-[0_2px_6px_rgba(0,0,0,0.3)] hover:bg-gray-100 transition-colors"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={20} />
+          </button>
+        )}
       </div>
-    </div>
+
+      </div>
+    </SettingsPanel>
   );
 };
 

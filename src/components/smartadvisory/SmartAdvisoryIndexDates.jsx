@@ -16,7 +16,6 @@ import {
   fetchSatelliteDates,
   clearSatelliteDates,
 } from "../../redux/slices/satelliteSlice";
-import { getSatelliteDateRangeForField } from "../../utility/satelliteDateRange";
 
 const DATE_FORMAT_OPTIONS = { day: "numeric", month: "short", year: "numeric" };
 const DEBOUNCE_DELAY = 500;
@@ -86,14 +85,8 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [visibleCount, setVisibleCount] = useState(6);
 
-  const selectedField = selectedFieldsDetials[0];
-  const currentFieldId = selectedField?._id;
+  const currentFieldId = selectedFieldsDetials[0]?._id;
   const prevFieldIdRef = useRef(currentFieldId);
-
-  const satelliteRange = useMemo(
-    () => getSatelliteDateRangeForField(selectedField),
-    [selectedField],
-  );
 
   const coordinates = useMemo(() => {
     const field = selectedFieldsDetials[0]?.field;
@@ -111,15 +104,9 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
 
   const debouncedFetch = useMemo(
     () =>
-      debounce((coords, startDate, endDate) => {
+      debounce((coords) => {
         if (coords.length) {
-          dispatch(
-            fetchSatelliteDates({
-              geometry: coords,
-              startDate,
-              endDate,
-            }),
-          );
+          dispatch(fetchSatelliteDates({ geometry: coords }));
         }
       }, DEBOUNCE_DELAY),
     [dispatch],
@@ -136,15 +123,9 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
   }, [currentFieldId, dispatch]);
 
   useEffect(() => {
-    if (coordinates.length) {
-      debouncedFetch(
-        coordinates,
-        satelliteRange.startDate,
-        satelliteRange.endDate,
-      );
-    }
+    if (coordinates.length) debouncedFetch(coordinates);
     return () => debouncedFetch.cancel();
-  }, [coordinates, satelliteRange.startDate, satelliteRange.endDate, debouncedFetch]);
+  }, [coordinates, debouncedFetch]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -250,16 +231,12 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
         selectedFieldsDetials={selectedFieldsDetials}
         selectedDate={selectedDate}
       />
-      <div className="flex items-center gap-2 w-full px-2 bg-ember-surface rounded-md relative">
+      <div className="flex items-center gap-2 w-full px-2 bg-ember-surface rounded-md">
         <div className="relative flex items-center">
           <button
             type="button"
             onClick={toggleCalendar}
-            className={`bg-transparent border-none cursor-pointer p-1 rounded transition-colors ${
-              isCalendarVisible
-                ? "bg-ember-sidebar"
-                : "hover:bg-ember-sidebar/50"
-            }`}
+            className="bg-transparent border-none cursor-pointer"
             aria-label="Toggle calendar"
           >
             <Calender />
@@ -291,19 +268,14 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
             ? Array.from({ length: visibleCount }).map((_, idx) => (
                 <div
                   key={idx}
-                  className="flex flex-col items-center rounded px-4 py-2.5 min-w-[90px] bg-ember-sidebar/50 animate-pulse"
-                >
-                  <div className="h-3 w-16 bg-ember-surface rounded mb-1.5" />
-                  <div className="h-3 w-14 bg-ember-surface rounded" />
-                </div>
+                  className="h-[30px] min-w-[80px] rounded-xl bg-ember-sidebar/50 animate-pulse"
+                />
               ))
             : visibleDates.map((dateItem) => (
                 <div
                   key={dateItem.isoDate}
-                  className={`flex flex-col items-center text-white cursor-pointer rounded px-4 py-2.5 min-w-[90px] transition-colors ${
-                    dateItem.isoDate === selectedDate
-                      ? "bg-ember-sidebar brightness-75 shadow-inner"
-                      : "bg-transparent hover:bg-ember-sidebar/50"
+                  className={`flex flex-col items-center text-white cursor-pointer rounded px-3 py-2 min-w-[80px] ${
+                    dateItem.isoDate === selectedDate ? "bg-ember-sidebar" : "bg-transparent"
                   }`}
                   onClick={() => handleDateClick(dateItem.isoDate)}
                   role="option"

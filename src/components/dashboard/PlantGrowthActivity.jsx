@@ -15,10 +15,6 @@ import PlantGrowthSkeleton from "../Skeleton/PlantGrowthSkeleton.jsx";
 import PremiumContentWrapper from "../subscription/PremiumContentWrapper.jsx";
 import FeatureGuard from "../subscription/FeatureGuard";
 import { useSubscriptionGuard } from "../subscription/hooks/useSubscriptionGuard";
-import {
-  formatDaysUntilSowingLabel,
-  isBarrenLandField,
-} from "../../utility/satelliteDateRange";
 
 const GRASS_COLOR_MAIN = "#86D72F";
 
@@ -161,16 +157,9 @@ const PlantGrowthActivity = memo(
     const sowingDateStr =
       field?.sowingDate || advisoryState?.farmFieldId?.sowingDate || null;
 
-    const isBarren =
-      isBarrenLandField(field) || plantActivity?.farmStatus === "barren";
-
     const targetDateStr = advisoryState?.targetDate || new Date().toISOString();
 
     const { daysSinceSowing, currentWeek } = useMemo(() => {
-      if (isBarren) {
-        return { daysSinceSowing: 0, currentWeek: 1 };
-      }
-
       const sowing = sowingDateStr ? new Date(sowingDateStr) : null;
       const target = targetDateStr ? new Date(targetDateStr) : new Date();
 
@@ -187,7 +176,7 @@ const PlantGrowthActivity = memo(
       );
 
       return { daysSinceSowing: diffDays, currentWeek: weeks };
-    }, [isBarren, sowingDateStr, targetDateStr, cropName]);
+    }, [sowingDateStr, targetDateStr, cropName]);
 
     const [interval, setInterval] = useState("Weeks");
 
@@ -196,46 +185,10 @@ const PlantGrowthActivity = memo(
       [interval, cropName],
     );
 
-    const referenceLabel = isBarren
-      ? formatDaysUntilSowingLabel(plantActivity?.daysUntilSowing)
-      : interval === "Days"
-        ? `Day ${daysSinceSowing}`
-        : `Week ${currentWeek}`;
+    const referenceLabel =
+      interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
 
     const [tooltipPos, setTooltipPos] = useState(null);
-
-    if (isBarren) {
-      const plannedSowing =
-        plantActivity?.expectedSowingDate ||
-        (sowingDateStr
-          ? new Date(sowingDateStr).toLocaleDateString("en-US", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : null);
-
-      return (
-        <div className="w-full flex justify-center mt-4">
-          <div className="relative w-full max-w-4xl rounded-2xl shadow-lg bg-white p-6 text-center">
-            <h3 className="text-lg font-bold text-ember-sidebar mb-2">
-              Pre-sowing (barren land)
-            </h3>
-            <p className="text-gray-700 text-sm mb-1">
-              {plantActivity?.stageName || "Land preparation phase"}
-            </p>
-            {plannedSowing && (
-              <p className="text-gray-600 text-sm">
-                Planned sowing: <strong>{plannedSowing}</strong>
-              </p>
-            )}
-            <p className="text-gray-500 text-xs mt-3">
-              {referenceLabel}. Satellite maps use the last 2 weeks through today.
-            </p>
-          </div>
-        </div>
-      );
-    }
 
     if (!sowingDateStr) {
       return (
@@ -323,7 +276,7 @@ const PlantGrowthActivity = memo(
 
         {tooltipPos && plantActivity && (
           <div
-            className="absolute z-50 bg-[#344E41] text-white text-xs p-3 rounded shadow-xl max-w-[320px]"
+            className="absolute z-50 bg-ember-sidebar text-white text-xs p-3 rounded shadow-xl max-w-[320px]"
             style={{
               left: Math.max(8, tooltipPos.x - 160),
               top: Math.max(8, tooltipPos.y - 100),
@@ -351,13 +304,13 @@ const PlantGrowthActivity = memo(
           {/* Always-visible header */}
           <div className="w-full mb-4 flex items-start justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-[#344E41] m-0">
+              <h2 className="text-xl font-semibold text-ember-sidebar m-0">
                 Plant Growth Activity
               </h2>
 
               {(bypassPremium || plantGrowthGuard.hasFeatureAccess) && (
                 <>
-                  <div className="text-sm font-bold text-[#344E41] mt-2">
+                  <div className="text-sm font-bold text-ember-sidebar mt-2">
                     {cropName}
                   </div>
 

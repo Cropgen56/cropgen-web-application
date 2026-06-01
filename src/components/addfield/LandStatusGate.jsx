@@ -23,7 +23,7 @@ const cardVariants = {
 const LandStatusGate = ({ onConfirm }) => {
   return (
     <div
-      className="fixed inset-0 z-[10050] flex min-h-[100dvh] flex-col items-center justify-center overflow-y-auto bg-gradient-to-b from-ember-sidebar via-ember-sidebar-hover to-ember-chat-dark px-4 py-10"
+      className="fixed inset-0 z-[10050] flex min-h-[100dvh] flex-col items-center justify-center overflow-y-auto bg-gradient-to-b from-[#0b5d3d] via-[#083828] to-[#041a10] px-4 py-10"
       role="dialog"
       aria-modal="true"
       aria-labelledby="land-gate-title"
@@ -33,7 +33,7 @@ const LandStatusGate = ({ onConfirm }) => {
         className="pointer-events-none absolute inset-0 overflow-hidden"
         aria-hidden
       >
-        <div className="absolute -left-20 top-20 h-72 w-72 rounded-full bg-ember-accent/12 blur-3xl" />
+        <div className="absolute -left-20 top-20 h-72 w-72 rounded-full bg-[#c9a227]/8 blur-3xl" />
         <div className="absolute -right-16 bottom-24 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
       </div>
 
@@ -70,7 +70,7 @@ const LandStatusGate = ({ onConfirm }) => {
             onClick={() => onConfirm("crop")}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
             whileTap={{ scale: 0.98 }}
-            className="group relative overflow-hidden rounded-2xl border-2 border-white/20 bg-gradient-to-br from-ember-sidebar via-ember-surface-muted to-ember-sidebar-hover p-5 text-left shadow-[0_20px_50px_rgba(0,0,0,0.28)] transition-shadow hover:border-white/35 hover:shadow-[0_24px_60px_rgba(52,78,65,0.4)] sm:p-6"
+            className="group relative overflow-hidden rounded-2xl border-2 border-white/25 bg-gradient-to-br from-[#0c4d35] via-[#0b5d3d] to-[#095234] p-5 text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-shadow hover:border-white/40 hover:shadow-[0_24px_60px_rgba(11,93,61,0.45)] sm:p-6"
           >
             <div
               className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10 blur-2xl group-hover:bg-white/15"
@@ -101,7 +101,7 @@ const LandStatusGate = ({ onConfirm }) => {
             onClick={() => onConfirm("barren")}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
             whileTap={{ scale: 0.98 }}
-            className="group relative overflow-hidden rounded-2xl border-2 border-white/20 bg-gradient-to-br from-ember-surface-muted via-ember-sidebar to-ember-chat-dark p-5 text-left shadow-[0_20px_50px_rgba(0,0,0,0.28)] transition-shadow hover:border-white/35 hover:shadow-[0_24px_60px_rgba(52,78,65,0.35)] sm:p-6"
+            className="group relative overflow-hidden rounded-2xl border-2 border-white/25 bg-gradient-to-br from-[#4a6b58] via-[#436b52] to-[#355445] p-5 text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] transition-shadow hover:border-white/40 hover:shadow-[0_24px_60px_rgba(67,107,82,0.45)] sm:p-6"
           >
             <div
               className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10 blur-2xl group-hover:bg-white/15"

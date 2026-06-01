@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { getUserProfileData } from "../redux/slices/authSlice";
+import { DEFAULT_PROFILE_IMAGE_URL } from "../config/brand";
 import {
   Mail,
   Phone,
@@ -28,7 +29,7 @@ const Profile = () => {
   }, [token, profileStatus, userProfile, dispatch]);
 
   const getAvatarUrl = () => {
-    if (!userProfile?.avatar) return null;
+    if (!userProfile?.avatar) return DEFAULT_PROFILE_IMAGE_URL;
     if (userProfile.avatar.startsWith("http")) return userProfile.avatar;
     return `${S3_BUCKET_URL}/${userProfile.avatar}`;
   };
@@ -44,9 +45,9 @@ const Profile = () => {
     return (
       <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md font-inter min-h-[400px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-[#344e41]/20 animate-pulse" />
-          <div className="h-6 w-32 bg-[#344e41]/20 rounded animate-pulse" />
-          <div className="h-4 w-48 bg-[#344e41]/10 rounded animate-pulse" />
+          <div className="w-14 h-14 rounded-full bg-ember-sidebar/20 animate-pulse" />
+          <div className="h-6 w-32 bg-ember-sidebar/20 rounded animate-pulse" />
+          <div className="h-4 w-48 bg-ember-sidebar/10 rounded animate-pulse" />
         </div>
       </div>
     );
@@ -55,18 +56,18 @@ const Profile = () => {
   return (
     <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md font-inter min-h-[98%] overflow-y-auto">
       {/* Header - aligned with Personal Info, Farm Settings, Pricing */}
-      <div className="px-4 py-2 text-[#344E41] border-b border-black/40">
+      <div className="px-4 py-2 text-ember-sidebar border-b border-black/40">
         <div className="flex items-center justify-between">
-          <h5 className="text-[18px] font-bold text-[#344E41]">Profile</h5>
+          <h5 className="text-[18px] font-bold text-ember-sidebar">Profile</h5>
           <Link
             to="/setting"
-            className="flex items-center gap-1 text-xs text-[#344E41] hover:text-[#1d3039] transition-colors"
+            className="flex items-center gap-1 text-xs text-ember-sidebar hover:text-ember-sidebar-hover transition-colors"
           >
             <ArrowLeft size={16} />
             Back to Settings
           </Link>
         </div>
-        <p className="mt-1 mb-0.5 text-[#344E41] font-medium text-sm leading-[100%]">
+        <p className="mt-1 mb-0.5 text-ember-sidebar font-medium text-sm leading-[100%]">
           View your account information
         </p>
       </div>
@@ -74,23 +75,21 @@ const Profile = () => {
       {/* Content */}
       <div className="px-4 py-6 flex flex-col flex-grow">
         {/* Profile hero - matches Personal Info card style */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#344E41] via-[#3d5a4a] to-[#2d4339] shadow-lg mb-6">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-ember-sidebar via-ember-sidebar-hover to-ember-surface-muted shadow-lg mb-6">
           <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="relative px-6 lg:px-8 py-8">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="relative shrink-0">
                 <div className="w-24 h-24 lg:w-28 lg:h-28 rounded-2xl overflow-hidden bg-white/20 ring-4 ring-white/30 flex items-center justify-center shadow-xl">
-                  {getAvatarUrl() ? (
-                    <img
-                      src={getAvatarUrl()}
-                      alt={fullName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-4xl lg:text-5xl font-bold text-white/90">
-                      {fullName.charAt(0)}
-                    </span>
-                  )}
+                  <img
+                    src={getAvatarUrl()}
+                    alt={fullName}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = DEFAULT_PROFILE_IMAGE_URL;
+                    }}
+                  />
                 </div>
               </div>
               <div className="text-center sm:text-left flex-1">
@@ -134,7 +133,7 @@ const Profile = () => {
         <div className="mt-6">
           <Link
             to="/setting"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#344E41] hover:bg-[#2d4339] text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-ember-sidebar hover:bg-ember-sidebar-hover text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg"
           >
             <Settings className="w-4 h-4" />
             Edit profile in Settings
@@ -147,7 +146,7 @@ const Profile = () => {
 
 const ProfileRow = ({ icon: Icon, label, value, placeholder }) => (
   <div className="flex items-start gap-4 py-3 border-b border-gray-100 last:border-b-0">
-    <div className="mt-0.5 p-2 rounded-lg bg-[#344e41]/10 text-[#344e41]">
+    <div className="mt-0.5 p-2 rounded-lg bg-ember-sidebar/10 text-ember-sidebar">
       <Icon className="w-4 h-4" />
     </div>
     <div className="flex-1 min-w-0">

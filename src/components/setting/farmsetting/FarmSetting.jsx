@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import AddFarm from "./AddFarm";
 import AllFarms from "./AllFarms";
-import { ArrowLeft } from "lucide-react";
+import SettingsPanel from "../SettingsPanel";
 
 export default function FarmSetting({ setShowSidebar }) {
   const [showAddFarm, setShowAddFarm] = useState(false);
@@ -18,25 +18,16 @@ export default function FarmSetting({ setShowSidebar }) {
   };
 
   return (
-    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md h-[1000px] lg:h-[98%] flex flex-col box-border overflow-hidden overflow-y-hidden font-inter">
-      <div className="px-4 py-2 text-ember-primary border-b border-ember-border/50">
-        <div className="flex items-center justify-between">
-          <h5 className="text-[18px] font-bold text-ember-primary">Farm Settings</h5>
-          <button
-            onClick={() => setShowSidebar(true)}
-            className="flex items-center gap-1 text-xs text-ember-primary hover:text-ember-primary-hover transition-colors"
-          >
-            <ArrowLeft size={16} /> Back to Settings
-          </button>
-        </div>
-
-        {!showAddFarm && (
-          <p className="mt-1 mb-0.5 text-ember-primary font-medium text-sm leading-[100%]">
-            Manage your farm subscriptions and details.
-          </p>
-        )}
-      </div>
-
+    <SettingsPanel
+      title={showAddFarm ? "Add / edit farm" : "Farm Settings"}
+      description={
+        showAddFarm
+          ? "Update field details and subscription."
+          : "Manage your farm subscriptions and details."
+      }
+      onBack={setShowSidebar}
+      className="h-full bg-[#f8fbf9]"
+    >
       {showAddFarm ? (
         <AddFarm
           onBackClick={handleBackToAllFarms}
@@ -45,6 +36,6 @@ export default function FarmSetting({ setShowSidebar }) {
       ) : (
         <AllFarms onAddFarmClick={handleAddFarmClick} />
       )}
-    </div>
+    </SettingsPanel>
   );
 }

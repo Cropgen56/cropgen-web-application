@@ -108,6 +108,11 @@ const AddField = () => {
 
   const acresToHectares = (acres) => acres * 0.404686;
 
+  const getCurrentArea = () => {
+    if (markers.length < 3) return 0;
+    return acresToHectares(calculateArea(markers));
+  };
+
   /* ================= SAVE FIELD ================= */
 
   const saveFarm = async ({
@@ -243,6 +248,7 @@ const AddField = () => {
                         saveFarm={saveFarm}
                         markers={markers}
                         isTabletView={true}
+                        currentArea={getCurrentArea()}
                         fieldLandType={fieldLandType}
                         isDrawingField={isAddingMarkers}
                         onRequestChangeFieldStatus={openFieldStatusForChange}
@@ -258,6 +264,7 @@ const AddField = () => {
                 <AddFieldSidebar
                   saveFarm={saveFarm}
                   markers={markers}
+                  currentArea={getCurrentArea()}
                   fieldLandType={fieldLandType}
                   isDrawingField={isAddingMarkers}
                   onRequestChangeFieldStatus={openFieldStatusForChange}

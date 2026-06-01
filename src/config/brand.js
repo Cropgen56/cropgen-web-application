@@ -3,6 +3,9 @@ import appLogoAsset from "../assets/image/login/logo.svg";
 export const APP_LOGO_URL = appLogoAsset;
 export const APP_FAVICON_URL = `${process.env.PUBLIC_URL || ""}/favicon.png`;
 
+/** Default user avatar when no profile photo is set (`public/farmer-image.png`). */
+export const DEFAULT_PROFILE_IMAGE_URL = `${process.env.PUBLIC_URL || ""}/farmer-image.png`;
+
 export const APP_NAME = "CropGen";
 export const AI_ASSISTANT_NAME = `${APP_NAME} AI`;
 export const AI_ASSISTANT_SHORT = APP_NAME;

@@ -140,7 +140,7 @@ const AllFarms = ({ onAddFarmClick }) => {
   );
 
   return (
-    <div className="flex flex-col flex-grow gap-3 py-2 h-[calc(100vh-100px)]">
+    <div className="flex min-h-0 flex-col gap-3">
       {/* Tabs */}
       <div className="flex flex-wrap justify-start bg-[#E6F8EF] rounded-lg gap-1 py-1 px-1.5 sm:gap-1.5 sm:py-1.5 sm:px-2 w-fit max-w-full">
         {["all", "subscribed", "unsubscribed"].map((tab) => (
@@ -162,7 +162,7 @@ const AllFarms = ({ onAddFarmClick }) => {
       </div>
 
       {/* Farms List */}
-      <div className="overflow-y-auto flex-grow pr-1 mb-2 scroll-smooth no-scrollbar">
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1 scroll-smooth scrollbar-hide">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-6">
           <AddNewFarmCard onClick={() => navigate("/addfield")} />
 

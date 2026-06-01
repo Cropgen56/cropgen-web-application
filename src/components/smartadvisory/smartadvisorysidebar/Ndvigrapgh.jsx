@@ -15,72 +15,85 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-
 import { MdDownload } from "react-icons/md";
-import { fetchVegetationTimeSeriesSummary } from "../../../api/satelliteTimeseries";
-import { getDaysAgo } from "../../../utility/formatDate";
-import {
-  canFetchSatelliteForField,
-  getSatelliteDateRangeForField,
-} from "../../../utility/satelliteDateRange";
+import { getDaysAgo, getTodayDate } from "../../../utility/formatDate";
 import IndexChartLoader from "./IndexChartLoader";
+import { fetchVegetationTimeseries } from "../../../api/satelliteTimeseriesApi";
+
+const THEME = {
+  primary: "#0D6B45",
+  primaryLight: "#48A36D",
+  dark: "#10271D",
+  surface: "#173A2A",
+  surface2: "#1B3F2E",
+  surface3: "#1F4D38",
+  card: "#214A37",
+  chart: "#173828",
+};
 
 const NDVIChartCard = ({ selectedField }) => {
   const [indexTimeSeriesSummary, setIndexTimeSeriesSummary] = useState(null);
-  const [seriesLoading, setSeriesLoading] = useState(false);
-  const seriesRequestIdRef = useRef(0);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const abortRef = useRef(null);
   const [index, setIndex] = useState("NDVI");
 
-  // Scroll ref for drag functionality
   const scrollRef = useRef(null);
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-  // Get field geometry and sowing date
   const fieldGeometry = selectedField?.field;
+  const sowingDate = selectedField?.sowingDate;
 
   useEffect(() => {
-    if (!canFetchSatelliteForField(selectedField)) return;
+    if (!fieldGeometry || !sowingDate) return;
 
-    const { startDate, endDate } = getSatelliteDateRangeForField(selectedField);
+    const today = getTodayDate();
+
+    const sixMonthsBefore = (() => {
+      const d = new Date(today);
+      d.setMonth(d.getMonth() - 6);
+      return d.toISOString().split("T")[0];
+    })();
 
     const params = {
-      startDate,
-      endDate,
+      startDate: sixMonthsBefore,
+      endDate: today,
       geometry: fieldGeometry,
       index,
     };
 
-    const id = ++seriesRequestIdRef.current;
-    setSeriesLoading(true);
+    if (abortRef.current) abortRef.current.abort();
 
-    fetchVegetationTimeSeriesSummary(params)
-      .then((data) => {
-        if (seriesRequestIdRef.current !== id) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setError(null);
+    setIsLoading(true);
+
+    fetchVegetationTimeseries({ ...params, signal: controller.signal })
+      .then(({ data }) => {
         setIndexTimeSeriesSummary(data);
+        setIsLoading(false);
       })
-      .catch(() => {
-        if (seriesRequestIdRef.current !== id) return;
-        setIndexTimeSeriesSummary(null);
-      })
-      .finally(() => {
-        if (seriesRequestIdRef.current !== id) return;
-        setSeriesLoading(false);
-      });
-  }, [selectedField, fieldGeometry, index]);
+      .catch((e) => {
+        if (controller.signal.aborted) return;
 
-  // Process chart data
+        setError(e?.message || "Failed to load vegetation timeseries");
+        setIsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [fieldGeometry, sowingDate, index]);
+
   const chartData = useMemo(() => {
-    let timeseries =
+    const timeseries =
       indexTimeSeriesSummary?.data?.timeseries ||
       indexTimeSeriesSummary?.timeseries ||
       (Array.isArray(indexTimeSeriesSummary) ? indexTimeSeriesSummary : []);
 
-    if (!Array.isArray(timeseries) || timeseries.length === 0) {
-      return [];
-    }
+    if (!Array.isArray(timeseries) || timeseries.length === 0) return [];
 
     return timeseries.map((item) => ({
       date: new Date(item.date).toLocaleDateString("en-US", {
@@ -93,18 +106,17 @@ const NDVIChartCard = ({ selectedField }) => {
     }));
   }, [indexTimeSeriesSummary, index]);
 
-  // Calculate summary statistics
   const summaryData = useMemo(() => {
     const summary =
       indexTimeSeriesSummary?.data?.summary ||
       indexTimeSeriesSummary?.summary ||
       {};
-    const timestamp = indexTimeSeriesSummary?.timestamp || null;
 
+    const timestamp = indexTimeSeriesSummary?.timestamp || null;
     const { min = 0, mean = 0, max = 0 } = summary;
 
-    // Calculate change (difference between last two values)
     let change = 0;
+
     if (chartData.length >= 2) {
       const lastValue = chartData[chartData.length - 1]?.[index] || 0;
       const prevValue = chartData[chartData.length - 2]?.[index] || 0;
@@ -114,10 +126,8 @@ const NDVIChartCard = ({ selectedField }) => {
     return { min, mean, max, timestamp, change };
   }, [indexTimeSeriesSummary, chartData, index]);
 
-  // Handle index change
   const handleIndexChange = useCallback((e) => setIndex(e.target.value), []);
 
-  // Drag scroll handlers
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -129,65 +139,57 @@ const NDVIChartCard = ({ selectedField }) => {
       el.style.cursor = "grabbing";
     };
 
-    const handleMouseLeave = () => {
-      if (isDragging.current) {
-        isDragging.current = false;
-        el.style.cursor = "grab";
-      }
-    };
-
-    const handleMouseUp = () => {
-      if (isDragging.current) {
-        isDragging.current = false;
-        el.style.cursor = "grab";
-      }
+    const stopDragging = () => {
+      isDragging.current = false;
+      el.style.cursor = "grab";
     };
 
     const handleMouseMove = (e) => {
       if (!isDragging.current) return;
+
       e.preventDefault();
+
       const x = e.pageX - el.offsetLeft;
       const walk = x - startX.current;
       el.scrollLeft = scrollLeft.current - walk;
     };
 
     el.addEventListener("mousedown", handleMouseDown);
-    el.addEventListener("mouseleave", handleMouseLeave);
-    el.addEventListener("mouseup", handleMouseUp);
+    el.addEventListener("mouseleave", stopDragging);
+    el.addEventListener("mouseup", stopDragging);
     el.addEventListener("mousemove", handleMouseMove);
 
     return () => {
       el.removeEventListener("mousedown", handleMouseDown);
-      el.removeEventListener("mouseleave", handleMouseLeave);
-      el.removeEventListener("mouseup", handleMouseUp);
+      el.removeEventListener("mouseleave", stopDragging);
+      el.removeEventListener("mouseup", stopDragging);
       el.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
 
-  const isLoading = seriesLoading;
   const hasData = chartData.length > 0;
 
-  // Format change value for display
   const changeDisplay =
     summaryData.change >= 0
       ? `+${summaryData.change.toFixed(2)}`
       : summaryData.change.toFixed(2);
 
-  const changeColor =
-    summaryData.change >= 0 ? "text-[#86D72F]" : "text-red-400";
-  const changeBgColor =
-    summaryData.change >= 0 ? "bg-[#47664D]" : "bg-red-900/30";
+  const isPositive = summaryData.change >= 0;
 
-  // No field selected state
   if (!selectedField) {
     return (
-      <div className="w-full bg-[#2C4C3B] rounded-lg p-4 text-white shadow-md border border-white/5">
-        <h2 className="text-2xl font-bold text-[#86D72F] mb-4">NDVI</h2>
-        <div className="h-[200px] flex items-center justify-center text-gray-300">
-          <div className="text-center">
-            <p>No field selected</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Select a field to view NDVI data
+      <div className="w-full rounded-2xl bg-gradient-to-br from-[#173A2A] via-[#1B3F2E] to-[#10271D] p-5 text-white shadow-xl">
+        <h2 className="mb-4 text-2xl font-extrabold text-[#48A36D]">
+          NDVI
+        </h2>
+
+        <div className="flex h-[220px] items-center justify-center rounded-xl bg-[#173828]/70 text-center">
+          <div>
+            <p className="text-sm font-semibold text-white">
+              No field selected
+            </p>
+            <p className="mt-1 text-xs text-white/55">
+              Select a field to view vegetation index data
             </p>
           </div>
         </div>
@@ -196,20 +198,27 @@ const NDVIChartCard = ({ selectedField }) => {
   }
 
   return (
-    <div className="w-full bg-[#2C4C3B] rounded-lg px-3 py-4 text-white shadow-md border border-white/5">
-      {/* Header Row */}
-      <div className="flex flex-col md:flex-row justify-between gap-6">
-        {/* Left: NDVI Info */}
-        <div className="w-full md:w-[35%] flex flex-col gap-3">
-          {/* Index Selector */}
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-3xl lg:text-4xl font-bold text-[#86D72F]">
-              {index}
-            </h2>
+    <div className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-br from-[#173A2A] via-[#1B3F2E] to-[#10271D] px-4 py-4 text-white shadow-xl">
+      <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-[#48A36D]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-20 -left-16 h-48 w-48 rounded-full bg-[#0D6B45]/20 blur-3xl" />
+
+      <div className="relative z-10 flex flex-col gap-4 lg:flex-row">
+        <div className="w-full lg:w-[34%]">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">
+                Vegetation Index
+              </p>
+
+              <h2 className="mt-1 text-4xl font-extrabold leading-none text-[#48A36D]">
+                {index}
+              </h2>
+            </div>
+
             <select
               value={index}
               onChange={handleIndexChange}
-              className="bg-[#47664D] text-white rounded-md px-3 py-1 text-sm border border-[#5a8060] focus:outline-none focus:border-[#86D72F]"
+              className="rounded-xl bg-[#1F4D38]/90 px-3 py-2 text-xs font-semibold text-white outline-none transition focus:bg-[#214A37]"
             >
               <option value="NDVI">NDVI</option>
               <option value="EVI">EVI</option>
@@ -218,131 +227,165 @@ const NDVIChartCard = ({ selectedField }) => {
             </select>
           </div>
 
-          {/* Change Value */}
-          <div
-            className={`${changeBgColor} ${changeColor} px-4 py-2 rounded-md text-xl font-semibold w-fit`}
-          >
-            {isLoading ? "..." : changeDisplay}
+          <div className="mb-4 rounded-2xl bg-[#1B3F2E]/90 p-4 backdrop-blur">
+            <div
+              className={`mb-2 inline-flex rounded-full px-3 py-1 text-sm font-bold ${
+                isPositive
+                  ? "bg-[#48A36D]/15 text-[#48A36D]"
+                  : "bg-red-500/15 text-red-300"
+              }`}
+            >
+              {isLoading ? "..." : changeDisplay}
+            </div>
+
+            <p className="text-xs text-white/55">
+              {summaryData.timestamp
+                ? `Last Update ${getDaysAgo(summaryData.timestamp)} days Ago`
+                : "Last Update N/A"}
+            </p>
+
+            <p className="mt-2 truncate text-xs font-medium text-white/70">
+              Field:{" "}
+              <span className="text-white">
+                {selectedField?.fieldName ||
+                  selectedField?.farmName ||
+                  "Unknown"}
+              </span>
+            </p>
           </div>
 
-          {/* Last Update */}
-          <p className="text-sm text-gray-300">
-            {summaryData.timestamp
-              ? `Last Update ${getDaysAgo(summaryData.timestamp)} days Ago`
-              : "Last Update N/A"}
-          </p>
-
-          {/* Field Name */}
-          <p className="text-xs text-gray-400">
-            Field:{" "}
-            {selectedField?.fieldName || selectedField?.farmName || "Unknown"}
-          </p>
-
-          {/* Summary Stats */}
           {hasData && (
-            <div className="bg-[#365541] border border-gray-400 p-3 rounded-md text-sm">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-gray-400 text-xs">Min</p>
-                  <p className="font-semibold text-[#86D72F]">
-                    {summaryData.min?.toFixed(2) || "N/A"}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                ["Min", summaryData.min],
+                ["Mean", summaryData.mean],
+                ["Max", summaryData.max],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="rounded-xl bg-[#214A37] px-2 py-3 text-center"
+                >
+                  <p className="text-[10px] uppercase tracking-wide text-white/45">
+                    {label}
+                  </p>
+                  <p className="mt-1 text-sm font-extrabold text-[#48A36D]">
+                    {value?.toFixed(2) || "N/A"}
                   </p>
                 </div>
-                <div>
-                  <p className="text-gray-400 text-xs">Mean</p>
-                  <p className="font-semibold text-[#86D72F]">
-                    {summaryData.mean?.toFixed(2) || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-400 text-xs">Max</p>
-                  <p className="font-semibold text-[#86D72F]">
-                    {summaryData.max?.toFixed(2) || "N/A"}
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Right: Chart and Info Cards */}
-        <div className="w-full md:w-[65%] flex flex-col justify-between">
-          {/* Chart */}
-          <div className="relative w-full">
+        <div className="w-full lg:w-[66%]">
+          <div className="relative rounded-2xl bg-[#173828]/70 p-3">
             {isLoading ? (
-              <div className="h-[200px] flex items-center justify-center">
+              <div className="flex h-[230px] items-center justify-center">
                 <IndexChartLoader message={`Loading ${index} data...`} />
               </div>
             ) : !hasData ? (
-              <div className="h-[200px] flex items-center justify-center">
-                <div className="text-center text-gray-300">
-                  <p>No {index} data available</p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    Try selecting a different time range
+              <div className="flex h-[230px] items-center justify-center text-center">
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    {error ? "Failed to load data" : `No ${index} data available`}
+                  </p>
+                  <p className="mt-1 text-xs text-white/50">
+                    {error ? error : "Try selecting a different field"}
                   </p>
                 </div>
               </div>
             ) : (
               <div
                 ref={scrollRef}
-                className="overflow-x-auto cursor-grab active:cursor-grabbing no-scrollbar"
+                className="no-scrollbar cursor-grab overflow-x-auto active:cursor-grabbing"
               >
-                <div style={{ minWidth: Math.max(chartData.length * 40, 500) }}>
-                  <ResponsiveContainer width="100%" height={200}>
+                <div style={{ minWidth: Math.max(chartData.length * 42, 540) }}>
+                  <ResponsiveContainer width="100%" height={230}>
                     <LineChart
                       data={chartData}
-                      margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                      margin={{ top: 22, right: 28, left: 0, bottom: 4 }}
                     >
-                      <CartesianGrid stroke="#3a5947" strokeDasharray="3 3" />
+                      <CartesianGrid
+                        stroke="rgba(255,255,255,0.09)"
+                        strokeDasharray="4 4"
+                        vertical={false}
+                      />
+
                       <XAxis
                         dataKey="date"
-                        stroke="#ccc"
-                        fontSize={12}
+                        stroke="rgba(255,255,255,0.55)"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
                         interval={Math.floor(chartData.length / 8)}
                       />
+
                       <YAxis
-                        stroke="#ccc"
-                        fontSize={12}
+                        stroke="rgba(255,255,255,0.55)"
+                        fontSize={11}
                         domain={[0, 1]}
+                        tickLine={false}
+                        axisLine={false}
                         tickFormatter={(value) => value.toFixed(1)}
                       />
+
                       <Tooltip
+                        cursor={{
+                          stroke: THEME.primaryLight,
+                          strokeWidth: 1,
+                          strokeDasharray: "4 4",
+                        }}
                         content={({ active, payload, label }) => {
                           if (!active || !payload?.length) return null;
+
                           const point = payload[0]?.payload;
                           const value = payload[0]?.value;
 
                           return (
-                            <div
-                              style={{
-                                backgroundColor: "#47664D",
-                                border: "none",
-                                color: "white",
-                                borderRadius: "8px",
-                                padding: "10px 12px",
-                              }}
-                            >
-                              <div>{`Date: ${label}`}</div>
-                              <div>{`${index}: ${Number(value).toFixed(3)}`}</div>
-                              <div style={{ fontSize: "12px", opacity: 0.9 }}>
-                                {`Status: ${point?.status || "Unknown"}`}
+                            <div className="rounded-xl bg-[#10271D]/95 px-3 py-2 text-xs text-white shadow-xl backdrop-blur">
+                              <div className="mb-1 font-bold text-[#48A36D]">
+                                {label}
+                              </div>
+                              <div>
+                                {index}:{" "}
+                                <span className="font-bold">
+                                  {Number(value).toFixed(3)}
+                                </span>
+                              </div>
+                              <div className="mt-1 text-white/60">
+                                Status: {point?.status || "Unknown"}
                               </div>
                             </div>
                           );
                         }}
                       />
+
                       <Legend
                         verticalAlign="top"
                         align="right"
-                        wrapperStyle={{ paddingBottom: 10 }}
+                        wrapperStyle={{
+                          paddingBottom: 10,
+                          fontSize: 12,
+                        }}
                       />
+
                       <Line
                         type="monotone"
                         dataKey={index}
-                        stroke="#86D72F"
-                        dot={{ r: 3, fill: "#86D72F" }}
-                        strokeWidth={2}
-                        activeDot={{ r: 5, fill: "#5cb020" }}
+                        stroke={THEME.primaryLight}
+                        strokeWidth={3}
+                        dot={{
+                          r: 3,
+                          fill: THEME.primaryLight,
+                          stroke: THEME.chart,
+                          strokeWidth: 2,
+                        }}
+                        activeDot={{
+                          r: 6,
+                          fill: THEME.primaryLight,
+                          stroke: "#ffffff",
+                          strokeWidth: 2,
+                        }}
                         connectNulls
                       />
                     </LineChart>
@@ -351,51 +394,41 @@ const NDVIChartCard = ({ selectedField }) => {
               </div>
             )}
 
-            {/* Download Button */}
             {hasData && (
-              <div className="absolute top-0 right-0 pr-4 pt-2">
-                <MdDownload
-                  className="text-xl cursor-pointer hover:text-[#86D72F] transition-colors"
-                  title="Download data"
-                />
-              </div>
+              <button
+                type="button"
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#214A37] text-white transition hover:bg-[#48A36D] hover:text-[#10271D]"
+                title="Download data"
+              >
+                <MdDownload className="text-lg" />
+              </button>
             )}
           </div>
 
-          {/* Compact Info Cards under Chart */}
-          <div className="grid grid-cols-1 md:grid-cols-3 rounded-md overflow-hidden text-[11px] leading-snug text-white">
-            {/* Card 1 */}
-            <div className="bg-[#5B7C6F] p-2 flex flex-col justify-between border-r border-[#3e5c4a]">
-              <p className="font-semibold border-b border-[#3e5c4a] mb-1 text-xs">
-                Low {index} in Specific Areas
-              </p>
-              <p className="pl-3">
-                • Check for irrigation leaks, clogged drippers, or uneven
-                fertilizer distribution.
-              </p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="bg-[#5B7C6F] p-2 flex flex-col justify-between border-r border-[#3e5c4a]">
-              <p className="font-semibold border-b border-[#3e5c4a] pb-1 mb-1">
-                Sudden {index} Drops
-              </p>
-              <p className="pl-3">
-                • Investigate pest outbreaks or extreme weather events like
-                hailstorms or drought.
-              </p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-[#5B7C6F] p-2 flex flex-col justify-between">
-              <p className="font-semibold border-b border-[#3e5c4a] pb-1 mb-1">
-                Consistently Low {index}
-              </p>
-              <p className="pl-3">
-                • May indicate soil fertility issues. Conduct soil tests for
-                corrective measures.
-              </p>
-            </div>
+          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
+            {[
+              [
+                `Low ${index} Areas`,
+                "Check irrigation leaks, clogged drippers, or uneven fertilizer distribution.",
+              ],
+              [
+                `Sudden ${index} Drops`,
+                "Investigate pest outbreaks or extreme weather events like hailstorms or drought.",
+              ],
+              [
+                `Consistently Low ${index}`,
+                "May indicate soil fertility issues. Conduct soil tests for corrective measures.",
+              ],
+            ].map(([title, text]) => (
+              <div key={title} className="rounded-xl bg-[#1F4D38] p-3">
+                <p className="mb-1 text-xs font-bold text-[#48A36D]">
+                  {title}
+                </p>
+                <p className="text-[11px] leading-relaxed text-white/75">
+                  {text}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

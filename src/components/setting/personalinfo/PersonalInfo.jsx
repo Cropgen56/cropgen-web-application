@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import profileImage from "../../../assets/image/pngimages/profile.png";
+import { DEFAULT_PROFILE_IMAGE_URL } from "../../../config/brand";
 import {
   getUserProfileData,
   updateUserData,
@@ -10,7 +10,12 @@ import { getFarmFields } from "../../../redux/slices/farmSlice";
 import { message } from "antd";
 import PersonalInfoSkeleton from "../../Skeleton/PersonalInfoSkeleton";
 import {
-  ArrowLeft,
+  getCountries,
+  getStatesByCountry,
+  getCitiesByState,
+} from "../../../api/locationApi";
+import { getStaticCountries } from "../../../config/countriesFallback";
+import {
   Camera,
   Loader2,
   Pencil,
@@ -22,11 +27,64 @@ import {
   Mail,
   Phone,
   Building2,
+  Languages,
 } from "lucide-react";
+import SettingsPanel, {
+  settingsFieldStyles as fs,
+} from "../SettingsPanel";
+import {
+  FARMER_LANGUAGE_OPTIONS,
+  getFarmerLanguageLabel,
+  normalizeFarmerLanguage,
+} from "../../../config/languages";
 
 const S3_BUCKET_URL =
   process.env.REACT_APP_S3_BUCKET_URL ||
   "https://your-bucket-name.s3.amazonaws.com";
+
+const InputField = ({
+  id,
+  label,
+  type = "text",
+  value,
+  onChange,
+  disabled = false,
+  readOnly = false,
+  placeholder,
+  icon: Icon,
+  isEditing = false,
+}) => {
+  const isEditable = isEditing && !readOnly;
+
+  const locked = readOnly || !isEditing;
+
+  return (
+    <div className="group">
+      <label htmlFor={id} className={fs.label}>
+        {label}
+      </label>
+      <div className="relative">
+        {Icon ? (
+          <div className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-ember-sidebar">
+            <Icon className="h-3.5 w-3.5" aria-hidden />
+          </div>
+        ) : null}
+        <input
+          type={type}
+          id={id}
+          placeholder={placeholder || label}
+          value={value}
+          onChange={onChange}
+          disabled={disabled || !isEditable}
+          readOnly={readOnly}
+          className={`${fs.inputBase} ${Icon ? fs.inputWithIcon : fs.inputPlain} ${
+            locked ? fs.inputReadonly : fs.inputEditable
+          }`}
+        />
+      </div>
+    </div>
+  );
+};
 
 const PersonalInfo = ({ setShowSidebar }) => {
   const dispatch = useDispatch();
@@ -49,6 +107,10 @@ const PersonalInfo = ({ setShowSidebar }) => {
     email: "",
     phone: "",
     organization: "",
+    language: "en",
+    country: "",
+    state: "",
+    city: "",
   });
 
   const [originalData, setOriginalData] = useState({
@@ -57,13 +119,22 @@ const PersonalInfo = ({ setShowSidebar }) => {
     email: "",
     phone: "",
     organization: "",
+    language: "en",
+    country: "",
+    state: "",
+    city: "",
   });
+  const [countries, setCountries] = useState(() => getStaticCountries());
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [cityUseTextInput, setCityUseTextInput] = useState(false);
 
   const [updateStatus, setUpdateStatus] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (userProfile) {
+    // Do not overwrite in-progress typing while edit mode is active.
+    if (userProfile && !isEditing) {
       const profileData = {
         firstName: userProfile.firstName || "",
         lastName: userProfile.lastName || "",
@@ -71,12 +142,16 @@ const PersonalInfo = ({ setShowSidebar }) => {
         phone: userProfile.phone || "",
         organization:
           userProfile.organization?.organizationName || "No Organization",
+        language: normalizeFarmerLanguage(userProfile.language),
+        country: userProfile.country || "",
+        state: userProfile.state || "",
+        city: userProfile.city || "",
       };
       setFormData(profileData);
       setOriginalData(profileData);
       setPreviewUrl(null);
     }
-  }, [userProfile]);
+  }, [userProfile, isEditing]);
 
   useEffect(() => {
     if (updateStatus) {
@@ -96,6 +171,51 @@ const PersonalInfo = ({ setShowSidebar }) => {
       dispatch(getFarmFields(userId));
     }
   }, [dispatch, userId]);
+
+  useEffect(() => {
+    let active = true;
+    getCountries().then((data) => {
+      if (active && Array.isArray(data) && data.length > 0) {
+        setCountries(data);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isEditing || !formData.country) {
+      setStates([]);
+      return;
+    }
+    let active = true;
+    getStatesByCountry(formData.country).then((data) => {
+      if (active) setStates(Array.isArray(data) ? data : []);
+    });
+    return () => {
+      active = false;
+    };
+  }, [isEditing, formData.country]);
+
+  useEffect(() => {
+    if (!isEditing || !formData.state) {
+      setCities([]);
+      setCityUseTextInput(false);
+      return;
+    }
+    let active = true;
+    setCityUseTextInput(false);
+    getCitiesByState(formData.state).then((data) => {
+      if (!active) return;
+      const list = Array.isArray(data) ? data : [];
+      setCities(list);
+      setCityUseTextInput(list.length === 0);
+    });
+    return () => {
+      active = false;
+    };
+  }, [isEditing, formData.state]);
 
   const handleAvatarClick = () => {
     if (!avatarUploading) {
@@ -149,7 +269,15 @@ const PersonalInfo = ({ setShowSidebar }) => {
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    setFormData((prev) => {
+      if (id === "country") {
+        return { ...prev, country: value, state: "", city: "" };
+      }
+      if (id === "state") {
+        return { ...prev, state: value, city: "" };
+      }
+      return { ...prev, [id]: value };
+    });
   };
 
   const handleEnableEdit = () => {
@@ -168,16 +296,32 @@ const PersonalInfo = ({ setShowSidebar }) => {
     setIsSaving(true);
 
     try {
-      let phone = formData.phone.replace(/\D/g, "");
-      phone = phone.slice(-10);
-      const formattedPhone = `+91${phone}`;
+      const rawPhone = String(formData.phone || "").trim();
+      const digitsOnly = rawPhone.replace(/\D/g, "");
+      let formattedPhone = "";
+
+      if (digitsOnly.length > 0) {
+        if (digitsOnly.length === 10) {
+          formattedPhone = `+91${digitsOnly}`;
+        } else if (digitsOnly.length >= 11 && digitsOnly.length <= 12) {
+          formattedPhone = `+${digitsOnly}`;
+        } else {
+          throw new Error("Please enter a valid phone number");
+        }
+      }
 
       const updatePayload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: formattedPhone,
         email: formData.email,
+        language: normalizeFarmerLanguage(formData.language),
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
       };
+      if (formattedPhone) {
+        updatePayload.phone = formattedPhone;
+      }
 
       await dispatch(
         updateUserData({ id: userId, updateData: updatePayload })
@@ -193,11 +337,15 @@ const PersonalInfo = ({ setShowSidebar }) => {
 
       setIsEditing(false);
     } catch (err) {
+      const errMessage =
+        err?.message ||
+        err?.response?.data?.message ||
+        "Failed to update profile";
       setUpdateStatus({
         success: false,
-        message: err.message || "Failed to update profile",
+        message: errMessage,
       });
-      message.error(err.message || "Failed to update profile");
+      message.error(errMessage);
     } finally {
       setIsSaving(false);
     }
@@ -211,100 +359,38 @@ const PersonalInfo = ({ setShowSidebar }) => {
       }
       return `${S3_BUCKET_URL}/${userProfile.avatar}`;
     }
-    return profileImage;
+    return DEFAULT_PROFILE_IMAGE_URL;
   };
 
   const StatCard = ({ icon: Icon, value, label }) => (
-    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30">
-      <Icon className="w-5 h-5 text-white" />
-      <div>
-        <p className="text-lg font-bold text-white leading-tight">{value}</p>
-        <p className="text-xs text-white/80">{label}</p>
+    <div className="flex items-center gap-2 rounded-lg border border-white/25 bg-white/15 px-2.5 py-1.5 backdrop-blur-sm sm:px-3 sm:py-2">
+      <Icon className="h-3.5 w-3.5 shrink-0 text-white sm:h-4 sm:w-4" aria-hidden />
+      <div className="min-w-0">
+        <p className="text-sm font-bold leading-tight text-white sm:text-base">
+          {value}
+        </p>
+        <p className="text-[10px] text-white/80 sm:text-[11px]">{label}</p>
       </div>
     </div>
   );
-
-  const InputField = ({
-    id,
-    label,
-    type = "text",
-    value,
-    onChange,
-    disabled = false,
-    readOnly = false,
-    placeholder,
-    icon: Icon,
-  }) => {
-    const isEditable = isEditing && !readOnly;
-
-    return (
-      <div className="group">
-        <label
-          htmlFor={id}
-          className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5"
-        >
-          {label}
-        </label>
-        <div className="relative">
-          {Icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-ember-primary transition-colors">
-              <Icon className="w-4 h-4" />
-            </div>
-          )}
-          <input
-            type={type}
-            id={id}
-            placeholder={placeholder || label}
-            value={value}
-            onChange={onChange}
-            disabled={disabled || !isEditable}
-            readOnly={readOnly}
-            className={`w-full rounded-xl border-2 py-3 transition-all duration-200 outline-none text-[15px] ${
-              Icon ? "pl-10 pr-4" : "px-4"
-            } ${
-              readOnly || !isEditing
-                ? "bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
-                : "bg-white border-gray-200 hover:border-ember-primary/40 focus:border-ember-primary focus:ring-2 focus:ring-ember-primary/20"
-            }`}
-          />
-        </div>
-      </div>
-    );
-  };
 
   if (loading || profileStatus === "loading") {
     return <PersonalInfoSkeleton />;
   }
 
   return (
-    <div className="max-w-[1200px] w-[98%] mx-auto my-2 p-2 px-4 lg:p-4 rounded-lg bg-white shadow-md font-inter min-h-[98%] overflow-y-auto">
-      {/* Header - aligned with Farm Settings, Pricing, Profile */}
-      <div className="px-4 py-2 text-ember-primary border-b border-ember-border/50">
-        <div className="flex items-center justify-between">
-          <h5 className="text-[18px] font-bold text-ember-primary">Personal Info</h5>
-          <button
-            onClick={() => setShowSidebar(true)}
-            className="flex items-center gap-1 text-xs text-ember-primary hover:text-ember-primary-hover transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Back to Settings
-          </button>
-        </div>
-        <p className="mt-1 mb-0.5 text-ember-primary font-medium text-sm leading-[100%]">
-          Manage your profile details and preferences
-        </p>
-      </div>
+    <SettingsPanel
+      title="Personal Info"
+      description="Manage your profile details and preferences"
+      onBack={setShowSidebar}
+      className="h-full bg-[#f8fbf9]"
+    >
+      <div className="mx-auto w-full max-w-4xl space-y-3 sm:space-y-4">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-ember-sidebar via-ember-sidebar-hover to-ember-surface-muted shadow-md sm:rounded-2xl">
+          <div className="absolute top-0 right-0 h-32 w-32 translate-x-1/3 -translate-y-1/3 rounded-full bg-white/5 sm:h-48 sm:w-48" />
 
-      <div className="px-4 py-6 lg:px-6 space-y-8 overflow-y-auto">
-        {/* Profile hero card */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-ember-sidebar via-ember-surface-muted to-ember-sidebar-hover shadow-xl">
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-
-          <div className="relative px-6 lg:px-8 py-8 lg:py-10">
-            <div className="flex flex-col sm:flex-row items-center gap-6 lg:gap-8">
-              {/* Avatar */}
+          <div className="relative px-3 py-4 sm:px-5 sm:py-5">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-4">
               <div className="relative shrink-0">
                 <input
                   type="file"
@@ -317,12 +403,12 @@ const PersonalInfo = ({ setShowSidebar }) => {
                   type="button"
                   onClick={handleAvatarClick}
                   disabled={avatarUploading}
-                  className="relative block w-24 h-24 lg:w-28 lg:h-28 rounded-2xl overflow-hidden ring-4 ring-white/30 shadow-2xl hover:ring-white/50 focus:outline-none focus:ring-4 focus:ring-white/50 transition-all disabled:opacity-70 disabled:cursor-wait"
+                  className="relative block h-[72px] w-[72px] overflow-hidden rounded-xl ring-2 ring-white/35 transition-all hover:ring-white/55 focus:outline-none focus:ring-2 focus:ring-white/55 disabled:cursor-wait disabled:opacity-70 sm:h-20 sm:w-20"
                 >
                   {avatarUploading ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-white/10">
-                      <Loader2 className="w-8 h-8 animate-spin text-white" />
-                      <span className="text-xs text-white/90 mt-1 font-medium">
+                    <div className="flex h-full w-full flex-col items-center justify-center bg-white/10">
+                      <Loader2 className="h-5 w-5 animate-spin text-white" />
+                      <span className="mt-0.5 text-[10px] font-medium text-white/90">
                         {uploadProgress}%
                       </span>
                     </div>
@@ -331,32 +417,35 @@ const PersonalInfo = ({ setShowSidebar }) => {
                       <img
                         src={getAvatarUrl()}
                         alt="Profile"
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = profileImage;
+                          e.target.src = DEFAULT_PROFILE_IMAGE_URL;
                         }}
                       />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Camera className="w-8 h-8 text-white" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity hover:opacity-100">
+                        <Camera className="h-5 w-5 text-white" aria-hidden />
                       </div>
                     </>
                   )}
                 </button>
-                <div className="absolute -bottom-1 -right-1 w-9 h-9 bg-white rounded-lg shadow-lg flex items-center justify-center border-2 border-ember-sidebar">
-                  <Camera className="w-4 h-4 text-ember-sidebar" />
+                <div className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-md border border-ember-sidebar bg-white shadow">
+                  <Camera className="h-3 w-3 text-ember-sidebar" aria-hidden />
                 </div>
               </div>
 
-              {/* Name & stats */}
-              <div className="flex-1 text-center sm:text-left">
-                <h2 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">
+              <div className="min-w-0 flex-1 text-center sm:text-left">
+                <h2 className="text-base font-bold leading-tight text-white sm:text-lg">
                   {userProfile?.firstName} {userProfile?.lastName}
                 </h2>
-                <p className="mt-1 text-white/90 font-medium capitalize">
+                <p className="mt-0.5 text-xs font-medium capitalize text-white/90">
                   {userProfile?.role}
                 </p>
-                <div className="flex flex-wrap gap-3 mt-4 justify-center sm:justify-start">
+                <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white/95 sm:text-[11px]">
+                  <Languages className="h-3 w-3 shrink-0" aria-hidden />
+                  {getFarmerLanguageLabel(userProfile?.language)}
+                </p>
+                <div className="mt-2.5 flex flex-wrap justify-center gap-2 sm:justify-start">
                   <StatCard
                     icon={Home}
                     value={fields?.length || 0}
@@ -373,10 +462,9 @@ const PersonalInfo = ({ setShowSidebar }) => {
           </div>
         </div>
 
-        {/* Form card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-6 lg:p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm sm:rounded-2xl">
+          <form onSubmit={handleSubmit} className="p-3 sm:p-4 md:p-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5">
               <InputField
                 id="firstName"
                 label="First Name"
@@ -384,6 +472,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
                 onChange={handleInputChange}
                 placeholder="First Name"
                 icon={User}
+                isEditing={isEditing}
               />
               <InputField
                 id="lastName"
@@ -392,6 +481,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
                 onChange={handleInputChange}
                 placeholder="Last Name"
                 icon={User}
+                isEditing={isEditing}
               />
               <InputField
                 id="email"
@@ -401,6 +491,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
                 readOnly
                 placeholder="Email"
                 icon={Mail}
+                isEditing={isEditing}
               />
               <InputField
                 id="phone"
@@ -409,6 +500,17 @@ const PersonalInfo = ({ setShowSidebar }) => {
                 onChange={handleInputChange}
                 placeholder="+91 9876543210"
                 icon={Phone}
+                isEditing={isEditing}
+              />
+              <SelectField
+                id="language"
+                label="Preferred language"
+                value={formData.language}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                options={FARMER_LANGUAGE_OPTIONS}
+                placeholder="Select language"
+                hint="Used for advisories and farm communications."
               />
               <div className="md:col-span-2">
                 <InputField
@@ -418,20 +520,73 @@ const PersonalInfo = ({ setShowSidebar }) => {
                   readOnly
                   placeholder="No Organization"
                   icon={Building2}
+                  isEditing={isEditing}
                 />
+              </div>
+              <SelectField
+                id="country"
+                label="Country"
+                value={formData.country}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                options={(countries || []).map((c) => ({
+                  label: c.name,
+                  value: c.iso2,
+                }))}
+                placeholder="Select country"
+              />
+              <SelectField
+                id="state"
+                label="State"
+                value={formData.state}
+                onChange={handleInputChange}
+                disabled={!isEditing || !formData.country}
+                options={(states || []).map((s) => ({
+                  label: s.name,
+                  value: s.state_code,
+                }))}
+                placeholder="Select state"
+              />
+              <div className="md:col-span-2">
+                {cityUseTextInput && isEditing ? (
+                  <InputField
+                    id="city"
+                    label="City"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    placeholder="Enter your city or village"
+                    isEditing={isEditing}
+                  />
+                ) : (
+                  <SelectField
+                    id="city"
+                    label="City"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    disabled={!isEditing || !formData.state}
+                    options={(cities || []).map((c) => ({
+                      label: c.name,
+                      value: c.name,
+                    }))}
+                    placeholder={
+                      isEditing && formData.state && cities.length === 0
+                        ? "Loading cities…"
+                        : "Select city"
+                    }
+                  />
+                )}
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
               {!isEditing ? (
                 <button
                   type="button"
                   onClick={handleEnableEdit}
-                  className="flex items-center gap-2 px-6 py-3 bg-ember-primary hover:bg-ember-primary-hover text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-ember-primary focus:ring-offset-2"
+                  className={`${fs.btnPrimary} w-full sm:w-auto`}
                 >
-                  <Pencil className="w-4 h-4" />
-                  Edit Your Details
+                  <Pencil className="h-3.5 w-3.5" aria-hidden />
+                  Edit details
                 </button>
               ) : (
                 <>
@@ -439,25 +594,25 @@ const PersonalInfo = ({ setShowSidebar }) => {
                     type="button"
                     onClick={handleCancelEdit}
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`${fs.btnSecondary} w-full sm:w-auto`}
                   >
-                    <X className="w-4 h-4" />
+                    <X className="h-3.5 w-3.5" aria-hidden />
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-6 py-3 bg-ember-primary hover:bg-ember-primary-hover text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ember-primary focus:ring-offset-2"
+                    className={`${fs.btnPrimary} w-full sm:w-auto`}
                   >
                     {isSaving ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Saving...
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                        Saving…
                       </>
                     ) : (
                       <>
-                        <Save className="w-4 h-4" />
-                        Save Changes
+                        <Save className="h-3.5 w-3.5" aria-hidden />
+                        Save changes
                       </>
                     )}
                   </button>
@@ -465,26 +620,64 @@ const PersonalInfo = ({ setShowSidebar }) => {
               )}
             </div>
 
-            {isEditing && (
-              <div className="mt-4 text-center">
-                <span className="inline-flex items-center gap-2 text-sm text-amber-700 bg-amber-50 px-4 py-2 rounded-xl border border-amber-200">
-                  You're in edit mode — make your changes and click Save.
+            {isEditing ? (
+              <p className="mt-2 text-center text-[11px] text-amber-800 sm:text-xs">
+                <span className="inline-block rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1">
+                  Edit mode — save when finished.
                 </span>
-              </div>
-            )}
+              </p>
+            ) : null}
 
-            {updateStatus?.success && (
-              <div className="mt-4 text-center">
-                <span className="inline-flex items-center gap-2 text-sm text-green-700 bg-green-50 px-4 py-2 rounded-xl border border-green-200">
-                  ✓ {updateStatus.message}
+            {updateStatus?.success ? (
+              <p className="mt-2 text-center text-[11px] text-green-700 sm:text-xs">
+                <span className="inline-block rounded-md border border-green-200 bg-green-50 px-2.5 py-1">
+                  {updateStatus.message}
                 </span>
-              </div>
-            )}
+              </p>
+            ) : null}
           </form>
         </div>
       </div>
-    </div>
+    </SettingsPanel>
   );
 };
+
+const SelectField = ({
+  id,
+  label,
+  value,
+  onChange,
+  disabled = false,
+  options = [],
+  placeholder = "Select",
+  hint,
+}) => (
+  <div className="group">
+    <label htmlFor={id} className={fs.label}>
+      {label}
+    </label>
+    <select
+      id={id}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+      className={`${fs.inputBase} ${fs.inputPlain} ${
+        disabled ? fs.inputReadonly : fs.inputEditable
+      }`}
+    >
+      <option value="">{placeholder}</option>
+      {options.map((opt) => (
+        <option key={`${id}-${opt.value}`} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+    {hint ? (
+      <p className="mt-1 text-[10px] leading-snug text-gray-500 sm:text-[11px]">
+        {hint}
+      </p>
+    ) : null}
+  </div>
+);
 
 export default PersonalInfo;

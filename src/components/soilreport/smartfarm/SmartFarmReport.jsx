@@ -32,7 +32,6 @@ import {
   ReportBuildProgress,
   SmartFarmReportEmptyState,
 } from "./ReportWorkspace";
-import { getSatelliteDateRangeForField } from "../../../utility/satelliteDateRange";
 
 function buildIndexRows(indexDataByType) {
   return REPORT_SATELLITE_INDICES.map((code) => {
@@ -64,6 +63,7 @@ export default function SmartFarmReport({
   reportRef,
   onDownloadPdf,
   isDownloading,
+  onGenerateReport,
 }) {
   const dispatch = useDispatch();
   const store = useStore();
@@ -128,9 +128,8 @@ export default function SmartFarmReport({
 
     pipelineKeyRef.current = null;
 
-    const { startDate, endDate } = getSatelliteDateRangeForField(field);
-    dispatch(fetchSatelliteDates({ geometry: ring, startDate, endDate }));
-  }, [field, dispatch, ring]);
+    dispatch(fetchSatelliteDates({ geometry: ring }));
+  }, [field?._id, dispatch, ring]);
 
   const datesIdle = !loading.satelliteDates;
   const hasDateItems = (satelliteDates?.items?.length ?? 0) > 0;
@@ -350,6 +349,7 @@ export default function SmartFarmReport({
       <SmartFarmReportEmptyState
         selectedField={selectedField}
         isDesktop={isDesktopLayout}
+        onGenerateReport={onGenerateReport}
       />
     );
   }
@@ -357,7 +357,7 @@ export default function SmartFarmReport({
   const fieldLabel = field.fieldName || field.farmName || "Selected field";
 
   return (
-    <div ref={reportRef} className="cropgen-smart-report print:bg-white">
+    <div ref={reportRef} className="satagro-smart-report print:bg-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5 pb-16">
         <ReportHeader
           generatedAt={reportData?.generatedAt}
@@ -441,14 +441,14 @@ export default function SmartFarmReport({
               analysisDate={analysisDate}
             />
 
-            <footer className="rounded-[12px] bg-ember-sidebar text-white px-6 py-5 shadow-lg">
+            <footer className="rounded-[12px] bg-[#0D6B45] text-white px-6 py-5 shadow-lg">
               <p className="text-sm font-medium leading-relaxed text-center">
                 {insights?.diagnosis ||
                   "Overall farm health is stable with moderate variability across satellite indices; validate with field scouting and lab sampling."}
               </p>
 
               <p className="text-[10px] text-white/70 text-center mt-3 uppercase tracking-widest">
-                CropGen · Confidential farm intelligence
+                Satagro · Confidential farm intelligence
               </p>
             </footer>
           </>
