@@ -24,16 +24,21 @@ import {
   dominantLegendSummary,
   toISODateString,
 } from "./utils";
-import { generateFarmIntelligenceAi } from "./generateFarmIntelligenceAi";
+import {
+  generateFarmIntelligenceAi,
+  buildFallbackInsights,
+} from "./generateFarmIntelligenceAi";
 import {
   ReportBuildProgress,
   SmartFarmReportEmptyState,
 } from "./ReportWorkspace";
+import { getSatelliteDateRangeForField } from "../../../utility/satelliteDateRange";
 
 function buildIndexRows(indexDataByType) {
   return REPORT_SATELLITE_INDICES.map((code) => {
     const data = indexDataByType?.[code];
     const summary = dominantLegendSummary(data?.legend);
+
     return {
       code,
       value: summary.value,
@@ -41,6 +46,15 @@ function buildIndexRows(indexDataByType) {
       meaning: summary.meaning,
     };
   });
+}
+
+function withTimeout(promise, ms = 10000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("AI_TIMEOUT")), ms),
+    ),
+  ]);
 }
 
 export default function SmartFarmReport({
@@ -53,16 +67,22 @@ export default function SmartFarmReport({
 }) {
   const dispatch = useDispatch();
   const store = useStore();
+
   const { satelliteDates, indexDataByType, loading } = useSelector(
     (s) => s.satellite,
   );
+
   const { userProfile, userDetails } = useSelector((s) => s.auth);
 
   const field = reportData?.field;
+
   const [analysisDate, setAnalysisDate] = useState("");
   const [insights, setInsights] = useState(null);
   const [pipelineLoading, setPipelineLoading] = useState(false);
+  const [aiError, setAiError] = useState(false);
+
   const pipelineKeyRef = useRef(null);
+
   const [isDesktopLayout, setIsDesktopLayout] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -72,8 +92,10 @@ export default function SmartFarmReport({
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
     const onChange = () => setIsDesktopLayout(mq.matches);
+
     onChange();
     mq.addEventListener("change", onChange);
+
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
@@ -84,31 +106,40 @@ export default function SmartFarmReport({
       userProfile?.firstName || userDetails?.firstName || user?.firstName || "";
     const last =
       userProfile?.lastName || userDetails?.lastName || user?.lastName || "";
+
     const fromParts = `${first} ${last}`.trim();
+
     return {
       userName: user?.name || user?.fullName || fromParts,
-      userEmail:
-        userProfile?.email || userDetails?.email || user?.email || "",
-      userPhone:
-        userProfile?.phone || userDetails?.phone || user?.phone || "",
+      userEmail: userProfile?.email || userDetails?.email || user?.email || "",
+      userPhone: userProfile?.phone || userDetails?.phone || user?.phone || "",
     };
   }, [user, userProfile, userDetails]);
 
   useEffect(() => {
     if (!field?._id || ring.length < 3) return;
+
     dispatch(clearIndexDataByType());
+
     setAnalysisDate("");
     setInsights(null);
+    setPipelineLoading(false);
+    setAiError(false);
+
     pipelineKeyRef.current = null;
-    dispatch(fetchSatelliteDates({ geometry: ring }));
-  }, [field?._id, dispatch, ring]);
+
+    const { startDate, endDate } = getSatelliteDateRangeForField(field);
+    dispatch(fetchSatelliteDates({ geometry: ring, startDate, endDate }));
+  }, [field, dispatch, ring]);
 
   const datesIdle = !loading.satelliteDates;
   const hasDateItems = (satelliteDates?.items?.length ?? 0) > 0;
 
   const satelliteSignature = useMemo(() => {
     const items = satelliteDates?.items || [];
+
     if (!items.length) return "";
+
     return items
       .map((i) => `${toISODateString(i.date)}:${i.cloud_cover ?? 0}`)
       .join("|");
@@ -125,52 +156,94 @@ export default function SmartFarmReport({
 
     const farmerKey = `${userName}|${userEmail}|${userPhone}`;
     const runKey = `${field._id}-${iso}-${farmerKey}`;
-    if (pipelineKeyRef.current === runKey) return;
-    pipelineKeyRef.current = runKey;
 
+    if (pipelineKeyRef.current === runKey) return;
+
+    pipelineKeyRef.current = runKey;
     setAnalysisDate(iso);
+
     let cancelled = false;
 
-    (async () => {
+    async function runPipeline() {
       setPipelineLoading(true);
       setInsights(null);
-      dispatch(clearIndexDataByType());
+      setAiError(false);
 
-      await Promise.allSettled(
-        REPORT_SATELLITE_INDICES.map((index) =>
-          dispatch(
-            fetchIndexDataForMap({
-              endDate: iso,
-              geometry: [ring],
-              index,
+      try {
+        dispatch(clearIndexDataByType());
+
+        await Promise.allSettled(
+          REPORT_SATELLITE_INDICES.map((index) =>
+            dispatch(
+              fetchIndexDataForMap({
+                endDate: iso,
+                geometry: [ring],
+                index,
+              }),
+            ).unwrap(),
+          ),
+        );
+
+        if (cancelled) return;
+
+        const latest = store.getState().satellite.indexDataByType;
+        const rows = buildIndexRows(latest);
+        const farmerName = userName || userEmail || "Farmer";
+
+        let finalInsights = null;
+
+        try {
+          finalInsights = await withTimeout(
+            generateFarmIntelligenceAi({
+              fieldName: field.fieldName || field.farmName,
+              farmerName,
+              indexRows: rows,
+              acre: field.acre,
+              cropName: field.cropName,
             }),
-          ).unwrap(),
-        ),
-      );
+            10000,
+          );
+        } catch (aiErr) {
+          console.warn("AI failed or timed out. Using fallback:", aiErr);
 
-      if (cancelled) return;
+          setAiError(true);
 
-      const latest = store.getState().satellite.indexDataByType;
-      const rows = buildIndexRows(latest);
+          finalInsights = buildFallbackInsights({
+            fieldName: field.fieldName || field.farmName,
+            indexRows: rows,
+          });
+        }
 
-      const farmerName = userName || userEmail || "Farmer";
-      const ai = await generateFarmIntelligenceAi({
-        fieldName: field.fieldName || field.farmName,
-        farmerName,
-        indexRows: rows,
-        acre: field.acre,
-        cropName: field.cropName,
-      });
+        if (cancelled) return;
 
-      if (!cancelled) {
-        setInsights(ai);
-        setPipelineLoading(false);
+        setInsights(finalInsights);
+      } catch (err) {
+        console.error("Smart farm report pipeline failed:", err);
+
+        if (cancelled) return;
+
+        const latest = store.getState().satellite.indexDataByType;
+        const rows = buildIndexRows(latest);
+
+        setAiError(true);
+
+        setInsights(
+          buildFallbackInsights({
+            fieldName: field.fieldName || field.farmName,
+            indexRows: rows,
+          }),
+        );
+      } finally {
+        if (!cancelled) {
+          setPipelineLoading(false);
+        }
       }
-    })();
+    }
+
+    runPipeline();
 
     return () => {
       cancelled = true;
-      setPipelineLoading(false);
     };
   }, [
     field?._id,
@@ -184,6 +257,7 @@ export default function SmartFarmReport({
     datesIdle,
     hasDateItems,
     satelliteSignature,
+    satelliteDates,
     userName,
     userEmail,
     userPhone,
@@ -196,21 +270,43 @@ export default function SmartFarmReport({
 
   const satelliteTableRows = useMemo(() => {
     const ai = insights?.indexMeanings;
+
     if (!ai || typeof ai !== "object") return indexRows;
-    return indexRows.map((r) => {
-      const m = ai[r.code];
-      return typeof m === "string" && m.trim()
-        ? { ...r, meaning: m.trim() }
-        : r;
+
+    return indexRows.map((row) => {
+      const meaning = ai[row.code];
+
+      return typeof meaning === "string" && meaning.trim()
+        ? { ...row, meaning: meaning.trim() }
+        : row;
     });
   }, [indexRows, insights?.indexMeanings]);
 
-  const handlePrint = useCallback(() => window.print(), []);
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
+  const reportBuildComplete = Boolean(insights) && !pipelineLoading;
+  const showBuildProgress = field && !reportBuildComplete;
+
+  const handleDownloadPdf = useCallback(() => {
+    if (!onDownloadPdf) return;
+
+    if (!reportBuildComplete) {
+      alert("Report is still generating. Please download after it is ready.");
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      onDownloadPdf();
+    });
+  }, [onDownloadPdf, reportBuildComplete]);
 
   const healthScore = useMemo(() => {
     const favorable = indexRows.filter((r) => r.status === "Favorable").length;
     const attention = indexRows.filter((r) => r.status === "Attention").length;
     const base = 55 + favorable * 6 - attention * 5;
+
     return Math.max(38, Math.min(96, Math.round(base)));
   }, [indexRows]);
 
@@ -220,14 +316,16 @@ export default function SmartFarmReport({
   const socRow = indexRows.find((r) => r.code === "SOC");
 
   const indicesTotal = REPORT_SATELLITE_INDICES.length;
+
   const indicesLoadedCount = useMemo(
     () =>
       REPORT_SATELLITE_INDICES.filter((code) => {
-        const d = indexDataByType?.[code];
+        const data = indexDataByType?.[code];
+
         return (
-          d?.legend &&
-          Array.isArray(d.legend) &&
-          d.legend.length > 0
+          data?.legend &&
+          Array.isArray(data.legend) &&
+          data.legend.length > 0
         );
       }).length,
     [indexDataByType],
@@ -241,6 +339,12 @@ export default function SmartFarmReport({
     [loading.indexDataByType],
   );
 
+  const aiRunning =
+    pipelineLoading &&
+    !insights &&
+    !anyIndexLoading &&
+    Boolean(analysisDate);
+
   if (!field) {
     return (
       <SmartFarmReportEmptyState
@@ -250,14 +354,6 @@ export default function SmartFarmReport({
     );
   }
 
-  const reportBuildComplete = Boolean(insights) && !pipelineLoading;
-  const showBuildProgress = field && !reportBuildComplete;
-  const aiRunning =
-    pipelineLoading &&
-    !insights &&
-    !anyIndexLoading &&
-    Boolean(analysisDate);
-
   const fieldLabel = field.fieldName || field.farmName || "Selected field";
 
   return (
@@ -265,7 +361,7 @@ export default function SmartFarmReport({
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 space-y-5 pb-16">
         <ReportHeader
           generatedAt={reportData?.generatedAt}
-          onDownloadPdf={onDownloadPdf}
+          onDownloadPdf={handleDownloadPdf}
           onPrint={handlePrint}
           isDownloading={isDownloading}
         />
@@ -281,6 +377,7 @@ export default function SmartFarmReport({
             indicesTotal={indicesTotal}
             anyIndexLoading={anyIndexLoading}
             aiRunning={aiRunning}
+            aiError={aiError}
             isComplete={reportBuildComplete}
           />
         ) : null}
@@ -294,6 +391,7 @@ export default function SmartFarmReport({
             />
 
             <FieldDetails field={field} />
+
             <GISGeometryCard field={field} />
 
             <SatelliteAnalysis
@@ -343,11 +441,12 @@ export default function SmartFarmReport({
               analysisDate={analysisDate}
             />
 
-            <footer className="rounded-[12px] bg-[#0D6B45] text-white px-6 py-5 shadow-lg">
+            <footer className="rounded-[12px] bg-ember-sidebar text-white px-6 py-5 shadow-lg">
               <p className="text-sm font-medium leading-relaxed text-center">
                 {insights?.diagnosis ||
                   "Overall farm health is stable with moderate variability across satellite indices; validate with field scouting and lab sampling."}
               </p>
+
               <p className="text-[10px] text-white/70 text-center mt-3 uppercase tracking-widest">
                 CropGen · Confidential farm intelligence
               </p>

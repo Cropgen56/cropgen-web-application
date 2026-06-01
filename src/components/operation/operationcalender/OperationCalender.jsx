@@ -78,7 +78,7 @@ const StatCard = ({ label, value, icon: Icon }) => (
 
 const OperationCard = ({ event, onOpen, onDelete }) => {
   const props = event.extendedProps || {};
-  const typeColor = getOperationTypeColor(props.operationType);
+  const typeColor = getOperationTypeColor(props.operationType, props);
   const progressStyle = getProgressStyle(props.progress);
   const title = getOperationDisplayTitle(props);
   const fromAdvisory = props.source === "advisory";
@@ -173,7 +173,7 @@ const FarmerScheduler = ({ selectedField: farmFieldId, fieldName }) => {
 
   useEffect(() => {
     const mappedEvents = operations.map((operation) => {
-      const colors = getOperationTypeColor(operation.operationType);
+      const colors = getOperationTypeColor(operation.operationType, operation);
       const startDateTime = moment(
         `${operation.operationDate} ${operation.operationTime}`,
         "YYYY-MM-DD HH:mm:ss"

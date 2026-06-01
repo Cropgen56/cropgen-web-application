@@ -1,5 +1,5 @@
 import React from "react";
-import logo from "../../../assets/image/login/logo.svg";
+import { APP_NAME } from "../../../config/brand";
 
 const Report = ({ data, isdownloading }) => {
   const parameters = [
@@ -36,9 +36,12 @@ const Report = ({ data, isdownloading }) => {
 
   return (
     <div className={`${bgMain} p-7 rounded-md shadow-lg mb-0`}>
-      <div className="flex justify-left items-center mb-6">
-        <img src={logo} alt="Logo" className="w-[15%] p-2" />
-        <h4 className={`${isdownloading ? "text-black" : "text-white"} text-3xl font-bold`}>CropGen</h4>
+      <div className="flex justify-left items-center gap-3 mb-6">
+        <h4
+          className={`${isdownloading ? "text-black" : "text-white"} text-3xl font-bold`}
+        >
+          {APP_NAME}
+        </h4>
       </div>
 
       <h3 className="text-2xl font-bold mb-6">Summary &nbsp; Report</h3>

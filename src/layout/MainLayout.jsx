@@ -39,7 +39,7 @@ const MainLayout = () => {
         {/* Sidebar */}
         <div
           className="flex-shrink-0 transition-[width] duration-300 ease-out"
-          style={{ width: isSidebarCollapsed ? "3.7rem" : "14.9rem" }}
+          style={{ width: isSidebarCollapsed ? "3.75rem" : "16.25rem" }}
         >
           <Sidebar onToggleCollapse={toggleSidebar} />
         </div>

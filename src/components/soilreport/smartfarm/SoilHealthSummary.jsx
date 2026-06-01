@@ -49,17 +49,17 @@ export default function SoilHealthSummary({
       {cards.map(({ title, value, sub, icon: Icon, tint }) => (
         <div
           key={title}
-          className={`rounded-[12px] border border-gray-100 bg-white shadow-[0_4px_20px_rgba(13,107,69,0.07)] p-4 relative overflow-hidden`}
+          className={`rounded-[12px] border border-gray-100 bg-white shadow-[0_4px_20px_rgba(52,78,65,0.07)] p-4 relative overflow-hidden`}
         >
           <div
             className={`absolute inset-0 bg-gradient-to-br ${tint} pointer-events-none`}
           />
           <div className="relative">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wide text-[#0D6B45]">
+              <span className="text-xs font-bold uppercase tracking-wide text-[#344e41]">
                 {title}
               </span>
-              <Icon className="w-5 h-5 text-[#0D6B45]/80" />
+              <Icon className="w-5 h-5 text-[#344e41]/80" />
             </div>
             <p className="text-2xl font-bold text-gray-900">{value}</p>
             <p className="text-xs text-gray-500 mt-1">{sub}</p>

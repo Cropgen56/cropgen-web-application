@@ -17,11 +17,11 @@ import {
 } from "recharts";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchIndexTimeSeriesSummary } from "../../../redux/slices/satelliteSlice";
+import { getDaysAgo } from "../../../utility/formatDate";
 import {
-  getDaysAgo,
-  getOneYearBefore,
-  getTodayDate,
-} from "../../../utility/formatDate";
+  canFetchSatelliteForField,
+  getSatelliteDateRangeForField,
+} from "../../../utility/satelliteDateRange";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
 
@@ -34,7 +34,7 @@ const NdviGraph = ({
   bypassPremium = false,
   isPreparedForPDF = false,
 }) => {
-  const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
+  const { field } = selectedFieldsDetials?.[0] || {};
   const { indexTimeSeriesSummary = null, loading } =
     useSelector((state) => state.satellite) || {};
 
@@ -49,16 +49,20 @@ const NdviGraph = ({
   const scrollRef = useRef(null);
   const lastRequestKeyRef = useRef(null);
 
+  const fieldRecord = selectedFieldsDetials?.[0];
+
   const fetchParams = useMemo(() => {
-    if (!field || !sowingDate) return null;
+    if (!canFetchSatelliteForField(fieldRecord)) return null;
+
+    const { startDate, endDate } = getSatelliteDateRangeForField(fieldRecord);
 
     return {
-      startDate: getOneYearBefore(getTodayDate()),
-      endDate: getTodayDate(),
+      startDate,
+      endDate,
       geometry: field,
       index,
     };
-  }, [field, sowingDate, index]);
+  }, [field, fieldRecord, index]);
 
   const requestKey = useMemo(
     () => (fetchParams ? JSON.stringify(fetchParams) : null),

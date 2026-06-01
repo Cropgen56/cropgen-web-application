@@ -98,7 +98,7 @@ const OperationDetailsModal = ({
   }, [visible, operation]);
 
   const op = localOp;
-  const typeColor = getOperationTypeColor(op.operationType);
+  const typeColor = getOperationTypeColor(op.operationType, op);
   const progressStyle = getProgressStyle(op.progress);
   const title = getOperationDisplayTitle(op);
   const fromAdvisory = op.source === "advisory";

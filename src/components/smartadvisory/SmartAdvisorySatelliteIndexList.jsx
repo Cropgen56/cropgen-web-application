@@ -109,7 +109,6 @@ const SmartAdvisorySatelliteIndexList = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState("NDVI");
   const dispatch = useDispatch();
-  const { sowingDate = null } = selectedFieldsDetials[0] || {};
   const scrollContainerRef = useRef(null);
 
   const validateGeometry = (field) => {
@@ -167,14 +166,7 @@ const SmartAdvisorySatelliteIndexList = ({
     return () => {
       debouncedFetchIndex.cancel?.();
     };
-  }, [
-    selectedIndex,
-    selectedDate,
-    sowingDate,
-    coordinates,
-    debouncedFetchIndex,
-    dispatch,
-  ]);
+  }, [selectedIndex, selectedDate, coordinates, debouncedFetchIndex, dispatch]);
 
   const handleArrowRightClick = () => {
     if (scrollContainerRef.current) {

@@ -18,6 +18,8 @@ import {
 } from "../../../../redux/slices/satelliteSlice";
 import { X, AlertCircle } from "lucide-react";
 import DateRangePicker from "./DateRangePicker";
+import { getTodayDate } from "../../../../utility/formatDate";
+import { getSatelliteDateRangeForField } from "../../../../utility/satelliteDateRange";
 
 const DATE_FORMAT_OPTIONS = { day: "numeric", month: "short", year: "numeric" };
 const CLOUD_COVER_THRESHOLD = 5;
@@ -59,13 +61,6 @@ const pickLowCloudIsoDate = (allDates, targetIsoDate, threshold) => {
   }
   return best?.isoDate ?? targetIsoDate;
 };
-
-const getSixMonthsBeforeDate = () => {
-  const date = new Date();
-  date.setMonth(date.getMonth() - 6);
-  return date.toISOString().split("T")[0];
-};
-const getTodayDate = () => new Date().toISOString().split("T")[0];
 
 const areArraysEqual = (arr1, arr2) => {
   if (!arr1 || !arr2 || arr1.length !== arr2.length) return false;
@@ -176,8 +171,13 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   const dispatch = useDispatch();
   const { satelliteDates, loading } = useSelector((state) => state.satellite);
 
-  const defaultStartDate = useMemo(() => getSixMonthsBeforeDate(), []);
-  const defaultEndDate = useMemo(() => getTodayDate(), []);
+  const selectedField = selectedFieldsDetials[0];
+  const defaultRange = useMemo(
+    () => getSatelliteDateRangeForField(selectedField),
+    [selectedField],
+  );
+  const defaultStartDate = defaultRange.startDate;
+  const defaultEndDate = defaultRange.endDate;
 
   const [dates, setDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");

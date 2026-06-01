@@ -4,7 +4,9 @@ import { CiSearch } from "react-icons/ci";
 import { FileText, Download } from "lucide-react";
 import { useSelector } from "react-redux";
 import PolygonPreview from "../../polygon/PolygonPreview";
-import SubscriptionStatusBadge from "../../comman/SubscriptionStatusBadge";
+
+const SIDEBAR_BG = "#344e41";
+const SIDEBAR_HOVER = "#2b4035";
 
 const FieldInfo = ({
   title,
@@ -17,27 +19,38 @@ const FieldInfo = ({
   isSubscribed,
 }) => (
   <div
-    className={`flex items-center gap-1.5 md:gap-2.5 border-b border-[#344e41]/10 py-3 px-2 cursor-pointer transition-colors ${
+    className={`flex items-center gap-2 border-b border-white/12 py-3 px-3 cursor-pointer transition-colors ${
       isSelected
-        ? "bg-[#344e41]/10"
-        : "bg-transparent hover:bg-[#344e41]/5"
+        ? "bg-white/12 border-l-[3px] border-l-emerald-300 pl-2.5"
+        : "hover:bg-white/5 border-l-[3px] border-l-transparent"
     }`}
     onClick={onClick}
   >
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
-    <div className="flex-grow min-w-0">
-      <div className="flex items-center gap-1.5 mb-1 min-w-0">
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center justify-between gap-1 mb-0.5">
         <h4
-          className={`text-base min-w-0 flex-1 truncate ${isSelected ? "text-[#344e41]" : "text-[#344e41]/90"}`}
+          className={`text-sm font-semibold truncate ${
+            isSelected ? "text-white" : "text-white/90"
+          }`}
+          title={title}
         >
           {title}
         </h4>
-        <SubscriptionStatusBadge isSubscribed={isSubscribed} variant="light" />
+        <span
+          className={`shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+            isSubscribed
+              ? "bg-emerald-400/25 text-emerald-50"
+              : "bg-red-500/20 text-red-100"
+          }`}
+        >
+          {isSubscribed ? "Active" : "Off"}
+        </span>
       </div>
-      <p className="text-xs text-[#344e41]/70 mb-1">{area}</p>
-      <div className="flex gap-4 text-xs text-[#344e41]/55">
-        <p>{lat} N</p>
-        <p>{lon} E</p>
+      <p className="text-[11px] text-white/60 truncate">{area}</p>
+      <div className="flex gap-2 text-[10px] text-white/50 mt-0.5">
+        <span>{lat}°N</span>
+        <span>{lon}°E</span>
       </div>
     </div>
   </div>
@@ -63,35 +76,6 @@ const SoilReportSidebar = ({
     }
   }, [selectedOperation?._id]);
 
-  // #region agent log
-  useEffect(() => {
-    const q = searchQuery.toLowerCase();
-    const filtered = [...(fields || [])]
-      .reverse()
-      .filter((f) => (f.fieldName || "").toLowerCase().includes(q));
-    fetch("http://127.0.0.1:7904/ingest/32eac84f-dd56-4cc2-9343-d9dd7fb0d851", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "011770",
-      },
-      body: JSON.stringify({
-        sessionId: "011770",
-        runId: "run1",
-        hypothesisId: "D",
-        location: "SoilReportSidebar.jsx:fields-sync",
-        message: "sidebar field list",
-        data: {
-          fieldsCount: fields.length,
-          filteredCount: filtered.length,
-          sidebarVisible: isSidebarVisible,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }, [fields, searchQuery, isSidebarVisible]);
-  // #endregion
-
   if (!isSidebarVisible) return null;
 
   const sortedFields = [...fields].reverse();
@@ -100,7 +84,7 @@ const SoilReportSidebar = ({
   );
 
   const calculateCentroid = (polygon) => {
-    if (!polygon || polygon.length === 0) return { lat: 0, lon: 0 };
+    if (!polygon || polygon.length === 0) return { lat: "0.000", lon: "0.000" };
     const total = polygon.reduce(
       (acc, point) => ({ lat: acc.lat + point.lat, lng: acc.lng + point.lng }),
       { lat: 0, lng: 0 },
@@ -111,33 +95,41 @@ const SoilReportSidebar = ({
     };
   };
 
-  const formatArea = (acres) => `${acres ? Number(acres).toFixed(3) : 0} acres`;
+  const formatArea = (acres) => {
+    const ha = ((acres ?? 0) * 0.404686).toFixed(2);
+    return `${ha} ha`;
+  };
 
   const selectedFieldObj = fields.find((f) => f._id === selectedFieldId);
 
   return (
-    <div className="sm:min-w-[280px] sm:max-w-[22vw] m-0 p-0 shadow-xl flex flex-col h-screen relative overflow-y-auto bg-white text-[#344e41] border-r border-[#344e41]/12">
-      <div className="flex flex-col border-b border-[#344e41]/12 gap-2 px-3 py-3 bg-white">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Operation2 />
-            <p className="text-[18px] font-bold m-0 tracking-tight text-[#344e41]">
-              CropGen
-            </p>
+    <div
+      className="h-full w-[260px] xl:w-[300px] flex flex-col text-white shrink-0 shadow-xl"
+      style={{ backgroundColor: SIDEBAR_BG }}
+    >
+      <div
+        className="shrink-0 px-3 py-3 border-b border-white/15"
+        style={{
+          background: `linear-gradient(180deg, ${SIDEBAR_BG}, ${SIDEBAR_HOVER})`,
+        }}
+      >
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-1.5 rounded-lg bg-white/10 shrink-0">
+              <Operation2 />
+            </div>
+            <div className="min-w-0">
+              <p className="text-base font-bold m-0 truncate">Soil Report</p>
+              <p className="text-[10px] text-white/55">Smart farm intelligence</p>
+            </div>
           </div>
           <button
             type="button"
             aria-label="Hide sidebar"
-            className="cursor-pointer p-1 rounded-md hover:bg-[#344e41]/8 transition-colors text-[#344e41]"
+            className="cursor-pointer p-1 rounded-md hover:bg-white/10 transition-colors shrink-0"
             onClick={() => setIsSidebarVisible(false)}
           >
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 30 30"
-              fill="none"
-              className="text-[#344e41]"
-            >
+            <svg width="24" height="24" viewBox="0 0 30 30" fill="none">
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
@@ -147,26 +139,31 @@ const SoilReportSidebar = ({
             </svg>
           </button>
         </div>
-        <div className="relative flex items-center mx-auto w-full">
-          <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#344e41]/45 text-lg pointer-events-none" />
+        <div className="relative">
+          <CiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/45 text-base pointer-events-none" />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2.5 rounded-[10px] border border-[#344e41]/20 bg-[#f4f7f5] text-[#344e41] text-sm outline-none placeholder:text-[#344e41]/45 focus:border-[#344e41]/40"
-            placeholder="Search farm"
+            className="w-full pl-9 pr-2 py-2 rounded-lg bg-white/10 border border-white/15 text-white text-sm placeholder:text-white/40 outline-none focus:border-white/30"
+            placeholder="Search farms..."
           />
         </div>
       </div>
 
-      <h2 className="px-4 pt-3 text-[15px] font-bold text-[#344e41]/85 uppercase tracking-wide">
-        Farm list
-      </h2>
-      <div className="flex flex-col overflow-y-auto no-scrollbar flex-1">
+      <div className="shrink-0 flex items-center justify-between px-3 py-2 bg-black/10 text-xs text-white/55 font-semibold uppercase tracking-wide">
+        <span>Farms</span>
+        <span className="px-1.5 py-0.5 rounded-md bg-white/15 text-white/75 normal-case">
+          {filteredFields.length}
+        </span>
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
         {filteredFields.map((field) => {
           const { lat, lon } = calculateCentroid(field.field);
           const isSelected = selectedFieldId === field._id;
-          const isSubscribed = field.subscription?.hasActiveSubscription === true;
+          const isSubscribed =
+            field.subscription?.hasActiveSubscription === true;
 
           return (
             <FieldInfo
@@ -189,12 +186,12 @@ const SoilReportSidebar = ({
       </div>
 
       {selectedFieldId && selectedFieldObj && (
-        <div className="mt-auto p-4 border-t border-[#344e41]/12 space-y-3 bg-[#f8faf9]">
-          <div className="rounded-[12px] bg-white border border-[#344e41]/15 px-3 py-2 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wider text-[#344e41]/55 font-semibold">
+        <div className="mt-auto p-4 border-t border-white/15 space-y-3 bg-black/10">
+          <div className="rounded-lg bg-white/10 border border-white/15 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wider text-white/60 font-semibold">
               Selected field
             </p>
-            <p className="text-sm font-bold text-[#344e41] truncate">
+            <p className="text-sm font-bold text-white truncate">
               {selectedFieldObj.fieldName || selectedFieldObj.farmName}
             </p>
           </div>
@@ -202,7 +199,7 @@ const SoilReportSidebar = ({
             <button
               type="button"
               onClick={() => onGenerateReport(selectedFieldObj)}
-              className="w-full flex items-center justify-center gap-2 font-semibold text-[#0D6B45] rounded-[12px] px-3 py-3 bg-white border border-[#344e41]/15 hover:bg-[#f4f7f5] transition-colors shadow-md"
+              className="w-full flex items-center justify-center gap-2 font-semibold text-[#344e41] rounded-xl px-3 py-3 bg-white hover:bg-gray-100 transition-colors shadow-lg"
             >
               <FileText size={18} />
               Generate Report
@@ -211,7 +208,7 @@ const SoilReportSidebar = ({
             <button
               type="button"
               onClick={downloadPDF}
-              className="w-full flex items-center justify-center gap-2 font-semibold text-[#344e41] rounded-[12px] px-3 py-3 border-2 border-[#344e41]/35 hover:bg-[#344e41]/5 transition-colors"
+              className="w-full flex items-center justify-center gap-2 font-semibold text-white rounded-xl px-3 py-3 border-2 border-white/40 hover:bg-white/10 transition-colors"
             >
               <Download size={18} />
               Download PDF

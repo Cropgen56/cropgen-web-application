@@ -16,6 +16,7 @@ import {
   fetchSatelliteDates,
   clearSatelliteDates,
 } from "../../redux/slices/satelliteSlice";
+import { getSatelliteDateRangeForField } from "../../utility/satelliteDateRange";
 
 const DATE_FORMAT_OPTIONS = { day: "numeric", month: "short", year: "numeric" };
 const DEBOUNCE_DELAY = 500;
@@ -85,8 +86,14 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [visibleCount, setVisibleCount] = useState(6);
 
-  const currentFieldId = selectedFieldsDetials[0]?._id;
+  const selectedField = selectedFieldsDetials[0];
+  const currentFieldId = selectedField?._id;
   const prevFieldIdRef = useRef(currentFieldId);
+
+  const satelliteRange = useMemo(
+    () => getSatelliteDateRangeForField(selectedField),
+    [selectedField],
+  );
 
   const coordinates = useMemo(() => {
     const field = selectedFieldsDetials[0]?.field;
@@ -104,9 +111,15 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
 
   const debouncedFetch = useMemo(
     () =>
-      debounce((coords) => {
+      debounce((coords, startDate, endDate) => {
         if (coords.length) {
-          dispatch(fetchSatelliteDates({ geometry: coords }));
+          dispatch(
+            fetchSatelliteDates({
+              geometry: coords,
+              startDate,
+              endDate,
+            }),
+          );
         }
       }, DEBOUNCE_DELAY),
     [dispatch],
@@ -123,9 +136,15 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
   }, [currentFieldId, dispatch]);
 
   useEffect(() => {
-    if (coordinates.length) debouncedFetch(coordinates);
+    if (coordinates.length) {
+      debouncedFetch(
+        coordinates,
+        satelliteRange.startDate,
+        satelliteRange.endDate,
+      );
+    }
     return () => debouncedFetch.cancel();
-  }, [coordinates, debouncedFetch]);
+  }, [coordinates, satelliteRange.startDate, satelliteRange.endDate, debouncedFetch]);
 
   useEffect(() => {
     const handleResize = () => {

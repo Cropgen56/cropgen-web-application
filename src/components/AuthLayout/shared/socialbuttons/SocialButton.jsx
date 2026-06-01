@@ -7,6 +7,7 @@ import {
   setGoogleLoginData,
   decodeToken,
 } from "../../../../redux/slices/authSlice";
+import { persistRefreshToken } from "../../../../utility/authSession";
 import { FcGoogle } from "react-icons/fc";
 import { AUTH_EMAIL_CLIENT_BRAND } from "../../../../config/brand";
 
@@ -38,6 +39,7 @@ function SocialButtons() {
       );
 
       if (res.data.success) {
+        persistRefreshToken(res.data.refreshToken);
         dispatch(
           setGoogleLoginData({
             accessToken: res.data.accessToken,

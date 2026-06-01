@@ -1,4 +1,5 @@
 import axios from "axios";
+import { attachAuthResponseInterceptor } from "./setupAuthInterceptor.js";
 
 let store;
 let onUnauthorized = null;
@@ -29,21 +30,10 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Only clear session when the server rejected a request that sent Bearer auth.
-    // Avoids treating unauthenticated 401s as "log the user out" during bootstrap.
-    const authHeader =
-      error.config?.headers?.Authorization ||
-      error.config?.headers?.authorization;
-    const hadBearer =
-      typeof authHeader === "string" && authHeader.startsWith("Bearer ");
-    if (error.response?.status === 401 && hadBearer) {
-      onUnauthorized?.();
-    }
-    return Promise.reject(error);
-  },
+attachAuthResponseInterceptor(
+  api,
+  () => store,
+  () => onUnauthorized?.(),
 );
 
 export default api;

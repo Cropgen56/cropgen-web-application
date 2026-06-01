@@ -34,7 +34,24 @@ export function formatOperationType(type) {
   return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export function getOperationTypeColor(type) {
+const ADVISORY_TYPE_TO_OPERATION_COLOR = {
+  SPRAY: "spray",
+  FERTIGATION: "fertilizer_application",
+  IRRIGATION: "other",
+  WEATHER: "other",
+  CROP_RISK: "other",
+  MONITORING: "interculture_operation",
+  CARBON_TRACKING: "other",
+};
+
+export function getOperationTypeColor(type, operation) {
+  if (operation?.source === "advisory" && operation?.advisoryActivityType) {
+    const mapped =
+      ADVISORY_TYPE_TO_OPERATION_COLOR[operation.advisoryActivityType];
+    if (mapped) {
+      return OPERATION_TYPE_COLORS[mapped] || OPERATION_TYPE_COLORS.other;
+    }
+  }
   return OPERATION_TYPE_COLORS[type] || OPERATION_TYPE_COLORS.other;
 }
 

@@ -11,9 +11,13 @@ import {
   refreshToken,
   logoutUserApi,
   getAvatarPresignedUrl,
-  CROPGEN_REFRESH_STORAGE_KEY,
 } from "../../api/authApi";
 import { decodeJWT } from "../../utility/decodetoken";
+import { isTokenValid } from "../../utility/token";
+import {
+  persistRefreshToken,
+  clearPersistedRefreshToken,
+} from "../../utility/authSession";
 
 // Prevents simultaneous token refresh races
 const refreshLock = {
@@ -315,17 +319,15 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      if (typeof window !== "undefined") {
-        try {
-          sessionStorage.removeItem(CROPGEN_REFRESH_STORAGE_KEY);
-        } catch {
-          /* ignore */
-        }
-      }
+      clearPersistedRefreshToken();
       Object.assign(state, authInitialState);
     },
     decodeToken: (state) => {
       if (!state.token) return;
+      if (!isTokenValid(state.token)) {
+        state.isAuthenticated = false;
+        return;
+      }
       try {
         const userData = decodeJWT(state.token);
         state.user = {
@@ -378,31 +380,18 @@ const authSlice = createSlice({
         state.isAuthenticated = !!action.payload.accessToken;
         state.onboardingRequired = action.payload.onboardingRequired || false;
         state.error = null;
-        if (typeof window !== "undefined" && action.payload.refreshToken) {
-          try {
-            sessionStorage.setItem(
-              CROPGEN_REFRESH_STORAGE_KEY,
-              action.payload.refreshToken,
-            );
-          } catch {
-            /* ignore */
-          }
-        }
+        persistRefreshToken(action.payload.refreshToken);
       })
       .addCase(refreshAccessToken.rejected, (state, action) => {
         state.refreshPending = false;
         state.error = action.payload;
-        state.isAuthenticated = false;
-        state.token = null;
-        state.user = null;
-        state.role = null;
-        state.onboardingRequired = false;
-        if (typeof window !== "undefined") {
-          try {
-            sessionStorage.removeItem(CROPGEN_REFRESH_STORAGE_KEY);
-          } catch {
-            /* ignore */
-          }
+        if (!isTokenValid(state.token)) {
+          state.isAuthenticated = false;
+          state.token = null;
+          state.user = null;
+          state.role = null;
+          state.onboardingRequired = false;
+          clearPersistedRefreshToken();
         }
       })
 
@@ -454,13 +443,15 @@ const authSlice = createSlice({
       })
       .addCase(verifyuserotp.fulfilled, (state, action) => {
         state.status = "succeeded";
-        const { accessToken, user, role, onboardingRequired } = action.payload;
+        const { accessToken, user, role, onboardingRequired, refreshToken } =
+          action.payload;
         state.token = accessToken;
         state.user = user || null;
         state.role = role || null;
         state.isAuthenticated = !!accessToken;
         state.onboardingRequired = onboardingRequired || false;
         state.error = null;
+        persistRefreshToken(refreshToken);
       })
       .addCase(verifyuserotp.rejected, (state, action) => {
         state.status = "failed";
@@ -497,16 +488,7 @@ const authSlice = createSlice({
         state.isAuthenticated = !!resolvedAccessToken;
         state.onboardingRequired = resolvedOnboardingRequired;
         state.error = null;
-        if (typeof window !== "undefined" && resolvedRefreshToken) {
-          try {
-            sessionStorage.setItem(
-              CROPGEN_REFRESH_STORAGE_KEY,
-              resolvedRefreshToken,
-            );
-          } catch {
-            /* ignore */
-          }
-        }
+        persistRefreshToken(resolvedRefreshToken);
       })
       .addCase(verifyWhatsappOtpThunk.rejected, (state, action) => {
         state.status = "failed";
@@ -519,13 +501,15 @@ const authSlice = createSlice({
       })
       .addCase(completeProfile.fulfilled, (state, action) => {
         state.status = "succeeded";
-        const { accessToken, user, role, onboardingRequired } = action.payload;
+        const { accessToken, user, role, onboardingRequired, refreshToken } =
+          action.payload;
         state.token = accessToken || null;
         state.user = user || state.user;
         state.role = role || state.role;
         state.isAuthenticated = !!accessToken;
         state.onboardingRequired = onboardingRequired || false;
         state.error = null;
+        persistRefreshToken(refreshToken);
       })
       .addCase(completeProfile.rejected, (state, action) => {
         state.status = "failed";

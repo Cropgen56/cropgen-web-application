@@ -18,11 +18,11 @@ import {
 
 import { MdDownload } from "react-icons/md";
 import { fetchVegetationTimeSeriesSummary } from "../../../api/satelliteTimeseries";
+import { getDaysAgo } from "../../../utility/formatDate";
 import {
-  getDaysAgo,
-  getOneYearBefore,
-  getTodayDate,
-} from "../../../utility/formatDate";
+  canFetchSatelliteForField,
+  getSatelliteDateRangeForField,
+} from "../../../utility/satelliteDateRange";
 import IndexChartLoader from "./IndexChartLoader";
 
 const NDVIChartCard = ({ selectedField }) => {
@@ -40,14 +40,15 @@ const NDVIChartCard = ({ selectedField }) => {
 
   // Get field geometry and sowing date
   const fieldGeometry = selectedField?.field;
-  const sowingDate = selectedField?.sowingDate;
 
   useEffect(() => {
-    if (!fieldGeometry || !sowingDate) return;
+    if (!canFetchSatelliteForField(selectedField)) return;
+
+    const { startDate, endDate } = getSatelliteDateRangeForField(selectedField);
 
     const params = {
-      startDate: getOneYearBefore(getTodayDate()),
-      endDate: getTodayDate(),
+      startDate,
+      endDate,
       geometry: fieldGeometry,
       index,
     };
@@ -68,7 +69,7 @@ const NDVIChartCard = ({ selectedField }) => {
         if (seriesRequestIdRef.current !== id) return;
         setSeriesLoading(false);
       });
-  }, [fieldGeometry, sowingDate, index]);
+  }, [selectedField, fieldGeometry, index]);
 
   // Process chart data
   const chartData = useMemo(() => {

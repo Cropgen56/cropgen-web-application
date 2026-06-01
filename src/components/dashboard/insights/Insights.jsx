@@ -1,7 +1,6 @@
 import React from "react";
-import { FcCheckmark } from "react-icons/fc";
-import { FaXmark } from "react-icons/fa6";
-import { Info } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Info, Eye } from "lucide-react";
 import {
   Drop,
   SmallDrop,
@@ -14,6 +13,8 @@ import { useSelector } from "react-redux";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
 import FeatureGuard from "../../subscription/FeatureGuard";
 import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
+
+const ACTIVITIES_TO_DO_PATH = "/smart-advisory#activities-to-do";
 
 /* ================= ICON MAPPER ================= */
 
@@ -68,7 +69,7 @@ const getIconByType = (type) => {
 
 /* ================= SUB COMPONENT ================= */
 
-const Insight = ({ icon, title, description }) => {
+const Insight = ({ icon, title, description, onView }) => {
   return (
     <div className="flex items-center gap-3 lg:gap-4 py-3 px-4 border-b border-gray-200 last:border-b-0">
       <div className="flex-shrink-0">{icon}</div>
@@ -78,20 +79,22 @@ const Insight = ({ icon, title, description }) => {
           {title}
         </div>
 
-        <div className="text-xs lg:text-sm text-gray-500 whitespace-pre-line">
-          {description}
-        </div>
+        {description ? (
+          <div className="text-xs lg:text-sm text-gray-500 mt-0.5 line-clamp-2">
+            {description}
+          </div>
+        ) : null}
       </div>
 
-      <div className="flex gap-4 ml-auto flex-shrink-0">
-        <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 bg-white">
-          <FcCheckmark className="text-lg" />
-        </button>
-
-        <button className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 bg-white">
-          <FaXmark className="text-red-500 text-lg" />
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={onView}
+        className="p-2 border border-gray-200 rounded-full hover:bg-gray-100 bg-white flex-shrink-0"
+        title="View in Smart Advisory"
+        aria-label="View activity in Smart Advisory"
+      >
+        <Eye className="w-5 h-5 text-[#344E41]" />
+      </button>
     </div>
   );
 };
@@ -104,7 +107,6 @@ const InsightsSkeletonRow = () => (
       <div className="h-3 w-full bg-gray-200 rounded" />
     </div>
     <div className="flex gap-4 ml-auto flex-shrink-0">
-      <div className="w-10 h-10 bg-gray-200 rounded-full" />
       <div className="w-10 h-10 bg-gray-200 rounded-full" />
     </div>
   </div>
@@ -127,6 +129,7 @@ const InsightsEmptyState = () => (
 /* ================= MAIN COMPONENT ================= */
 
 const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
+  const navigate = useNavigate();
   const insightsGuard = useSubscriptionGuard({
     field: selectedFieldsDetials?.[0],
     featureKey: "agronomicInsights",
@@ -134,27 +137,19 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
 
   const advisory = useSelector((state) => state.smartAdvisory?.advisory);
 
+  const goToActivitiesToDo = () => {
+    navigate(ACTIVITIES_TO_DO_PATH);
+  };
+
   /* ================= BUILD INSIGHTS ================= */
 
   const insights =
-    advisory?.activitiesToDo?.map((activity) => {
-      let detailsText = "";
-
-      if (activity.details) {
-        detailsText = Object.entries(activity.details)
-          .filter(([_, value]) => value)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join(", ");
-      }
-
-      return {
-        icon: getIconByType(activity.type),
-        title: activity.title,
-        description: detailsText
-          ? `${activity.message}\n${detailsText}`
-          : activity.message,
-      };
-    }) || [];
+    advisory?.activitiesToDo?.map((activity) => ({
+      icon: getIconByType(activity.type),
+      title: activity.title,
+      description: String(activity.message || "").trim(),
+      onView: goToActivitiesToDo,
+    })) || [];
 
   /* ================= CONTENT ================= */
 
@@ -196,7 +191,7 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <div className="text-md lg:text-lg font-semibold text-gray-900">
-                Action
+                View
               </div>
 
               <div className="flex flex-col items-center [&_svg]:fill-gray-500">
@@ -205,9 +200,13 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
               </div>
             </div>
 
-            <div className="text-xs lg:text-sm text-gray-500 cursor-pointer hover:text-gray-900">
+            <button
+              type="button"
+              onClick={goToActivitiesToDo}
+              className="text-xs lg:text-sm text-gray-500 cursor-pointer hover:text-gray-900 bg-transparent border-0 p-0"
+            >
               See all
-            </div>
+            </button>
 
             {!bypassPremium && !insightsGuard.hasFeatureAccess && (
               <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">

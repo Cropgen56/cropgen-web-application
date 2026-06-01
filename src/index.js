@@ -16,7 +16,7 @@ import { attachSmartAdvisoryStore } from "./api/smartAdvisoryApi";
 import { logout } from "./redux/slices/authSlice";
 
 attachStore(store);
-attachSmartAdvisoryStore(store);
+attachSmartAdvisoryStore(store, () => store.dispatch(logout()));
 setUnauthorizedHandler(() => store.dispatch(logout()));
 
 const root = ReactDOM.createRoot(document.getElementById("root"));

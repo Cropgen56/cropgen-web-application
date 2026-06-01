@@ -51,7 +51,7 @@ const DayOperationsModal = ({
         ) : (
           <ul className="space-y-2">
             {operations.map((op) => {
-              const color = getOperationTypeColor(op.operationType);
+              const color = getOperationTypeColor(op.operationType, op);
               const progress = getProgressStyle(op.progress);
               return (
                 <li key={op._id}>

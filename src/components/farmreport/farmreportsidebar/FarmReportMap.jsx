@@ -1,11 +1,4 @@
-// FarmReportMap.jsx
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -20,47 +13,35 @@ import {
   clearIndexDataByType,
 } from "../../../redux/slices/satelliteSlice";
 import LogoFlipLoader from "../../comman/loading/LogoFlipLoader";
+import L from "leaflet";
 
-const MoveMapToField = ({ lat, lng, bounds }) => {
-  const map = useMap();
+// Import Leaflet marker icons
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      map.invalidateSize();
+// Fix Leaflet default icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
-      if (bounds && bounds.length === 2 && isValidBounds(bounds)) {
-        map.fitBounds(bounds, {
-          padding: [30, 30],
-          maxZoom: 16,
-          animate: false,
-        });
-      } else if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
-        map.setView([lat, lng], 16);
-      }
-    }, 150);
+const INDEXES = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
 
-    return () => clearTimeout(timer);
-  }, [lat, lng, bounds, map]);
-
-  return null;
+const TITLES = {
+  NDVI: "Crop Health",
+  NDMI: "Water in Crop",
+  NDRE: "Crop Stress / Maturity",
+  TRUE_COLOR: "True Color Image",
 };
 
-const MapResizer = () => {
-  const map = useMap();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      map.invalidateSize();
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [map]);
-
-  return null;
-};
+const DEFAULT_CENTER = [20.135245, 77.156935];
 
 const isValidBounds = (bounds) => {
-  if (!bounds || !Array.isArray(bounds) || bounds.length !== 2) return false;
+  if (!Array.isArray(bounds) || bounds.length !== 2) return false;
+
   const [sw, ne] = bounds;
   if (!Array.isArray(sw) || !Array.isArray(ne)) return false;
   if (sw.length !== 2 || ne.length !== 2) return false;
@@ -68,39 +49,44 @@ const isValidBounds = (bounds) => {
   const [swLat, swLng] = sw;
   const [neLat, neLng] = ne;
 
-  if (
-    typeof swLat !== "number" ||
-    isNaN(swLat) ||
-    typeof swLng !== "number" ||
-    isNaN(swLng) ||
-    typeof neLat !== "number" ||
-    isNaN(neLat) ||
-    typeof neLng !== "number" ||
-    isNaN(neLng)
-  )
-    return false;
-
-  if (swLat < -90 || swLat > 90 || neLat < -90 || neLat > 90) return false;
-  if (swLng < -180 || swLng > 180 || neLng < -180 || neLng > 180) return false;
-
-  return true;
+  return (
+    typeof swLat === "number" &&
+    typeof swLng === "number" &&
+    typeof neLat === "number" &&
+    typeof neLng === "number" &&
+    !isNaN(swLat) &&
+    !isNaN(swLng) &&
+    !isNaN(neLat) &&
+    !isNaN(neLng) &&
+    swLat >= -90 &&
+    swLat <= 90 &&
+    neLat >= -90 &&
+    neLat <= 90 &&
+    swLng >= -180 &&
+    swLng <= 180 &&
+    neLng >= -180 &&
+    neLng <= 180
+  );
 };
 
 const closePolygon = (coords) => {
-  if (!coords || !coords.length) return [];
+  if (!coords?.length) return [];
   const first = coords[0];
   const last = coords[coords.length - 1];
+
   if (first[0] !== last[0] || first[1] !== last[1]) {
     return [...coords, first];
   }
+
   return coords;
 };
 
 const calculateCentroid = (coords) => {
-  if (!coords || !coords.length) return { lat: null, lng: null };
-  let x = 0,
-    y = 0,
-    validCount = 0;
+  if (!coords?.length) return { lat: null, lng: null };
+
+  let latSum = 0;
+  let lngSum = 0;
+  let count = 0;
 
   coords.forEach(([lng, lat]) => {
     if (
@@ -109,75 +95,50 @@ const calculateCentroid = (coords) => {
       !isNaN(lat) &&
       !isNaN(lng)
     ) {
-      x += lat;
-      y += lng;
-      validCount++;
+      latSum += lat;
+      lngSum += lng;
+      count += 1;
     }
   });
 
-  if (validCount === 0) return { lat: null, lng: null };
-  return { lat: x / validCount, lng: y / validCount };
+  if (!count) return { lat: null, lng: null };
+
+  return {
+    lat: latSum / count,
+    lng: lngSum / count,
+  };
 };
 
 const calculateBounds = (coords) => {
-  if (!coords || !coords.length) return null;
+  if (!coords?.length) return null;
 
   const validCoords = coords.filter(
     ([lng, lat]) =>
       typeof lat === "number" &&
       typeof lng === "number" &&
       !isNaN(lat) &&
-      !isNaN(lng),
+      !isNaN(lng)
   );
 
-  if (validCoords.length === 0) return null;
+  if (!validCoords.length) return null;
 
-  const lats = validCoords.map(([lng, lat]) => lat);
-  const lngs = validCoords.map(([lng, lat]) => lng);
-
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
-
-  if (isNaN(minLat) || isNaN(maxLat) || isNaN(minLng) || isNaN(maxLng)) {
-    return null;
-  }
+  const lats = validCoords.map(([, lat]) => lat);
+  const lngs = validCoords.map(([lng]) => lng);
 
   return [
-    [minLat, minLng],
-    [maxLat, maxLng],
+    [Math.min(...lats), Math.min(...lngs)],
+    [Math.max(...lats), Math.max(...lngs)],
   ];
 };
 
 const calculateImageBounds = (coords, centerOffset = 0) => {
-  if (!coords || !coords.length) return null;
+  const bounds = calculateBounds(coords);
+  if (!bounds) return null;
 
-  const validCoords = coords.filter(
-    ([lng, lat]) =>
-      typeof lat === "number" &&
-      typeof lng === "number" &&
-      !isNaN(lat) &&
-      !isNaN(lng),
-  );
+  const [[minLat, minLng], [maxLat, maxLng]] = bounds;
 
-  if (validCoords.length === 0) return null;
-
-  const lats = validCoords.map(([lng, lat]) => lat);
-  const lngs = validCoords.map(([lng, lat]) => lng);
-
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
-
-  if (isNaN(minLat) || isNaN(maxLat) || isNaN(minLng) || isNaN(maxLng)) {
-    return null;
-  }
-
-  const latPadding = (maxLat - minLat) * 0.02;
-  const lngPadding = (maxLng - minLng) * 0.02;
-
+  const latPadding = Math.max((maxLat - minLat) * 0.02, 0.00005);
+  const lngPadding = Math.max((maxLng - minLng) * 0.02, 0.00005);
   const latOffset = (maxLat - minLat) * centerOffset;
 
   return [
@@ -193,87 +154,177 @@ const parseApiBounds = (apiBounds) => {
     if (Array.isArray(apiBounds)) {
       if (apiBounds.length === 4) {
         const [minLng, minLat, maxLng, maxLat] = apiBounds;
-        if (
-          typeof minLat === "number" &&
-          typeof minLng === "number" &&
-          typeof maxLat === "number" &&
-          typeof maxLng === "number"
-        ) {
-          return [
-            [minLat, minLng],
-            [maxLat, maxLng],
-          ];
-        }
-      } else if (apiBounds.length === 2) {
-        const [first, second] = apiBounds;
-        if (Array.isArray(first) && Array.isArray(second)) {
-          if (first.length === 2 && second.length === 2) {
-            const [firstVal0, firstVal1] = first;
-            const [secondVal0, secondVal1] = second;
-            if (
-              typeof firstVal0 === "number" &&
-              typeof firstVal1 === "number" &&
-              typeof secondVal0 === "number" &&
-              typeof secondVal1 === "number"
-            ) {
-              return [
-                [firstVal1, firstVal0],
-                [secondVal1, secondVal0],
-              ];
-            }
-          }
-        }
+
+        return [
+          [minLat, minLng],
+          [maxLat, maxLng],
+        ];
       }
-    } else if (typeof apiBounds === "object") {
-      if (apiBounds.southwest && apiBounds.northeast) {
-        const sw = apiBounds.southwest;
-        const ne = apiBounds.northeast;
+
+      if (apiBounds.length === 2) {
+        const [first, second] = apiBounds;
+
         if (
-          typeof sw.lat === "number" &&
-          typeof sw.lng === "number" &&
-          typeof ne.lat === "number" &&
-          typeof ne.lng === "number"
+          Array.isArray(first) &&
+          Array.isArray(second) &&
+          first.length === 2 &&
+          second.length === 2
         ) {
+          const [firstLng, firstLat] = first;
+          const [secondLng, secondLat] = second;
+
           return [
-            [sw.lat, sw.lng],
-            [ne.lat, ne.lng],
+            [firstLat, firstLng],
+            [secondLat, secondLng],
           ];
         }
       }
     }
-  } catch (error) {
-    console.warn("Error parsing API bounds:", error);
+
+    if (typeof apiBounds === "object") {
+      if (apiBounds.southwest && apiBounds.northeast) {
+        return [
+          [apiBounds.southwest.lat, apiBounds.southwest.lng],
+          [apiBounds.northeast.lat, apiBounds.northeast.lng],
+        ];
+      }
+    }
+  } catch (err) {
+    console.warn("Error parsing API bounds:", err);
   }
 
   return null;
 };
+
+const withTimeout = (promise, ms = 18000) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("SATELLITE_TIMEOUT")), ms)
+    ),
+  ]);
+};
+
+const formatDate = (date) => date.toISOString().split("T")[0];
+
+const subtractDays = (days) => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return formatDate(d);
+};
+
+const createDateCandidates = (selectedDate) => {
+  if (selectedDate) {
+    return [
+      selectedDate,
+      subtractDays(3),
+      subtractDays(7),
+      subtractDays(14),
+      subtractDays(21),
+      subtractDays(30),
+    ].filter((v, i, arr) => v && arr.indexOf(v) === i);
+  }
+
+  return [
+    subtractDays(3),
+    subtractDays(7),
+    subtractDays(14),
+    subtractDays(21),
+    subtractDays(30),
+    subtractDays(45),
+  ];
+};
+
+const hasUsableImage = (data) => {
+  return Boolean(data?.image_base64);
+};
+
+const MoveMapToField = ({ lat, lng, bounds }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        map.invalidateSize(true);
+
+        if (bounds && isValidBounds(bounds)) {
+          map.fitBounds(bounds, {
+            padding: [50, 50],
+            maxZoom: 16,
+            animate: false,
+          });
+        } else if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
+          map.setView([lat, lng], 16, { animate: false });
+        }
+      } catch (e) {
+        console.warn("Error in MoveMapToField:", e);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [lat, lng, bounds, map]);
+
+  return null;
+};
+
+const MapResizer = () => {
+  const map = useMap();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        map.invalidateSize(true);
+      } catch (e) {
+        console.warn("Error in MapResizer:", e);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [map]);
+
+  return null;
+};
+
 const MapCaptureMode = ({ isPDFMode }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (isPDFMode) {
-      // Disable all interactions during PDF capture
+    if (!isPDFMode) {
+      // Re-enable interactions
+      try {
+        map.dragging.enable();
+        map.touchZoom.enable();
+        map.doubleClickZoom.enable();
+        map.scrollWheelZoom.enable();
+        map.boxZoom.enable();
+        map.keyboard.enable();
+      } catch (e) {
+        console.warn("Error enabling map interactions:", e);
+      }
+      return;
+    }
+
+    // Disable for PDF
+    try {
       map.dragging.disable();
       map.touchZoom.disable();
       map.doubleClickZoom.disable();
       map.scrollWheelZoom.disable();
       map.boxZoom.disable();
       map.keyboard.disable();
-
-      // Force a redraw without animation
       map.invalidateSize({ animate: false });
+    } catch (e) {
+      console.warn("Error disabling map interactions:", e);
     }
   }, [isPDFMode, map]);
 
   return null;
 };
 
-
-// Horizontal Color Bar Legend for PDF (more compact)
+// Fixed Legend Component
 const ColorBarLegend = ({ legend, indexName }) => {
   if (!legend || legend.length === 0) return null;
 
-  // Sort legend by value (assuming labels contain value ranges)
   const sortedLegend = [...legend].sort((a, b) => {
     const aVal = parseFloat(a.label) || 0;
     const bVal = parseFloat(b.label) || 0;
@@ -281,42 +332,114 @@ const ColorBarLegend = ({ legend, indexName }) => {
   });
 
   return (
-    <div className="color-bar-legend mt-2 px-2 pdf-legend-bar">
-      {/* Color gradient bar */}
-      <div className="flex h-4 rounded-md overflow-hidden border border-white/20">
+    <div
+      className="pdf-legend-bar"
+      style={{
+        marginTop: "12px",
+        paddingLeft: "8px",
+        paddingRight: "8px",
+        display: "flex",
+        flexDirection: "column",
+        visibility: "visible",
+        opacity: "1",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          height: "16px",
+          borderRadius: "6px",
+          overflow: "hidden",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
+        }}
+      >
         {sortedLegend.map((item, idx) => (
           <div
             key={`bar-${idx}`}
-            className="flex-1 relative group"
-            style={{ backgroundColor: item.color }}
+            style={{
+              flex: 1,
+              backgroundColor: item.color,
+            }}
             title={`${item.label}: ${item.hectares?.toFixed(2) || 0} ha`}
           />
         ))}
       </div>
 
-      {/* Labels below the bar */}
-      <div className="flex justify-between mt-1 px-1">
-        <span className="text-[9px] text-white/80">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginTop: "6px",
+          paddingLeft: "4px",
+          paddingRight: "4px",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "10px",
+            color: "rgba(255, 255, 255, 0.9)",
+            fontWeight: "500",
+          }}
+        >
           {sortedLegend[0]?.label || "Low"}
         </span>
-        <span className="text-[9px] text-white/80 font-medium">
+        <span
+          style={{
+            fontSize: "10px",
+            color: "rgba(255, 255, 255, 0.9)",
+            fontWeight: "bold",
+          }}
+        >
           {indexName}
         </span>
-        <span className="text-[9px] text-white/80">
+        <span
+          style={{
+            fontSize: "10px",
+            color: "rgba(255, 255, 255, 0.9)",
+            fontWeight: "500",
+          }}
+        >
           {sortedLegend[sortedLegend.length - 1]?.label || "High"}
         </span>
       </div>
 
-      {/* Detailed legend items */}
-      <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 mt-1">
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: "8px",
+          marginTop: "8px",
+        }}
+      >
         {sortedLegend.map((item, idx) => (
-          <div key={`detail-${idx}`} className="flex items-center gap-1">
+          <div
+            key={`detail-${idx}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
             <span
-              className="w-3 h-2 rounded-sm border border-white/30"
-              style={{ backgroundColor: item.color }}
+              style={{
+                width: "12px",
+                height: "12px",
+                borderRadius: "3px",
+                backgroundColor: item.color,
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                display: "inline-block",
+              }}
             />
-            <span className="text-[8px] text-white/90">
-              {item.label}: {item.hectares?.toFixed(1) || "0.0"}ha
+            <span
+              style={{
+                fontSize: "9px",
+                color: "rgba(255, 255, 255, 0.95)",
+                fontWeight: "500",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {item.label}: {item.hectares?.toFixed(2) || "0.0"}ha
             </span>
           </div>
         ))}
@@ -325,28 +448,16 @@ const ColorBarLegend = ({ legend, indexName }) => {
   );
 };
 
-const INDEXES = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
-const TITLES = {
-  NDVI: "Crop Health",
-  NDMI: "Water in Crop",
-  NDRE: "Crop Stress / Maturity",
-  TRUE_COLOR: "True Color Image",
-};
-
-const DEFAULT_CENTER = [20.135245, 77.156935];
-
 const FarmReportMap = React.forwardRef(
   (
     { selectedFieldsDetials, selectedDate = null, hidePolygonForPDF = false },
-    ref,
+    ref
   ) => {
     const dispatch = useDispatch();
-    const { indexDataByType, loading } = useSelector(
-      (state) => state.satellite,
-    );
+    const { indexDataByType, loading } = useSelector((state) => state.satellite);
 
-    const hasFetchedRef = useRef(false);
-    const prevFieldIdRef = useRef(null);
+    const prevRunKeyRef = useRef("");
+    const mapInstancesRef = useRef({});
 
     const [showLegend, setShowLegend] = useState({
       NDVI: false,
@@ -355,8 +466,9 @@ const FarmReportMap = React.forwardRef(
       TRUE_COLOR: false,
     });
 
-    const [isInitialLoad, setIsInitialLoad] = useState(true);
-    const [localLoading, setLocalLoading] = useState(false);
+    const [localLoadingByIndex, setLocalLoadingByIndex] = useState({});
+    const [failedByIndex, setFailedByIndex] = useState({});
+    const [dateUsedByIndex, setDateUsedByIndex] = useState({});
 
     const field = selectedFieldsDetials?.[0];
     const fieldId = field?._id || field?.id;
@@ -369,27 +481,32 @@ const FarmReportMap = React.forwardRef(
           (point) =>
             point &&
             typeof point.lat === "number" &&
-            typeof point.lng === "number",
+            typeof point.lng === "number"
         )
         .map(({ lat, lng }) => [lng, lat]);
 
       if (validCoords.length < 3) return [];
+
       return closePolygon(validCoords);
     }, [field]);
 
+    const polygonSignature = useMemo(() => {
+      return JSON.stringify(polygonCoordinates);
+    }, [polygonCoordinates]);
+
     const centroid = useMemo(
       () => calculateCentroid(polygonCoordinates),
-      [polygonCoordinates],
+      [polygonCoordinates]
     );
 
     const polygonBounds = useMemo(
       () => calculateBounds(polygonCoordinates),
-      [polygonCoordinates],
+      [polygonCoordinates]
     );
 
     const imageBounds = useMemo(
       () => calculateImageBounds(polygonCoordinates, 0.05),
-      [polygonCoordinates],
+      [polygonCoordinates]
     );
 
     const leafletCoordinates = useMemo(() => {
@@ -399,51 +516,118 @@ const FarmReportMap = React.forwardRef(
             typeof lat === "number" &&
             typeof lng === "number" &&
             !isNaN(lat) &&
-            !isNaN(lng),
+            !isNaN(lng)
         )
         .map(([lng, lat]) => [lat, lng]);
     }, [polygonCoordinates]);
 
+    const fetchSingleIndex = useCallback(
+      async (indexName, dateCandidates) => {
+        setLocalLoadingByIndex((prev) => ({
+          ...prev,
+          [indexName]: true,
+        }));
+
+        setFailedByIndex((prev) => ({
+          ...prev,
+          [indexName]: false,
+        }));
+
+        let found = false;
+        let lastError = null;
+
+        for (const dateToUse of dateCandidates) {
+          try {
+            const result = await withTimeout(
+              dispatch(
+                fetchIndexDataForMap({
+                  endDate: dateToUse,
+                  geometry: [polygonCoordinates],
+                  index: indexName,
+                })
+              ).unwrap(),
+              18000
+            );
+
+            if (hasUsableImage(result)) {
+              setDateUsedByIndex((prev) => ({
+                ...prev,
+                [indexName]: dateToUse,
+              }));
+
+              found = true;
+              break;
+            }
+          } catch (err) {
+            lastError = err;
+            console.warn(
+              `${indexName} failed for date ${dateToUse}:`,
+              err?.message || err
+            );
+          }
+        }
+
+        if (!found) {
+          console.warn(`${indexName} no usable data found`, lastError);
+
+          setFailedByIndex((prev) => ({
+            ...prev,
+            [indexName]: true,
+          }));
+        }
+
+        setLocalLoadingByIndex((prev) => ({
+          ...prev,
+          [indexName]: false,
+        }));
+      },
+      [dispatch, polygonCoordinates]
+    );
+
+    const fetchAllIndexes = useCallback(async () => {
+      if (!polygonCoordinates.length || !fieldId) return;
+
+      const dateCandidates = createDateCandidates(selectedDate);
+
+      await Promise.allSettled(
+        INDEXES.map((indexName) => fetchSingleIndex(indexName, dateCandidates))
+      );
+    }, [polygonCoordinates, fieldId, selectedDate, fetchSingleIndex]);
+
     useEffect(() => {
-      if (!polygonCoordinates.length) return;
+      if (!polygonCoordinates.length || !fieldId) return;
 
-      const fieldChanged = prevFieldIdRef.current !== fieldId;
+      const runKey = `${fieldId}-${selectedDate || "auto"}-${polygonSignature}`;
 
-      if (fieldChanged) {
-        dispatch(clearIndexDataByType());
-        hasFetchedRef.current = false;
-        setIsInitialLoad(true);
-        setLocalLoading(true);
-      }
+      if (prevRunKeyRef.current === runKey) return;
 
-      if (hasFetchedRef.current && !fieldChanged) return;
+      prevRunKeyRef.current = runKey;
 
-      const dateToUse = selectedDate || new Date().toISOString().split("T")[0];
+      dispatch(clearIndexDataByType());
 
-      hasFetchedRef.current = true;
-      prevFieldIdRef.current = fieldId;
-
-      const fetchPromises = INDEXES.map((index) =>
-        dispatch(
-          fetchIndexDataForMap({
-            endDate: dateToUse,
-            geometry: [polygonCoordinates],
-            index,
-          }),
-        ),
+      setFailedByIndex({});
+      setDateUsedByIndex({});
+      setLocalLoadingByIndex(
+        INDEXES.reduce((acc, indexName) => {
+          acc[indexName] = true;
+          return acc;
+        }, {})
       );
 
-      Promise.all(fetchPromises).finally(() => {
-        setIsInitialLoad(false);
-        setLocalLoading(false);
-      });
-    }, [polygonCoordinates, selectedDate, dispatch, fieldId]);
+      fetchAllIndexes();
+    }, [
+      fieldId,
+      selectedDate,
+      polygonSignature,
+      polygonCoordinates.length,
+      dispatch,
+      fetchAllIndexes,
+    ]);
 
     useEffect(() => {
       return () => {
         dispatch(clearIndexDataByType());
-        hasFetchedRef.current = false;
-        prevFieldIdRef.current = null;
+        prevRunKeyRef.current = "";
       };
     }, [dispatch]);
 
@@ -458,9 +642,12 @@ const FarmReportMap = React.forwardRef(
           });
         }
       };
+
       document.addEventListener("mousedown", handleClickOutside);
-      return () =>
+
+      return () => {
         document.removeEventListener("mousedown", handleClickOutside);
+      };
     }, []);
 
     const toggleLegend = useCallback((indexName) => {
@@ -470,25 +657,35 @@ const FarmReportMap = React.forwardRef(
       }));
     }, []);
 
+    const retryIndex = useCallback(
+      (indexName) => {
+        const dateCandidates = createDateCandidates(selectedDate);
+        fetchSingleIndex(indexName, dateCandidates);
+      },
+      [selectedDate, fetchSingleIndex]
+    );
+
     if (!field || !field.field || field.field.length < 3) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
           {INDEXES.map((indexName) => (
             <div
               key={indexName}
-              className="relative w-full h-[250px] rounded-xl overflow-hidden shadow-md bg-gray-800 flex items-center justify-center"
+              className="relative w-full h-[280px] rounded-xl overflow-hidden shadow-md bg-gray-800 flex items-center justify-center"
             >
               <div className="text-center p-4">
                 <div className="animate-pulse">
-                  <div className="w-16 h-16 bg-gray-600 rounded-full mx-auto mb-4"></div>
-                  <div className="h-4 bg-gray-600 rounded w-32 mx-auto mb-2"></div>
-                  <div className="h-3 bg-gray-700 rounded w-24 mx-auto"></div>
+                  <div className="w-16 h-16 bg-gray-600 rounded-full mx-auto mb-4" />
+                  <div className="h-4 bg-gray-600 rounded w-32 mx-auto mb-2" />
+                  <div className="h-3 bg-gray-700 rounded w-24 mx-auto" />
                 </div>
+
                 <p className="text-gray-400 mt-4 text-sm">
                   Waiting for field data...
                 </p>
               </div>
-              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[3000] bg-[#344E41] min-w-[160px] px-3 py-1.5 text-white text-sm font-semibold text-center rounded-md shadow-md">
+
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[3000] bg-ember-primary min-w-[160px] px-3 py-1.5 text-white text-sm font-semibold text-center rounded-md shadow-md">
                 {TITLES[indexName]}
               </div>
             </div>
@@ -497,16 +694,18 @@ const FarmReportMap = React.forwardRef(
       );
     }
 
-    const gridClasses =
-      hidePolygonForPDF
-        ? "grid grid-cols-2 gap-2 w-full"
-        : "grid grid-cols-1 md:grid-cols-2 gap-2 w-full";
+    const gridClasses = hidePolygonForPDF
+      ? "grid grid-cols-2 gap-3 w-full"
+      : "grid grid-cols-1 md:grid-cols-2 gap-3 w-full";
 
     return (
       <div ref={ref} className={gridClasses}>
         {INDEXES.map((indexName) => {
           const layer = indexDataByType?.[indexName];
-          const isLoading = loading?.indexDataByType?.[indexName] ?? false;
+
+          const reduxLoading = loading?.indexDataByType?.[indexName] === true;
+          const localLoading = localLoadingByIndex?.[indexName] === true;
+
           const imageUrl = layer?.image_base64
             ? `data:image/png;base64,${layer.image_base64}`
             : null;
@@ -521,49 +720,49 @@ const FarmReportMap = React.forwardRef(
             effectiveImageBounds = imageBounds;
           }
 
-          const showLoader =
-            isLoading || localLoading || (isInitialLoad && !imageUrl);
-          const showNoData =
-            !isLoading && !localLoading && !imageUrl && !isInitialLoad;
           const canRenderImage =
-            imageUrl &&
-            effectiveImageBounds &&
-            isValidBounds(effectiveImageBounds);
+            imageUrl && effectiveImageBounds && isValidBounds(effectiveImageBounds);
+
+          const showLoader = (reduxLoading || localLoading) && !canRenderImage;
+
+          const showNoData =
+            !showLoader && !canRenderImage && failedByIndex[indexName];
 
           return (
             <div
               key={`${indexName}-${fieldId}`}
-              className={`map-card-wrapper ${hidePolygonForPDF ? "min-w-[380px]" : ""}`}
+              className={`map-card-wrapper ${
+                hidePolygonForPDF ? "min-w-[580px]" : ""
+              }`}
             >
-              <div className="relative w-full h-[250px] rounded-xl overflow-hidden shadow-md bg-gray-900">
+              <div className="relative w-full h-[280px] rounded-xl overflow-hidden shadow-md bg-gray-900">
                 {showLoader && (
                   <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-[5000] rounded-xl">
                     <LogoFlipLoader />
+
                     <p className="text-white text-sm mt-4 font-medium animate-pulse">
                       Loading {TITLES[indexName]}...
+                    </p>
+
+                    <p className="text-white/60 text-[11px] mt-1">
+                      Searching latest available satellite scene
                     </p>
                   </div>
                 )}
 
                 {showNoData && (
-                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center z-[4000] rounded-xl">
-                    <p className="text-white text-sm font-medium text-center px-4">
+                  <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center z-[4000] rounded-xl">
+                    <p className="text-white text-sm font-semibold text-center px-4">
                       No data available for {TITLES[indexName]}
                     </p>
+
+                    <p className="text-white/70 text-xs text-center px-6 mt-1">
+                      No usable image was found in recent satellite dates.
+                    </p>
+
                     <button
-                      onClick={() => {
-                        const dateToUse =
-                          selectedDate ||
-                          new Date().toISOString().split("T")[0];
-                        dispatch(
-                          fetchIndexDataForMap({
-                            endDate: dateToUse,
-                            geometry: [polygonCoordinates],
-                            index: indexName,
-                          }),
-                        );
-                      }}
-                      className="mt-2 px-3 py-1 bg-[#344e41] text-white text-xs rounded hover:bg-[#5a7c6b] transition-colors"
+                      onClick={() => retryIndex(indexName)}
+                      className="mt-3 px-3 py-1.5 bg-ember-primary text-white text-xs rounded hover:bg-ember-primary-hover transition-colors"
                     >
                       Retry
                     </button>
@@ -574,26 +773,28 @@ const FarmReportMap = React.forwardRef(
                   <div className="absolute top-2 right-2 z-[5000] legend-dropdown-wrapper">
                     <button
                       onClick={() => toggleLegend(indexName)}
-                      className="flex items-center whitespace-nowrap bg-[#344e41] outline-none border border-[#344e41] rounded text-white px-2 py-1 text-sm font-normal cursor-pointer hover:bg-[#5a7c6b] transition-colors"
+                      className="flex items-center whitespace-nowrap bg-ember-primary outline-none border border-ember-primary rounded text-white px-2 py-1 text-sm font-normal cursor-pointer hover:bg-ember-primary-hover transition-colors"
                     >
                       🗺️ Legend
                     </button>
 
                     {showLegend[indexName] && layer?.legend && (
-                      <div className="absolute top-10 right-0 bg-[#344e41] text-white rounded-lg shadow-lg max-w-[280px] max-h-[250px] overflow-y-auto z-[6000] animate-slideIn no-scrollbar">
+                      <div className="absolute top-10 right-0 bg-ember-primary text-white rounded-lg shadow-lg max-w-[280px] max-h-[250px] overflow-y-auto z-[6000] animate-slideIn no-scrollbar">
                         <ul className="divide-y divide-white/10 list-none p-2 no-scrollbar">
                           {layer.legend.map((item, idx) => (
                             <li
                               key={`${item.label}-${idx}`}
-                              className="flex items-center gap-2 p-1 cursor-pointer hover:bg-[#5a7c6b] transition-colors duration-200 rounded"
+                              className="flex items-center gap-2 p-1 cursor-pointer hover:bg-ember-primary-hover transition-colors duration-200 rounded"
                             >
                               <span
                                 className="w-[20px] h-[12px] rounded border border-black/10 flex-shrink-0"
                                 style={{ backgroundColor: item.color }}
                               />
+
                               <span className="flex-1 text-xs whitespace-nowrap font-medium">
                                 {item.label}
                               </span>
+
                               <span className="text-gray-200 text-xs font-normal whitespace-nowrap">
                                 {item.hectares?.toFixed(2) || "0.00"} ha
                               </span>
@@ -617,25 +818,45 @@ const FarmReportMap = React.forwardRef(
                   }
                   zoom={16}
                   scrollWheelZoom={false}
-                  dragging={false}
+                  dragging={!hidePolygonForPDF}
                   doubleClickZoom={false}
                   touchZoom={false}
-                  style={{ height: "100%", width: "100%" }}
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    background: "white",
+                  }}
                   maxZoom={20}
                   minZoom={10}
                   attributionControl={false}
                   zoomControl={false}
                   preferCanvas={true}
+                  ref={(mapRef) => {
+                    if (mapRef) {
+                      mapInstancesRef.current[indexName] = mapRef;
+                    }
+                  }}
+                  whenReady={(mapEvent) => {
+                    setTimeout(() => {
+                      try {
+                        mapEvent.target.invalidateSize(true);
+                      } catch (e) {
+                        console.warn("Error in whenReady:", e);
+                      }
+                    }, 150);
+                  }}
                 >
                   <MapResizer />
                   <MapCaptureMode isPDFMode={hidePolygonForPDF} />
 
                   <TileLayer
                     attribution="© Google Maps"
-                    url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                    url="https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
                     subdomains={["mt0", "mt1", "mt2", "mt3"]}
                     maxZoom={20}
-                    crossOrigin={true}
+                    crossOrigin="anonymous"
+                    updateWhenIdle={false}
+                    keepBuffer={2}
                   />
 
                   {leafletCoordinates.length > 0 && (
@@ -671,26 +892,29 @@ const FarmReportMap = React.forwardRef(
                   />
                 </MapContainer>
 
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[3000] bg-[#344E41] min-w-[160px] px-3 py-1.5 text-white text-sm font-semibold text-center rounded-md shadow-md">
+                {dateUsedByIndex[indexName] && (
+                  <div className="absolute top-2 left-2 z-[3000] rounded-md bg-black/60 px-2 py-1 text-[10px] font-medium text-white">
+                    {dateUsedByIndex[indexName]}
+                  </div>
+                )}
+
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[3000] bg-ember-primary min-w-[160px] px-3 py-1.5 text-white text-sm font-semibold text-center rounded-md shadow-md">
                   {TITLES[indexName]}
                 </div>
               </div>
 
-              {/* Color Palette Legend for PDF - Always visible when hidePolygonForPDF is true */}
-              {hidePolygonForPDF &&
-                layer?.legend &&
-                indexName !== "TRUE_COLOR" && (
-                  <ColorBarLegend
-                    legend={layer.legend}
-                    indexName={TITLES[indexName]}
-                  />
-                )}
+              {hidePolygonForPDF && layer?.legend && indexName !== "TRUE_COLOR" && (
+                <ColorBarLegend
+                  legend={layer.legend}
+                  indexName={TITLES[indexName]}
+                />
+              )}
             </div>
           );
         })}
       </div>
     );
-  },
+  }
 );
 
 FarmReportMap.displayName = "FarmReportMap";

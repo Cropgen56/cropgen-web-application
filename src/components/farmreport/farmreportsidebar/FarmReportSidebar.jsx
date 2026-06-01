@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
+import { CloudRain } from "lucide-react";
 import PolygonPreview from "../../polygon/PolygonPreview";
-import SubscriptionStatusBadge from "../../comman/SubscriptionStatusBadge";
+
+const SIDEBAR_BG = "#344e41";
+const SIDEBAR_HOVER = "#2b4035";
 
 const FieldInfo = ({
   title,
@@ -16,25 +19,38 @@ const FieldInfo = ({
   isSubscribed,
 }) => (
   <div
-    className={`flex items-center gap-1.5 md:gap-2.5 border-b border-[#344e41] py-3 px-2 cursor-pointer ${
-      isSelected ? "bg-[#5a7c6b]" : "bg-transparent"
+    className={`flex items-center gap-2 border-b border-white/12 py-3 px-3 cursor-pointer transition-colors ${
+      isSelected
+        ? "bg-white/12 border-l-[3px] border-l-ember-accent pl-2.5"
+        : "hover:bg-white/5 border-l-[3px] border-l-transparent"
     }`}
     onClick={onClick}
   >
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
-    <div className="flex-grow min-w-0">
-      <div className="flex items-center gap-1.5 mb-1 min-w-0">
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center justify-between gap-1 mb-0.5">
         <h4
-          className={`text-base min-w-0 flex-1 truncate ${isSelected ? "text-white" : "text-[#344e41]"}`}
+          className={`text-sm font-semibold truncate ${
+            isSelected ? "text-white" : "text-white/90"
+          }`}
+          title={title}
         >
           {title}
         </h4>
-        <SubscriptionStatusBadge isSubscribed={isSubscribed} />
+        <span
+          className={`shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+            isSubscribed
+              ? "bg-emerald-400/25 text-emerald-50"
+              : "bg-red-500/20 text-red-100"
+          }`}
+        >
+          {isSubscribed ? "Active" : "Off"}
+        </span>
       </div>
-      <p className="text-xs text-[#a2a2a2] mb-1">{area}</p>
-      <div className="flex gap-4 text-xs text-[#a2a2a2]">
-        <p>{lat} N</p>
-        <p>{lon} E</p>
+      <p className="text-[11px] text-white/60 truncate">{area}</p>
+      <div className="flex gap-2 text-[10px] text-white/50 mt-0.5">
+        <span>{lat}°N</span>
+        <span>{lon}°E</span>
       </div>
     </div>
   </div>
@@ -47,91 +63,109 @@ const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
   const fields = useSelector((state) => state.farmfield.fields) || [];
 
   // Sort fields in descending order (latest first)
-  const filteredFields = fields
+  const filteredFields = [...fields]
+    .reverse()
     .filter((field) =>
-      field.fieldName.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      field.fieldName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-  const calculateCentroid = (field) => {
-    if (!field || field.length === 0) return { lat: 0, lon: 0 };
-    const total = field.reduce(
-      (acc, point) => ({
-        lat: acc.lat + point.lat,
-        lng: acc.lng + point.lng,
-      }),
-      { lat: 0, lng: 0 },
+  const calculateCentroid = (polygon) => {
+    if (!polygon?.length) return { lat: "0.000", lon: "0.000" };
+    const total = polygon.reduce(
+      (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }),
+      { lat: 0, lng: 0 }
     );
     return {
-      lat: (total.lat / field.length).toFixed(3),
-      lon: (total.lng / field.length).toFixed(3),
+      lat: (total.lat / polygon.length).toFixed(3),
+      lon: (total.lng / polygon.length).toFixed(3),
     };
   };
 
-  const formatArea = (acres) => `${(acres * 0.404686).toFixed(2)}h`;
+  const formatArea = (acres) => {
+    const ha = ((acres ?? 0) * 0.404686).toFixed(2);
+    return `${ha} ha`;
+  };
 
   return (
-    <div className="sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">
+    <div
+      className="h-full w-[260px] xl:w-[280px] flex flex-col text-white shrink-0"
+      style={{ backgroundColor: SIDEBAR_BG }}
+    >
       {/* Header */}
-      <div className="flex flex-col border-b border-[#344e41] gap-2 px-3 py-3">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Weather2 />
-            <h2 className="text-[18px] font-bold text-[#344e41]">
-              Farm Report
-            </h2>
+      <div
+        className="shrink-0 px-3 py-3 border-b border-white/15"
+        style={{ background: `linear-gradient(180deg, ${SIDEBAR_BG}, ${SIDEBAR_HOVER})` }}
+      >
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-1.5 rounded-lg bg-white/10 shrink-0">
+              <Weather2 />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-base font-bold truncate">Farm Report</h2>
+              <p className="text-[10px] text-white/55">Monitor your farms</p>
+            </div>
           </div>
           {/* Close Icon */}
-          <div
-            className="cursor-pointer"
+          <button
             onClick={() => setIsSidebarVisible(false)}
+            className="shrink-0 p-1 rounded-lg hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+            aria-label="Close sidebar"
           >
             <svg
-              width="24"
-              height="24"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="text-current"
             >
               <path
                 d="M18 6L6 18"
-                stroke="#344E41"
+                stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M6 6L18 18"
-                stroke="#344E41"
+                stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
-          </div>
+          </button>
         </div>
 
-        <div className="relative flex items-center w-full mt-2">
-          <CiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-100 text-lg" />
+        {/* Search */}
+        <div className="relative">
+          <CiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/45 text-base pointer-events-none" />
           <input
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 text-gray-100 text-sm outline-none bg-[#344e41]"
-            placeholder="Search"
+            className="w-full pl-9 pr-2 py-2 rounded-lg bg-white/10 border border-white/15 text-white text-sm placeholder:text-white/40 outline-none focus:border-white/30"
+            placeholder="Search farms..."
           />
         </div>
       </div>
 
+      {/* Fields Count */}
+      <div className="shrink-0 flex items-center justify-between px-3 py-2 bg-black/10 text-xs text-white/55 font-semibold uppercase tracking-wide">
+        <span>Farms</span>
+        <span className="px-1.5 py-0.5 rounded-md bg-white/15 text-white/75 normal-case">
+          {filteredFields.length}
+        </span>
+      </div>
+
       {/* Fields List */}
-      <div className="overflow-y-auto max-h-[calc(100vh-150px)] no-scrollbar">
-        <h2 className="font-bold text-[#344e41] text-[18px] p-2">All Farms</h2>
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
         {filteredFields.length > 0 ? (
           filteredFields.map((field, index) => {
             const { lat, lon } = calculateCentroid(field.field);
             const isSelected = selectedIndex === index;
-            const isSubscribed =
-              field.subscription?.hasActiveSubscription ?? false;
+            const isSubscribed = field.subscription?.hasActiveSubscription === true;
 
             return (
               <FieldInfo
@@ -152,9 +186,10 @@ const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
             );
           })
         ) : (
-          <p className="text-center text-sm text-gray-500 mt-4">
-            No fields found
-          </p>
+          <div className="text-center py-10 px-3">
+            <CloudRain className="mx-auto mb-2 text-white/25" size={28} />
+            <p className="text-xs text-white/55">No farms found</p>
+          </div>
         )}
       </div>
     </div>

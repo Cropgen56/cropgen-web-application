@@ -1,289 +1,301 @@
-// useFarmReportPDF.js
 import { useState, useCallback } from "react";
 import { message } from "antd";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import CropGenLogo from "../../assets/image/login/logo.svg";
 import store from "../../redux/store";
 import { fetchForecastData } from "../../redux/slices/weatherSlice";
+import { APP_NAME, APP_SITE_URL, APP_TAGLINE } from "../../config/brand";
 
-// A4 content width in px at 96dpi for consistent capture
-const PDF_CAPTURE_WIDTH = 794;
+const PDF_CAPTURE_WIDTH = 1200;
 
-const SECTION_TITLES = [
-  "Satellite Imagery & Crop Health",
-  "Weather & Vegetation Indices",
-  "Insights & Advisory",
-];
-
-// Sections that should always start on a new page
-const NEW_PAGE_SECTIONS = [
-  "insights",
-  "weekly crop advisory",
-  "plant growth",
-  "weekly advisory",
-  "crop advisory",
-  "growth stage",
-  "plant growth stage",
-];
+// Dark Green Theme
+const DARK_GREEN = {
+  primary: [20, 83, 45],        // Dark green
+  secondary: [15, 65, 35],      // Darker green
+  accent: [34, 197, 94],        // Medium green
+  text: [240, 253, 250],        // Light text
+  textMuted: [156, 163, 175],   // Muted text
+  background: [31, 41, 55],     // Very dark gray
+};
 
 const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isPreparedForPDF, setIsPreparedForPDF] = useState(false);
 
-  // PDF Layout Constants
   const PDF_CONFIG = {
-    MARGIN_LEFT: 8,
-    MARGIN_RIGHT: 8,
+    MARGIN_LEFT: 10,
+    MARGIN_RIGHT: 10,
     HEADER_HEIGHT: 14,
     FOOTER_HEIGHT: 10,
-    SECTION_TITLE_HEIGHT: 9,
-    SECTION_GAP: 4,
+    SECTION_TITLE_HEIGHT: 8,
+    SECTION_GAP: 5,
     CONTENT_PADDING: 2,
   };
 
-  // Check if a section should start on a new page
-  const shouldStartNewPage = useCallback((sectionElement, sectionTitle) => {
-    // Check by section title
-    const titleLower = sectionTitle?.toLowerCase() || "";
-    if (NEW_PAGE_SECTIONS.some((keyword) => titleLower.includes(keyword))) {
-      return true;
+  const getLogoBase64 = useCallback(async () => {
+    try {
+      const response = await fetch("/favicon.png");
+      const blob = await response.blob();
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result.split(",")[1]; // Remove data:image/png;base64, prefix
+          resolve(base64String);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.warn("Could not load logo:", error);
+      return null;
     }
-
-    // Check by data attribute
-    if (sectionElement?.dataset?.newPage === "true") {
-      return true;
-    }
-
-    // Check by class name
-    if (sectionElement?.classList?.contains("new-page-section")) {
-      return true;
-    }
-
-    // Check by section id or other attributes
-    const sectionId = sectionElement?.id?.toLowerCase() || "";
-    const sectionClass = sectionElement?.className?.toLowerCase() || "";
-
-    const checkPatterns = [
-      "insight",
-      "advisory",
-      "plant-growth",
-      "plantgrowth",
-      "growth-stage",
-      "weekly-advisory",
-    ];
-
-    return checkPatterns.some(
-      (pattern) => sectionId.includes(pattern) || sectionClass.includes(pattern)
-    );
   }, []);
 
-  // Convert SVG to high-quality PNG base64
-  const getLogoBase64 = useCallback(() => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-
-      img.onload = () => {
-        const scale = 4;
-        const canvas = document.createElement("canvas");
-        const targetWidth = 280 * scale;
-        const targetHeight = 84 * scale;
-
-        canvas.width = targetWidth;
-        canvas.height = targetHeight;
-
-        const ctx = canvas.getContext("2d");
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-        ctx.clearRect(0, 0, targetWidth, targetHeight);
-
-        const aspectRatio = img.width / img.height;
-        let drawWidth = targetWidth;
-        let drawHeight = targetWidth / aspectRatio;
-
-        if (drawHeight > targetHeight) {
-          drawHeight = targetHeight;
-          drawWidth = targetHeight * aspectRatio;
-        }
-
-        const x = (targetWidth - drawWidth) / 2;
-        const y = (targetHeight - drawHeight) / 2;
-
-        ctx.drawImage(img, x, y, drawWidth, drawHeight);
-
-        try {
-          resolve(canvas.toDataURL("image/png", 1.0));
-        } catch (e) {
-          resolve(null);
-        }
-      };
-
-      img.onerror = () => resolve(null);
-      img.src = CropGenLogo;
-    });
-  }, []);
-
-  // Capture Leaflet map canvases to static images
   const captureLeafletMapsToImages = useCallback((element) => {
     return new Promise((resolve) => {
       try {
         const mapContainers = element.querySelectorAll(".leaflet-container");
 
-        mapContainers.forEach((mapContainer) => {
-          const canvases = mapContainer.querySelectorAll("canvas");
-          const svgs = mapContainer.querySelectorAll("svg");
-          const rect = mapContainer.getBoundingClientRect();
+        if (mapContainers.length === 0) {
+          resolve();
+          return;
+        }
 
-          const compositeCanvas = document.createElement("canvas");
-          compositeCanvas.width = rect.width * 2;
-          compositeCanvas.height = rect.height * 2;
-          compositeCanvas.style.width = rect.width + "px";
-          compositeCanvas.style.height = rect.height + "px";
+        const processedSnapshots = [];
 
-          const ctx = compositeCanvas.getContext("2d");
-          ctx.scale(2, 2);
+        mapContainers.forEach((mapContainer, index) => {
+          try {
+            const canvases = mapContainer.querySelectorAll("canvas");
+            const svgs = mapContainer.querySelectorAll("svg");
+            const rect = mapContainer.getBoundingClientRect();
 
-          canvases.forEach((canvas) => {
-            try {
-              const canvasRect = canvas.getBoundingClientRect();
-              const offsetX = canvasRect.left - rect.left;
-              const offsetY = canvasRect.top - rect.top;
-
-              const transform = window.getComputedStyle(canvas).transform;
-              let translateX = 0,
-                translateY = 0;
-
-              if (transform && transform !== "none") {
-                const matrix = new DOMMatrix(transform);
-                translateX = matrix.m41;
-                translateY = matrix.m42;
-              }
-
-              ctx.drawImage(
-                canvas,
-                offsetX + translateX,
-                offsetY + translateY,
-                canvas.width / (window.devicePixelRatio || 1),
-                canvas.height / (window.devicePixelRatio || 1)
-              );
-            } catch (e) {
-              console.warn("Could not draw canvas:", e);
+            if (rect.width === 0 || rect.height === 0) {
+              console.warn("Map container has zero dimensions");
+              return;
             }
-          });
 
-          svgs.forEach((svg) => {
-            try {
-              const svgRect = svg.getBoundingClientRect();
-              const offsetX = svgRect.left - rect.left;
-              const offsetY = svgRect.top - rect.top;
+            const compositeCanvas = document.createElement("canvas");
+            compositeCanvas.width = rect.width * 2;
+            compositeCanvas.height = rect.height * 2;
 
-              const pane = svg.closest(".leaflet-overlay-pane, .leaflet-pane");
-              let translateX = 0,
-                translateY = 0;
+            const ctx = compositeCanvas.getContext("2d", { alpha: false });
+            ctx.scale(2, 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, rect.width, rect.height);
 
-              if (pane) {
-                const paneTransform = window.getComputedStyle(pane).transform;
-                if (paneTransform && paneTransform !== "none") {
-                  const matrix = new DOMMatrix(paneTransform);
+            canvases.forEach((canvas) => {
+              try {
+                const canvasRect = canvas.getBoundingClientRect();
+                const offsetX = canvasRect.left - rect.left;
+                const offsetY = canvasRect.top - rect.top;
+
+                const transform = window.getComputedStyle(canvas).transform;
+                let translateX = 0;
+                let translateY = 0;
+
+                if (transform && transform !== "none") {
+                  const matrix = new DOMMatrix(transform);
                   translateX = matrix.m41;
                   translateY = matrix.m42;
                 }
-              }
 
-              const svgData = new XMLSerializer().serializeToString(svg);
-              const svgBlob = new Blob([svgData], {
-                type: "image/svg+xml;charset=utf-8",
-              });
-              const svgUrl = URL.createObjectURL(svgBlob);
-
-              const svgImg = new Image();
-              svgImg.onload = () => {
                 ctx.drawImage(
-                  svgImg,
+                  canvas,
                   offsetX + translateX,
                   offsetY + translateY,
-                  svgRect.width,
-                  svgRect.height
+                  canvasRect.width,
+                  canvasRect.height
                 );
-                URL.revokeObjectURL(svgUrl);
-              };
-              svgImg.src = svgUrl;
-            } catch (e) {
-              console.warn("Could not draw SVG:", e);
-            }
-          });
+              } catch (e) {
+                console.warn("Could not draw canvas:", e);
+              }
+            });
 
-          mapContainer.setAttribute(
-            "data-map-snapshot",
-            compositeCanvas.toDataURL("image/png", 1.0)
-          );
+            let svgsProcessed = 0;
+            const totalSvgs = svgs.length;
+
+            const finishProcessing = () => {
+              const snapshot = compositeCanvas.toDataURL("image/png", 1.0);
+              mapContainer.setAttribute("data-map-snapshot", snapshot);
+              processedSnapshots.push(index);
+
+              if (processedSnapshots.length === mapContainers.length) {
+                setTimeout(resolve, 200);
+              }
+            };
+
+            if (totalSvgs === 0) {
+              finishProcessing();
+              return;
+            }
+
+            svgs.forEach((svg) => {
+              try {
+                const svgRect = svg.getBoundingClientRect();
+                const offsetX = svgRect.left - rect.left;
+                const offsetY = svgRect.top - rect.top;
+
+                const pane = svg.closest(".leaflet-overlay-pane, .leaflet-pane");
+                let translateX = 0;
+                let translateY = 0;
+
+                if (pane) {
+                  const paneTransform = window.getComputedStyle(pane).transform;
+                  if (paneTransform && paneTransform !== "none") {
+                    const matrix = new DOMMatrix(paneTransform);
+                    translateX = matrix.m41;
+                    translateY = matrix.m42;
+                  }
+                }
+
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const svgBlob = new Blob([svgData], {
+                  type: "image/svg+xml;charset=utf-8",
+                });
+                const svgUrl = URL.createObjectURL(svgBlob);
+
+                const svgImg = new Image();
+                svgImg.crossOrigin = "anonymous";
+
+                svgImg.onload = () => {
+                  try {
+                    ctx.drawImage(
+                      svgImg,
+                      offsetX + translateX,
+                      offsetY + translateY,
+                      svgRect.width,
+                      svgRect.height
+                    );
+                  } catch (e) {
+                    console.warn("Could not draw SVG:", e);
+                  }
+                  URL.revokeObjectURL(svgUrl);
+                  svgsProcessed++;
+
+                  if (svgsProcessed === totalSvgs) {
+                    finishProcessing();
+                  }
+                };
+
+                svgImg.onerror = () => {
+                  URL.revokeObjectURL(svgUrl);
+                  svgsProcessed++;
+
+                  if (svgsProcessed === totalSvgs) {
+                    finishProcessing();
+                  }
+                };
+
+                svgImg.src = svgUrl;
+              } catch (e) {
+                console.warn("Error processing SVG:", e);
+                svgsProcessed++;
+
+                if (svgsProcessed === totalSvgs) {
+                  finishProcessing();
+                }
+              }
+            });
+          } catch (e) {
+            console.warn("Error processing map container:", e);
+            processedSnapshots.push(index);
+
+            if (processedSnapshots.length === mapContainers.length) {
+              setTimeout(resolve, 200);
+            }
+          }
         });
 
-        setTimeout(resolve, 500);
+        setTimeout(() => {
+          if (processedSnapshots.length < mapContainers.length) {
+            console.warn("Map capture timeout, proceeding anyway");
+            resolve();
+          }
+        }, 5000);
       } catch (e) {
-        console.warn("Error capturing Leaflet maps:", e);
+        console.warn("Error in captureLeafletMapsToImages:", e);
         resolve();
       }
     });
   }, []);
 
-  // Helper function to capture a section directly from the DOM
   const captureSectionFromDOM = useCallback(
-    async (section, options = {}) => {
-      const { scale = 2, backgroundColor = "#ffffff" } = options;
+    async (section) => {
+      const originalWidth = section.style.width;
+      const originalMaxWidth = section.style.maxWidth;
+      const originalTransform = section.style.transform;
+      const originalDisplay = section.style.display;
 
-      const originalStyles = {
-        position: section.style.position,
-        width: section.style.width,
-        transform: section.style.transform,
-        overflow: section.style.overflow,
-      };
-
-      const mapTransforms = new Map();
-      const mapContainers = section.querySelectorAll(".leaflet-container");
-
-      mapContainers.forEach((map, index) => {
-        const panes = map.querySelectorAll(".leaflet-pane");
-        const paneData = [];
-
-        panes.forEach((pane) => {
-          paneData.push({
-            element: pane,
-            transform: pane.style.transform,
-            computedTransform: window.getComputedStyle(pane).transform,
-          });
-        });
-
-        mapTransforms.set(index, {
-          map,
-          panes: paneData,
-          width: map.style.width,
-          height: map.style.height,
-        });
-      });
+      section.style.width = `${PDF_CAPTURE_WIDTH}px`;
+      section.style.maxWidth = `${PDF_CAPTURE_WIDTH}px`;
+      section.style.transform = "none";
+      section.style.display = "block";
 
       try {
         await captureLeafletMapsToImages(section);
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         const canvas = await html2canvas(section, {
-          scale: scale,
+          scale: 1.5,
           width: PDF_CAPTURE_WIDTH,
           windowWidth: PDF_CAPTURE_WIDTH,
           useCORS: true,
           allowTaint: true,
           logging: false,
-          backgroundColor: backgroundColor,
-          imageTimeout: 15000,
+          backgroundColor: "#ffffff",
+          imageTimeout: 20000,
           removeContainer: false,
           onclone: (clonedDoc, clonedElement) => {
-            clonedElement.style.overflow = "visible";
+            clonedElement.style.width = `${PDF_CAPTURE_WIDTH}px`;
+            clonedElement.style.maxWidth = `${PDF_CAPTURE_WIDTH}px`;
+            clonedElement.style.transform = "none";
+            clonedElement.style.display = "block";
+
+            const clonedMaps = clonedElement.querySelectorAll(".leaflet-container");
+            const originalMaps = section.querySelectorAll(".leaflet-container");
+
+            clonedMaps.forEach((clonedMap, index) => {
+              if (originalMaps[index]) {
+                const snapshot = originalMaps[index].getAttribute("data-map-snapshot");
+
+                if (snapshot) {
+                  clonedMap.innerHTML = "";
+
+                  const img = clonedDoc.createElement("img");
+                  img.src = snapshot;
+                  img.style.width = "100%";
+                  img.style.height = "100%";
+                  img.style.objectFit = "cover";
+                  img.style.display = "block";
+
+                  clonedMap.appendChild(img);
+                  clonedMap.style.background = "white";
+                }
+              }
+            });
+
             clonedElement
-              .querySelectorAll("path.leaflet-interactive")
-              .forEach((path) => {
-                path.style.pointerEvents = "none";
+              .querySelectorAll(".legend-dropdown-wrapper")
+              .forEach((wrapper) => {
+                const button = wrapper.querySelector("button");
+                if (button) button.style.display = "none";
+
+                const dropdown = wrapper.querySelector("[class*='absolute']");
+                if (dropdown) dropdown.style.display = "none";
               });
+
+            clonedElement.querySelectorAll(".pdf-legend-bar").forEach((legend) => {
+              legend.style.display = "flex !important";
+              legend.style.visibility = "visible !important";
+              legend.style.opacity = "1 !important";
+              legend.style.pointerEvents = "none";
+            });
+
+            clonedElement.querySelectorAll(".leaflet-control").forEach((control) => {
+              control.style.display = "none";
+            });
 
             clonedElement.querySelectorAll("img").forEach((img) => {
               img.style.display = "block";
@@ -291,45 +303,20 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
               img.style.opacity = "1";
             });
 
-            clonedElement
-              .querySelectorAll(".legend-dropdown-wrapper button")
-              .forEach((el) => {
-                el.style.display = "none";
-              });
-
-            clonedElement
-              .querySelectorAll(".color-bar-legend, .pdf-legend-bar")
-              .forEach((legend) => {
-                legend.style.display = "block";
-                legend.style.visibility = "visible";
-              });
-
-            clonedElement.querySelectorAll(".leaflet-pane").forEach((pane) => {
-              const computedTransform = window.getComputedStyle(pane).transform;
-              if (computedTransform && computedTransform !== "none") {
-                pane.style.transform = computedTransform;
+            clonedElement.querySelectorAll("button, [role='button']").forEach((btn) => {
+              if (!btn.closest(".pdf-legend-bar")) {
+                btn.style.pointerEvents = "none";
               }
             });
-
-            clonedElement
-              .querySelectorAll(".leaflet-image-layer")
-              .forEach((img) => {
-                const computedStyle = window.getComputedStyle(img);
-                img.style.transform = computedStyle.transform;
-                img.style.transformOrigin = computedStyle.transformOrigin;
-              });
           },
         });
 
         return canvas;
       } finally {
-        Object.assign(section.style, originalStyles);
-
-        mapTransforms.forEach((data) => {
-          data.panes.forEach((paneData) => {
-            paneData.element.style.transform = paneData.transform;
-          });
-        });
+        section.style.width = originalWidth;
+        section.style.maxWidth = originalMaxWidth;
+        section.style.transform = originalTransform;
+        section.style.display = originalDisplay;
       }
     },
     [captureLeafletMapsToImages]
@@ -338,132 +325,120 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
   const addPDFHeader = useCallback((pdf, pageNumber, totalPages, fieldName) => {
     const pdfWidth = pdf.internal.pageSize.getWidth();
 
-    pdf.setFillColor(52, 78, 65);
-    pdf.rect(0, 0, pdfWidth, 14, "F");
+    pdf.setFillColor(...DARK_GREEN.primary);
+    pdf.rect(0, 0, pdfWidth, PDF_CONFIG.HEADER_HEIGHT, "F");
 
-    pdf.setTextColor(255, 255, 255);
+    pdf.setTextColor(...DARK_GREEN.text);
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "bold");
-    pdf.text("CropGen", 12, 9);
+    pdf.text(APP_NAME, 12, 10);
 
-    pdf.setFontSize(8);
+    pdf.setFontSize(7);
     pdf.setFont("helvetica", "normal");
-    pdf.text(fieldName || "Field Report", 50, 9);
+    const truncatedName =
+      fieldName && fieldName.length > 35
+        ? fieldName.substring(0, 32) + "..."
+        : fieldName || "Farm Report";
+    pdf.text(truncatedName, 50, 10);
 
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-
-    pdf.setFontSize(7);
-    const dateWidth = pdf.getTextWidth(currentDate);
-    pdf.text(currentDate, pdfWidth - dateWidth - 25, 9);
-
-    pdf.setFontSize(7);
-    const pageText = `${pageNumber}/${totalPages}`;
+    pdf.setFontSize(6);
+    const pageText = `Page ${pageNumber} of ${totalPages}`;
     const pageWidth = pdf.getTextWidth(pageText);
-    pdf.text(pageText, pdfWidth - pageWidth - 8, 9);
+    pdf.text(pageText, pdfWidth - pageWidth - 10, 10);
   }, []);
 
   const addPDFFooter = useCallback((pdf) => {
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    pdf.setFillColor(52, 78, 65);
-    pdf.rect(0, pdfHeight - 10, pdfWidth, 10, "F");
+    pdf.setFillColor(...DARK_GREEN.primary);
+    pdf.rect(
+      0,
+      pdfHeight - PDF_CONFIG.FOOTER_HEIGHT,
+      pdfWidth,
+      PDF_CONFIG.FOOTER_HEIGHT,
+      "F"
+    );
 
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(7);
+    pdf.setTextColor(...DARK_GREEN.text);
+    pdf.setFontSize(6);
     pdf.setFont("helvetica", "normal");
-    pdf.text("© 2025 CropGen | Precision Agriculture", 10, pdfHeight - 4);
+    const year = new Date().getFullYear();
+    pdf.text(`© ${year} ${APP_NAME} | ${APP_TAGLINE}`, 10, pdfHeight - 3);
 
-    const contactText = "www.cropgenapp.com";
+    const contactText = APP_SITE_URL.replace(/^https?:\/\//, "");
     const contactWidth = pdf.getTextWidth(contactText);
-    pdf.text(contactText, pdfWidth - contactWidth - 10, pdfHeight - 4);
+    pdf.text(contactText, pdfWidth - contactWidth - 10, pdfHeight - 3);
   }, []);
 
   const addSectionTitle = useCallback((pdf, title, yPosition) => {
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const margin = 8;
+    const margin = PDF_CONFIG.MARGIN_LEFT;
 
-    pdf.setFillColor(52, 78, 65);
-    pdf.roundedRect(margin, yPosition, pdfWidth - margin * 2, 7, 1, 1, "F");
+    pdf.setFillColor(...DARK_GREEN.primary);
+    pdf.roundedRect(
+      margin,
+      yPosition,
+      pdfWidth - margin * 2,
+      PDF_CONFIG.SECTION_TITLE_HEIGHT,
+      1,
+      1,
+      "F"
+    );
 
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(8);
+    pdf.setTextColor(...DARK_GREEN.text);
+    pdf.setFontSize(7.5);
     pdf.setFont("helvetica", "bold");
-    pdf.text(title, margin + 4, yPosition + 5);
+    pdf.text(title, margin + 3, yPosition + 5.5);
 
-    return yPosition + 9;
+    return yPosition + PDF_CONFIG.SECTION_TITLE_HEIGHT + 1;
   }, []);
-
-  const formatIrrigationType = (type) => {
-    if (!type) return "N/A";
-    return type
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
 
   const createCoverPage = useCallback(
     async (pdf, fieldName, logoBase64) => {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      pdf.setFillColor(52, 78, 65);
+      pdf.setFillColor(...DARK_GREEN.primary);
       pdf.rect(0, 0, pdfWidth, pdfHeight, "F");
 
-      const logoY = 20;
+      // Add logo if available
       if (logoBase64) {
         try {
-          const logoWidth = 60;
-          const logoHeight = 18;
+          const logoWidth = 30;
+          const logoHeight = 30;
           pdf.addImage(
-            logoBase64,
+            `data:image/png;base64,${logoBase64}`,
             "PNG",
             pdfWidth / 2 - logoWidth / 2,
-            logoY,
+            15,
             logoWidth,
             logoHeight
           );
         } catch (e) {
           console.warn("Could not add logo to PDF:", e);
-          pdf.setTextColor(255, 255, 255);
-          pdf.setFontSize(28);
-          pdf.setFont("helvetica", "bold");
-          pdf.text("CropGen", pdfWidth / 2, logoY + 12, { align: "center" });
         }
-      } else {
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(28);
-        pdf.setFont("helvetica", "bold");
-        pdf.text("CropGen", pdfWidth / 2, logoY + 12, { align: "center" });
       }
 
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(24);
+      pdf.setTextColor(...DARK_GREEN.text);
+      pdf.setFontSize(32);
       pdf.setFont("helvetica", "bold");
-      pdf.text("CropGen", pdfWidth / 2, 50, { align: "center" });
+      pdf.text(APP_NAME, pdfWidth / 2, 55, { align: "center" });
 
-      pdf.setFontSize(9);
+      pdf.setFontSize(10);
       pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(163, 177, 138);
-      pdf.text("Precision Agriculture Solutions", pdfWidth / 2, 58, {
-        align: "center",
-      });
+      pdf.setTextColor(...DARK_GREEN.accent);
+      pdf.text(APP_TAGLINE, pdfWidth / 2, 63, { align: "center" });
 
-      pdf.setTextColor(255, 255, 255);
+      pdf.setTextColor(...DARK_GREEN.text);
       pdf.setFontSize(20);
       pdf.setFont("helvetica", "bold");
-      pdf.text("Farm Analysis Report", pdfWidth / 2, 75, { align: "center" });
+      pdf.text("Farm Analysis Report", pdfWidth / 2, 80, { align: "center" });
 
       pdf.setFontSize(13);
       pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(163, 177, 138);
-      pdf.text(fieldName || "Farm Report", pdfWidth / 2, 85, {
-        align: "center",
-      });
+      pdf.setTextColor(...DARK_GREEN.accent);
+      pdf.text(fieldName || "Farm Report", pdfWidth / 2, 90, { align: "center" });
 
       const farmId =
         selectedFieldDetails?.id ||
@@ -472,9 +447,7 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
         "N/A";
 
       const cropName =
-        selectedFieldDetails?.cropName ||
-        selectedFieldDetails?.crop ||
-        "N/A";
+        selectedFieldDetails?.cropName || selectedFieldDetails?.crop || "N/A";
 
       const variety =
         selectedFieldDetails?.variety ||
@@ -495,110 +468,62 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
           })
         : "N/A";
 
-      const irrigationType = formatIrrigationType(
-        selectedFieldDetails?.typeOfIrrigation ||
-          selectedFieldDetails?.irrigationType ||
-          selectedFieldDetails?.irrigation
-      );
-
-      const farmingType =
-        selectedFieldDetails?.typeOfFarming ||
-        selectedFieldDetails?.farmingType ||
-        selectedFieldDetails?.farming ||
-        "N/A";
-
       const area =
         selectedFieldDetails?.areaInHectares ||
-        (selectedFieldDetails?.acre
-          ? selectedFieldDetails.acre * 0.404686
-          : null);
+        (selectedFieldDetails?.acre ? selectedFieldDetails.acre * 0.404686 : null);
 
       const areaText = typeof area === "number" ? `${area.toFixed(2)} ha` : "N/A";
 
-      const cardMargin = 20;
+      const cardMargin = 22;
       const cardWidth = pdfWidth - cardMargin * 2;
-      const cardY = 95;
+      const cardY = 105;
       const cardPadding = 12;
       const rowHeight = 22;
-      const cardHeight = rowHeight * 4 + cardPadding * 2;
+      const cardHeight = rowHeight * 3 + cardPadding * 2;
 
-      pdf.setFillColor(44, 67, 57);
+      pdf.setFillColor(...DARK_GREEN.secondary);
       pdf.roundedRect(cardMargin, cardY, cardWidth, cardHeight, 4, 4, "F");
 
       const col1X = cardMargin + cardPadding;
       const col2X = pdfWidth / 2 + 5;
-      const labelValueGap = 5;
+      const labelValueGap = 4;
 
       const drawField = (label, value, x, y) => {
-        pdf.setTextColor(163, 177, 138);
-        pdf.setFontSize(8);
+        pdf.setTextColor(...DARK_GREEN.accent);
+        pdf.setFontSize(7);
         pdf.setFont("helvetica", "bold");
         pdf.text(label, x, y);
 
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(11);
+        pdf.setTextColor(...DARK_GREEN.text);
+        pdf.setFontSize(10);
         pdf.setFont("helvetica", "normal");
         const displayValue = value && value !== "N/A" ? String(value) : "N/A";
-        pdf.text(displayValue, x, y + labelValueGap + 4);
+        const maxWidth = col2X - col1X - 3;
+        pdf.text(displayValue, x, y + labelValueGap + 3, { maxWidth });
       };
 
-      const row1Y = cardY + cardPadding + 5;
+      const row1Y = cardY + cardPadding + 2;
       const row2Y = row1Y + rowHeight;
       const row3Y = row2Y + rowHeight;
-      const row4Y = row3Y + rowHeight;
 
-      pdf.setDrawColor(90, 124, 107);
-      pdf.setLineWidth(0.3);
-      pdf.line(
-        cardMargin + 8,
-        row1Y + rowHeight - 5,
-        cardMargin + cardWidth - 8,
-        row1Y + rowHeight - 5
-      );
-      pdf.line(
-        cardMargin + 8,
-        row2Y + rowHeight - 5,
-        cardMargin + cardWidth - 8,
-        row2Y + rowHeight - 5
-      );
-      pdf.line(
-        cardMargin + 8,
-        row3Y + rowHeight - 5,
-        cardMargin + cardWidth - 8,
-        row3Y + rowHeight - 5
-      );
-      pdf.line(pdfWidth / 2, cardY + 8, pdfWidth / 2, cardY + cardHeight - 8);
+      pdf.setDrawColor(...DARK_GREEN.accent);
+      pdf.setLineWidth(0.2);
+      pdf.line(cardMargin + 6, row1Y + rowHeight - 4, cardMargin + cardWidth - 6, row1Y + rowHeight - 4);
+      pdf.line(cardMargin + 6, row2Y + rowHeight - 4, cardMargin + cardWidth - 6, row2Y + rowHeight - 4);
+      pdf.line(pdfWidth / 2, cardY + 6, pdfWidth / 2, cardY + cardHeight - 6);
 
-      drawField("FARM ID", farmId, col1X, row1Y);
-      drawField("CROP", cropName, col2X, row1Y);
-      drawField("VARIETY", variety, col1X, row2Y);
-      drawField("SOWING DATE", formattedDate, col2X, row2Y);
-      drawField("IRRIGATION TYPE", irrigationType, col1X, row3Y);
-      drawField("FARMING TYPE", farmingType, col2X, row3Y);
-      drawField("TOTAL AREA", areaText, col1X, row4Y);
+      drawField("Farm ID", farmId, col1X, row1Y);
+      drawField("Crop", cropName, col2X, row1Y);
+      drawField("Variety", variety, col1X, row2Y);
+      drawField("Sowing Date", formattedDate, col2X, row2Y);
+      drawField("Total Area", areaText, col1X, row3Y);
+      drawField("Status", "Active", col2X, row3Y);
 
-      if (selectedFieldDetails?.acre) {
-        drawField(
-          "AREA (ACRES)",
-          `${selectedFieldDetails.acre.toFixed(2)} acres`,
-          col2X,
-          row4Y
-        );
-      }
-
-      const dateCardY = cardY + cardHeight + 12;
+      const dateCardY = cardY + cardHeight + 14;
       const dateCardHeight = 28;
 
-      pdf.setFillColor(44, 67, 57);
-      pdf.roundedRect(
-        cardMargin,
-        dateCardY,
-        cardWidth,
-        dateCardHeight,
-        4,
-        4,
-        "F"
-      );
+      pdf.setFillColor(...DARK_GREEN.secondary);
+      pdf.roundedRect(cardMargin, dateCardY, cardWidth, dateCardHeight, 4, 4, "F");
 
       const reportDate = new Date().toLocaleDateString("en-US", {
         weekday: "long",
@@ -607,27 +532,27 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
         day: "numeric",
       });
 
-      pdf.setTextColor(163, 177, 138);
-      pdf.setFontSize(8);
+      pdf.setTextColor(...DARK_GREEN.accent);
+      pdf.setFontSize(7);
       pdf.setFont("helvetica", "bold");
-      pdf.text("REPORT GENERATED ON", pdfWidth / 2, dateCardY + 10, {
-        align: "center",
-      });
+      pdf.text("REPORT GENERATED ON", pdfWidth / 2, dateCardY + 8, { align: "center" });
 
-      pdf.setTextColor(255, 255, 255);
+      pdf.setTextColor(...DARK_GREEN.text);
       pdf.setFontSize(11);
       pdf.setFont("helvetica", "normal");
       pdf.text(reportDate, pdfWidth / 2, dateCardY + 20, { align: "center" });
 
-      pdf.setTextColor(163, 177, 138);
-      pdf.setFontSize(9);
+      pdf.setTextColor(...DARK_GREEN.accent);
+      pdf.setFontSize(8);
       pdf.setFont("helvetica", "normal");
-      pdf.text("www.cropgenapp.com", pdfWidth / 2, pdfHeight - 28, {
-        align: "center",
-      });
+      pdf.text(
+        APP_SITE_URL.replace(/^https?:\/\//, ""),
+        pdfWidth / 2,
+        pdfHeight - 28,
+        { align: "center" }
+      );
 
-      pdf.setTextColor(120, 140, 130);
-      pdf.setFontSize(7);
+      pdf.setFontSize(6);
       pdf.text(
         "Powered by satellite imagery and AI analytics",
         pdfWidth / 2,
@@ -635,38 +560,15 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
         { align: "center" }
       );
       pdf.text(
-        "© 2025 CropGen. All rights reserved.",
+        `© ${new Date().getFullYear()} ${APP_NAME}. All rights reserved.`,
         pdfWidth / 2,
-        pdfHeight - 14,
+        pdfHeight - 12,
         { align: "center" }
       );
     },
     [selectedFieldDetails]
   );
 
-  // Calculate how many pages a section will need
-  const calculateSectionPages = useCallback(
-    (imgHeight, currentY, maxContentHeight, contentStartY) => {
-      const availableOnCurrentPage = maxContentHeight - (currentY - contentStartY);
-
-      if (imgHeight <= availableOnCurrentPage) {
-        return { pagesNeeded: 0, newY: currentY + imgHeight };
-      }
-
-      let remaining = imgHeight - availableOnCurrentPage;
-      let pages = 1;
-
-      while (remaining > maxContentHeight) {
-        remaining -= maxContentHeight;
-        pages++;
-      }
-
-      return { pagesNeeded: pages, newY: contentStartY + remaining };
-    },
-    []
-  );
-
-  // Create a new page with header and footer
   const createNewPage = useCallback(
     (pdf, pageNumber, totalPages, fieldName) => {
       pdf.addPage();
@@ -676,10 +578,9 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
     [addPDFHeader, addPDFFooter]
   );
 
-  // Wait for critical data to be present before capture (up to 8s; longer for forecast/ET)
   const waitForDataReadiness = useCallback(() => {
     const maxWaitMs = 8000;
-    const pollIntervalMs = 250;
+    const pollIntervalMs = 200;
     const start = Date.now();
 
     return new Promise((resolve) => {
@@ -692,11 +593,16 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
         const hasAdvisory = !!advisory;
         const hasIndexData =
           indexData &&
-          (indexData.NDVI || indexData.NDMI || indexData.NDRE || indexData.TRUE_COLOR);
+          (indexData.NDVI ||
+            indexData.NDMI ||
+            indexData.NDRE ||
+            indexData.TRUE_COLOR);
         const hasForecast =
           !!forecastData?.current ||
           !!forecastData?.forecast ||
-          (forecastData && typeof forecastData === "object" && (forecastData.current || forecastData.forecast));
+          (forecastData &&
+            typeof forecastData === "object" &&
+            (forecastData.current || forecastData.forecast));
 
         const ready = hasAdvisory || hasIndexData || hasForecast;
 
@@ -710,50 +616,51 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
     });
   }, []);
 
-  // Get section title from element
-  const getSectionTitle = useCallback((sectionElement, index) => {
-    // Try to get title from data attribute
+  const getSectionTitle = useCallback((sectionElement) => {
     if (sectionElement?.dataset?.sectionTitle) {
       return sectionElement.dataset.sectionTitle;
     }
 
-    // Try to get title from heading inside section
     const heading = sectionElement?.querySelector(
-      "h1, h2, h3, h4, .section-title"
+      "h1, h2, h3, h4, h5, [data-section-title]"
     );
     if (heading?.textContent) {
       return heading.textContent.trim();
     }
 
-    // Fallback to predefined titles or generic title
-    return SECTION_TITLES[index] || `Section ${index + 1}`;
+    return "Report Section";
   }, []);
 
-  // Main continuous flow PDF generator with new page support
   const downloadFarmReportPDF = useCallback(
-    async (mainReportRef) => {
+    async (mainReportRef, onBeforeCapture) => {
       const input = mainReportRef.current;
       if (!input) {
         message.error("Report area not found!");
         return;
       }
 
-      setIsDownloading(true);
-      setIsPreparedForPDF(true);
-      setDownloadProgress(0);
-
-      // Proactively trigger forecast fetch if aoiId exists and no data yet
-      const state = store.getState();
-      const existingForecast = state?.weather?.forecastData;
-      if (aoiId && !existingForecast?.current && !existingForecast?.forecast) {
-        store.dispatch(fetchForecastData({ geometry_id: aoiId }));
+      if (onBeforeCapture && typeof onBeforeCapture === "function") {
+        onBeforeCapture();
       }
 
-      // Wait for charts and Leaflet to render, and for critical data (up to 8s)
-      await new Promise((res) => setTimeout(res, 1500));
-      await waitForDataReadiness();
+      await new Promise((res) => setTimeout(res, 300));
+
+      setIsDownloading(true);
+      setIsPreparedForPDF(true);
+      setDownloadProgress(2);
 
       try {
+        const state = store.getState();
+        const existingForecast = state?.weather?.forecastData;
+        if (aoiId && !existingForecast?.current && !existingForecast?.forecast) {
+          store.dispatch(fetchForecastData({ geometry_id: aoiId }));
+        }
+
+        await new Promise((res) => setTimeout(res, 1500));
+        await waitForDataReadiness();
+
+        setDownloadProgress(8);
+
         const logoBase64 = await getLogoBase64();
         const sections = input.querySelectorAll(".farm-section");
 
@@ -764,226 +671,137 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
         const fieldName =
           selectedFieldDetails?.fieldName ||
           selectedFieldDetails?.farmName ||
+          selectedFieldDetails?.name ||
           "Farm Report";
 
-        // Layout calculations
-        const contentWidth =
-          pdfWidth - PDF_CONFIG.MARGIN_LEFT - PDF_CONFIG.MARGIN_RIGHT;
-        const contentStartY =
-          PDF_CONFIG.HEADER_HEIGHT + PDF_CONFIG.CONTENT_PADDING;
-        const contentEndY =
-          pdfHeight - PDF_CONFIG.FOOTER_HEIGHT - PDF_CONFIG.CONTENT_PADDING;
+        const contentWidth = pdfWidth - PDF_CONFIG.MARGIN_LEFT - PDF_CONFIG.MARGIN_RIGHT;
+        const contentStartY = PDF_CONFIG.HEADER_HEIGHT + PDF_CONFIG.CONTENT_PADDING;
+        const contentEndY = pdfHeight - PDF_CONFIG.FOOTER_HEIGHT - PDF_CONFIG.CONTENT_PADDING;
         const maxContentHeight = contentEndY - contentStartY;
 
-        // First pass: Capture all sections and calculate total pages
+        // Page Mapping:
+        // Page 2: Satellite Maps + Crop Health
+        // Page 3: Crop Advisory + Weather Forecast
+        // Page 4: NDVI + Water Index + ET
+        // Page 5: Insights + Growth Activity
+
+        const pageMappings = {
+          0: 2, // Satellite Imagery
+          1: 2, // Crop Health & Yield
+          2: 3, // Crop Advisory & Soil
+          3: 3, // Weather Forecast
+          4: 4, // Vegetation & Water Index
+          5: 4, // Evapotranspiration
+          6: 5, // Agronomic Insights
+          7: 5  // Plant Growth Activity
+        };
+
         const capturedSections = [];
         const totalSections = sections.length;
 
-        setDownloadProgress(5);
+        setDownloadProgress(12);
 
+        // Capture all sections
         for (let i = 0; i < sections.length; i++) {
           const sec = sections[i];
           if (sec.classList.contains("exclude-from-pdf")) continue;
 
-          await new Promise((res) => setTimeout(res, 200));
+          await new Promise((res) => setTimeout(res, 300));
 
-          const canvas = await captureSectionFromDOM(sec, {
-            scale: 2,
-            backgroundColor: "#ffffff",
-          });
-
+          const canvas = await captureSectionFromDOM(sec);
           const imgHeight = (canvas.height * contentWidth) / canvas.width;
-          const sectionTitle = getSectionTitle(sec, i);
-          const forceNewPage = shouldStartNewPage(sec, sectionTitle);
+          const sectionTitle = getSectionTitle(sec);
 
           capturedSections.push({
             canvas,
             imgHeight,
             title: sectionTitle,
-            imgData: canvas.toDataURL("image/png", 1.0),
-            forceNewPage,
-            element: sec,
+            imgData: canvas.toDataURL("image/png", 0.92),
+            pageNumber: pageMappings[i] || 2,
           });
 
-          setDownloadProgress(5 + (i / totalSections) * 40);
+          const progress = 12 + (i / totalSections) * 35;
+          setDownloadProgress(Math.round(progress));
         }
-
-        // Calculate total pages needed (considering forced new pages)
-        let tempY = contentStartY;
-        let pagesNeeded = 1;
-        let isFirstSection = true;
-
-        capturedSections.forEach((section, index) => {
-          const titleHeight = PDF_CONFIG.SECTION_TITLE_HEIGHT;
-
-          // Force new page for specific sections (except first section)
-          if (section.forceNewPage && !isFirstSection) {
-            pagesNeeded++;
-            tempY = contentStartY;
-          }
-
-          // Check if title + minimum content fits on current page
-          if (tempY + titleHeight + 20 > contentEndY) {
-            pagesNeeded++;
-            tempY = contentStartY;
-          }
-
-          const { pagesNeeded: additionalPages, newY } = calculateSectionPages(
-            section.imgHeight,
-            tempY + titleHeight,
-            maxContentHeight,
-            contentStartY
-          );
-
-          pagesNeeded += additionalPages;
-          tempY = newY + PDF_CONFIG.SECTION_GAP;
-
-          // Account for page break before next section when near bottom
-          const nextSection = capturedSections[index + 1];
-          if (nextSection && tempY > contentEndY - 10) {
-            pagesNeeded++;
-            tempY = contentStartY;
-          } else if (tempY > contentEndY) {
-            tempY = contentStartY;
-          }
-
-          isFirstSection = false;
-        });
-
-        const totalPages = pagesNeeded + 1; // +1 for cover page
 
         setDownloadProgress(50);
 
-        // Create Cover Page
+        // Calculate total pages
+        const titleBarHeight = PDF_CONFIG.SECTION_TITLE_HEIGHT + 2;
+        const totalPages = 5;
+
+        // Create cover page
         await createCoverPage(pdf, fieldName, logoBase64);
 
-        // Create first content page
-        let currentPage = 2;
-        createNewPage(pdf, currentPage, totalPages, fieldName);
+        // Create pages with sections
+        for (let pageNum = 2; pageNum <= totalPages; pageNum++) {
+          createNewPage(pdf, pageNum, totalPages, fieldName);
+          let currentY = contentStartY;
 
-        let currentY = contentStartY;
+          // Filter sections for this page
+          const pageSections = capturedSections.filter(s => s.pageNumber === pageNum);
 
-        // Second pass: Generate the PDF with continuous flow + forced page breaks
-        for (let i = 0; i < capturedSections.length; i++) {
-          const section = capturedSections[i];
-          const { canvas, imgHeight, title, imgData, forceNewPage } = section;
+          for (let i = 0; i < pageSections.length; i++) {
+            const section = pageSections[i];
+            const { canvas, imgHeight, title, imgData } = section;
 
-          const titleHeight = PDF_CONFIG.SECTION_TITLE_HEIGHT;
-          const minContentHeight = 20;
+            const sectionHeight = imgHeight + titleBarHeight + PDF_CONFIG.SECTION_GAP;
 
-          // Force new page for specific sections (Insights, Weekly Advisory, Plant Growth)
-          // But not for the very first section
-          if (forceNewPage && i > 0 && currentY > contentStartY) {
-            currentPage++;
-            createNewPage(pdf, currentPage, totalPages, fieldName);
-            currentY = contentStartY;
-          }
+            // Check if section fits on current page
+            if (currentY + sectionHeight > contentEndY) {
+              // Scale down to fit
+              const availableHeight = contentEndY - currentY - PDF_CONFIG.SECTION_GAP;
+              const scaledHeight = Math.min(imgHeight, availableHeight);
 
-          if (currentY + titleHeight + minContentHeight > contentEndY) {
-            currentPage++;
-            createNewPage(pdf, currentPage, totalPages, fieldName);
-            currentY = contentStartY;
-          }
+              currentY = addSectionTitle(pdf, title, currentY);
+              currentY += 1;
 
-          // Add section title
-          currentY = addSectionTitle(pdf, title, currentY);
-          currentY += 2; // Small gap after title
+              if (scaledHeight > 2) {
+                pdf.addImage(
+                  imgData,
+                  "PNG",
+                  PDF_CONFIG.MARGIN_LEFT,
+                  currentY,
+                  contentWidth,
+                  scaledHeight,
+                  undefined,
+                  "FAST"
+                );
 
-          const remainingHeight = contentEndY - currentY;
-
-          if (imgHeight <= remainingHeight) {
-            // Image fits completely in remaining space
-            pdf.addImage(
-              imgData,
-              "PNG",
-              PDF_CONFIG.MARGIN_LEFT,
-              currentY,
-              contentWidth,
-              imgHeight
-            );
-            currentY += imgHeight + PDF_CONFIG.SECTION_GAP;
-          } else {
-            // Need to split the image across pages
-            let remainingImgHeight = imgHeight;
-            let sourceY = 0;
-            let isFirstPart = true;
-
-            while (remainingImgHeight > 0) {
-              const availableHeight = isFirstPart
-                ? remainingHeight
-                : maxContentHeight;
-              const partHeight = Math.min(remainingImgHeight, availableHeight);
-              const sourceHeight = (partHeight / imgHeight) * canvas.height;
-
-              // Create a part canvas
-              const partCanvas = document.createElement("canvas");
-              partCanvas.width = canvas.width;
-              partCanvas.height = Math.ceil(sourceHeight);
-
-              const partCtx = partCanvas.getContext("2d");
-              partCtx.drawImage(
-                canvas,
-                0,
-                Math.floor(sourceY),
-                canvas.width,
-                Math.ceil(sourceHeight),
-                0,
-                0,
-                canvas.width,
-                Math.ceil(sourceHeight)
-              );
-
-              const partImgData = partCanvas.toDataURL("image/png", 1.0);
-              const drawY = isFirstPart ? currentY : contentStartY;
+                currentY += scaledHeight + PDF_CONFIG.SECTION_GAP;
+              }
+            } else {
+              // Section fits normally
+              currentY = addSectionTitle(pdf, title, currentY);
+              currentY += 1;
 
               pdf.addImage(
-                partImgData,
+                imgData,
                 "PNG",
                 PDF_CONFIG.MARGIN_LEFT,
-                drawY,
+                currentY,
                 contentWidth,
-                partHeight
+                imgHeight,
+                undefined,
+                "FAST"
               );
 
-              sourceY += sourceHeight;
-              remainingImgHeight -= partHeight;
-
-              if (remainingImgHeight > 0) {
-                // Need another page for continuation
-                currentPage++;
-                createNewPage(pdf, currentPage, totalPages, fieldName);
-                currentY = contentStartY;
-              } else {
-                // Finished this section
-                currentY = drawY + partHeight + PDF_CONFIG.SECTION_GAP;
-              }
-
-              isFirstPart = false;
+              currentY += imgHeight + PDF_CONFIG.SECTION_GAP;
             }
           }
-
-          // Check if we need a new page for next section
-          // But respect forced new page sections
-          const nextSection = capturedSections[i + 1];
-          if (nextSection) {
-            // If next section forces new page, don't create one here
-            if (!nextSection.forceNewPage && currentY > contentEndY - 10) {
-              currentPage++;
-              createNewPage(pdf, currentPage, totalPages, fieldName);
-              currentY = contentStartY;
-            }
-          }
-
-          setDownloadProgress(50 + ((i + 1) / capturedSections.length) * 45);
         }
 
-        setDownloadProgress(98);
+        setDownloadProgress(96);
 
-        const fileName = `cropgen-report-${
-          selectedFieldDetails?.fieldName ||
-          selectedFieldDetails?.farmName ||
-          "report"
-        }-${new Date().toISOString().split("T")[0]}.pdf`;
+        // Save PDF
+        const safeName = (fieldName)
+          .toString()
+          .replace(/[^\w\s-]/g, "")
+          .trim()
+          .replace(/\s+/g, "-")
+          .toLowerCase();
+
+        const fileName = `farm-report-${safeName}-${new Date().toISOString().split("T")[0]}.pdf`;
 
         pdf.save(fileName);
 
@@ -992,30 +810,29 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
 
         setTimeout(() => {
           setDownloadProgress(0);
-        }, 1000);
+        }, 1500);
       } catch (error) {
         console.error("Error generating PDF:", error);
         message.error("Failed to generate PDF. Please try again.");
+        setDownloadProgress(0);
       } finally {
         setTimeout(() => {
           setIsDownloading(false);
           setIsPreparedForPDF(false);
-        }, 1000);
+        }, 800);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       selectedFieldDetails,
+      aoiId,
       addPDFHeader,
       addPDFFooter,
       addSectionTitle,
       createCoverPage,
       getLogoBase64,
       captureSectionFromDOM,
-      calculateSectionPages,
       waitForDataReadiness,
       createNewPage,
-      shouldStartNewPage,
       getSectionTitle,
     ]
   );

@@ -1,6 +1,14 @@
-/** CropGen enterprise report — brand accent */
-export const SATAGRO_GREEN = "#0D6B45";
-export const SATAGRO_GREEN_DARK = "#095C3B";
+/** CropGen soil report — brand palette (matches ember-* CSS variables) */
+export const CROPGEN_PRIMARY = "#344e41";
+export const CROPGEN_PRIMARY_DARK = "#2b4035";
+export const CROPGEN_PRIMARY_LIGHT = "#5a7c6b";
+export const CROPGEN_ACCENT = "#3da660";
+
+/** @deprecated use CROPGEN_PRIMARY */
+export const SATAGRO_GREEN = CROPGEN_PRIMARY;
+/** @deprecated use CROPGEN_PRIMARY_DARK */
+export const SATAGRO_GREEN_DARK = CROPGEN_PRIMARY_DARK;
+
 export const CARD_RADIUS = "12px";
 
 /** Indices shown in the intelligence report table */

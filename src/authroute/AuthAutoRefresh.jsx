@@ -1,10 +1,10 @@
-import { useEffect } from "react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { refreshAccessToken, logout } from "../redux/slices/authSlice";
+import { store } from "../redux/store";
 import { decodeJWT } from "../utility/decodetoken";
-
-const REFRESH_BEFORE_EXPIRY_SECONDS = 3300;
+import { isTokenValid } from "../utility/token";
+import { msUntilAccessTokenRefresh } from "../utility/authSession";
 
 const AuthAutoRefresh = ({ children }) => {
   const dispatch = useDispatch();
@@ -12,55 +12,60 @@ const AuthAutoRefresh = ({ children }) => {
   const bootstrapTriedRef = useRef(false);
 
   useEffect(() => {
-    // On app bootstrap, try one silent refresh from httpOnly cookie.
-    // This keeps users signed in across reloads within refresh-token lifetime.
-    if (bootstrapTriedRef.current || token) return;
+    if (bootstrapTriedRef.current) return;
+    if (token && isTokenValid(token)) {
+      bootstrapTriedRef.current = true;
+      return;
+    }
     bootstrapTriedRef.current = true;
     dispatch(refreshAccessToken()).catch(() => {
-      // Ignore at bootstrap: unauthenticated users are expected here.
+      // Unauthenticated visitors are expected; ProtectedRoute handles routing.
     });
   }, [dispatch, token]);
 
   useEffect(() => {
-    if (!isAuthenticated || !token) return;
+    if (!token || !isAuthenticated) return;
 
     let timeoutId;
+    let cancelled = false;
 
-    try {
-      const payload = decodeJWT(token);
-      const exp = payload?.exp;
-      if (!exp) return;
+    const scheduleRefresh = () => {
+      try {
+        const payload = decodeJWT(token);
+        const exp = payload?.exp;
+        if (!exp) return;
 
-      const now = Date.now() / 1000;
-      const secondsUntilExpiry = exp - now;
+        const delayMs = msUntilAccessTokenRefresh(exp);
 
-      const secondsUntilRefresh =
-        secondsUntilExpiry - REFRESH_BEFORE_EXPIRY_SECONDS;
+        const runRefresh = () => {
+          dispatch(refreshAccessToken())
+            .unwrap()
+            .catch(() => {
+              const current = store.getState().auth?.token;
+              if (!cancelled && !isTokenValid(current)) {
+                dispatch(logout());
+              }
+            });
+        };
 
-      const delayMs = Math.max(secondsUntilRefresh, 0) * 1000;
+        if (delayMs <= 0) {
+          runRefresh();
+          return;
+        }
 
-      if (delayMs <= 0) {
-        // immediate refresh
-        dispatch(refreshAccessToken())
-          .unwrap()
-          .catch(() => {
-            dispatch(logout());
-          });
-        return;
+        timeoutId = setTimeout(runRefresh, delayMs);
+      } catch {
+        const current = store.getState().auth?.token;
+        if (!isTokenValid(current)) {
+          dispatch(logout());
+        }
       }
+    };
 
-      timeoutId = setTimeout(() => {
-        dispatch(refreshAccessToken())
-          .unwrap()
-          .catch(() => {
-            dispatch(logout());
-          });
-      }, delayMs);
-    } catch (err) {
-      dispatch(logout());
-    }
+    scheduleRefresh();
 
     return () => {
+      cancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [token, isAuthenticated, dispatch]);

@@ -15,10 +15,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { getDaysAgo } from "../../../utility/formatDate";
 import {
-  getDaysAgo,
-  getTodayDate,
-} from "../../../utility/formatDate";
+  canFetchSatelliteForField,
+  getSatelliteDateRangeForField,
+} from "../../../utility/satelliteDateRange";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
 import { Info } from "lucide-react";
 import { fetchWaterTimeseries } from "../../../api/satelliteTimeseriesApi";
@@ -34,7 +35,7 @@ const WaterIndex = ({
   bypassPremium = false,
   isPreparedForPDF = false,
 }) => {
-  const { sowingDate, field } = selectedFieldsDetials?.[0] || {};
+  const { field } = selectedFieldsDetials?.[0] || {};
   const [waterIndexData, setWaterIndexData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -49,23 +50,20 @@ const WaterIndex = ({
   const lastRequestKeyRef = useRef(null);
   const abortRef = useRef(null);
 
-  const getSixMonthsBefore = useCallback((dateStr) => {
-    const d = dateStr ? new Date(dateStr) : new Date();
-    d.setMonth(d.getMonth() - 6);
-    return d.toISOString().split("T")[0];
-  }, []);
+  const fieldRecord = selectedFieldsDetials?.[0];
 
   const fetchParams = useMemo(() => {
-    if (!field || !sowingDate) return null;
+    if (!canFetchSatelliteForField(fieldRecord)) return null;
 
-    const today = getTodayDate();
+    const { startDate, endDate } = getSatelliteDateRangeForField(fieldRecord);
+
     return {
-      startDate: getSixMonthsBefore(today),
-      endDate: today,
+      startDate,
+      endDate,
       geometry: field,
       index,
     };
-  }, [field, sowingDate, index, getSixMonthsBefore]);
+  }, [field, fieldRecord, index]);
 
   useEffect(() => {
     const requestKey = fetchParams ? JSON.stringify(fetchParams) : null;

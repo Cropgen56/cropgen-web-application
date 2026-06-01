@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Download, Printer, Sparkles } from "lucide-react";
-import { SATAGRO_GREEN } from "./constants";
+import { CROPGEN_PRIMARY, CROPGEN_PRIMARY_DARK } from "./constants";
 
 export default function ReportHeader({
   generatedAt,
@@ -20,12 +20,12 @@ export default function ReportHeader({
     <motion.header
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-[12px] bg-white shadow-[0_8px_30px_rgba(13,107,69,0.08)] border border-gray-100 overflow-hidden"
+      className="rounded-[12px] bg-white shadow-[0_8px_30px_rgba(52,78,65,0.08)] border border-gray-100 overflow-hidden"
     >
       <div
         className="px-6 py-5 text-white"
         style={{
-          background: `linear-gradient(135deg, ${SATAGRO_GREEN} 0%, #0a5238 100%)`,
+          background: `linear-gradient(135deg, ${CROPGEN_PRIMARY} 0%, ${CROPGEN_PRIMARY_DARK} 100%)`,
         }}
       >
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -50,7 +50,7 @@ export default function ReportHeader({
               type="button"
               onClick={onDownloadPdf}
               disabled={isDownloading}
-              className="inline-flex items-center gap-2 rounded-[10px] bg-white px-4 py-2.5 text-sm font-semibold text-[#0D6B45] shadow-md hover:bg-gray-50 disabled:opacity-60 transition-colors"
+              className="inline-flex items-center gap-2 rounded-[10px] bg-white px-4 py-2.5 text-sm font-semibold text-ember-sidebar shadow-md hover:bg-gray-50 disabled:opacity-60 transition-colors"
             >
               <Download className="w-4 h-4" />
               {isDownloading ? "Preparing PDF…" : "Download PDF"}

@@ -12,7 +12,7 @@ export default function SatelliteAnalysis({ rows, analysisDate }) {
       className="rounded-[12px] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden"
     >
       <div className="px-5 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2 bg-[#fafcfb]">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-[#0D6B45] flex items-center gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-[#344e41] flex items-center gap-2">
           <Satellite className="w-4 h-4" />
           Satellite Index Analysis
         </h2>
@@ -23,7 +23,7 @@ export default function SatelliteAnalysis({ rows, analysisDate }) {
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
-            <tr className="bg-[#0D6B45] text-white">
+            <tr className="bg-[#344e41] text-white">
               <th className="px-4 py-3 font-semibold">Index</th>
               <th className="px-4 py-3 font-semibold">Value / distribution</th>
               <th className="px-4 py-3 font-semibold">Status</th>
@@ -37,7 +37,7 @@ export default function SatelliteAnalysis({ rows, analysisDate }) {
                 className={i % 2 === 0 ? "bg-white" : "bg-gray-50/80"}
               >
                 <td className="px-4 py-3 font-semibold text-gray-900">
-                  <span className="text-[#0D6B45]">{row.code}</span>
+                  <span className="text-[#344e41]">{row.code}</span>
                   <span className="block text-xs font-normal text-gray-500">
                     {INDEX_LABELS[row.code] || ""}
                   </span>

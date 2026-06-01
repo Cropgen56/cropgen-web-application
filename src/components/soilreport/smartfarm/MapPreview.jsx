@@ -66,8 +66,8 @@ export default function MapPreview({ field, ndviLayer, analysisDate }) {
       className="rounded-[12px] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-gray-100 overflow-hidden"
     >
       <div className="px-5 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2 bg-[#fafcfb]">
-        <Layers className="w-4 h-4 text-[#0D6B45]" />
-        <h2 className="text-sm font-bold uppercase tracking-wide text-[#0D6B45]">
+        <Layers className="w-4 h-4 text-[#344e41]" />
+        <h2 className="text-sm font-bold uppercase tracking-wide text-[#344e41]">
           GIS / NDVI snapshot
         </h2>
         {analysisDate ? (
@@ -103,9 +103,9 @@ export default function MapPreview({ field, ndviLayer, analysisDate }) {
           <Polygon
             positions={positions}
             pathOptions={{
-              color: "#0D6B45",
+              color: "#344e41",
               weight: 3,
-              fillColor: "#0D6B45",
+              fillColor: "#344e41",
               fillOpacity: canShowNdvi ? 0.05 : 0.2,
             }}
           />
@@ -137,7 +137,7 @@ export default function MapPreview({ field, ndviLayer, analysisDate }) {
           </div>
           <div className="flex justify-between mt-1 text-[9px] text-gray-500">
             <span>{legend[0]?.label || "Low"}</span>
-            <span className="font-semibold text-[#0D6B45]">NDVI</span>
+            <span className="font-semibold text-[#344e41]">NDVI</span>
             <span>{legend[legend.length - 1]?.label || "High"}</span>
           </div>
         </div>

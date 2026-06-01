@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import Card from "react-bootstrap/Card";
 import profile from "../../assets/image/pngimages/profile.png";
@@ -57,6 +57,7 @@ const Sidebar = ({ onToggleCollapse }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const logout = useLogout();
 
@@ -189,70 +190,90 @@ const Sidebar = ({ onToggleCollapse }) => {
   };
 
 
+  const isActivePath = (path) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    return (
+      location.pathname === path ||
+      location.pathname.startsWith(`${path}/`)
+    );
+  };
+
   const renderFullSidebar = () => (
     <div className="sidebar-content-wrapper">
-
       <div
         className="title-container flex items-center justify-center cursor-pointer"
         onClick={() => handleNavigation("/")}
       >
-        <img src={img1} alt="CropGen Logo" className="w-[170px]" />
+        <img src={img1} alt="CropGen Logo" className="sidebar-logo" />
       </div>
 
-  
-      <Card
-        style={{ width: "13rem", paddingTop: "10px" }}
-        onClick={() => handleNavigation("/setting")}
-        className="profile-card"
-      >
-      
-        <div className="avatar-container">
-          <div className="avatar-wrapper">
-            <img
-              src={getAvatarUrl()}
-              alt="User profile"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = profile;
-              }}
-            />
+      <div className="sidebar-profile-section">
+        <Card
+          onClick={() => handleNavigation("/setting")}
+          className="profile-card"
+        >
+          <div className="avatar-container">
+            <div className="avatar-wrapper">
+              <img
+                src={getAvatarUrl()}
+                alt="User profile"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = profile;
+                }}
+              />
+            </div>
           </div>
-        </div>
-        <Card.Body className="text-center pt-2 pb-3">
-          <Card.Title className="profile-user-name mb-1">
-            {displayFullName}
-          </Card.Title>
-          <Card.Text className="profile-user-email mb-0">
-            {displayEmail}
-          </Card.Text>
-        </Card.Body>
-      </Card>
-
+          <Card.Body className="text-center profile-card-body">
+            <Card.Title className="profile-user-name">
+              {displayFullName}
+            </Card.Title>
+            <Card.Text className="profile-user-email">
+              {displayEmail}
+            </Card.Text>
+          </Card.Body>
+        </Card>
+      </div>
 
       <div className="sidebar-nav-wrapper">
-        <nav className="sidebar-nav">
+        <p className="sidebar-nav-label">Menu</p>
+        <nav className="sidebar-nav" aria-label="Main navigation">
           <ul>
             {NAV_ITEMS.map(({ path, label, Icon }) => (
               <li
                 key={path}
                 onClick={() => handleNavigation(path)}
+                className={isActivePath(path) ? "active" : ""}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleNavigation(path);
+                  }
+                }}
               >
-                <Icon />
-                <span>{label}</span>
+                <span className="nav-icon" aria-hidden>
+                  <Icon />
+                </span>
+                <span className="nav-label">{label}</span>
               </li>
             ))}
           </ul>
         </nav>
       </div>
 
-      <div
-        className="offcanvas-footer cursor-pointer"
-        onClick={() => setIsLogoutModalOpen(true)}
-      >
-        <div className="footer-text">
+      <div className="offcanvas-footer">
+        <button
+          type="button"
+          className="footer-text"
+          onClick={() => setIsLogoutModalOpen(true)}
+        >
           <Logout />
           <span>Logout</span>
-        </div>
+        </button>
       </div>
     </div>
   );

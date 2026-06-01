@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import api from "../../api/api";
-import { updateAdvisoryActivityProgressAPI } from "../../api/smartAdvisoryApi";
-
-const BASE_URL = process.env.REACT_APP_SMART_ADVISORY;
+import smartAdvisoryApi, {
+  updateAdvisoryActivityProgressAPI,
+} from "../../api/smartAdvisoryApi";
+import { normalizeAdvisory } from "../../utility/normalizeAdvisory";
 
 /* =====================================================
    FETCH SMART ADVISORY
@@ -12,13 +12,20 @@ export const fetchSmartAdvisory = createAsyncThunk(
   "smartAdvisory/fetchSmartAdvisory",
   async ({ fieldId }, thunkAPI) => {
     try {
-      const res = await axios.get(
-        `${BASE_URL}/advisory/${fieldId}?latest=true`,
+      const res = await smartAdvisoryApi.get(
+        `/advisory/${fieldId}?latest=true`,
       );
 
+      const advisories =
+        res.data?.advisories ??
+        (Array.isArray(res.data?.data) ? res.data.data : []);
+
+      const raw = advisories[0] ?? null;
+
       return {
-        exists: res.data?.exists ?? false,
-        advisory: res.data?.advisories?.[0] || null,
+        fieldId,
+        exists: advisories.length > 0,
+        advisory: normalizeAdvisory(raw),
       };
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
@@ -35,18 +42,15 @@ export const updateAdvisoryActivityProgress = createAsyncThunk(
         activityType,
         progress,
       });
-      return data.advisory;
+      return normalizeAdvisory(data.advisory);
     } catch (err) {
       return thunkAPI.rejectWithValue(
-        err.response?.data?.message || err.message || "Failed to update progress"
+        err.response?.data?.message || err.message || "Failed to update progress",
       );
     }
-  }
+  },
 );
 
-/* =====================================================
-   SEND WHATSAPP ADVISORY (UNCHANGED)
-===================================================== */
 export const sendFarmAdvisoryWhatsApp = createAsyncThunk(
   "smartAdvisory/sendFarmAdvisoryWhatsApp",
   async ({ phone, farmAdvisoryId, language }, thunkAPI) => {
@@ -63,16 +67,14 @@ export const sendFarmAdvisoryWhatsApp = createAsyncThunk(
   },
 );
 
-/* =====================================================
-   SLICE
-===================================================== */
 const smartAdvisorySlice = createSlice({
   name: "smartAdvisory",
   initialState: {
     loading: false,
+    loadingFieldId: null,
 
     advisory: null,
-    exists: false, // 🔑 NEW (for polling & instant update)
+    exists: false,
     error: null,
 
     whatsappSending: false,
@@ -88,23 +90,40 @@ const smartAdvisorySlice = createSlice({
       state.advisory = null;
       state.exists = false;
       state.error = null;
+      state.loadingFieldId = null;
     },
   },
 
   extraReducers: (builder) => {
     builder
-
-      /* ---------- Fetch Advisory ---------- */
-      .addCase(fetchSmartAdvisory.pending, (state) => {
+      .addCase(fetchSmartAdvisory.pending, (state, action) => {
         state.loading = true;
+        state.loadingFieldId = action.meta.arg?.fieldId ?? null;
+        state.error = null;
       })
       .addCase(fetchSmartAdvisory.fulfilled, (state, action) => {
+        if (
+          action.payload.fieldId &&
+          state.loadingFieldId &&
+          action.payload.fieldId !== state.loadingFieldId
+        ) {
+          return;
+        }
         state.loading = false;
+        state.loadingFieldId = null;
         state.exists = action.payload.exists;
         state.advisory = action.payload.advisory;
       })
       .addCase(fetchSmartAdvisory.rejected, (state, action) => {
+        if (
+          action.meta.arg?.fieldId &&
+          state.loadingFieldId &&
+          action.meta.arg.fieldId !== state.loadingFieldId
+        ) {
+          return;
+        }
         state.loading = false;
+        state.loadingFieldId = null;
         state.error = action.payload;
       })
 
@@ -122,7 +141,6 @@ const smartAdvisorySlice = createSlice({
         state.progressError = action.payload;
       })
 
-      /* ---------- WhatsApp ---------- */
       .addCase(sendFarmAdvisoryWhatsApp.pending, (state) => {
         state.whatsappSending = true;
         state.whatsappSuccess = false;

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import IndexPremiumWrapper from "../subscription/Indexpremiumwrapper";
+import IndexPremiumWrapper from "../subscription/PremiumIndexWrapper";
 
 /* ===================== ROW ===================== */
 const Row = ({ label, value }) => {

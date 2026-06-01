@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
 
-const BRAND = "#0D6B45";
+const BRAND = "#344e41";
 const TRACK = "#e8f5ef";
 
 function productivityBand(pct) {
@@ -33,7 +33,7 @@ export default function YieldPrediction({ productivityPercent, futurePrediction 
       transition={{ delay: 0.22 }}
       className="rounded-[12px] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-gray-100 p-5"
     >
-      <h2 className="text-sm font-bold uppercase tracking-wide text-[#0D6B45] mb-4 flex items-center gap-2">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-[#344e41] mb-4 flex items-center gap-2">
         <TrendingUp className="w-4 h-4" />
         Yield &amp; Future Outlook
       </h2>
@@ -81,7 +81,7 @@ export default function YieldPrediction({ productivityPercent, futurePrediction 
               <span className="mt-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">
                 Productivity index
               </span>
-              <span className="mt-1 inline-flex rounded-full bg-[#0D6B45]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#0D6B45]">
+              <span className="mt-1 inline-flex rounded-full bg-[#344e41]/10 px-2.5 py-0.5 text-[11px] font-semibold text-[#344e41]">
                 {band.label}
               </span>
             </div>

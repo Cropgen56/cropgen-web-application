@@ -21,7 +21,7 @@ export default function GISGeometryCard({ field }) {
       className="rounded-[12px] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-gray-100 p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-[#0D6B45] flex items-center gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-[#344e41] flex items-center gap-2">
           <MapPinned className="w-4 h-4" />
           Field Geometry / GIS
         </h2>

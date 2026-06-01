@@ -31,7 +31,7 @@ export default function Recommendations({ fertilizer, irrigation, soil }) {
       transition={{ delay: 0.2 }}
       className="rounded-[12px] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-gray-100 p-5"
     >
-      <h2 className="text-sm font-bold uppercase tracking-wide text-[#0D6B45] mb-4">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-[#344e41] mb-4">
         AI Recommendations
       </h2>
       <div className="grid md:grid-cols-3 gap-4">
@@ -41,7 +41,7 @@ export default function Recommendations({ fertilizer, irrigation, soil }) {
             className={`rounded-[12px] bg-[#fafcfb] border border-gray-100 shadow-sm p-4 ${accent}`}
           >
             <div className="flex items-center gap-2 mb-2">
-              <Icon className="w-5 h-5 text-[#0D6B45]" />
+              <Icon className="w-5 h-5 text-[#344e41]" />
               <h3 className="font-bold text-gray-900 text-sm">{title}</h3>
             </div>
             <p className="text-xs text-gray-700 leading-relaxed">{body || "—"}</p>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import SmartAdvisorySidebar from "../components/smartadvisory/smartadvisorysidebar/SmartAdvisorySidebar";
 import SmartAdvisoryMap from "../components/smartadvisory/SmartAdvisoryMap";
@@ -70,6 +70,7 @@ const EmptyState = ({ onAddField }) => (
 const SmartAdvisory = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useSelector((s) => s.auth?.user);
   const fields = useSelector((s) => s.farmfield?.fields || []);
   const aois = useSelector((s) => s.weather?.aois || []);
@@ -139,6 +140,17 @@ const SmartAdvisory = () => {
     field: selectedField,
     featureKey: "smartAdvisorySystem",
   });
+
+  useEffect(() => {
+    if (location.hash !== "#activities-to-do") return;
+    const scrollToActivities = () => {
+      document
+        .getElementById("activities-to-do")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    const timer = window.setTimeout(scrollToActivities, 300);
+    return () => window.clearTimeout(timer);
+  }, [location.hash, selectedField?._id]);
 
   /* ---------- PRICING ---------- */
   const handleSubscribe = useCallback(() => {

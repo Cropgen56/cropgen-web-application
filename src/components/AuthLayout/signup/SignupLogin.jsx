@@ -280,11 +280,9 @@ const SignupLogin = () => {
   useEffect(() => {
     if (!isSignupCountry && !isSignupAccount && !isLogin) return;
     let active = true;
-    getCountries()
-      .then((data) => {
-        if (active) setCountries(Array.isArray(data) ? data : []);
-      })
-      .catch(() => message.error("Unable to load countries."));
+    getCountries().then((data) => {
+      if (active) setCountries(Array.isArray(data) ? data : []);
+    });
     return () => {
       active = false;
     };

@@ -1,9 +1,12 @@
 import axios from "axios";
+import { attachAuthResponseInterceptor } from "./setupAuthInterceptor.js";
 
 let store;
+let onUnauthorized = null;
 
-export const attachSmartAdvisoryStore = (reduxStore) => {
+export const attachSmartAdvisoryStore = (reduxStore, unauthorizedHandler) => {
   store = reduxStore;
+  onUnauthorized = unauthorizedHandler ?? null;
 };
 
 const smartAdvisoryApi = axios.create({
@@ -13,12 +16,19 @@ const smartAdvisoryApi = axios.create({
 });
 
 smartAdvisoryApi.interceptors.request.use((config) => {
+  config.headers["X-Client-App"] = "cropgen_web";
   const token = store?.getState()?.auth?.token;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+attachAuthResponseInterceptor(
+  smartAdvisoryApi,
+  () => store,
+  () => onUnauthorized?.(),
+);
 
 export const updateAdvisoryActivityProgressAPI = async ({
   advisoryId,

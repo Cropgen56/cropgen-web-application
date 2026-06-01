@@ -15,6 +15,10 @@ import PlantGrowthSkeleton from "../Skeleton/PlantGrowthSkeleton.jsx";
 import PremiumContentWrapper from "../subscription/PremiumContentWrapper.jsx";
 import FeatureGuard from "../subscription/FeatureGuard";
 import { useSubscriptionGuard } from "../subscription/hooks/useSubscriptionGuard";
+import {
+  formatDaysUntilSowingLabel,
+  isBarrenLandField,
+} from "../../utility/satelliteDateRange";
 
 const GRASS_COLOR_MAIN = "#86D72F";
 
@@ -157,9 +161,16 @@ const PlantGrowthActivity = memo(
     const sowingDateStr =
       field?.sowingDate || advisoryState?.farmFieldId?.sowingDate || null;
 
+    const isBarren =
+      isBarrenLandField(field) || plantActivity?.farmStatus === "barren";
+
     const targetDateStr = advisoryState?.targetDate || new Date().toISOString();
 
     const { daysSinceSowing, currentWeek } = useMemo(() => {
+      if (isBarren) {
+        return { daysSinceSowing: 0, currentWeek: 1 };
+      }
+
       const sowing = sowingDateStr ? new Date(sowingDateStr) : null;
       const target = targetDateStr ? new Date(targetDateStr) : new Date();
 
@@ -176,7 +187,7 @@ const PlantGrowthActivity = memo(
       );
 
       return { daysSinceSowing: diffDays, currentWeek: weeks };
-    }, [sowingDateStr, targetDateStr, cropName]);
+    }, [isBarren, sowingDateStr, targetDateStr, cropName]);
 
     const [interval, setInterval] = useState("Weeks");
 
@@ -185,10 +196,46 @@ const PlantGrowthActivity = memo(
       [interval, cropName],
     );
 
-    const referenceLabel =
-      interval === "Days" ? `Day ${daysSinceSowing}` : `Week ${currentWeek}`;
+    const referenceLabel = isBarren
+      ? formatDaysUntilSowingLabel(plantActivity?.daysUntilSowing)
+      : interval === "Days"
+        ? `Day ${daysSinceSowing}`
+        : `Week ${currentWeek}`;
 
     const [tooltipPos, setTooltipPos] = useState(null);
+
+    if (isBarren) {
+      const plannedSowing =
+        plantActivity?.expectedSowingDate ||
+        (sowingDateStr
+          ? new Date(sowingDateStr).toLocaleDateString("en-US", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+          : null);
+
+      return (
+        <div className="w-full flex justify-center mt-4">
+          <div className="relative w-full max-w-4xl rounded-2xl shadow-lg bg-white p-6 text-center">
+            <h3 className="text-lg font-bold text-ember-sidebar mb-2">
+              Pre-sowing (barren land)
+            </h3>
+            <p className="text-gray-700 text-sm mb-1">
+              {plantActivity?.stageName || "Land preparation phase"}
+            </p>
+            {plannedSowing && (
+              <p className="text-gray-600 text-sm">
+                Planned sowing: <strong>{plannedSowing}</strong>
+              </p>
+            )}
+            <p className="text-gray-500 text-xs mt-3">
+              {referenceLabel}. Satellite maps use the last 2 weeks through today.
+            </p>
+          </div>
+        </div>
+      );
+    }
 
     if (!sowingDateStr) {
       return (

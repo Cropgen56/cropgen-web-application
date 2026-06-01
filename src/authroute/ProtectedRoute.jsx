@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Navigate, useLocation } from "react-router-dom";
 import { refreshAccessToken, logout } from "../redux/slices/authSlice";
+import { store } from "../redux/store";
 import { isTokenValid } from "../utility/token";
 import LogoFlipLoader from "../components/comman/loading/LogoFlipLoader";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,17 +20,15 @@ const ProtectedRoute = ({ children }) => {
     const ensureAuth = async () => {
       const token = auth?.token;
 
-      // 1) If token is already valid, no need to refresh
       if (isTokenValid(token)) {
         if (mounted) setChecking(false);
         return;
       }
 
-      // 2) Token missing OR invalid/expired → try silent refresh via refresh token (cookie)
       try {
         await dispatch(refreshAccessToken()).unwrap();
-      } catch (err) {
-        if (mounted) {
+      } catch {
+        if (mounted && !isTokenValid(store.getState().auth?.token)) {
           dispatch(logout());
         }
       } finally {
@@ -44,7 +43,6 @@ const ProtectedRoute = ({ children }) => {
     };
   }, [auth?.token, dispatch]);
 
-  // Show loader only while initial auth check is happening
   if (checking) {
     return (
       <div className="flex justify-center items-center h-screen w-full bg-[#344e41] realtive ">
@@ -67,15 +65,16 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // After checking: recompute authenticated state using token validity
+  const token = auth?.token;
   const isAuthenticated =
-    !!auth?.token && isTokenValid(auth.token) && auth.isAuthenticated;
+    !!token && isTokenValid(token) && auth.isAuthenticated;
 
   if (!isAuthenticated) {
-    return <Navigate to={AUTH_ROUTES.login} replace state={{ from: location }} />;
+    return (
+      <Navigate to={AUTH_ROUTES.login} replace state={{ from: location }} />
+    );
   }
 
-  // Auth OK -> render protected content
   return children;
 };
 

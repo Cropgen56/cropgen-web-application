@@ -12,12 +12,12 @@ export default function AIInsights({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.16 }}
-      className="rounded-[12px] border-2 border-[#0D6B45]/20 bg-gradient-to-br from-[#f0faf4] to-white shadow-[0_8px_32px_rgba(13,107,69,0.12)] p-6"
+      className="rounded-[12px] border-2 border-[#344e41]/20 bg-gradient-to-br from-ember-card to-white shadow-[0_8px_32px_rgba(52,78,65,0.12)] p-6"
     >
       <div className="flex items-center gap-2 mb-4">
-        <BrainCircuit className="w-6 h-6 text-[#0D6B45]" />
-        <h2 className="text-lg font-bold text-[#0D6B45]">AI Generated Insights</h2>
-        <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-white bg-[#0D6B45] px-2 py-1 rounded-md">
+        <BrainCircuit className="w-6 h-6 text-[#344e41]" />
+        <h2 className="text-lg font-bold text-[#344e41]">AI Generated Insights</h2>
+        <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-white bg-[#344e41] px-2 py-1 rounded-md">
           Model assisted
         </span>
       </div>

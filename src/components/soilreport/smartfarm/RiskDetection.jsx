@@ -39,7 +39,7 @@ export default function RiskDetection({ risks }) {
       transition={{ delay: 0.18 }}
       className="rounded-[12px] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-gray-100 p-5"
     >
-      <h2 className="text-sm font-bold uppercase tracking-wide text-[#0D6B45] mb-4">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-[#344e41] mb-4">
         Risk Detection
       </h2>
       <div className="grid sm:grid-cols-2 gap-3">

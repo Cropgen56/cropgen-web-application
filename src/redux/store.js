@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import weatherSlice from "./slices/weatherSlice";
 import authSlice, { authInitialState, decodeToken } from "./slices/authSlice";
+import { isTokenValid } from "../utility/token";
 import farmSlice from "./slices/farmSlice";
 import satelliteSlice from "./slices/satelliteSlice";
 import operationSlice from "./slices/operationSlice";
@@ -29,18 +30,29 @@ const authTokenPersistMiddleware = (storeApi) => (next) => (action) => {
   return result;
 };
 
-const persistedToken =
+const rawPersistedToken =
   typeof window !== "undefined" ? localStorage.getItem(AUTH_TOKEN_KEY) : null;
+const persistedToken =
+  rawPersistedToken && isTokenValid(rawPersistedToken)
+    ? rawPersistedToken
+    : null;
 
-const preloadedState =
-  persistedToken != null && persistedToken !== ""
-    ? {
-        auth: {
-          ...authInitialState,
-          token: persistedToken,
-        },
-      }
-    : undefined;
+if (typeof window !== "undefined" && rawPersistedToken && !persistedToken) {
+  try {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+const preloadedState = persistedToken
+  ? {
+      auth: {
+        ...authInitialState,
+        token: persistedToken,
+      },
+    }
+  : undefined;
 
 // Configure the Redux store
 export const store = configureStore({

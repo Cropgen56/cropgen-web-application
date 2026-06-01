@@ -16,7 +16,7 @@ export default function FarmerDetails({ name, email, phone }) {
       transition={{ delay: 0.05 }}
       className="rounded-[12px] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] border border-gray-100 p-5"
     >
-      <h2 className="text-sm font-bold uppercase tracking-wide text-[#0D6B45] mb-4">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-[#344e41] mb-4">
         Farmer Details
       </h2>
       <div className="grid sm:grid-cols-3 gap-4">
