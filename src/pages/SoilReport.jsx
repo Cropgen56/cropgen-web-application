@@ -4,16 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText } from "lucide-react";
-
 import SoilReportSidebar from "../components/soilreport/soilreportsidebar/SoilReportSidebar";
 import SmartFarmReport from "../components/soilreport/smartfarm/SmartFarmReport";
 import { getFarmFields } from "../redux/slices/farmSlice";
 import SimpleLoader from "../components/comman/loading/SimpleLoader";
-
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 import FieldDropdown from "../components/comman/FieldDropdown";
+import { generateSoilReportAPI } from "../api/soilReportApi";
 
 const SoilReport = () => {
   const dispatch = useDispatch();
@@ -29,6 +28,7 @@ const SoilReport = () => {
   const [selectedOperation, setSelectedOperation] = useState(null);
   const [reportData, setReportData] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
@@ -93,15 +93,80 @@ const SoilReport = () => {
     setPricingFieldData(null);
   }, []);
 
-  const handleGenerateReport = useCallback((field) => {
-    if (!field) return;
-    setSelectedField(field);
-    setSelectedOperation(field);
-    setReportData({
-      field,
-      generatedAt: new Date().toISOString(),
-    });
-  }, []);
+  const handleGenerateReport = useCallback(
+    async (field) => {
+      if (!field) return;
+
+      const polygon = Array.isArray(field?.field)
+        ? field.field.map((p) => [Number(p?.lng), Number(p?.lat)])
+        : [];
+      if (polygon.length < 3) {
+        message.error("Field boundary is invalid. Please update field polygon.");
+        return;
+      }
+      const first = polygon[0];
+      const last = polygon[polygon.length - 1];
+      if (first[0] !== last[0] || first[1] !== last[1]) {
+        polygon.push([...first]);
+      }
+
+      const endDate = new Date().toISOString().slice(0, 10);
+      const sowingDate =
+        field?.sowingDate && !Number.isNaN(new Date(field.sowingDate).getTime())
+          ? new Date(field.sowingDate)
+          : null;
+      const fallbackStart = new Date();
+      fallbackStart.setMonth(fallbackStart.getMonth() - 18);
+      const startDate = (sowingDate || fallbackStart).toISOString().slice(0, 10);
+
+      const language =
+        user?.language || user?.preferredLanguage || user?.userProfile?.language || "en";
+      const organizationCode = user?.organizationCode || "CROPGEN";
+
+      setSelectedField(field);
+      setSelectedOperation(field);
+      setIsGeneratingReport(true);
+      try {
+        const soilApi = await generateSoilReportAPI({
+          geometry: {
+            type: "Polygon",
+            coordinates: [polygon],
+          },
+          startDate,
+          endDate,
+          currentCrop: field?.cropName || "default",
+          previousCrop: field?.previousCrop || "default",
+          organizationCode,
+          language,
+        });
+
+        if (!soilApi?.success || !soilApi?.data) {
+          throw new Error(
+            soilApi?.message || "Soil report API returned empty response.",
+          );
+        }
+
+        setReportData({
+          field,
+          generatedAt: new Date().toISOString(),
+          soilReport: soilApi.data,
+        });
+        message.success("Soil report generated successfully.");
+      } catch (err) {
+        console.error("Soil report API failed:", err);
+        const apiMsg =
+          err?.code === "ECONNABORTED"
+            ? "Soil report is taking longer than expected. Please retry in a moment."
+            : err?.response?.data?.message ||
+              "Could not generate soil report. Please retry.";
+        setReportData(null);
+        message.error(apiMsg);
+      } finally {
+        setIsGeneratingReport(false);
+      }
+    },
+    [user],
+  );
 
   const downloadPDF = useCallback(async () => {
     const hasSoilReportPermission =
@@ -158,7 +223,7 @@ const SoilReport = () => {
         heightLeft -= pdfHeight;
       }
 
-      pdf.save("cropgen-smart-farm-intelligence.pdf");
+      pdf.save("cropgen-soil-report.pdf");
     } catch (err) {
       console.error(err);
       message.error("Could not generate PDF. Please try again.");
@@ -227,7 +292,7 @@ const SoilReport = () => {
         )}
       </AnimatePresence>
 
-      <div className="h-screen w-full bg-[#344e41] flex overflow-hidden">
+      <div className="h-screen w-full bg-[#f3f6f4] flex overflow-hidden">
         <div className="hidden lg:flex w-full h-full">
           <SoilReportSidebar
             selectedOperation={selectedOperation}
@@ -238,7 +303,7 @@ const SoilReport = () => {
             reportReady={!!reportData}
           />
 
-          <div className="flex-1 h-screen overflow-y-auto bg-[#344e41]">
+          <div className="flex-1 h-screen overflow-y-auto bg-[#f3f6f4]">
             <PremiumPageWrapper
               isLocked={!hasSubscription}
               onSubscribe={handleSubscribe}
@@ -247,23 +312,24 @@ const SoilReport = () => {
               <SmartFarmReport
                 reportData={reportData}
                 selectedField={selectedField}
-                user={user}
                 reportRef={reportRef}
                 onDownloadPdf={downloadPDF}
                 isDownloading={isDownloading}
+                onGenerateReport={handleGenerateReport}
+                isGeneratingReport={isGeneratingReport}
               />
             </PremiumPageWrapper>
           </div>
         </div>
 
         <div className="lg:hidden flex-1 flex flex-col h-screen overflow-hidden">
-          <div className="p-3 border-b border-[#5a7c6b] bg-[#344e41] flex flex-wrap gap-2 items-center shadow-sm">
+          <div className="p-3 border-b border-gray-200 bg-white flex flex-wrap gap-2 items-center shadow-sm">
             <FieldDropdown
               fields={fields}
               selectedField={selectedField}
               setSelectedField={handleFieldChange}
             />
-            {selectedField && (
+            {selectedField ? (
               <button
                 type="button"
                 onClick={() => handleGenerateReport(selectedField)}
@@ -272,9 +338,9 @@ const SoilReport = () => {
                 <FileText className="w-4 h-4" />
                 Generate Report
               </button>
-            )}
+            ) : null}
           </div>
-          <div className="flex-1 overflow-y-auto bg-[#344e41]">
+          <div className="flex-1 overflow-y-auto bg-[#f3f6f4]">
             <PremiumPageWrapper
               isLocked={!hasSubscription}
               onSubscribe={handleSubscribe}
@@ -283,10 +349,11 @@ const SoilReport = () => {
               <SmartFarmReport
                 reportData={reportData}
                 selectedField={selectedField}
-                user={user}
                 reportRef={reportRef}
                 onDownloadPdf={downloadPDF}
                 isDownloading={isDownloading}
+                onGenerateReport={handleGenerateReport}
+                isGeneratingReport={isGeneratingReport}
               />
             </PremiumPageWrapper>
           </div>
