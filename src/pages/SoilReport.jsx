@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText } from "lucide-react";
+
 import SoilReportSidebar from "../components/soilreport/soilreportsidebar/SoilReportSidebar";
 import SmartFarmReport from "../components/soilreport/smartfarm/SmartFarmReport";
 import { getFarmFields } from "../redux/slices/farmSlice";
@@ -95,37 +95,54 @@ const SoilReport = () => {
 
   const handleGenerateReport = useCallback(
     async (field) => {
-      if (!field) return;
+      if (!field) {
+        message.warning("Please select a field first.");
+        return;
+      }
 
       const polygon = Array.isArray(field?.field)
         ? field.field.map((p) => [Number(p?.lng), Number(p?.lat)])
         : [];
+
       if (polygon.length < 3) {
         message.error("Field boundary is invalid. Please update field polygon.");
         return;
       }
+
       const first = polygon[0];
       const last = polygon[polygon.length - 1];
+
       if (first[0] !== last[0] || first[1] !== last[1]) {
         polygon.push([...first]);
       }
 
       const endDate = new Date().toISOString().slice(0, 10);
+
       const sowingDate =
         field?.sowingDate && !Number.isNaN(new Date(field.sowingDate).getTime())
           ? new Date(field.sowingDate)
           : null;
+
       const fallbackStart = new Date();
       fallbackStart.setMonth(fallbackStart.getMonth() - 18);
-      const startDate = (sowingDate || fallbackStart).toISOString().slice(0, 10);
+
+      const startDate = (sowingDate || fallbackStart)
+        .toISOString()
+        .slice(0, 10);
 
       const language =
-        user?.language || user?.preferredLanguage || user?.userProfile?.language || "en";
-      const organizationCode = user?.organizationCode || "CROPGEN";
+        user?.language ||
+        user?.preferredLanguage ||
+        user?.userProfile?.language ||
+        "en";
+
+      const organizationCode = user?.organizationCode || "BIODROPS";
 
       setSelectedField(field);
       setSelectedOperation(field);
+      setReportData(null);
       setIsGeneratingReport(true);
+
       try {
         const soilApi = await generateSoilReportAPI({
           geometry: {
@@ -142,7 +159,7 @@ const SoilReport = () => {
 
         if (!soilApi?.success || !soilApi?.data) {
           throw new Error(
-            soilApi?.message || "Soil report API returned empty response.",
+            soilApi?.message || "Soil report API returned empty response."
           );
         }
 
@@ -151,21 +168,25 @@ const SoilReport = () => {
           generatedAt: new Date().toISOString(),
           soilReport: soilApi.data,
         });
+
         message.success("Soil report generated successfully.");
       } catch (err) {
         console.error("Soil report API failed:", err);
+
         const apiMsg =
           err?.code === "ECONNABORTED"
             ? "Soil report is taking longer than expected. Please retry in a moment."
             : err?.response?.data?.message ||
+              err?.message ||
               "Could not generate soil report. Please retry.";
+
         setReportData(null);
         message.error(apiMsg);
       } finally {
         setIsGeneratingReport(false);
       }
     },
-    [user],
+    [user]
   );
 
   const downloadPDF = useCallback(async () => {
@@ -179,13 +200,16 @@ const SoilReport = () => {
       return;
     }
 
-    const el = reportRef.current;
-    if (!el) {
-      message.error("Report is not ready to export yet.");
+    const reportEl = reportRef.current;
+
+    if (!reportEl) {
+      message.error("Please generate the report first.");
       return;
     }
 
     setIsDownloading(true);
+
+    let cloneWrapper = null;
 
     try {
       const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
@@ -193,42 +217,102 @@ const SoilReport = () => {
         import("jspdf"),
       ]);
 
-      el.classList.add("pdf-style");
-      await new Promise((res) => setTimeout(res, 200));
+      cloneWrapper = document.createElement("div");
+      cloneWrapper.style.position = "absolute";
+      cloneWrapper.style.left = "-10000px";
+      cloneWrapper.style.top = "0";
+      cloneWrapper.style.width = "794px";
+      cloneWrapper.style.background = "#ffffff";
+      cloneWrapper.style.zIndex = "-1";
 
-      const canvas = await html2canvas(el, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
+      const clonedReport = reportEl.cloneNode(true);
+
+      clonedReport.style.width = "794px";
+      clonedReport.style.maxWidth = "794px";
+      clonedReport.style.background = "#ffffff";
+      clonedReport.style.padding = "16px";
+      clonedReport.style.margin = "0";
+      clonedReport.style.boxShadow = "none";
+
+      clonedReport.querySelectorAll(".pdf-hide").forEach((el) => {
+        el.remove();
       });
 
-      const imgData = canvas.toDataURL("image/png", 1.0);
+      cloneWrapper.appendChild(clonedReport);
+      document.body.appendChild(cloneWrapper);
+
+      await document.fonts?.ready;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      let heightLeft = imgHeight;
-      let position = 0;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
+      const margin = 8;
+      const usableWidth = pageWidth - margin * 2;
 
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+      let y = margin;
+      let hasAddedContent = false;
+
+      const addElementToPdf = async (element) => {
+        if (!element) return;
+
+        const rect = element.getBoundingClientRect();
+
+        if (!rect.width || !rect.height) return;
+
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          scrollX: 0,
+          scrollY: 0,
+          width: Math.ceil(rect.width),
+          height: Math.ceil(rect.height),
+          windowWidth: 794,
+          windowHeight: Math.ceil(rect.height),
+        });
+
+        if (!canvas.width || !canvas.height) return;
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.95);
+        const imgHeight = (canvas.height * usableWidth) / canvas.width;
+
+        if (!Number.isFinite(imgHeight) || imgHeight <= 0) return;
+
+        if (hasAddedContent && y + imgHeight > pageHeight - margin) {
+          pdf.addPage();
+          y = margin;
+        }
+
+        pdf.addImage(imgData, "JPEG", margin, y, usableWidth, imgHeight);
+
+        y += imgHeight + 4;
+        hasAddedContent = true;
+      };
+
+      const header = clonedReport.firstElementChild;
+      const sections = Array.from(clonedReport.querySelectorAll(".soil-section"));
+
+      await addElementToPdf(header);
+
+      for (const section of sections) {
+        await addElementToPdf(section);
       }
 
-      pdf.save("cropgen-soil-report.pdf");
+      if (!hasAddedContent) {
+        throw new Error("Report content could not be captured.");
+      }
+
+      pdf.save("soil-health-report.pdf");
     } catch (err) {
-      console.error(err);
-      message.error("Could not generate PDF. Please try again.");
+      console.error("PDF generation failed:", err);
+      message.error(err?.message || "Could not generate PDF.");
     } finally {
-      reportRef.current?.classList.remove("pdf-style");
+      if (cloneWrapper) cloneWrapper.remove();
       setIsDownloading(false);
     }
   }, [selectedField, handleSubscribe]);
@@ -237,10 +321,12 @@ const SoilReport = () => {
     () =>
       Boolean(
         selectedField?.subscription?.hasActiveSubscription &&
-          selectedField?.subscription?.plan?.features?.soilReportGeneration,
+          selectedField?.subscription?.plan?.features?.soilReportGeneration
       ),
-    [selectedField],
+    [selectedField]
   );
+
+  const reportReady = Boolean(reportData?.soilReport);
 
   if (fields.length === 0) {
     return (
@@ -250,9 +336,11 @@ const SoilReport = () => {
           variant="brandMark"
           className="mb-8 h-44 w-44 sm:h-52 sm:w-52"
         />
+
         <h2 className="text-2xl font-semibold text-white">
           Add Farm to See the Soil Report
         </h2>
+
         <button
           type="button"
           onClick={() => navigate("/addfield")}
@@ -297,10 +385,11 @@ const SoilReport = () => {
           <SoilReportSidebar
             selectedOperation={selectedOperation}
             setSelectedOperation={setSelectedOperation}
-            setSelectedField={setSelectedField}
+            setSelectedField={handleFieldChange}
             onGenerateReport={handleGenerateReport}
             downloadPDF={downloadPDF}
-            reportReady={!!reportData}
+            reportReady={reportReady}
+            isGeneratingReport={isGeneratingReport}
           />
 
           <div className="flex-1 h-screen overflow-y-auto bg-[#f3f6f4]">
@@ -312,6 +401,7 @@ const SoilReport = () => {
               <SmartFarmReport
                 reportData={reportData}
                 selectedField={selectedField}
+                user={user}
                 reportRef={reportRef}
                 onDownloadPdf={downloadPDF}
                 isDownloading={isDownloading}
@@ -329,17 +419,8 @@ const SoilReport = () => {
               selectedField={selectedField}
               setSelectedField={handleFieldChange}
             />
-            {selectedField ? (
-              <button
-                type="button"
-                onClick={() => handleGenerateReport(selectedField)}
-                className="inline-flex items-center gap-2 rounded-[12px] px-4 py-2 text-sm font-semibold text-white shadow-md bg-ember-primary hover:bg-ember-primary-hover"
-              >
-                <FileText className="w-4 h-4" />
-                Generate Report
-              </button>
-            ) : null}
           </div>
+
           <div className="flex-1 overflow-y-auto bg-[#f3f6f4]">
             <PremiumPageWrapper
               isLocked={!hasSubscription}
@@ -349,6 +430,7 @@ const SoilReport = () => {
               <SmartFarmReport
                 reportData={reportData}
                 selectedField={selectedField}
+                user={user}
                 reportRef={reportRef}
                 onDownloadPdf={downloadPDF}
                 isDownloading={isDownloading}

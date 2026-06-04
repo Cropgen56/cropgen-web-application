@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Operation2 } from "../../../assets/Icons";
 import { CiSearch } from "react-icons/ci";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, Loader2 } from "lucide-react";
 import { useSelector } from "react-redux";
+import { message } from "antd";
 import PolygonPreview from "../../polygon/PolygonPreview";
 
 const SIDEBAR_BG = "#344e41";
@@ -27,6 +28,7 @@ const FieldInfo = ({
     onClick={onClick}
   >
     <PolygonPreview coordinates={coordinates} isSelected={isSelected} />
+
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between gap-1 mb-0.5">
         <h4
@@ -37,6 +39,7 @@ const FieldInfo = ({
         >
           {title}
         </h4>
+
         <span
           className={`shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
             isSubscribed
@@ -47,7 +50,9 @@ const FieldInfo = ({
           {isSubscribed ? "Active" : "Off"}
         </span>
       </div>
+
       <p className="text-[11px] text-white/60 truncate">{area}</p>
+
       <div className="flex gap-2 text-[10px] text-white/50 mt-0.5">
         <span>{lat}°N</span>
         <span>{lon}°E</span>
@@ -62,7 +67,8 @@ const SoilReportSidebar = ({
   setSelectedField,
   onGenerateReport,
   downloadPDF,
-  reportReady,
+  reportReady = false,
+  isGeneratingReport = false,
 }) => {
   const [selectedFieldId, setSelectedFieldId] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -79,16 +85,26 @@ const SoilReportSidebar = ({
   if (!isSidebarVisible) return null;
 
   const sortedFields = [...fields].reverse();
+
   const filteredFields = sortedFields.filter((f) =>
-    (f.fieldName || "").toLowerCase().includes(searchQuery.toLowerCase()),
+    (f.fieldName || f.farmName || "")
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
   );
 
   const calculateCentroid = (polygon) => {
-    if (!polygon || polygon.length === 0) return { lat: "0.000", lon: "0.000" };
+    if (!polygon || polygon.length === 0) {
+      return { lat: "0.000", lon: "0.000" };
+    }
+
     const total = polygon.reduce(
-      (acc, point) => ({ lat: acc.lat + point.lat, lng: acc.lng + point.lng }),
-      { lat: 0, lng: 0 },
+      (acc, point) => ({
+        lat: acc.lat + Number(point?.lat || 0),
+        lng: acc.lng + Number(point?.lng || 0),
+      }),
+      { lat: 0, lng: 0 }
     );
+
     return {
       lat: (total.lat / polygon.length).toFixed(3),
       lon: (total.lng / polygon.length).toFixed(3),
@@ -101,6 +117,38 @@ const SoilReportSidebar = ({
   };
 
   const selectedFieldObj = fields.find((f) => f._id === selectedFieldId);
+
+  const handleSelectField = (field) => {
+    setSelectedFieldId(field._id);
+    setSelectedOperation(field);
+
+    if (typeof setSelectedField === "function") {
+      setSelectedField(field);
+    }
+  };
+
+  const handleGenerateClick = () => {
+    if (!selectedFieldObj) {
+      message.warning("Please select a field first.");
+      return;
+    }
+
+    if (typeof onGenerateReport !== "function") {
+      message.error("Generate report function is not connected.");
+      return;
+    }
+
+    onGenerateReport(selectedFieldObj);
+  };
+
+  const handleDownloadClick = () => {
+    if (typeof downloadPDF !== "function") {
+      message.error("Download function is not connected.");
+      return;
+    }
+
+    downloadPDF();
+  };
 
   return (
     <div
@@ -118,11 +166,15 @@ const SoilReportSidebar = ({
             <div className="p-1.5 rounded-lg bg-white/10 shrink-0">
               <Operation2 />
             </div>
+
             <div className="min-w-0">
               <p className="text-base font-bold m-0 truncate">Soil Report</p>
-              <p className="text-[10px] text-white/55">Smart farm intelligence</p>
+              <p className="text-[10px] text-white/55">
+                Smart farm intelligence
+              </p>
             </div>
           </div>
+
           <button
             type="button"
             aria-label="Hide sidebar"
@@ -139,8 +191,10 @@ const SoilReportSidebar = ({
             </svg>
           </button>
         </div>
+
         <div className="relative">
           <CiSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/45 text-base pointer-events-none" />
+
           <input
             type="search"
             value={searchQuery}
@@ -168,18 +222,14 @@ const SoilReportSidebar = ({
           return (
             <FieldInfo
               key={field._id}
-              title={field.fieldName || "Field"}
+              title={field.fieldName || field.farmName || "Field"}
               area={formatArea(field.acre)}
               lat={lat}
               lon={lon}
               coordinates={field.field}
               isSelected={isSelected}
               isSubscribed={isSubscribed}
-              onClick={() => {
-                setSelectedFieldId(field._id);
-                setSelectedOperation(field);
-                setSelectedField(field);
-              }}
+              onClick={() => handleSelectField(field)}
             />
           );
         })}
@@ -191,23 +241,35 @@ const SoilReportSidebar = ({
             <p className="text-[10px] uppercase tracking-wider text-white/60 font-semibold">
               Selected field
             </p>
+
             <p className="text-sm font-bold text-white truncate">
-              {selectedFieldObj.fieldName || selectedFieldObj.farmName}
+              {selectedFieldObj.fieldName || selectedFieldObj.farmName || "Field"}
             </p>
           </div>
+
           {!reportReady ? (
             <button
               type="button"
-              onClick={() => onGenerateReport(selectedFieldObj)}
-              className="w-full flex items-center justify-center gap-2 font-semibold text-[#344e41] rounded-xl px-3 py-3 bg-white hover:bg-gray-100 transition-colors shadow-lg"
+              onClick={handleGenerateClick}
+              disabled={isGeneratingReport}
+              className="w-full flex items-center justify-center gap-2 font-semibold text-[#344e41] rounded-xl px-3 py-3 bg-white hover:bg-gray-100 transition-colors shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <FileText size={18} />
-              Generate Report
+              {isGeneratingReport ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <FileText size={18} />
+                  Generate Report
+                </>
+              )}
             </button>
           ) : (
             <button
               type="button"
-              onClick={downloadPDF}
+              onClick={handleDownloadClick}
               className="w-full flex items-center justify-center gap-2 font-semibold text-white rounded-xl px-3 py-3 border-2 border-white/40 hover:bg-white/10 transition-colors"
             >
               <Download size={18} />

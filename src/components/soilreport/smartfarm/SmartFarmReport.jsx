@@ -1,10 +1,14 @@
 import React from "react";
 import SoilHealthReportView from "../SoilHealthReportView";
-import { SmartFarmReportEmptyState, ReportBuildProgress } from "./ReportWorkspace";
+import {
+  SmartFarmReportEmptyState,
+  ReportBuildProgress,
+} from "./ReportWorkspace";
 
 export default function SmartFarmReport({
   reportData,
   selectedField,
+  user,
   reportRef,
   onDownloadPdf,
   isDownloading,
@@ -31,6 +35,7 @@ export default function SmartFarmReport({
 
   if (isGeneratingReport) {
     const fieldLabel = field.fieldName || field.farmName || "Selected field";
+
     return (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <ReportBuildProgress
@@ -68,9 +73,11 @@ export default function SmartFarmReport({
   return (
     <SoilHealthReportView
       data={soilReport}
+      field={field}
+      user={user}
+      generatedAt={reportData?.generatedAt}
       reportRef={reportRef}
       onDownloadPdf={onDownloadPdf}
-      onPrint={() => window.print()}
       isDownloading={isDownloading}
     />
   );
