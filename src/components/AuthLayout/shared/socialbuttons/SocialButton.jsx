@@ -10,6 +10,7 @@ import {
 import { persistRefreshToken } from "../../../../utility/authSession";
 import { FcGoogle } from "react-icons/fc";
 import { AUTH_EMAIL_CLIENT_BRAND } from "../../../../config/brand";
+import { API_BASE_URL } from "../../../../config/envUrls";
 
 const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 function SocialButtons() {
@@ -24,7 +25,7 @@ function SocialButtons() {
       const { credential } = response;
 
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/auth/google`,
+        `${API_BASE_URL}/api/auth/google`,
         {
           token: credential,
           clientBrand: AUTH_EMAIL_CLIENT_BRAND,

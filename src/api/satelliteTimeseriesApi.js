@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getReactAppUrl } from "../config/envUrls";
 
 const DEFAULT_CACHE_TTL_MS = 4 * 24 * 60 * 60 * 1000; // 4 days
 const DEFAULT_TIMEOUT_MS = 20000;
@@ -8,7 +9,7 @@ const SATELLITE_API_KEY =
   process.env.REACT_APP_SATELLITE_API || "CROPGEN_230498adklfjadsljf";
 
 function getSatelliteApiBase() {
-  const raw = process.env.REACT_APP_API_URL_SATELLITE?.trim();
+  const raw = getReactAppUrl("REACT_APP_API_URL_SATELLITE");
   const prodFallback = "https://server.cropgenapp.com/v4/api";
   const localPython = "http://127.0.0.1:8001/v4/api";
   const browserHost =

@@ -1,7 +1,8 @@
 import api from "./api";
+import { API_BASE_URL } from "../config/envUrls";
 
 function resolveSoilReportUrl() {
-  const apiBase = String(process.env.REACT_APP_API_URL || "").trim();
+  const apiBase = API_BASE_URL;
   const devTargetRaw = String(process.env.REACT_APP_DEV_PROXY_TARGET || "").trim();
   const devTarget = devTargetRaw
     ? devTargetRaw.replace("127.0.0.1", "localhost")

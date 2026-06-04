@@ -1,9 +1,9 @@
 import axios from "axios";
 import api from "./api.js";
 import { AUTH_EMAIL_CLIENT_BRAND } from "../config/brand";
+import { API_BASE_URL } from "../config/envUrls.js";
 
-const AUTH_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:7070/v1";
+const AUTH_BASE_URL = API_BASE_URL;
 const AUTH_CLIENT_APP = "cropgen_web";
 export const CROPGEN_REFRESH_STORAGE_KEY = "cropgen_refresh_jwt";
 const authBrandPayload = (body) => ({

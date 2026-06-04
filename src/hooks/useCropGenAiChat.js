@@ -5,6 +5,7 @@ import {
   AI_ASSISTANT_NAME,
   AUTH_EMAIL_CLIENT_BRAND,
 } from "../config/brand";
+import { getReactAppUrl } from "../config/envUrls";
 
 const nextId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -15,11 +16,9 @@ const SOCKET_PATH =
 const PRODUCTION_AGENT_URL = "https://server.cropgenapp.com";
 
 function resolveAgentUrl() {
-  const fromEnv = (
-    process.env.REACT_APP_CROPGEN_AGENT_URL ||
-    process.env.REACT_APP_AGENT_URL ||
-    ""
-  ).trim();
+  const fromEnv =
+    getReactAppUrl("REACT_APP_CROPGEN_AGENT_URL") ||
+    getReactAppUrl("REACT_APP_AGENT_URL");
   if (fromEnv) return fromEnv.replace(/\/$/, "");
   if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
     return window.location.origin;

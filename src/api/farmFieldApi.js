@@ -1,7 +1,5 @@
 import api from "./api";
 
-const API_URL = process.env.REACT_APP_API_URL;
-
 export const addFieldAPI = async ({
   latlng,
   userId,
@@ -15,9 +13,7 @@ export const addFieldAPI = async ({
   isBarrenLand,
 }) => {
   try {
-    const response = await api.post(
-      `${API_URL}/api/field/add-field/${userId}`,
-      {
+    const response = await api.post(`/api/field/add-field/${userId}`, {
         latlng,
         cropName,
         variety,
@@ -39,7 +35,7 @@ export const addFieldAPI = async ({
 // Get field API
 export const getFieldAPI = async (userId) => {
   try {
-    const response = await api.get(`${API_URL}/api/field/get-field/${userId}`);
+    const response = await api.get(`/api/field/get-field/${userId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching field data:", error);
@@ -51,8 +47,8 @@ export const getFieldAPI = async (userId) => {
 export const updateFieldAPI = async (fieldId, updatedData) => {
   try {
     const response = await api.patch(
-      `${API_URL}/api/field/update-field/${fieldId}`,
-      updatedData
+      `/api/field/update-field/${fieldId}`,
+      updatedData,
     );
     return response.data;
   } catch (error) {
@@ -64,9 +60,7 @@ export const updateFieldAPI = async (fieldId, updatedData) => {
 // Delete field API
 export const deleteFieldAPI = async (fieldId) => {
   try {
-    const response = await api.delete(
-      `${API_URL}/api/field/delete-field/${fieldId}`
-    );
+    const response = await api.delete(`/api/field/delete-field/${fieldId}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting field:", error);

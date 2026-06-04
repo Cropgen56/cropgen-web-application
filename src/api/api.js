@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_BASE_URL } from "../config/envUrls.js";
 import { attachAuthResponseInterceptor } from "./setupAuthInterceptor.js";
 
 let store;
@@ -13,7 +14,7 @@ export const setUnauthorizedHandler = (handler) => {
 };
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || "http://localhost:7070/v1",
+  baseURL: API_BASE_URL,
   withCredentials: true,
   timeout: 30000,
 });
