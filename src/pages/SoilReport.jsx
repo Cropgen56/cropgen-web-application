@@ -189,133 +189,124 @@ const SoilReport = () => {
     [user]
   );
 
-  const downloadPDF = useCallback(async () => {
-    const hasSoilReportPermission =
-      selectedField?.subscription?.hasActiveSubscription &&
-      selectedField?.subscription?.plan?.features?.soilReportGeneration;
+const downloadPDF = useCallback(async () => {
+  const hasSoilReportPermission =
+    selectedField?.subscription?.hasActiveSubscription &&
+    selectedField?.subscription?.plan?.features?.soilReportGeneration;
 
-    if (!hasSoilReportPermission) {
-      message.warning("Please subscribe to download soil reports");
-      handleSubscribe();
-      return;
+  if (!hasSoilReportPermission) {
+    message.warning("Please subscribe to download soil reports");
+    handleSubscribe();
+    return;
+  }
+
+  const reportEl = reportRef.current;
+
+  if (!reportEl) {
+    message.error("Please generate the report first.");
+    return;
+  }
+
+  setIsDownloading(true);
+
+  let cloneWrapper = null;
+
+  try {
+    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+      import("html2canvas"),
+      import("jspdf"),
+    ]);
+
+    cloneWrapper = document.createElement("div");
+    cloneWrapper.style.position = "fixed";
+    cloneWrapper.style.left = "-10000px";
+    cloneWrapper.style.top = "0";
+    cloneWrapper.style.width = "820px";
+    cloneWrapper.style.background = "#ffffff";
+    cloneWrapper.style.zIndex = "-1";
+    cloneWrapper.style.overflow = "visible";
+
+    const clonedReport = reportEl.cloneNode(true);
+
+    clonedReport.style.width = "820px";
+    clonedReport.style.maxWidth = "820px";
+    clonedReport.style.background = "#ffffff";
+    clonedReport.style.margin = "0";
+    clonedReport.style.boxShadow = "none";
+    clonedReport.style.overflow = "visible";
+
+    clonedReport.querySelectorAll(".pdf-hide").forEach((el) => el.remove());
+
+    cloneWrapper.appendChild(clonedReport);
+    document.body.appendChild(cloneWrapper);
+
+    await document.fonts?.ready;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    const margin = 6;
+    const usableWidth = pageWidth - margin * 2;
+    const usableHeight = pageHeight - margin * 2;
+
+    const pages = Array.from(clonedReport.querySelectorAll(".pdf-page"));
+
+    if (!pages.length) {
+      throw new Error("No PDF pages found.");
     }
 
-    const reportEl = reportRef.current;
+    for (let i = 0; i < pages.length; i += 1) {
+      const page = pages[i];
 
-    if (!reportEl) {
-      message.error("Please generate the report first.");
-      return;
-    }
+      page.style.width = "820px";
+      page.style.background = "#ffffff";
+      page.style.boxShadow = "none";
 
-    setIsDownloading(true);
+      const rect = page.getBoundingClientRect();
 
-    let cloneWrapper = null;
-
-    try {
-      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf"),
-      ]);
-
-      cloneWrapper = document.createElement("div");
-      cloneWrapper.style.position = "absolute";
-      cloneWrapper.style.left = "-10000px";
-      cloneWrapper.style.top = "0";
-      cloneWrapper.style.width = "794px";
-      cloneWrapper.style.background = "#ffffff";
-      cloneWrapper.style.zIndex = "-1";
-
-      const clonedReport = reportEl.cloneNode(true);
-
-      clonedReport.style.width = "794px";
-      clonedReport.style.maxWidth = "794px";
-      clonedReport.style.background = "#ffffff";
-      clonedReport.style.padding = "16px";
-      clonedReport.style.margin = "0";
-      clonedReport.style.boxShadow = "none";
-
-      clonedReport.querySelectorAll(".pdf-hide").forEach((el) => {
-        el.remove();
+      const canvas = await html2canvas(page, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 820,
+        windowHeight: Math.ceil(rect.height),
+        width: Math.ceil(rect.width),
+        height: Math.ceil(rect.height),
       });
 
-      cloneWrapper.appendChild(clonedReport);
-      document.body.appendChild(cloneWrapper);
+      if (!canvas.width || !canvas.height) continue;
 
-      await document.fonts?.ready;
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const imgData = canvas.toDataURL("image/jpeg", 0.96);
+      const imgHeight = (canvas.height * usableWidth) / canvas.width;
+      const finalHeight = Math.min(imgHeight, usableHeight);
 
-      const pdf = new jsPDF("p", "mm", "a4");
+      if (i > 0) pdf.addPage();
 
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      const margin = 8;
-      const usableWidth = pageWidth - margin * 2;
-
-      let y = margin;
-      let hasAddedContent = false;
-
-      const addElementToPdf = async (element) => {
-        if (!element) return;
-
-        const rect = element.getBoundingClientRect();
-
-        if (!rect.width || !rect.height) return;
-
-        const canvas = await html2canvas(element, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: "#ffffff",
-          logging: false,
-          scrollX: 0,
-          scrollY: 0,
-          width: Math.ceil(rect.width),
-          height: Math.ceil(rect.height),
-          windowWidth: 794,
-          windowHeight: Math.ceil(rect.height),
-        });
-
-        if (!canvas.width || !canvas.height) return;
-
-        const imgData = canvas.toDataURL("image/jpeg", 0.95);
-        const imgHeight = (canvas.height * usableWidth) / canvas.width;
-
-        if (!Number.isFinite(imgHeight) || imgHeight <= 0) return;
-
-        if (hasAddedContent && y + imgHeight > pageHeight - margin) {
-          pdf.addPage();
-          y = margin;
-        }
-
-        pdf.addImage(imgData, "JPEG", margin, y, usableWidth, imgHeight);
-
-        y += imgHeight + 4;
-        hasAddedContent = true;
-      };
-
-      const header = clonedReport.firstElementChild;
-      const sections = Array.from(clonedReport.querySelectorAll(".soil-section"));
-
-      await addElementToPdf(header);
-
-      for (const section of sections) {
-        await addElementToPdf(section);
-      }
-
-      if (!hasAddedContent) {
-        throw new Error("Report content could not be captured.");
-      }
-
-      pdf.save("soil-health-report.pdf");
-    } catch (err) {
-      console.error("PDF generation failed:", err);
-      message.error(err?.message || "Could not generate PDF.");
-    } finally {
-      if (cloneWrapper) cloneWrapper.remove();
-      setIsDownloading(false);
+      pdf.addImage(
+        imgData,
+        "JPEG",
+        margin,
+        margin,
+        usableWidth,
+        finalHeight
+      );
     }
-  }, [selectedField, handleSubscribe]);
+
+    pdf.save("soil-health-report.pdf");
+  } catch (err) {
+    console.error("PDF generation failed:", err);
+    message.error(err?.message || "Could not generate PDF.");
+  } finally {
+    if (cloneWrapper) cloneWrapper.remove();
+    setIsDownloading(false);
+  }
+}, [selectedField, handleSubscribe]);
 
   const hasSubscription = useMemo(
     () =>

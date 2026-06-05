@@ -1,212 +1,125 @@
 import React from "react";
-import { Download, Printer, Leaf, CheckCircle2 } from "lucide-react";
+import { Download, CheckCircle2 } from "lucide-react";
 import satagroLogo from "../../assets/image/login/logo.svg";
 
-function cleanLabel(value = "") {
-  return String(value)
-    .replace(/([A-Z])/g, " $1")
-    .replace(/_/g, " ")
-    .replace(/^./, (s) => s.toUpperCase());
+const THEME = "#0D6B45";
+const SOFT = "#F3FAF6";
+
+const COMPANY = {
+  name: "LEACROP AGRITECH PRIVATE LIMITED",
+  address:
+    "87/3b/1c, Azad Wadi, Kothrud, Pune, Pune City, Maharashtra, India, 411038",
+};
+
+const DISCLAIMER =
+  "Disclaimer: This report is prepared using satellite data and AI analysis. It is designed to help understand field conditions and provide recommendations. For exact soil nutrient values and scientific verification, laboratory soil testing is recommended.";
+
+const STATIC_FALLBACK = {
+  reportId: "LCA-SOIL-001",
+  farmerName: "Satagro Farmer",
+  villageName: "—",
+  tehsil: "—",
+  district: "—",
+  mobileNumber: "—",
+  latitudeLongitude: "—",
+  currentCrop: "Default",
+  previousCrop: "Default",
+};
+
+const SOIL_ROWS = [
+  ["nitrogen", "N (Nitrogen)", "Kg/ha", "280-560"],
+  ["phosphorus", "P (Phosphorus)", "Kg/ha", "22-56"],
+  ["potassium", "K (Potassium)", "Kg/ha", "150-250"],
+  ["soc", "SOC (Soil Organic Carbon)", "%", "1.0-3.0"],
+  ["soilMoisture", "Soil Moisture", "%", "NA"],
+  ["clayContent", "Clay Content", "%", "NA"],
+  ["calcium", "Ca (Calcium)", "ppm", "500-1000"],
+  ["magnesium", "Mg (Magnesium)", "ppm", "100-300"],
+  ["sulfur", "S (Sulfur)", "ppm", "30-50"],
+  ["boron", "B (Boron)", "ppm", "0.2-0.6"],
+  ["zinc", "Zn (Zinc)", "ppm", "0.5-2.0"],
+  ["copper", "Cu (Copper)", "ppm", "0.5-2.0"],
+  ["iron", "Fe (Iron)", "ppm", "10-50"],
+  ["manganese", "Mn (Manganese)", "ppm", "10-50"],
+  ["ph", "pH", "-", "6.5-7.5"],
+  ["cec", "CEC (Cation Exchange Capacity)", "Meq/100g", "-"],
+];
+
+function formatDate(value) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toLocaleDateString("en-IN");
+  }
+  return date.toLocaleDateString("en-IN");
 }
 
-function getValue(value) {
-  if (value == null || value === "") return "—";
+function valueText(value, fallback = "—") {
+  if (value === null || value === undefined || value === "") return fallback;
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
 
-function Section({ title, children }) {
-  return (
-    <section className="overflow-hidden rounded-xl border border-gray-300 bg-white print:rounded-none print:border-gray-400">
-      <div className="border-b border-gray-300 bg-[#F3FAF6] px-4 py-2 print:border-gray-400">
-        <h2 className="text-[12px] font-black uppercase tracking-[0.16em] text-[#0D6B45]">
-          {title}
-        </h2>
-      </div>
-      <div className="p-3 print:p-2">{children}</div>
-    </section>
+function normalizeKey(key = "") {
+  return String(key).toLowerCase().replace(/[\s_()-]/g, "");
+}
+
+function findMetric(metrics, wantedKey) {
+  const aliases = {
+    nitrogen: ["nitrogen", "n"],
+    phosphorus: ["phosphorus", "p"],
+    potassium: ["potassium", "k"],
+    soc: ["soc", "soilorganiccarbon", "organiccarbon"],
+    soilMoisture: ["soilmoisture", "moisture"],
+    clayContent: ["claycontent", "clay"],
+    calcium: ["calcium", "ca"],
+    magnesium: ["magnesium", "mg"],
+    sulfur: ["sulfur", "sulphur", "s"],
+    boron: ["boron", "b"],
+    zinc: ["zinc", "zn"],
+    copper: ["copper", "cu"],
+    iron: ["iron", "fe"],
+    manganese: ["manganese", "mn"],
+    ph: ["ph"],
+    cec: ["cec", "cationexchangecapacity"],
+  };
+
+  const possible = aliases[wantedKey] || [wantedKey];
+
+  const found = Object.entries(metrics || {}).find(([key]) =>
+    possible.includes(normalizeKey(key))
   );
+
+  return found?.[1] || null;
 }
 
-function ReportRow({ items, columns = 3 }) {
+function getMetricValue(metric) {
+  if (!metric) return "—";
+  return valueText(metric.value ?? metric.available ?? metric.amount ?? metric);
+}
+
+function getMetricRemark(metric) {
+  if (!metric) return "—";
+  return valueText(metric.classification ?? metric.remark ?? metric.status, "—");
+}
+
+function getRemarkClass(remark = "") {
+  const text = String(remark).toLowerCase();
+  if (text.includes("low")) return "text-red-700";
+  if (text.includes("high")) return "text-emerald-800";
+  if (text.includes("medium") || text.includes("moderate")) return "text-blue-800";
+  return "text-gray-800";
+}
+
+function InfoCell({ label, value }) {
   return (
-    <div
-      className={`grid border border-gray-300 ${columns === 2
-        ? "grid-cols-2"
-        : columns === 3
-          ? "grid-cols-3"
-          : columns === 4
-            ? "grid-cols-4"
-            : "grid-cols-6"
-        }`}
-    >
-      {items.map(([label, value], index) => (
-        <div
-          key={`${label}-${index}`}
-          className="flex min-h-[42px] items-center border-r border-b border-gray-300 last:border-r-0"
-        >
-          <div className="w-[45%] self-stretch border-r border-gray-300 bg-gray-50 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-gray-500">
-            {cleanLabel(label)}
-          </div>
-          <div className="flex-1 px-3 py-2 text-[12px] font-bold text-gray-900">
-            {getValue(value)}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ChunkRows({ entries, columns = 3 }) {
-  const rows = [];
-  for (let i = 0; i < entries.length; i += columns) {
-    rows.push(entries.slice(i, i + columns));
-  }
-
-  return (
-    <div className="space-y-0">
-      {rows.map((row, index) => (
-        <ReportRow key={index} items={row} columns={columns} />
-      ))}
-    </div>
-  );
-}
-
-function PillsRow({ obj }) {
-  if (!obj || typeof obj !== "object") return null;
-
-  return (
-    <div className="flex flex-wrap gap-2 border border-gray-300 px-3 py-3">
-      {Object.entries(obj).map(([key, value]) => (
-        <span
-          key={key}
-          className="rounded-full border border-[#0D6B45]/20 bg-[#0D6B45]/5 px-3 py-1 text-[11px] font-black uppercase tracking-wide text-[#0D6B45]"
-        >
-          {value === true || value === "true"
-            ? cleanLabel(key)
-            : `${cleanLabel(key)}: ${getValue(value)}`}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function CropContextTable({ obj }) {
-  if (!obj || typeof obj !== "object") return null;
-
-  const allEntries = Object.entries(obj);
-  const firstRowKeys = ["n", "p", "k", "sos"];
-  const firstRow = firstRowKeys
-    .map((key) => {
-      const found = allEntries.find(([k]) => k.toLowerCase() === key);
-      return found || null;
-    })
-    .filter(Boolean);
-
-  const usedKeys = new Set(firstRow.map(([key]) => key));
-  const remaining = allEntries.filter(([key]) => !usedKeys.has(key));
-
-  return (
-    <div className="space-y-3">
-      {firstRow.length > 0 ? (
-        <table className="w-full border-collapse border border-gray-300 text-left text-xs">
-          <thead>
-            <tr className="bg-[#0D6B45] text-white">
-              {firstRow.map(([key]) => (
-                <th
-                  key={key}
-                  className="border border-[#0D6B45] px-3 py-2 font-black uppercase tracking-wide"
-                >
-                  {cleanLabel(key)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {firstRow.map(([key, value]) => (
-                <td
-                  key={key}
-                  className="border border-gray-300 px-3 py-2 font-bold text-gray-900"
-                >
-                  {getValue(value)}
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
-      ) : null}
-
-      {remaining.length > 0 ? (
-        <table className="w-full border-collapse border border-gray-300 text-left text-xs">
-          <thead>
-            <tr className="bg-gray-100 text-gray-700">
-              {remaining.map(([key]) => (
-                <th
-                  key={key}
-                  className="border border-gray-300 px-3 py-2 font-black uppercase tracking-wide"
-                >
-                  {cleanLabel(key)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {remaining.map(([key, value]) => (
-                <td
-                  key={key}
-                  className="border border-gray-300 px-3 py-2 font-bold text-gray-900"
-                >
-                  {getValue(value)}
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
-      ) : null}
-    </div>
-  );
-}
-
-function getBadgeClass(classification = "") {
-  const value = classification.toLowerCase();
-  if (value.includes("high")) {
-    return "bg-emerald-100 text-emerald-800 border-emerald-300";
-  }
-  if (value.includes("low")) {
-    return "bg-amber-100 text-amber-900 border-amber-300";
-  }
-  if (value.includes("medium") || value.includes("moderate")) {
-    return "bg-blue-100 text-blue-800 border-blue-300";
-  }
-  return "bg-gray-100 text-gray-700 border-gray-300";
-}
-
-function MetricRow({ label, metric }) {
-  if (!metric) return null;
-
-  return (
-    <tr>
-      <td className="border border-gray-300 px-3 py-2 text-xs font-bold text-gray-800">
-        {cleanLabel(label)}
+    <>
+      <td className="w-[18%] border border-gray-400 bg-[#F7FBF8] px-3 py-2 text-[12px] font-black text-gray-900">
+        {label}
       </td>
-      <td className="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-900">
-        {metric.value != null ? metric.value : "—"}
+      <td className="w-[32%] border border-gray-400 px-3 py-2 text-[12px] font-bold text-gray-800">
+        {valueText(value)}
       </td>
-      <td className="border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-900">
-        {metric.unit || "—"}
-      </td>
-      <td className="border border-gray-300 px-3 py-2">
-        <span
-          className={`inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-black ${getBadgeClass(
-            metric.classification
-          )}`}
-        >
-          {metric.classification || "—"}
-        </span>
-      </td>
-    </tr>
+    </>
   );
 }
 
@@ -214,15 +127,16 @@ function RecommendationList({ items }) {
   if (!Array.isArray(items) || items.length === 0) return null;
 
   return (
-    <div className="border border-gray-300">
-      {items.map((line, i) => (
+    <div className="space-y-3">
+      {items.map((item, index) => (
         <div
-          key={`rec-${i}`}
-          className="flex items-start gap-2 border-b border-gray-300 px-3 py-2 last:border-b-0"
+          key={index}
+          className="flex gap-2 text-[13px] leading-relaxed text-gray-800"
         >
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#0D6B45]" />
-          <p className="text-xs font-semibold leading-relaxed text-gray-800">
-            {line}
+          <CheckCircle2 className="mt-[2px] h-4 w-4 shrink-0 text-[#0D6B45]" />
+          <p>
+            <span className="font-black text-[#0D6B45]">{index + 1}. </span>
+            {item}
           </p>
         </div>
       ))}
@@ -230,175 +144,277 @@ function RecommendationList({ items }) {
   );
 }
 
+function DisclaimerText() {
+  return (
+    <p className="mt-2 border-t border-gray-300 pt-2 text-[9px] font-semibold leading-[1.35] text-gray-600">
+      {DISCLAIMER}
+    </p>
+  );
+}
+
 export function SoilHealthReportView({
   data,
+  field,
+  generatedAt,
   onDownloadPdf,
-  onPrint,
   isDownloading,
   reportRef,
 }) {
-  if (!data) return null;
+  const report = data?.soilReport || data || {};
+  const selectedField = data?.field || field || {};
 
-  const areaEntries = data.area ? Object.entries(data.area) : [];
-  const satelliteEntries = data.satelliteContext
-    ? Object.entries(data.satelliteContext)
-    : [];
+  const metrics = report?.soilMetrics || report?.metrics || {};
+  const area = report?.area || {};
+  const cropContext = report?.cropContext || {};
 
-  const metrics = data.soilMetrics || {};
-  const metricEntries = Object.entries(metrics);
+  const farmName =
+    selectedField?.fieldName ||
+    selectedField?.farmName ||
+    area?.fieldName ||
+    STATIC_FALLBACK.farmerName;
+
+  const latitude =
+    selectedField?.field?.[0]?.lat ||
+    selectedField?.lat ||
+    area?.latitude ||
+    report?.latitude;
+
+  const longitude =
+    selectedField?.field?.[0]?.lng ||
+    selectedField?.lng ||
+    area?.longitude ||
+    report?.longitude;
+
+  const info = {
+    farmerName: selectedField?.farmerName || selectedField?.ownerName || farmName,
+    reportId: report?.reportId || STATIC_FALLBACK.reportId,
+    villageName:
+      selectedField?.village ||
+      selectedField?.villageName ||
+      STATIC_FALLBACK.villageName,
+    date: formatDate(generatedAt || data?.generatedAt || report?.generatedAt),
+    tehsil: selectedField?.tehsil || STATIC_FALLBACK.tehsil,
+    mobileNumber: selectedField?.mobileNumber || STATIC_FALLBACK.mobileNumber,
+    district:
+      selectedField?.district || selectedField?.state || STATIC_FALLBACK.district,
+    latitudeLongitude:
+      latitude && longitude
+        ? `${Number(latitude).toFixed(6)}, ${Number(longitude).toFixed(6)}`
+        : STATIC_FALLBACK.latitudeLongitude,
+    currentCrop:
+      selectedField?.cropName ||
+      cropContext?.currentCrop ||
+      report?.currentCrop ||
+      STATIC_FALLBACK.currentCrop,
+    previousCrop:
+      selectedField?.previousCrop ||
+      cropContext?.previousCrop ||
+      report?.previousCrop ||
+      STATIC_FALLBACK.previousCrop,
+  };
+
+  const recommendations =
+    report?.fertilizerRecommendations ||
+    report?.recommendations || [
+      "Apply balanced nutrients based on crop requirement and soil condition.",
+      "Use organic compost or well decomposed manure to improve soil organic carbon.",
+      "Maintain proper irrigation scheduling to avoid nutrient leaching.",
+      "Repeat soil testing periodically for better fertilizer planning.",
+    ];
 
   return (
-    <div className="min-h-screen bg-[#F4FAF6] px-4 py-5">
+    <div className="min-h-screen bg-[#EEF6F1] px-4 py-5">
       <div
         ref={reportRef}
-        className="pdf-export mx-auto max-w-5xl space-y-3 bg-white p-4 shadow-[0_20px_60px_rgba(0,0,0,0.08)] print:max-w-none print:space-y-2 print:p-0 print:shadow-none"
+        className="pdf-export mx-auto max-w-[820px] space-y-5 print:space-y-0"
       >
-        {/* REPORT HEADER */}
-        <div className={`overflow-hidden rounded-[18px] bg-gradient-to-r from-[#0B3D0B] via-[#0D6B45] to-[#15803D] shadow-[0_10px_30px_rgba(13,107,69,0.18)] print:shadow-none ${isDownloading ? "pointer-events-none" : ""
-          }`}>
-          <div className="relative flex flex-wrap items-center justify-between gap-4 px-6 py-4 text-white">
-            <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
-
-            <div className="relative z-10 flex items-center gap-5">
-              <div className="flex h-16 w-[170px] items-center justify-center rounded-xl bg-white  shadow-lg">
-                <img
-                  src={satagroLogo}
-                  alt="Satagro"
-                  className="h-10 w-[50%] object-contain"
-                />
+        <div className="pdf-page bg-white p-5 shadow-[0_18px_60px_rgba(13,107,69,0.12)] print:shadow-none">
+          <div className="flex min-h-[1085px] flex-col border-[1.5px] border-gray-500 bg-white p-3">
+            <div className="grid grid-cols-[160px_1fr] border border-gray-500">
+              <div className="flex h-[105px] items-center justify-center p-3">
+                <div className="flex h-[72px] w-[128px] items-center justify-center overflow-hidden">
+                  <img
+                    src={satagroLogo}
+                    alt="LeaCrop"
+                    className="block h-auto max-h-[68px] w-auto max-w-[124px] object-contain"
+                    style={{
+                      aspectRatio: "auto",
+                      objectFit: "contain",
+                    }}
+                  />
+                </div>
               </div>
 
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-100">
-                  SATAGRO SMART FARMING
-                </p>
-                <h1 className="text-[30px] font-black tracking-wide leading-none text-white">
-                  Soil Health Report
+              <div className="flex flex-col items-center justify-center px-5 py-4 text-center">
+                <h1 className="text-[21px] font-black uppercase tracking-[0.08em] text-[#0B3D0B]">
+                  {COMPANY.name}
                 </h1>
-                <p className="mt-1 text-sm font-medium text-emerald-50/90">
-                  AI Powered Soil Analytics & Nutrient Assessment
+                <p className="mt-2 max-w-[520px] text-[12px] font-semibold leading-relaxed text-gray-600">
+                  {COMPANY.address}
                 </p>
               </div>
             </div>
 
-            {!isDownloading && (
-              <div className="relative z-10 flex flex-wrap gap-2 print:hidden">
-                {onDownloadPdf ? (
-                  <button
-                    type="button"
-                    onClick={onDownloadPdf}
-                    disabled={isDownloading}
-                    className="inline-flex items-center gap-2 rounded-[10px] bg-white px-4 py-2 text-sm font-bold text-[#0D6B45] shadow-md hover:bg-emerald-50 disabled:opacity-60"
-                  >
-                    <Download className="h-4 w-4" />
-                    {isDownloading ? "Preparing PDF..." : "Download PDF"}
-                  </button>
-                ) : null}
+            <div className="relative mt-4 text-center">
+              <h2 className="text-[22px] font-black uppercase tracking-wide text-gray-950">
+                Soil Report
+              </h2>
 
-                {onPrint ? (
-                  <button
-                    type="button"
-                    onClick={onPrint}
-                    className="inline-flex items-center gap-2 rounded-[10px] border border-white/25 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur hover:bg-white/15"
-                  >
-                    <Printer className="h-4 w-4" />
-                    Print
-                  </button>
-                ) : null}
-              </div>
-            )}
-          </div>
-        </div>
+              {!isDownloading && onDownloadPdf ? (
+                <button
+                  type="button"
+                  onClick={onDownloadPdf}
+                  disabled={isDownloading}
+                  className="pdf-hide absolute right-0 top-0 inline-flex items-center gap-2 rounded-lg bg-[#0D6B45] px-4 py-2 text-xs font-bold text-white shadow hover:bg-[#0B3D0B] disabled:opacity-60"
+                >
+                  <Download className="h-4 w-4" />
+                  {isDownloading ? "Preparing..." : "Download PDF"}
+                </button>
+              ) : null}
+            </div>
 
-        {areaEntries.length > 0 && (
-          <div className="soil-section" data-section-title="Area Details">
-            <Section title="Area Details">
-              <ChunkRows entries={areaEntries} columns={3} />
-            </Section>
-          </div>
-        )}
+            <div className="mt-4">
+              <table className="w-full border-collapse">
+                <tbody>
+                  <tr>
+                    <InfoCell label="Farmer Name" value={info.farmerName} />
+                    <InfoCell label="Report ID" value={info.reportId} />
+                  </tr>
+                  <tr>
+                    <InfoCell label="Village Name" value={info.villageName} />
+                    <InfoCell label="Date" value={info.date} />
+                  </tr>
+                  <tr>
+                    <InfoCell label="Tehsil" value={info.tehsil} />
+                    <InfoCell label="Mobile Number" value={info.mobileNumber} />
+                  </tr>
+                  <tr>
+                    <InfoCell label="District" value={info.district} />
+                    <InfoCell label="Latitude, Longitude" value={info.latitudeLongitude} />
+                  </tr>
+                  <tr>
+                    <InfoCell label="Current Crop" value={info.currentCrop} />
+                    <InfoCell label="Previous Crop" value={info.previousCrop} />
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-        {satelliteEntries.length > 0 && (
-          <div className="soil-section" data-section-title="Satellite Context">
-            <Section title="Satellite Context">
-              <ChunkRows entries={satelliteEntries.slice(0, 6)} columns={3} />
-            </Section>
-          </div>
-        )}
-
-        {data.indicesUsed && (
-          <div className="soil-section" data-section-title="Indices Used">
-            <Section title="Indices Used">
-              <PillsRow obj={data.indicesUsed} />
-            </Section>
-          </div>
-        )}
-
-        {data.cropContext && (
-          <div className="soil-section" data-section-title="Crop Context">
-            <Section title="Crop Context">
-              <CropContextTable obj={data.cropContext} />
-            </Section>
-          </div>
-        )}
-
-        {metricEntries.length > 0 && (
-          <div className="soil-section" data-section-title="Soil Metrics">
-            <Section title="Soil Metrics Table">
-              <table className="w-full border-collapse text-left">
+            <div className="mt-6">
+              <table className="w-full border-collapse text-center">
                 <thead>
-                  <tr className="bg-[#0D6B45] text-white">
-                    <th className="border border-[#0D6B45] px-3 py-2 text-xs font-black uppercase tracking-wide">
-                      Parameter
+                  <tr style={{ backgroundColor: SOFT }}>
+                    <th className="border border-gray-500 px-2 py-3 text-[12px] font-black text-gray-950">
+                      Sr.No
                     </th>
-                    <th className="border border-[#0D6B45] px-3 py-2 text-xs font-black uppercase tracking-wide">
-                      Value
+                    <th className="border border-gray-500 px-2 py-3 text-[12px] font-black text-gray-950">
+                      Soil Parameters
                     </th>
-                    <th className="border border-[#0D6B45] px-3 py-2 text-xs font-black uppercase tracking-wide">
+                    <th className="border border-gray-500 px-2 py-3 text-[12px] font-black text-gray-950">
                       Unit
                     </th>
-                    <th className="border border-[#0D6B45] px-3 py-2 text-xs font-black uppercase tracking-wide">
-                      Classification
+                    <th className="border border-gray-500 px-2 py-3 text-[12px] font-black text-gray-950">
+                      Range
+                    </th>
+                    <th className="border border-gray-500 px-2 py-3 text-[12px] font-black text-gray-950">
+                      Available
+                    </th>
+                    <th className="border border-gray-500 px-2 py-3 text-[12px] font-black text-gray-950">
+                      Remark
                     </th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {metricEntries.map(([key, metric]) => (
-                    <MetricRow key={key} label={key} metric={metric} />
-                  ))}
+                  {SOIL_ROWS.map(([key, label, unit, range], index) => {
+                    const metric = findMetric(metrics, key);
+                    const available = getMetricValue(metric);
+                    const remark = getMetricRemark(metric);
+
+                    return (
+                      <tr key={key}>
+                        <td className="border border-gray-500 px-2 py-2 text-[12px] font-black">
+                          {index + 1}
+                        </td>
+                        <td className="border border-gray-500 px-2 py-2 text-[12px] font-black">
+                          {label}
+                        </td>
+                        <td className="border border-gray-500 px-2 py-2 text-[12px] font-bold">
+                          {unit}
+                        </td>
+                        <td className="border border-gray-500 px-2 py-2 text-[12px] font-bold">
+                          {range}
+                        </td>
+                        <td className="border border-gray-500 px-2 py-2 text-[12px] font-black text-[#0D6B45]">
+                          {available}
+                        </td>
+                        <td
+                          className={`border border-gray-500 px-2 py-2 text-[12px] font-black ${getRemarkClass(
+                            remark
+                          )}`}
+                        >
+                          {remark}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-            </Section>
+            </div>
+
+            <div className="mt-auto">
+              <div className="mt-5 flex justify-end text-[11px] font-bold text-gray-700">
+                Authorized by LeaCrop Agritech
+              </div>
+              <DisclaimerText />
+            </div>
           </div>
-        )}
+        </div>
 
-        {Array.isArray(data.fertilizerRecommendations) &&
-          data.fertilizerRecommendations.length > 0 && (
-            <div className="soil-section" data-section-title="Fertilizer Recommendations">
-              <Section title="Fertilizer Recommendations">
-                <RecommendationList items={data.fertilizerRecommendations} />
-              </Section>
-            </div>
-          )}
+        <div className="pdf-page bg-white p-5 shadow-[0_18px_60px_rgba(13,107,69,0.12)] print:shadow-none">
+          <div className="flex min-h-[1085px] flex-col border-[1.5px] border-gray-500 bg-white p-5">
+            <div>
+              <h3 className="mb-4 text-[18px] font-black text-[#0B3D0B]">
+                Recommendations –
+              </h3>
 
-        {Array.isArray(data.organizationSuggestions) &&
-          data.organizationSuggestions.length > 0 &&
-          data.organizationSuggestions.map((block, idx) => (
-            <div
-              key={block.organizationCode || `org-${idx}`}
-              className="soil-section"
-              data-section-title={block.title || "Organization Suggestions"}
-            >
-              <Section title={block.title || "Organization Suggestions"}>
-                {block.organizationCode && (
-                  <p className="mb-2 inline-flex rounded-md bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">
-                    Organization Code: {block.organizationCode}
-                  </p>
+              <RecommendationList items={recommendations} />
+
+              {Array.isArray(report?.organizationSuggestions) &&
+                report.organizationSuggestions.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="mb-4 text-[18px] font-black text-[#0B3D0B]">
+                      Organization Suggestions –
+                    </h3>
+
+                    <div className="space-y-6">
+                      {report.organizationSuggestions.map((block, index) => (
+                        <div key={block.organizationCode || index}>
+                          {block.organizationCode ? (
+                            <p className="mb-3 inline-flex rounded-md bg-[#F3FAF6] px-3 py-1 text-[12px] font-bold text-[#0D6B45]">
+                              Organization Code: {block.organizationCode}
+                            </p>
+                          ) : null}
+
+                          <RecommendationList items={block.notes || []} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-                <RecommendationList items={block.notes || []} />
-              </Section>
             </div>
-          ))}
+
+            <div className="mt-auto">
+              <div className="flex items-center justify-between border-t border-gray-400 pt-3 text-[11px] font-bold text-gray-700">
+                <span>Authorized by LeaCrop Agritech</span>
+                <span style={{ color: THEME }}>
+                  Generated by Smart Farming Platform
+                </span>
+              </div>
+              <DisclaimerText />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
