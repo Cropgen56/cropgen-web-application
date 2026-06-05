@@ -208,6 +208,10 @@ function MiniStep({ done, active, warning, icon: Icon, label }) {
   );
 }
 
+const SOIL_REPORT_PROGRESS_START = 10;
+const SOIL_REPORT_PROGRESS_END = 100;
+const SOIL_REPORT_PROGRESS_DURATION_MS = 120000;
+
 export function ReportBuildProgress({
   fieldLabel,
   ringOk,
@@ -220,10 +224,38 @@ export function ReportBuildProgress({
   aiRunning,
   isComplete,
   aiError,
+  timedProgressDuration,
 }) {
   const [aiSeconds, setAiSeconds] = useState(0);
+  const [timedProgress, setTimedProgress] = useState(SOIL_REPORT_PROGRESS_START);
 
   const total = indicesTotal || REPORT_SATELLITE_INDICES.length || 1;
+
+  useEffect(() => {
+    if (!timedProgressDuration) return;
+
+    if (isComplete) {
+      setTimedProgress(SOIL_REPORT_PROGRESS_END);
+      return;
+    }
+
+    const startTime = Date.now();
+    setTimedProgress(SOIL_REPORT_PROGRESS_START);
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const ratio = Math.min(elapsed / timedProgressDuration, 1);
+      const value = Math.round(
+        SOIL_REPORT_PROGRESS_START +
+          (SOIL_REPORT_PROGRESS_END - SOIL_REPORT_PROGRESS_START) * ratio,
+      );
+      setTimedProgress(value);
+
+      if (ratio >= 1) clearInterval(interval);
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [timedProgressDuration, isComplete]);
 
   useEffect(() => {
     if (!aiRunning || isComplete) {
@@ -245,6 +277,10 @@ export function ReportBuildProgress({
   const aiTakingLong = aiRunning && aiSeconds >= 12 && !isComplete;
 
   const progress = useMemo(() => {
+    if (timedProgressDuration) {
+      return isComplete ? SOIL_REPORT_PROGRESS_END : timedProgress;
+    }
+
     let value = 0;
 
     if (ringOk) value += 18;
@@ -268,6 +304,8 @@ export function ReportBuildProgress({
     aiRunning,
     aiTakingLong,
     isComplete,
+    timedProgressDuration,
+    timedProgress,
   ]);
 
   const activeLabel = useMemo(() => {

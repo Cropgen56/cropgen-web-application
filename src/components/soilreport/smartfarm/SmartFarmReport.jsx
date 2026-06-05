@@ -50,6 +50,7 @@ export default function SmartFarmReport({
           aiRunning={false}
           aiError={false}
           isComplete={false}
+          timedProgressDuration={120000}
         />
       </div>
     );
