@@ -7,7 +7,7 @@ const GoogleSearchField = ({ setMapCenter, setHasCenteredOnUser }) => {
   useMap();
 
   useEffect(() => {
-    const apiKey = 'AIzaSyCpcyPZfB4CFTdGQw4noqjbwPp3vvNQ-0E';
+    const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
       console.error("Missing GOOGLE_MAPS_API_KEY");
