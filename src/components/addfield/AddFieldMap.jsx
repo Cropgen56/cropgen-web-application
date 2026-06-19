@@ -16,15 +16,18 @@ import {
   CurrentLocation,
   DeleteIcon,
 } from "../../assets/Icons";
-import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import { Calender, LeftArrow, RightArrow } from "../../assets/DashboardIcons";
-import "leaflet-geosearch/dist/geosearch.css";
 import FileUploadOverlay from "./FileUploadOverlay";
+import GoogleSearchField from "./GoogleSearchField";
 
 const DEFAULT_CENTER = { lat: 20.5937, lng: 78.9629 };
-
-/** Clicks within this many CSS pixels of the first vertex close the ring (no extra point). */
 const SNAP_CLOSE_FIRST_VERTEX_PX = 32;
+
+const GEO_OPTIONS = {
+  enableHighAccuracy: true,
+  timeout: 15000,
+  maximumAge: 60_000,
+};
 
 const AddFieldMap = ({
   setMarkers,
@@ -34,32 +37,25 @@ const AddFieldMap = ({
   toggleAddMarkers,
   clearMarkers,
   onToggleSidebar,
-  /** Set from parent (AddField) after browser geolocation — default map view. */
   initialMapCenter = null,
 }) => {
-  const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
-  const [hasCenteredOnUser, setHasCenteredOnUser] = useState(false);
-  const [isLocatingUser, setIsLocatingUser] = useState(false);
+  const [mapCenter, setMapCenter] = useState(() =>
+    initialMapCenter ? { ...initialMapCenter } : DEFAULT_CENTER,
+  );
+  const [hasCenteredOnUser, setHasCenteredOnUser] = useState(!!initialMapCenter);
+  const [isLocatingUser, setIsLocatingUser] = useState(!initialMapCenter);
   const [selectedIcon, setSelectedIcon] = useState("");
   const [showUploadOverlay, setShowUploadOverlay] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [geojsonLayers, setGeojsonLayers] = useState([]);
   const [isMapReady, setIsMapReady] = useState(false);
-  /** Cursor position while drawing — drives rubber-band preview (GEE-style). */
   const [drawPreview, setDrawPreview] = useState(null);
 
   const mapRef = useRef(null);
   const drawPreviewRaf = useRef(null);
+  const defaultLocationRequestedRef = useRef(false);
+  const cancelDefaultGeoRef = useRef(false);
 
-  useEffect(() => {
-    return () => {
-      if (drawPreviewRaf.current) {
-        cancelAnimationFrame(drawPreviewRaf.current);
-      }
-    };
-  }, []);
-
-  // Map Controller - only sets ref, no side effects
   const MapController = () => {
     const map = useMap();
 
@@ -74,18 +70,17 @@ const AddFieldMap = ({
     return null;
   };
 
-  // Handle GeoJSON bounds - with debounce to prevent jitter
   useEffect(() => {
     if (geojsonLayers.length === 0 || !mapRef.current || !isMapReady) return;
-    // If we already centered on the user's location, keep that as the
-    // map centroid while the user uploads/draws a field.
     if (hasCenteredOnUser || isLocatingUser) return;
 
     const timeoutId = setTimeout(() => {
       let allBounds = null;
+
       geojsonLayers.forEach((geojson) => {
         const layer = L.geoJSON(geojson);
         const bounds = layer.getBounds();
+
         if (allBounds === null) {
           allBounds = bounds;
         } else {
@@ -105,25 +100,62 @@ const AddFieldMap = ({
     return () => clearTimeout(timeoutId);
   }, [geojsonLayers, isMapReady, hasCenteredOnUser, isLocatingUser]);
 
-  // Center on user location from parent (single geolocation request on Add Field page)
   useEffect(() => {
-    if (!initialMapCenter) return;
+    if (initialMapCenter == null) return;
 
-    setMapCenter(initialMapCenter);
+    if (
+      typeof initialMapCenter.lat !== "number" ||
+      typeof initialMapCenter.lng !== "number"
+    ) {
+      return;
+    }
+
+    cancelDefaultGeoRef.current = true;
+    setMapCenter({ lat: initialMapCenter.lat, lng: initialMapCenter.lng });
     setHasCenteredOnUser(true);
     setIsLocatingUser(false);
+  }, [initialMapCenter]);
 
-    if (!isMapReady || !mapRef.current) return;
+  useEffect(() => {
+    if (initialMapCenter != null) return;
+    if (defaultLocationRequestedRef.current) return;
 
-    mapRef.current.flyTo(
-      [initialMapCenter.lat, initialMapCenter.lng],
-      17,
-      {
-        animate: true,
-        duration: 0.75,
+    if (!navigator.geolocation) {
+      setIsLocatingUser(false);
+      return;
+    }
+
+    defaultLocationRequestedRef.current = true;
+    setIsLocatingUser(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (cancelDefaultGeoRef.current) return;
+
+        const { latitude, longitude } = position.coords;
+
+        setMapCenter({ lat: latitude, lng: longitude });
+        setHasCenteredOnUser(true);
+        setIsLocatingUser(false);
       },
+      () => {
+        if (cancelDefaultGeoRef.current) return;
+
+        setIsLocatingUser(false);
+        setHasCenteredOnUser(false);
+      },
+      GEO_OPTIONS,
     );
-  }, [initialMapCenter, isMapReady]);
+  }, [initialMapCenter]);
+
+  useEffect(() => {
+    if (!hasCenteredOnUser || !isMapReady || !mapRef.current) return;
+
+    mapRef.current.flyTo([mapCenter.lat, mapCenter.lng], 18, {
+      animate: true,
+      duration: 0.75,
+    });
+  }, [hasCenteredOnUser, isMapReady, mapCenter.lat, mapCenter.lng]);
 
   useEffect(() => {
     if (isTabletView) {
@@ -136,14 +168,24 @@ const AddFieldMap = ({
   }, [isTabletView, showUploadOverlay, onToggleSidebar]);
 
   useEffect(() => {
+    return () => {
+      if (drawPreviewRaf.current) {
+        cancelAnimationFrame(drawPreviewRaf.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isAddingMarkers) setDrawPreview(null);
   }, [isAddingMarkers]);
 
   const CursorUpdater = ({ isAddingMarkers }) => {
     const map = useMap();
+
     useEffect(() => {
       map.getContainer().style.cursor = isAddingMarkers ? "crosshair" : "";
     }, [isAddingMarkers, map]);
+
     return null;
   };
 
@@ -161,15 +203,18 @@ const AddFieldMap = ({
         if (!isAddingMarkers) return;
 
         const first = markers[0];
+
         if (first && markers.length >= 3) {
           const clickPt = map.latLngToContainerPoint(e.latlng);
           const firstPt = map.latLngToContainerPoint(
             L.latLng(first.lat, first.lng),
           );
+
           const pxDist = Math.hypot(
             clickPt.x - firstPt.x,
             clickPt.y - firstPt.y,
           );
+
           if (pxDist <= SNAP_CLOSE_FIRST_VERTEX_PX) {
             toggleAddMarkers();
             return;
@@ -177,24 +222,31 @@ const AddFieldMap = ({
         }
 
         const { lat, lng } = e.latlng;
+
         setMarkers((currentMarkers) => [...currentMarkers, { lat, lng }]);
       },
+
       mousemove: (e) => {
         if (!isAddingMarkers) return;
+
         const lat = e.latlng.lat;
         const lng = e.latlng.lng;
+
         if (drawPreviewRaf.current) {
           cancelAnimationFrame(drawPreviewRaf.current);
         }
+
         drawPreviewRaf.current = requestAnimationFrame(() => {
           drawPreviewRaf.current = null;
           setDrawPreview({ lat, lng });
         });
       },
+
       mouseout: () => {
         if (isAddingMarkers) setDrawPreview(null);
       },
     });
+
     return null;
   };
 
@@ -204,67 +256,39 @@ const AddFieldMap = ({
         alert("No markers left to remove.");
         return currentMarkers;
       }
+
       return currentMarkers.slice(0, -1);
     });
   };
 
-  const SearchField = ({ onLocationSelect }) => {
-    const map = useMap();
-
-    useEffect(() => {
-      const provider = new OpenStreetMapProvider();
-
-      const searchControl = new GeoSearchControl({
-        provider,
-        style: "bar",
-        autoComplete: true,
-        autoCompleteDelay: 250,
-        resultFormat: ({ result }) => result.label,
-      });
-
-      map.addControl(searchControl);
-
-      const handleShowLocation = (result) => {
-        const { x, y, label } = result.location;
-        onLocationSelect({ lat: y, lng: x, name: label });
-      };
-
-      map.on("geosearch/showlocation", handleShowLocation);
-
-      return () => {
-        map.off("geosearch/showlocation", handleShowLocation);
-        map.removeControl(searchControl);
-      };
-    }, [map, onLocationSelect]);
-
-    return null;
-  };
-
   const handleCurrentLocation = useCallback(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setMapCenter({ lat: latitude, lng: longitude });
-          setHasCenteredOnUser(true);
-          setIsLocatingUser(false);
-          mapRef.current?.flyTo([latitude, longitude], 18, {
-            animate: true,
-            duration: 1,
-          });
-          setSelectedIcon("current-location");
-        },
-        () =>
-          alert("Unable to fetch your location. Please allow location access."),
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        },
-      );
-    } else {
+    if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
+      return;
     }
+
+    setIsLocatingUser(true);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        setMapCenter({ lat: latitude, lng: longitude });
+        setHasCenteredOnUser(true);
+        setIsLocatingUser(false);
+        setSelectedIcon("current-location");
+
+        mapRef.current?.flyTo([latitude, longitude], 18, {
+          animate: true,
+          duration: 1,
+        });
+      },
+      () => {
+        setIsLocatingUser(false);
+        alert("Unable to fetch your location. Please allow location access.");
+      },
+      GEO_OPTIONS,
+    );
   }, []);
 
   return (
@@ -292,6 +316,7 @@ const AddFieldMap = ({
             markerZoomAnimation={false}
           >
             <MapController />
+
             <TileLayer
               attribution="© Google Maps"
               url="http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
@@ -313,7 +338,6 @@ const AddFieldMap = ({
               />
             ))}
 
-            {/* Open path while drawing — no fill, no edge back to first point */}
             {isAddingMarkers && markers.length >= 2 && (
               <Polyline
                 positions={markers.map((marker) => [marker.lat, marker.lng])}
@@ -326,7 +350,6 @@ const AddFieldMap = ({
               />
             )}
 
-            {/* Filled polygon only after drawing mode is off (field boundary finalized) */}
             {!isAddingMarkers && markers.length >= 3 && (
               <Polygon
                 positions={markers.map((marker) => [marker.lat, marker.lng])}
@@ -371,7 +394,12 @@ const AddFieldMap = ({
             )}
 
             <DrawingInteraction />
-            <SearchField onLocationSelect={() => {}} />
+
+            <GoogleSearchField
+              setMapCenter={setMapCenter}
+              setHasCenteredOnUser={setHasCenteredOnUser}
+            />
+
             <CursorUpdater isAddingMarkers={isAddingMarkers} />
 
             {isTabletView && (
@@ -400,6 +428,14 @@ const AddFieldMap = ({
             ))}
           </MapContainer>
 
+          {isLocatingUser && (
+            <div className="absolute inset-0 z-[500] flex items-center justify-center pointer-events-none bg-black/10">
+              <div className="rounded-lg bg-white/95 px-4 py-2 text-sm text-ember-sidebar shadow-md">
+                Finding your location…
+              </div>
+            </div>
+          )}
+
           <button
             onClick={() => {
               setShowUploadOverlay(true);
@@ -409,7 +445,7 @@ const AddFieldMap = ({
             }}
             className={`
               absolute z-[2000] 
-              bg-white text-[#344E41] font-bold 
+              bg-white text-ember-sidebar font-bold 
               rounded-full shadow-md transition
               ${
                 isTabletView
@@ -486,7 +522,7 @@ const AddFieldMap = ({
             }`}
           >
             <div className="w-full text-center">
-              <div className="flex justify-between items-center gap-4 p-2.5 bg-[#5a7c6b] rounded shadow-md w-full max-w-[900px] mx-auto">
+              <div className="flex justify-between items-center gap-4 p-2.5 bg-ember-surface rounded shadow-md w-full max-w-[900px] mx-auto">
                 <div className="flex items-center gap-2 border-r border-gray-200 pr-2">
                   <button
                     aria-label="Calendar"
@@ -494,13 +530,14 @@ const AddFieldMap = ({
                   >
                     <Calender />
                   </button>
+
                   <button aria-label="Previous">
                     <LeftArrow />
                   </button>
                 </div>
 
                 <button
-                  className="px-4 text-sm lg:text-base rounded bg-[#5a7c6b] text-white font-semibold whitespace-nowrap"
+                  className="px-4 text-sm lg:text-base rounded bg-ember-surface text-white font-semibold whitespace-nowrap"
                   onClick={toggleAddMarkers}
                 >
                   {isAddingMarkers ? "Stop Adding Markers" : "Add Field"}
