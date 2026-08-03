@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { get, set, del, keys } from "idb-keyval";
 import { getReactAppUrl } from "../../config/envUrls";
+import { DEFAULT_SATELLITE } from "../../constants/satelliteIndices";
 
 const SATELLITE_API_KEY =
   process.env.REACT_APP_SATELLITE_API || "CROPGEN_230498adklfjadsljf";
@@ -74,7 +75,14 @@ const getSatelliteDatesEffectiveRange = ({ startDate, endDate }) => {
   return { startDate: sixMonthsBefore, endDate: today };
 };
 
-const getSatelliteDatesRequestKey = ({ geometry, startDate, endDate }) => {
+const resolveSatellite = (satellite) => satellite || DEFAULT_SATELLITE;
+
+const getSatelliteDatesRequestKey = ({
+  geometry,
+  startDate,
+  endDate,
+  satellite,
+}) => {
   const { startDate: effectiveStart, endDate: effectiveEnd } =
     getSatelliteDatesEffectiveRange({ startDate, endDate });
 
@@ -82,17 +90,33 @@ const getSatelliteDatesRequestKey = ({ geometry, startDate, endDate }) => {
     geometry: geometry,
     startDate: effectiveStart,
     endDate: effectiveEnd,
+    satellite: resolveSatellite(satellite),
   };
 
   return generateCacheKey("satelliteDates", cacheInput);
 };
 
-const getIndexDataRequestKey = ({ endDate, geometry, index }) => {
-  return generateCacheKey("indexData", { endDate, geometry, index });
+const getIndexDataRequestKey = ({ endDate, geometry, index, satellite }) => {
+  return generateCacheKey("indexData", {
+    endDate,
+    geometry,
+    index,
+    satellite: resolveSatellite(satellite),
+  });
 };
 
-const getIndexDataForMapRequestKey = ({ endDate, geometry, index }) => {
-  return generateCacheKey("indexDataForMap", { endDate, geometry, index });
+const getIndexDataForMapRequestKey = ({
+  endDate,
+  geometry,
+  index,
+  satellite,
+}) => {
+  return generateCacheKey("indexDataForMap", {
+    endDate,
+    geometry,
+    index,
+    satellite: resolveSatellite(satellite),
+  });
 };
 
 const getIndexTimeSeriesSummaryRequestKey = ({
@@ -124,6 +148,7 @@ const getWaterIndexDataRequestKey = ({
 };
 
 const initialState = {
+  selectedSatellite: DEFAULT_SATELLITE,
   satelliteDates: null,
   latestSatelliteDatesRequestKey: null,
   indexData: null,
@@ -154,10 +179,16 @@ const initialState = {
 
 export const fetchSatelliteDates = createAsyncThunk(
   "satellite/fetchSatelliteDates",
-  async ({ geometry, startDate, endDate }, { rejectWithValue }) => {
+  async (
+    { geometry, startDate, endDate, satellite },
+    { getState, rejectWithValue },
+  ) => {
     try {
       const today = endDate || getTodayDate();
       const sixMonthsBefore = startDate || getSixMonthsBeforeDate();
+      const resolvedSatellite = resolveSatellite(
+        satellite ?? getState()?.satellite?.selectedSatellite,
+      );
 
       if (!geometry || geometry.length === 0) {
         return rejectWithValue("Geometry is missing");
@@ -167,6 +198,7 @@ export const fetchSatelliteDates = createAsyncThunk(
         geometry: geometry,
         startDate: sixMonthsBefore,
         endDate: today,
+        satellite: resolvedSatellite,
       };
       const cacheKey = generateCacheKey("satelliteDates", cacheInput);
 
@@ -176,7 +208,8 @@ export const fetchSatelliteDates = createAsyncThunk(
       if (cached && now - cached.timestamp < CACHE_TTL) {
         if (
           cached.metadata?.startDate === sixMonthsBefore &&
-          cached.metadata?.endDate === today
+          cached.metadata?.endDate === today &&
+          cached.metadata?.satellite === resolvedSatellite
         ) {
           return cached.data;
         }
@@ -190,7 +223,7 @@ export const fetchSatelliteDates = createAsyncThunk(
         start_date: sixMonthsBefore,
         end_date: today,
         provider: "both",
-        satellite: "s2",
+        satellite: resolvedSatellite,
       };
 
       const response = await axios.post(
@@ -205,6 +238,7 @@ export const fetchSatelliteDates = createAsyncThunk(
         metadata: {
           startDate: sixMonthsBefore,
           endDate: today,
+          satellite: resolvedSatellite,
         },
       });
 
@@ -217,9 +251,20 @@ export const fetchSatelliteDates = createAsyncThunk(
 
 export const fetchIndexData = createAsyncThunk(
   "satellite/fetchIndexData",
-  async ({ endDate, geometry, index }, { rejectWithValue }) => {
+  async (
+    { endDate, geometry, index, satellite },
+    { getState, rejectWithValue },
+  ) => {
     try {
-      const input = { endDate, geometry, index };
+      const resolvedSatellite = resolveSatellite(
+        satellite ?? getState()?.satellite?.selectedSatellite,
+      );
+      const input = {
+        endDate,
+        geometry,
+        index,
+        satellite: resolvedSatellite,
+      };
       const cacheKey = generateCacheKey("indexData", input);
       const cached = await get(cacheKey);
       const now = Date.now();
@@ -240,7 +285,7 @@ export const fetchIndexData = createAsyncThunk(
         date: endDate,
         index_name: index,
         provider: "both",
-        satellite: "s2",
+        satellite: resolvedSatellite,
         width: 800,
         height: 800,
         supersample: 1,
@@ -264,9 +309,20 @@ export const fetchIndexData = createAsyncThunk(
 
 export const fetchIndexDataForMap = createAsyncThunk(
   "satellite/fetchIndexDataForMap",
-  async ({ endDate, geometry, index }, { rejectWithValue }) => {
+  async (
+    { endDate, geometry, index, satellite },
+    { getState, rejectWithValue },
+  ) => {
     try {
-      const input = { endDate, geometry, index };
+      const resolvedSatellite = resolveSatellite(
+        satellite ?? getState()?.satellite?.selectedSatellite,
+      );
+      const input = {
+        endDate,
+        geometry,
+        index,
+        satellite: resolvedSatellite,
+      };
       const cacheKey = generateCacheKey("indexDataForMap", input);
       const cached = await get(cacheKey);
       const now = Date.now();
@@ -287,7 +343,7 @@ export const fetchIndexDataForMap = createAsyncThunk(
         date: endDate,
         index_name: index,
         provider: "both",
-        satellite: "s2",
+        satellite: resolvedSatellite,
         width: 800,
         height: 800,
         supersample: 1,
@@ -487,6 +543,20 @@ const satelliteSlice = createSlice({
   name: "satellite",
   initialState,
   reducers: {
+    setSelectedSatellite: (state, action) => {
+      const next = resolveSatellite(action.payload);
+      if (state.selectedSatellite === next) return;
+      state.selectedSatellite = next;
+      state.satelliteDates = null;
+      state.indexData = null;
+      state.indexDataByType = {};
+      state.loading.indexDataByType = {};
+      state.latestIndexDataByTypeRequestKey = {};
+      state.latestSatelliteDatesRequestKey = null;
+      state.latestIndexDataRequestKey = null;
+      state.currentDateRange = { startDate: null, endDate: null };
+      state.error = null;
+    },
     setSelectedIndex: (state, action) => {
       state.selectedIndex = action.payload;
     },
@@ -653,6 +723,7 @@ const satelliteSlice = createSlice({
 });
 
 export const {
+  setSelectedSatellite,
   setSelectedIndex,
   removeSelectedIndexData,
   clearIndexDataByType,

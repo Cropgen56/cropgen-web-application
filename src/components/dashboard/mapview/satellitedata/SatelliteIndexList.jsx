@@ -5,110 +5,47 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   fetchIndexData,
   removeSelectedIndexData,
 } from "../../../../redux/slices/satelliteSlice";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
-const index_name_mapping = {
-  TRUE_COLOR: {
-    label: "Field View",
-    hint: "See anytime",
-    icon: "📸",
-  },
-  NDVI: {
-    label: "Crop Health",
-    hint: "Weekly check",
-    icon: "🌿",
-  },
-  EVI: {
-    label: "Crop Health (Dense)",
-    hint: "Thick crops",
-    icon: "🌿",
-  },
-  EVI2: {
-    label: "Crop Health (Simple)",
-    hint: "Quick check",
-    icon: "🌿",
-  },
-  SAVI: {
-    label: "Early Stage Health",
-    hint: "Just sowed",
-    icon: "🌱",
-  },
-  MSAVI: {
-    label: "Dry Land Health",
-    hint: "Dry / sparse field",
-    icon: "🏜️",
-  },
-  NDMI: {
-    label: "Water in Leaves",
-    hint: "Check irrigation",
-    icon: "💧",
-  },
-  NDWI: {
-    label: "Plant Water Level",
-    hint: "Plant thirst",
-    icon: "🪣",
-  },
-  SMI: {
-    label: "Soil Moisture",
-    hint: "Before watering",
-    icon: "🌍",
-  },
-  CCC: {
-    label: "Leaf Greenness",
-    hint: "Nutrient check",
-    icon: "🍃",
-  },
-  NITROGEN: {
-    label: "Nitrogen Level",
-    hint: "Before fertilizing",
-    icon: "🧪",
-  },
-  SOC: {
-    label: "Soil Fertility",
-    hint: "Soil audit",
-    icon: "🪱",
-  },
-  NDRE: {
-    label: "Crop Stress / Maturity",
-    hint: "Disease / Harvest",
-    icon: "⚠️",
-  },
-  RECI: {
-    label: "Leaf Richness",
-    hint: "Mid-late season",
-    icon: "🌾",
-  },
-};
-
-const indices = [
-  "TRUE_COLOR",
-  "NDVI",
-  "EVI",
-  "EVI2",
-  "SAVI",
-  "MSAVI",
-  "NDMI",
-  "NDWI",
-  "SMI",
-  "CCC",
-  "NITROGEN",
-  "SOC",
-  "NDRE",
-  "RECI",
-];
+import {
+  DEFAULT_SATELLITE,
+  getDefaultIndexForSatellite,
+  getIndexMetaForSatellite,
+  getIndicesForSatellite,
+} from "../../../../constants/satelliteIndices";
 
 const SatelliteIndexList = ({
   selectedFieldsDetials = [],
   selectedDate = null,
 }) => {
-  const [selectedIndex, setSelectedIndex] = useState("NDVI");
   const dispatch = useDispatch();
+  const selectedSatellite = useSelector(
+    (state) => state.satellite.selectedSatellite || DEFAULT_SATELLITE,
+  );
   const scrollContainerRef = useRef(null);
+
+  const indices = useMemo(
+    () => getIndicesForSatellite(selectedSatellite),
+    [selectedSatellite],
+  );
+  const indexMeta = useMemo(
+    () => getIndexMetaForSatellite(selectedSatellite),
+    [selectedSatellite],
+  );
+
+  const [selectedIndex, setSelectedIndex] = useState(
+    getDefaultIndexForSatellite(selectedSatellite),
+  );
+
+  useEffect(() => {
+    const defaultIndex = getDefaultIndexForSatellite(selectedSatellite);
+    setSelectedIndex(defaultIndex);
+    dispatch(removeSelectedIndexData());
+  }, [selectedSatellite, dispatch]);
 
   const validateGeometry = (field) => {
     if (!field || field.length < 3) return false;
@@ -148,10 +85,11 @@ const SatelliteIndexList = ({
           endDate: selectedDate,
           geometry: [coordinates],
           index,
+          satellite: selectedSatellite,
         }),
       );
     },
-    [selectedDate, coordinates, dispatch],
+    [selectedDate, coordinates, dispatch, selectedSatellite],
   );
 
   const debouncedFetchIndex = useMemo(
@@ -165,7 +103,14 @@ const SatelliteIndexList = ({
     return () => {
       debouncedFetchIndex.cancel?.();
     };
-  }, [selectedIndex, selectedDate, coordinates, debouncedFetchIndex, dispatch]);
+  }, [
+    selectedIndex,
+    selectedDate,
+    coordinates,
+    selectedSatellite,
+    debouncedFetchIndex,
+    dispatch,
+  ]);
 
   const handleArrowRightClick = () => {
     if (scrollContainerRef.current) {
@@ -182,7 +127,6 @@ const SatelliteIndexList = ({
   return (
     <div className="w-full mx-auto my-1 shadow-md overflow-hidden">
       <div className="flex items-center gap-1 lg:gap-2 p-1 lg:p-2 relative">
-        {/* Left Arrow */}
         <button
           className="absolute left-2 lg:left-4 bg-ember-sidebar py-2.5 text-white rounded cursor-pointer z-10"
           onClick={handleArrowLeftClick}
@@ -190,19 +134,18 @@ const SatelliteIndexList = ({
           <ChevronLeft size={24} strokeWidth={2} />
         </button>
 
-        {/* Scrollable Index Tabs */}
         <div className="relative flex-1 overflow-hidden px-[40px]">
           <div
             className="flex gap-1 lg:gap-2 flex-nowrap overflow-x-auto scroll-smooth no-scrollbar"
             ref={scrollContainerRef}
           >
             {indices.map((index) => {
-              const meta = index_name_mapping[index];
+              const meta = indexMeta[index];
               const isSelected = selectedIndex === index;
 
               return (
                 <button
-                  key={index}
+                  key={`${selectedSatellite}-${index}`}
                   onClick={() => {
                     dispatch(removeSelectedIndexData());
                     setSelectedIndex(index);
@@ -221,15 +164,10 @@ const SatelliteIndexList = ({
                     }
                   `}
                 >
-                  {/* Icon */}
                   <span className="text-base leading-none">{meta?.icon}</span>
-
-                  {/* Label */}
                   <span className="leading-tight text-center text-[11px] lg:text-xs font-semibold whitespace-nowrap">
                     {meta?.label || index}
                   </span>
-
-                  {/* Hint */}
                   <span
                     className={`text-[9px] lg:text-[10px] leading-none whitespace-nowrap font-normal
                       ${isSelected ? "text-white/80" : "text-white/50"}
@@ -243,7 +181,6 @@ const SatelliteIndexList = ({
           </div>
         </div>
 
-        {/* Right Arrow */}
         <button
           className="absolute right-2 bg-ember-sidebar text-white py-3 rounded cursor-pointer z-10 sm:right-1"
           onClick={handleArrowRightClick}

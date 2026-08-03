@@ -15,12 +15,17 @@ import SatelliteIndexList from "../satellitedata/SatelliteIndexList";
 import {
   fetchSatelliteDates,
   clearSatelliteDates,
+  setSelectedSatellite,
 } from "../../../../redux/slices/satelliteSlice";
 import { X, AlertCircle } from "lucide-react";
 import DateRangePicker from "./DateRangePicker";
+import {
+  SATELLITE_OPTIONS,
+  DEFAULT_SATELLITE,
+  isSentinel1,
+} from "../../../../constants/satelliteIndices";
 
 const DATE_FORMAT_OPTIONS = { day: "numeric", month: "short", year: "numeric" };
-const CLOUD_COVER_THRESHOLD = 5;
 
 // Helper functions
 const formatDate = (date) => {
@@ -42,22 +47,6 @@ const toISODateString = (date) => {
   } catch {
     return "";
   }
-};
-
-const pickLowCloudIsoDate = (allDates, targetIsoDate, threshold) => {
-  if (!Array.isArray(allDates) || allDates.length === 0) return targetIsoDate;
-  const targetIndex = allDates.findIndex((d) => d.isoDate === targetIsoDate);
-  const startIndex = targetIndex === -1 ? 0 : targetIndex;
-  for (let i = startIndex; i < allDates.length; i++) {
-    const cloud = allDates[i]?.value ?? 0;
-    if (cloud <= threshold) return allDates[i].isoDate;
-  }
-  let best = allDates[startIndex];
-  for (let i = startIndex + 1; i < allDates.length; i++) {
-    const cloud = allDates[i]?.value ?? 0;
-    if ((best?.value ?? Infinity) > cloud) best = allDates[i];
-  }
-  return best?.isoDate ?? targetIsoDate;
 };
 
 const getSixMonthsBeforeDate = () => {
@@ -174,15 +163,16 @@ const DateRangeBadge = ({ startDate, endDate, onClear }) => {
 
 const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   const dispatch = useDispatch();
-  const { satelliteDates, loading } = useSelector((state) => state.satellite);
+  const { satelliteDates, loading, selectedSatellite } = useSelector(
+    (state) => state.satellite,
+  );
+  const satellite = selectedSatellite || DEFAULT_SATELLITE;
 
   const defaultStartDate = useMemo(() => getSixMonthsBeforeDate(), []);
   const defaultEndDate = useMemo(() => getTodayDate(), []);
 
   const [dates, setDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
-  const [visibleDates, setVisibleDates] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(6);
 
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [customStartDate, setCustomStartDate] = useState(defaultStartDate);
@@ -195,13 +185,11 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     message: "",
   });
 
-  const [cloudModal, setCloudModal] = useState({
-    isOpen: false,
-    message: "",
-  });
-
   const currentFieldId = selectedFieldsDetials[0]?._id;
   const prevFieldIdRef = useRef(currentFieldId);
+  const datesScrollRef = useRef(null);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
 
   const isDefaultRange = useMemo(() => {
     return (
@@ -224,17 +212,18 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   }, [selectedFieldsDetials]);
 
   const fetchDatesDirectly = useCallback(
-    (coords, startDate, endDate) => {
+    (coords, startDate, endDate, sat = satellite) => {
       if (!coords || coords.length === 0) return;
       dispatch(
         fetchSatelliteDates({
           geometry: coords,
           startDate: startDate,
           endDate: endDate,
+          satellite: sat,
         }),
       );
     },
-    [dispatch],
+    [dispatch, satellite],
   );
 
   const debouncedFetchDates = useMemo(() => {
@@ -259,7 +248,6 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
       setAppliedEndDate(defaultEndDate);
       setSelectedDate("");
       setDates([]);
-      setVisibleDates([]);
       dispatch(clearSatelliteDates());
     }
   }, [currentFieldId, defaultStartDate, defaultEndDate, dispatch]);
@@ -269,22 +257,41 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
       debouncedFetchDates(coordinates, appliedStartDate, appliedEndDate);
     }
     return () => debouncedFetchDates.cancel?.();
-  }, [coordinates, appliedStartDate, appliedEndDate, debouncedFetchDates]);
+  }, [
+    coordinates,
+    appliedStartDate,
+    appliedEndDate,
+    satellite,
+    debouncedFetchDates,
+  ]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setVisibleCount(window.innerWidth < 1024 ? 5 : 6);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+  const handleSatelliteChange = useCallback(
+    (event) => {
+      const next = event.target.value;
+      if (!next || next === satellite) return;
+      setSelectedDate("");
+      setDates([]);
+      dispatch(setSelectedSatellite(next));
+    },
+    [satellite, dispatch],
+  );
+
+  const updateScrollButtons = useCallback(() => {
+    const el = datesScrollRef.current;
+    if (!el) {
+      setCanScrollPrev(false);
+      setCanScrollNext(false);
+      return;
+    }
+    const maxScrollLeft = el.scrollWidth - el.clientWidth;
+    setCanScrollPrev(el.scrollLeft > 2);
+    setCanScrollNext(el.scrollLeft < maxScrollLeft - 2);
   }, []);
 
   useEffect(() => {
     const items = satelliteDates?.items || [];
     if (!items.length) {
       setDates([]);
-      setVisibleDates([]);
       if (selectedDate) setSelectedDate("");
       return;
     }
@@ -295,7 +302,10 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
         dateMap.set(isoDate, {
           date: formatDate(item.date),
           isoDate: isoDate,
-          value: item.cloud_cover ?? 0,
+          value:
+            item.cloud_cover == null || Number.isNaN(Number(item.cloud_cover))
+              ? null
+              : Number(item.cloud_cover),
         });
       }
     });
@@ -303,53 +313,37 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
       (a, b) => new Date(b.isoDate) - new Date(a.isoDate),
     );
     setDates(uniqueDates);
-    setVisibleDates(uniqueDates.slice(0, visibleCount));
 
     if (uniqueDates.length > 0 && !selectedDate) {
-      const bestIso = pickLowCloudIsoDate(
-        uniqueDates,
-        uniqueDates[0].isoDate,
-        CLOUD_COVER_THRESHOLD,
-      );
-      setSelectedDate(bestIso);
+      setSelectedDate(uniqueDates[0].isoDate);
     }
-  }, [satelliteDates, visibleCount, selectedDate]);
+  }, [satelliteDates, selectedDate]);
 
   useEffect(() => {
-    if (!selectedDate || dates.length === 0) return;
-    const selectedObj = dates.find((d) => d.isoDate === selectedDate);
-    const selectedCloud = selectedObj?.value ?? 0;
-    if (selectedCloud > CLOUD_COVER_THRESHOLD) {
-      const fallbackIso = pickLowCloudIsoDate(
-        dates,
-        selectedDate,
-        CLOUD_COVER_THRESHOLD,
-      );
-      if (fallbackIso && fallbackIso !== selectedDate) {
-        setSelectedDate(fallbackIso);
-      }
+    const el = datesScrollRef.current;
+    if (!el) return;
+    updateScrollButtons();
+    el.addEventListener("scroll", updateScrollButtons, { passive: true });
+    window.addEventListener("resize", updateScrollButtons);
+    return () => {
+      el.removeEventListener("scroll", updateScrollButtons);
+      window.removeEventListener("resize", updateScrollButtons);
+    };
+  }, [dates, loading.satelliteDates, updateScrollButtons]);
+
+  useEffect(() => {
+    if (!selectedDate || !datesScrollRef.current) return;
+    const selectedEl = datesScrollRef.current.querySelector(
+      `[data-iso-date="${selectedDate}"]`,
+    );
+    if (selectedEl) {
+      selectedEl.scrollIntoView({
+        behavior: "smooth",
+        inline: "nearest",
+        block: "nearest",
+      });
     }
   }, [selectedDate, dates]);
-
-  useEffect(() => {
-    if (selectedDate && dates.length > 0) {
-      const selectedIndex = dates.findIndex((d) => d.isoDate === selectedDate);
-      if (selectedIndex !== -1) {
-        const pageStart =
-          Math.floor(selectedIndex / visibleCount) * visibleCount;
-        const newVisibleDates = dates.slice(
-          pageStart,
-          pageStart + visibleCount,
-        );
-        const isInCurrentView = visibleDates.some(
-          (d) => d.isoDate === selectedDate,
-        );
-        if (!isInCurrentView && newVisibleDates.length > 0) {
-          setVisibleDates(newVisibleDates);
-        }
-      }
-    }
-  }, [selectedDate, dates, visibleCount, visibleDates]);
 
   const handleApplyDateRange = useCallback(() => {
     if (!customStartDate || !customEndDate) return;
@@ -413,49 +407,22 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
     dispatch,
   ]);
 
-  const handleArrowClick = useCallback(
-    (direction) => {
-      if (!dates.length) return;
-      const currentStart = dates.findIndex(
-        (d) => d.isoDate === visibleDates[0]?.isoDate,
-      );
-      if (currentStart === -1) return;
-      const maxStart = Math.max(0, dates.length - visibleCount);
-      const delta = direction === "next" ? visibleCount : -visibleCount;
-      const nextStartRaw = currentStart + delta;
-      const nextStart = Math.min(maxStart, Math.max(0, nextStartRaw));
-      const nextVisibleDates = dates.slice(nextStart, nextStart + visibleCount);
-      setVisibleDates(nextVisibleDates);
-      const isSelectedVisible = nextVisibleDates.some(
-        (d) => d.isoDate === selectedDate,
-      );
-      if (!isSelectedVisible) {
-        setSelectedDate(nextVisibleDates[0]?.isoDate || "");
-      }
-    },
-    [dates, visibleDates, visibleCount, selectedDate],
-  );
+  const handleArrowClick = useCallback((direction) => {
+    const el = datesScrollRef.current;
+    if (!el) return;
+    const scrollAmount = Math.max(el.clientWidth * 0.8, 200);
+    el.scrollBy({
+      left: direction === "next" ? scrollAmount : -scrollAmount,
+      behavior: "smooth",
+    });
+  }, []);
 
   const handleDateClick = useCallback(
     (isoDate) => {
       if (!isoDate || isoDate === selectedDate) return;
-      const clickedObj = dates.find((d) => d.isoDate === isoDate);
-      const clickedCloud = clickedObj?.value ?? 0;
-      const bestIso = pickLowCloudIsoDate(
-        dates,
-        isoDate,
-        CLOUD_COVER_THRESHOLD,
-      );
-      if (clickedCloud > CLOUD_COVER_THRESHOLD) {
-        setCloudModal({
-          isOpen: true,
-          message:
-            "This date has too much cloud cover, so the image may not be clear. We selected an older clearer date instead.",
-        });
-      }
-      if (bestIso && bestIso !== selectedDate) setSelectedDate(bestIso);
+      setSelectedDate(isoDate);
     },
-    [selectedDate, dates],
+    [selectedDate],
   );
 
   const toggleCalendar = useCallback(() => {
@@ -467,35 +434,16 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   const closeErrorModal = useCallback(() => {
     setErrorModal({ isOpen: false, message: "" });
   }, []);
-  const closeCloudModal = useCallback(() => {
-    setCloudModal({ isOpen: false, message: "" });
-  }, []);
 
-  const isPrevDisabled = useMemo(() => {
-    if (loading.satelliteDates || !dates.length) return true;
-    const maxStart = Math.max(0, dates.length - visibleCount);
-    const currentStart = dates.findIndex(
-      (d) => d.isoDate === visibleDates[0]?.isoDate,
-    );
-    if (currentStart === -1) return true;
-    return currentStart <= 0 || currentStart > maxStart;
-  }, [loading.satelliteDates, dates, visibleDates, visibleCount]);
-  const isNextDisabled = useMemo(() => {
-    if (loading.satelliteDates || !dates.length) return true;
-    const maxStart = Math.max(0, dates.length - visibleCount);
-    const currentStart = dates.findIndex(
-      (d) => d.isoDate === visibleDates[0]?.isoDate,
-    );
-    if (currentStart === -1) return true;
-    return currentStart >= maxStart;
-  }, [loading.satelliteDates, dates, visibleDates, visibleCount]);
+  const isPrevDisabled = loading.satelliteDates || !dates.length || !canScrollPrev;
+  const isNextDisabled = loading.satelliteDates || !dates.length || !canScrollNext;
 
   // The skeleton loader is only shown *over* the date strip, not the rest (arrows, calendar, etc).
   const renderDateItems = () => {
     if (loading.satelliteDates) {
-      return <DateSkeleton count={visibleCount} />;
+      return <DateSkeleton count={6} />;
     }
-    if (visibleDates.length === 0) {
+    if (dates.length === 0) {
       return (
         <div className="flex flex-col items-center w-full text-xs text-gray-400 opacity-80 px-2 py-4">
           <div className="flex flex-row gap-2 w-full justify-center items-center">
@@ -525,10 +473,11 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
         </div>
       );
     }
-    return visibleDates.map((dateItem) => (
+    return dates.map((dateItem) => (
       <div
         key={dateItem.isoDate}
-        className={`flex flex-col items-center text-white cursor-pointer rounded px-4 py-2.5 min-w-[90px] transition-colors ${
+        data-iso-date={dateItem.isoDate}
+        className={`flex flex-col items-center text-white cursor-pointer rounded px-4 py-2.5 min-w-[90px] shrink-0 transition-colors ${
           dateItem.isoDate === selectedDate
             ? "bg-ember-sidebar brightness-75 shadow-inner"
             : "bg-transparent hover:bg-ember-sidebar/50"
@@ -547,7 +496,9 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
           {dateItem.date}
         </div>
         <div className="text-xs text-center whitespace-nowrap">
-          {dateItem.value.toFixed(2)}% Cloud
+          {isSentinel1(satellite) || dateItem.value == null
+            ? "0.00% Cloud"
+            : `${dateItem.value.toFixed(2)}% Cloud`}
         </div>
       </div>
     ));
@@ -560,18 +511,26 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
         onClose={closeErrorModal}
         message={errorModal.message}
       />
-      <ErrorModal
-        isOpen={cloudModal.isOpen}
-        onClose={closeCloudModal}
-        message={cloudModal.message}
-        title="Too much cloud"
-      />
       <SatelliteIndexList
         selectedFieldsDetials={selectedFieldsDetials}
         selectedDate={selectedDate}
       />
       <div className="flex items-center gap-2 w-full px-2 bg-ember-surface rounded-md relative">
-        <div className="relative flex items-center">
+        <div className="relative flex items-center gap-1.5">
+          <select
+            value={satellite}
+            onChange={handleSatelliteChange}
+            disabled={loading.satelliteDates}
+            className="bg-ember-sidebar text-white text-xs rounded px-2 py-1.5 border border-white/10 cursor-pointer outline-none hover:bg-ember-sidebar/80 disabled:opacity-50 max-w-[118px]"
+            aria-label="Select satellite"
+            title="Select satellite"
+          >
+            {SATELLITE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={toggleCalendar}
@@ -614,7 +573,10 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
           <LeftArrow />
         </button>
         {/* Only put the skeleton loader here, over the date items */}
-        <div className="flex gap-2 overflow-x-auto w-full justify-between py-[5px] scrollbar-hide scroll-smooth">
+        <div
+          ref={datesScrollRef}
+          className="flex gap-2 overflow-x-auto w-full py-[5px] scrollbar-hide scroll-smooth"
+        >
           {renderDateItems()}
         </div>
         <button
