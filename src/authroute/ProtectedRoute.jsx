@@ -4,6 +4,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { refreshAccessToken, logout } from "../redux/slices/authSlice";
 import { store } from "../redux/store";
 import { isTokenValid } from "../utility/token";
+import { hasPersistedRefreshToken } from "../utility/authSession";
 import LogoFlipLoader from "../components/comman/loading/LogoFlipLoader";
 import { motion, AnimatePresence } from "framer-motion";
 import { AUTH_ROUTES } from "../config/brand";
@@ -21,6 +22,12 @@ const ProtectedRoute = ({ children }) => {
       const token = auth?.token;
 
       if (isTokenValid(token)) {
+        if (mounted) setChecking(false);
+        return;
+      }
+
+      if (!hasPersistedRefreshToken()) {
+        dispatch(logout());
         if (mounted) setChecking(false);
         return;
       }

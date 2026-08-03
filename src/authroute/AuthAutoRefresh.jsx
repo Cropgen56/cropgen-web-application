@@ -4,7 +4,10 @@ import { refreshAccessToken, logout } from "../redux/slices/authSlice";
 import { store } from "../redux/store";
 import { decodeJWT } from "../utility/decodetoken";
 import { isTokenValid } from "../utility/token";
-import { msUntilAccessTokenRefresh } from "../utility/authSession";
+import {
+  hasPersistedRefreshToken,
+  msUntilAccessTokenRefresh,
+} from "../utility/authSession";
 
 const AuthAutoRefresh = ({ children }) => {
   const dispatch = useDispatch();
@@ -14,6 +17,10 @@ const AuthAutoRefresh = ({ children }) => {
   useEffect(() => {
     if (bootstrapTriedRef.current) return;
     if (token && isTokenValid(token)) {
+      bootstrapTriedRef.current = true;
+      return;
+    }
+    if (!hasPersistedRefreshToken()) {
       bootstrapTriedRef.current = true;
       return;
     }

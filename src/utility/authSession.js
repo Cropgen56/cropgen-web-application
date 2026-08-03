@@ -21,6 +21,15 @@ export function clearPersistedRefreshToken() {
   }
 }
 
+export function hasPersistedRefreshToken() {
+  if (typeof window === "undefined") return false;
+  try {
+    return Boolean(sessionStorage.getItem(CROPGEN_REFRESH_STORAGE_KEY));
+  } catch {
+    return false;
+  }
+}
+
 /** Milliseconds until proactive refresh; 0 means refresh now. */
 export function msUntilAccessTokenRefresh(expUnixSeconds) {
   const now = Date.now() / 1000;
