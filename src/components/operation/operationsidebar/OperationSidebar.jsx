@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Operation2 } from "../../../assets/Icons";
 import { CiSearch } from "react-icons/ci";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { useSelector } from "react-redux";
 import PolygonPreview from "../../polygon/PolygonPreview";
+import SubscriptionStatusBadge from "../../comman/SubscriptionStatusBadge";
 
 const SIDEBAR_BG = "#344e41";
 const SIDEBAR_HOVER = "#2b4035";
@@ -37,15 +38,11 @@ const FieldInfo = ({
         >
           {title}
         </h4>
-        <span
-          className={`shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
-            isSubscribed
-              ? "bg-emerald-400/25 text-emerald-50"
-              : "bg-red-500/20 text-red-100"
-          }`}
-        >
-          {isSubscribed ? "Active" : "Off"}
-        </span>
+        <SubscriptionStatusBadge
+          isSubscribed={isSubscribed}
+          variant="onDark"
+          mode="active"
+        />
       </div>
       <p className="text-[11px] text-white/60 truncate">{area}</p>
       <div className="flex gap-2 text-[10px] text-white/50 mt-0.5">
@@ -63,14 +60,14 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
   const filteredFields = [...fields]
     .reverse()
     .filter((field) =>
-      field.fieldName?.toLowerCase().includes(searchQuery.toLowerCase())
+      field.fieldName?.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
   const calculateCentroid = (polygon) => {
     if (!polygon?.length) return { lat: "0.000", lon: "0.000" };
     const total = polygon.reduce(
       (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }),
-      { lat: 0, lng: 0 }
+      { lat: 0, lng: 0 },
     );
     return {
       lat: (total.lat / polygon.length).toFixed(3),
@@ -90,7 +87,9 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
     >
       <div
         className="shrink-0 px-3 py-3 border-b border-white/15"
-        style={{ background: `linear-gradient(180deg, ${SIDEBAR_BG}, ${SIDEBAR_HOVER})` }}
+        style={{
+          background: `linear-gradient(180deg, ${SIDEBAR_BG}, ${SIDEBAR_HOVER})`,
+        }}
       >
         <div className="flex items-center gap-2 mb-3">
           <div className="p-1.5 rounded-lg bg-white/10 shrink-0">
@@ -133,7 +132,9 @@ const OperationSidebar = ({ setSelectedField, selectedField }) => {
                 lon={lon}
                 coordinates={field.field}
                 isSelected={selectedField?._id === field._id}
-                isSubscribed={field.subscription?.hasActiveSubscription === true}
+                isSubscribed={
+                  field.subscription?.hasActiveSubscription === true
+                }
                 onClick={() => setSelectedField(field)}
               />
             );

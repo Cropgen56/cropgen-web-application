@@ -17,3 +17,10 @@ export const verifySubscriptionPayment = async (subscriptionId, paymentData) => 
   });
   return response.data;
 };
+
+export const demoActivateAllSubscriptions = async (key) => {
+  const response = await api.post("/api/subscription/demo-activate-all", {
+    key,
+  });
+  return response.data;
+};

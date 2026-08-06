@@ -345,7 +345,7 @@ const FarmerScheduler = ({ selectedField: farmFieldId, fieldName }) => {
   };
 
   const renderEventContent = (eventInfo) => (
-    <div className="px-1 py-0.5 text-[9px] sm:text-[10px] font-semibold leading-tight truncate">
+    <div className="px-1 py-0.5 text-[9px] sm:text-[10px] font-semibold leading-tight truncate text-white">
       {moment(eventInfo.event.start).format("h A")} {eventInfo.event.title}
     </div>
   );
