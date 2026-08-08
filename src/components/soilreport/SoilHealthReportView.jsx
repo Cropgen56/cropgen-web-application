@@ -6,7 +6,7 @@ const THEME = "#0D6B45";
 const SOFT = "#F3FAF6";
 
 const COMPANY = {
-  name: "LEACROP AGRITECH PRIVATE LIMITED",
+  name: "LEANCROP AGRITECH PRIVATE LIMITED",
   address:
     "87/3b/1c, Azad Wadi, Kothrud, Pune, Pune City, Maharashtra, India, 411038",
 };
