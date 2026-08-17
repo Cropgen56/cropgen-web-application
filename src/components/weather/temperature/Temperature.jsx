@@ -13,10 +13,11 @@ const Temperature = ({ forecastData, historicalData, dateRange }) => {
 
   const { time = [], temp_max = [], temp_mean = [], temp_min = [] } = dataSource;
 
-  const slicedTime = time.slice(0, 16);
-  const slicedTempMax = temp_max.slice(0, 16);
-  const slicedTempMean = temp_mean.slice(0, 16);
-  const slicedTempMin = temp_min.slice(0, 16);
+  // Historical ranges can span years — show every point (scrollable), not just the first 16.
+  const slicedTime = time;
+  const slicedTempMax = temp_max;
+  const slicedTempMean = temp_mean;
+  const slicedTempMin = temp_min;
 
   const formattedDates = slicedTime.map(dateStr => {
     const d = new Date(dateStr);
@@ -25,10 +26,26 @@ const Temperature = ({ forecastData, historicalData, dateRange }) => {
     return `${day} ${month}`;
   });
 
+  // Keep point spacing legible: widen the chart instead of cramming points together,
+  // and let the wrapper scroll horizontally for long historical ranges.
+  const MIN_PX_PER_POINT = 34;
+  const chartMinWidth = Math.max(slicedTime.length * MIN_PX_PER_POINT, 100);
+
+  // Large historical ranges (100s of points) get expensive to animate/draw per-point —
+  // drop symbols/animation/smoothing and let echarts downsample instead of laggy per-dot rendering.
+  const LARGE_DATASET_THRESHOLD = 60;
+  const isLarge = slicedTime.length > LARGE_DATASET_THRESHOLD;
+
+  const seriesBase = isLarge
+    ? { showSymbol: false, sampling: "lttb" }
+    : { symbol: "circle", symbolSize: 4 };
+
   const options = {
+    animation: !isLarge,
     grid: {
-      left: "0%",
-      right: "2%",
+      // Fixed px (not %) so the margin stays small even when the chart is scroll-widened.
+      left: 8,
+      right: 12,
       top: "14%",
       bottom: "0%",
       containLabel: true,
@@ -57,8 +74,7 @@ const Temperature = ({ forecastData, historicalData, dateRange }) => {
         type: "line",
         areaStyle: { color: "#F4BC58" },
         lineStyle: { color: "#F4BC58" },
-        symbol: "circle",
-        symbolSize: 4,
+        ...seriesBase,
       },
       {
         name: "Mean Temp",
@@ -66,8 +82,7 @@ const Temperature = ({ forecastData, historicalData, dateRange }) => {
         type: "line",
         areaStyle: { color: "#86D72F" },
         lineStyle: { color: "#86D72F" },
-        symbol: "circle",
-        symbolSize: 4,
+        ...seriesBase,
       },
       {
         name: "Min Temp",
@@ -75,8 +90,7 @@ const Temperature = ({ forecastData, historicalData, dateRange }) => {
         type: "line",
         areaStyle: { color: "#4B970F" },
         lineStyle: { color: "#4B970F" },
-        symbol: "circle",
-        symbolSize: 4,
+        ...seriesBase,
       },
     ],
     tooltip: {
@@ -102,7 +116,11 @@ const Temperature = ({ forecastData, historicalData, dateRange }) => {
               <p className="text-sm text-gray-500">{dateRange.startDate} to {dateRange.endDate}</p>
             )}
           </div>
-          <ReactEcharts option={options} className="w-full relative h-[250px]" />
+          <div className="w-full overflow-x-auto">
+            <div style={{ width: `max(100%, ${chartMinWidth}px)` }}>
+              <ReactEcharts option={options} className="w-full relative h-[250px]" />
+            </div>
+          </div>
         </div>
       </Card.Body>
     </Card>

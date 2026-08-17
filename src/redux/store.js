@@ -9,6 +9,7 @@ import cropReducer from "./slices/cropSlice";
 import subscriptionSlice from "./slices/subscriptionSlice";
 import membershipReducer from "./slices/membershipSlice";
 import smartAdvisoryReducer from "./slices/smartAdvisorySlice";
+import zoningSlice from "./slices/zoningSlice";
 
 const AUTH_TOKEN_KEY = "authToken";
 
@@ -66,6 +67,7 @@ export const store = configureStore({
     subscription: subscriptionSlice,
     membership: membershipReducer,
     smartAdvisory: smartAdvisoryReducer,
+    zoning: zoningSlice,
   },
   preloadedState,
   middleware: (getDefaultMiddleware) =>

@@ -7,6 +7,7 @@ import Weather from "../pages/Weather";
 import DiseaseDetection from "../pages/DiseaseDetection";
 import SmartAdvisory from "../pages/SmartAdviosory";
 import SoilReport from "../pages/SoilReport";
+import Zoning from "../pages/Zoning";
 import FarmReport from "../pages/FarmReport";
 import PersonaliseCropSchedule from "../pages/PersonaliseCropSchedule";
 import Setting from "../pages/Setting";
@@ -42,6 +43,7 @@ const AppRoutes = () => {
           <Route path="disease-detection" element={<DiseaseDetection />} />
           <Route path="smart-advisory" element={<SmartAdvisory />} />
           <Route path="soil-report" element={<SoilReport />} />
+          <Route path="zoning" element={<Zoning />} />
           <Route path="farm-report" element={<FarmReport />} />
           <Route
             path="Personalise-crop-schedule"

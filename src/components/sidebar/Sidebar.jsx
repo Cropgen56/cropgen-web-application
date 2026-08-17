@@ -18,6 +18,7 @@ import {
   Setting,
   Logout,
   Hammer,
+  ZoningIcon,
 } from "../../assets/Icons";
 import "./Sidebar.css";
 import {
@@ -44,6 +45,7 @@ const NAV_ITEMS = [
   },
   { path: "/smart-advisory", label: "Smart Advisory", Icon: SmartAdvisory },
   { path: "/soil-report", label: "Soil Report", Icon: SoilReportIcon },
+  { path: "/zoning", label: "Zoning", Icon: ZoningIcon },
   { path: "/farm-report", label: "Farm Report", Icon: FarmReport },
   { path: "/setting", label: "Setting", Icon: Setting },
 ];

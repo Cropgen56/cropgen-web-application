@@ -16,6 +16,16 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
 
   const humidityData = dataSource.relative_humidity || [];
 
+  // Keep point spacing legible: widen the chart instead of cramming points together,
+  // and let the wrapper scroll horizontally for long historical ranges.
+  const MIN_PX_PER_POINT = 34;
+  const chartMinWidth = Math.max(dates.length * MIN_PX_PER_POINT, 100);
+
+  // Large historical ranges (100s of points) get expensive to animate/draw per-point —
+  // drop symbols/animation and let echarts downsample instead of laggy per-dot rendering.
+  const LARGE_DATASET_THRESHOLD = 60;
+  const isLarge = dates.length > LARGE_DATASET_THRESHOLD;
+
   const currentHumidity = isHistorical
     ? humidityData.length > 0
       ? humidityData[humidityData.length - 1]
@@ -23,9 +33,11 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
     : current.relative_humidity ?? "-";
 
   const options = {
+    animation: !isLarge,
     grid: {
-      left: "0%",
-      right: "2%",
+      // Fixed px (not %) so the margin stays small even when the chart is scroll-widened.
+      left: 8,
+      right: 12,
       top: "14%",
       bottom: "10%",
       containLabel: true,
@@ -37,10 +49,7 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
       axisLine: { show: true },
       axisLabel: {
         color: "#000",
-        interval: 0,
-        // rotate: 0,
-        // fontSize: 11,
-        // margin: 10,
+        interval: isLarge ? "auto" : 0,
         rotate: 30,
         margin: 15,
         fontSize: 12,
@@ -71,8 +80,9 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
         areaStyle: { color: "#0A94C080" },
         lineStyle: { color: "#0A94C080" },
         smooth: false,
-        symbol: "circle",
-        symbolSize: 4,
+        ...(isLarge
+          ? { showSymbol: false, sampling: "lttb" }
+          : { symbol: "circle", symbolSize: 4 }),
       },
     ],
     tooltip: {
@@ -104,8 +114,10 @@ const Humidity = ({ forecastData, historicalData, dateRange }) => {
             </p>
           )}
         </div>
-        <div className="w-full">
-          <ReactEcharts option={options} className="w-full h-[200px]" />
+        <div className="w-full overflow-x-auto">
+          <div style={{ width: `max(100%, ${chartMinWidth}px)` }}>
+            <ReactEcharts option={options} className="w-full h-[200px]" />
+          </div>
         </div>
       </div>
     </div>

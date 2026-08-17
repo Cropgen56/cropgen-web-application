@@ -8,19 +8,30 @@ const RainChances = ({ forecastData, historicalData, dateRange }) => {
   const dataSource = historicalData || forecastData?.forecast || {};
   const isHistorical = !!historicalData;
 
+  // Historical ranges can span years — show every point (scrollable), not just the first 16.
   const rainData =
     dataSource?.rain && dataSource.rain.length > 0
-      ? dataSource.rain.slice(0, 16)
+      ? dataSource.rain
       : new Array(16).fill(0);
 
-  const dateData = dataSource?.time
-    ? dataSource.time.slice(0, 16)
-    : [];
+  const dateData = dataSource?.time ? dataSource.time : [];
 
   const formattedDates = dateData.map((dateStr) => {
     const dateObj = new Date(dateStr);
-    return `${dateObj.getDate()}`;
+    return isHistorical
+      ? `${dateObj.getDate()} ${dateObj.toLocaleString("default", { month: "short" })}`
+      : `${dateObj.getDate()}`;
   });
+
+  // Keep point spacing legible: widen the chart instead of cramming points together,
+  // and let the wrapper scroll horizontally for long historical ranges.
+  const MIN_PX_PER_POINT = 34;
+  const chartMinWidth = Math.max(formattedDates.length * MIN_PX_PER_POINT, 100);
+
+  // Large historical ranges (100s of points) get expensive to animate/draw per-point —
+  // drop symbols/animation and let echarts downsample instead of laggy per-dot rendering.
+  const LARGE_DATASET_THRESHOLD = 60;
+  const isLarge = formattedDates.length > LARGE_DATASET_THRESHOLD;
 
   const currentDate = isHistorical && dateData.length > 0
     ? new Date(dateData[0])
@@ -54,9 +65,11 @@ const RainChances = ({ forecastData, historicalData, dateRange }) => {
     : (forecastData?.current?.precipitation || 5.2);
 
   const options = {
+    animation: !isLarge,
     grid: {
-      left: "2%",
-      right: "2%",
+      // Fixed px (not %) so the margin stays small even when the chart is scroll-widened.
+      left: 8,
+      right: 12,
       top: "14%",
       bottom: "15%",
       containLabel: true,
@@ -67,8 +80,8 @@ const RainChances = ({ forecastData, historicalData, dateRange }) => {
       data: formattedDates,
       axisLabel: {
         color: "#000",
-        interval: 0,
-        rotate: 0,
+        interval: isLarge ? "auto" : 0,
+        rotate: isLarge ? 30 : 0,
         margin: 10,
         fontSize: 12,
       },
@@ -92,9 +105,10 @@ const RainChances = ({ forecastData, historicalData, dateRange }) => {
         areaStyle: { color: "#81D8EB" },
         lineStyle: { color: "#81D8EB" },
         smooth: false,
-        symbol: "circle",
-        symbolSize: 10,
         itemStyle: { color: "#81D8EB" },
+        ...(isLarge
+          ? { showSymbol: false, sampling: "lttb" }
+          : { symbol: "circle", symbolSize: 10 }),
       },
     ],
     tooltip: { trigger: "axis", formatter: "{b0}: {c0} mm" },
@@ -151,11 +165,15 @@ const RainChances = ({ forecastData, historicalData, dateRange }) => {
           </div>
         </div>
 
-        <ReactEcharts
-          option={options}
-          className="rain-chances-chart mt-3"
-          style={{ width: "100%", height: "200px" }}
-        />
+        <div className="w-full overflow-x-auto">
+          <div style={{ width: `max(100%, ${chartMinWidth}px)` }}>
+            <ReactEcharts
+              option={options}
+              className="rain-chances-chart mt-3"
+              style={{ width: "100%", height: "200px" }}
+            />
+          </div>
+        </div>
       </Card.Body>
     </Card>
   );

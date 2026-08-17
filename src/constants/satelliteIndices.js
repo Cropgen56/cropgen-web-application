@@ -9,7 +9,7 @@ export const SATELLITE_OPTIONS = [
   { value: SATELLITES.S1, label: "Satellite 1" },
 ];
 
-export const DEFAULT_SATELLITE = SATELLITES.S2;
+export const DEFAULT_SATELLITE = SATELLITES.S1;
 
 /** Sentinel-2 optical indices (POST /calculate/index). */
 export const S2_INDEX_META = {

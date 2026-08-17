@@ -16,6 +16,16 @@ const WindChart = ({ forecastData, historicalData, dateRange }) => {
   const windGusts = dataSource.wind_gusts || [];
   const windSpeed = dataSource.wind_speed || [];
 
+  // Keep point spacing legible: widen the chart instead of cramming points together,
+  // and let the wrapper scroll horizontally for long historical ranges.
+  const MIN_PX_PER_POINT = 34;
+  const chartMinWidth = Math.max(dates.length * MIN_PX_PER_POINT, 100);
+
+  // Large historical ranges (100s of points) get expensive to animate/draw per-point —
+  // drop symbols/animation/smoothing and let echarts downsample instead of laggy per-dot rendering.
+  const LARGE_DATASET_THRESHOLD = 60;
+  const isLarge = dates.length > LARGE_DATASET_THRESHOLD;
+
   const currentWindSpeed = isHistorical 
     ? (windSpeed.length > 0 ? windSpeed[windSpeed.length - 1] : "-")
     : (current.wind_speed ?? "-");
@@ -31,10 +41,12 @@ const WindChart = ({ forecastData, historicalData, dateRange }) => {
       : "-";
 
   const option = {
+    animation: !isLarge,
     tooltip: { trigger: "axis" },
     grid: {
-      left: "3%",
-      right: "3%",
+      // Fixed px (not %) so the margin stays small even when the chart is scroll-widened.
+      left: 8,
+      right: 12,
       top: "18%",
       bottom: "15%",
       containLabel: true,
@@ -46,7 +58,7 @@ const WindChart = ({ forecastData, historicalData, dateRange }) => {
       axisLine: { lineStyle: { color: "#888" } },
       axisLabel: {
         color: "#333",
-        interval: 0,
+        interval: isLarge ? "auto" : 0,
         rotate: 30,
         margin: 15,
         fontSize: 12,
@@ -66,19 +78,21 @@ const WindChart = ({ forecastData, historicalData, dateRange }) => {
         name: "Wind Gusts",
         type: "line",
         data: windGusts,
-        smooth: true,
-        symbol: "circle",
-        symbolSize: 8,
+        smooth: !isLarge,
         itemStyle: { color: "#1f77b4" },
+        ...(isLarge
+          ? { showSymbol: false, sampling: "lttb" }
+          : { symbol: "circle", symbolSize: 8 }),
       },
       {
         name: "Wind Speed",
         type: "line",
         data: windSpeed,
-        smooth: true,
-        symbol: "circle",
-        symbolSize: 8,
+        smooth: !isLarge,
         itemStyle: { color: "#ff7f0e" },
+        ...(isLarge
+          ? { showSymbol: false, sampling: "lttb" }
+          : { symbol: "circle", symbolSize: 8 }),
       },
     ],
   };
@@ -125,8 +139,10 @@ const WindChart = ({ forecastData, historicalData, dateRange }) => {
             <p className="text-[0.7rem] text-[#9a9898] m-0 p-0">{lastUpdated}</p>
           </div>
         </div>
-        <div className="relative">
-          <ReactECharts option={option} className="w-full" style={{ padding: "0px", height: "200px" }} />
+        <div className="relative w-full overflow-x-auto">
+          <div style={{ width: `max(100%, ${chartMinWidth}px)` }}>
+            <ReactECharts option={option} className="w-full" style={{ padding: "0px", height: "200px" }} />
+          </div>
         </div>
       </Card.Body>
     </Card>

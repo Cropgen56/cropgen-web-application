@@ -309,6 +309,66 @@ export const SoilReportIcon = () => {
   );
 };
 
+export const ZoningIcon = () => {
+  return (
+    <svg
+      width="26"
+      height="26"
+      viewBox="0 0 36 35"
+      className="me-2"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        x="4"
+        y="5"
+        width="12"
+        height="12"
+        rx="1.5"
+        stroke="white"
+        strokeWidth="1.5"
+      />
+      <rect
+        x="20"
+        y="5"
+        width="12"
+        height="12"
+        rx="1.5"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeOpacity="0.6"
+      />
+      <rect
+        x="4"
+        y="21"
+        width="12"
+        height="12"
+        rx="1.5"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeOpacity="0.6"
+      />
+      <rect
+        x="20"
+        y="21"
+        width="12"
+        height="12"
+        rx="1.5"
+        stroke="white"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M8 11L12 9L14 11"
+        stroke="white"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="24" cy="27" r="2" fill="white" />
+    </svg>
+  );
+};
+
 export const FarmReport = () => {
   return (
     <svg
