@@ -12,6 +12,7 @@ import WeatherCard from "../components/smartadvisory/smartadvisorysidebar/Weathe
 import PestDiseaseCard from "../components/smartadvisory/smartadvisorysidebar/PestDiseaseCard";
 import FarmAdvisoryCard from "../components/smartadvisory/smartadvisorysidebar/FarmActivity";
 import Soiltemp from "../components/smartadvisory/smartadvisorysidebar/Soiltemp";
+import CropSwitcher from "../components/smartadvisory/smartadvisorysidebar/CropSwitcher";
 
 import FeatureGuard from "../components/subscription/FeatureGuardComponent";
 import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
@@ -221,6 +222,8 @@ const SmartAdvisory = () => {
                     selectedField={selectedField}
                     setSelectedField={setSelectedField}
                   />
+
+                  <CropSwitcher />
 
                   <NDVIChartCard selectedField={selectedField} />
                   <NutrientManagement />

@@ -67,3 +67,52 @@ export const deleteFieldAPI = async (fieldId) => {
     throw error;
   }
 };
+
+// ===================== Multi-crop: crops on a farm =====================
+
+// Add another crop to an existing farm.
+export const addCropToFieldAPI = async (fieldId, cropData) => {
+  try {
+    const response = await api.post(`/api/field/${fieldId}/crops`, cropData);
+    return response.data;
+  } catch (error) {
+    console.error("Error adding crop to field:", error);
+    throw error;
+  }
+};
+
+// List all crops (active + historical) for a farm.
+export const getCropsForFieldAPI = async (fieldId) => {
+  try {
+    const response = await api.get(`/api/field/${fieldId}/crops`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching crops for field:", error);
+    throw error;
+  }
+};
+
+// Edit a crop, or mark it harvested (isActive: false).
+export const updateCropAPI = async (fieldId, cropId, updatedData) => {
+  try {
+    const response = await api.patch(
+      `/api/field/${fieldId}/crops/${cropId}`,
+      updatedData,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating crop:", error);
+    throw error;
+  }
+};
+
+// Remove a mistakenly-added crop.
+export const deleteCropAPI = async (fieldId, cropId) => {
+  try {
+    const response = await api.delete(`/api/field/${fieldId}/crops/${cropId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting crop:", error);
+    throw error;
+  }
+};

@@ -5,10 +5,18 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
+  Plus,
+  X,
 } from "lucide-react";
 import { message } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCrops } from "../../redux/slices/cropSlice";
+import {
+  FARMING_TYPES,
+  IRRIGATION_TYPES,
+  CROP_LIFECYCLE_TYPES,
+  CROP_LIFECYCLE_LABELS,
+} from "../../constants/farmEnums";
 
 const AddFieldSidebar = ({
   saveFarm,
@@ -25,6 +33,11 @@ const AddFieldSidebar = ({
   const [typeOfIrrigation, setTypeOfIrrigation] = useState("");
   const [typeOfFarming, setTypeOfFarming] = useState("");
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+
+  // Multi-crop: optional extra crops on top of the one above. Default
+  // single-crop flow is completely unaffected when this stays empty.
+  const [additionalCrops, setAdditionalCrops] = useState([]);
+  const [showAddCropForm, setShowAddCropForm] = useState(false);
 
   const toggleSidebarVisibility = () => {
     setIsSidebarVisible(!isSidebarVisible);
@@ -81,6 +94,7 @@ const AddFieldSidebar = ({
         farmName,
         typeOfFarming,
         isBarrenLand: landType === "barren",
+        additionalCrops,
       });
 
       setFarmName("");
@@ -89,6 +103,8 @@ const AddFieldSidebar = ({
       setSowingDate("");
       setTypeOfIrrigation("");
       setTypeOfFarming("");
+      setAdditionalCrops([]);
+      setShowAddCropForm(false);
     },
     [
       fieldLandType,
@@ -100,6 +116,7 @@ const AddFieldSidebar = ({
       typeOfFarming,
       markers,
       saveFarm,
+      additionalCrops,
     ],
   );
 
@@ -134,6 +151,17 @@ const AddFieldSidebar = ({
           : "Use actual sowing date below (today or earlier)."}
       </p>
     </div>
+  );
+
+  const additionalCropsSection = (
+    <AdditionalCropsSection
+      crops={additionalCrops}
+      setCrops={setAdditionalCrops}
+      showForm={showAddCropForm}
+      setShowForm={setShowAddCropForm}
+      cropCatalog={crops}
+      fieldLandType={fieldLandType}
+    />
   );
 
   if (!isSidebarVisible) return null;
@@ -192,17 +220,19 @@ const AddFieldSidebar = ({
                   label="Type Of Irrigation"
                   value={typeOfIrrigation}
                   onChange={setTypeOfIrrigation}
-                  options={["open-irrigation", "drip-irrigation", "sprinkler"]}
+                  options={IRRIGATION_TYPES}
                   placeholder="Search or select irrigation"
                 />
                 <AutocompleteDropdown
                   label="Type Of Farming"
                   value={typeOfFarming}
                   onChange={setTypeOfFarming}
-                  options={["Organic", "Inorganic", "Integrated"]}
+                  options={FARMING_TYPES}
                   placeholder="Search or select farming type"
                 />
               </div>
+
+              {additionalCropsSection}
 
               <div className="mt-3 sm:mt-4 md:mt-6">
                 <button
@@ -275,16 +305,17 @@ const AddFieldSidebar = ({
                   label="Type Of Irrigation"
                   value={typeOfIrrigation}
                   onChange={setTypeOfIrrigation}
-                  options={["open-irrigation", "drip-irrigation", "sprinkler"]}
+                  options={IRRIGATION_TYPES}
                   placeholder="Select irrigation"
                 />
                 <AutocompleteDropdown
                   label="Type Of Farming"
                   value={typeOfFarming}
                   onChange={setTypeOfFarming}
-                  options={["Organic", "Inorganic", "Integrated"]}
+                  options={FARMING_TYPES}
                   placeholder=" Select farming type"
                 />
+                {additionalCropsSection}
               </div>
             </form>
 
@@ -682,6 +713,163 @@ const AutocompleteDropdown = ({
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+// Optional "+ Add another crop" section: lets the farmer stack extra crops
+// (each with its own name/variety/lifecycle/dates) on top of the single
+// crop entered above. Left untouched (empty), the farm creation flow is
+// exactly the single-crop flow it always was.
+const AdditionalCropsSection = ({
+  crops,
+  setCrops,
+  showForm,
+  setShowForm,
+  cropCatalog,
+  fieldLandType,
+}) => {
+  const emptyDraft = {
+    cropName: "",
+    variety: "",
+    cropLifecycleType: "seasonal",
+    startDate: "",
+    expectedEndDate: "",
+  };
+  const [draft, setDraft] = useState(emptyDraft);
+
+  const handleAdd = () => {
+    if (!draft.cropName.trim())
+      return message.error("Please select a crop name.");
+    if (!draft.variety.trim())
+      return message.error("Please enter the variety.");
+    if (!draft.startDate.trim())
+      return message.error("Please select the crop's start date.");
+    if (draft.cropLifecycleType === "seasonal" && !draft.expectedEndDate.trim()) {
+      return message.error(
+        "Please select the expected harvest date for a seasonal crop.",
+      );
+    }
+    setCrops((prev) => [...prev, { ...draft, _localId: Date.now() }]);
+    setDraft(emptyDraft);
+    setShowForm(false);
+  };
+
+  return (
+    <div className="flex flex-col gap-2 mt-1">
+      {crops.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <span className="font-semibold text-xs sm:text-sm">
+            Additional crops on this farm ({crops.length})
+          </span>
+          {crops.map((c, i) => (
+            <div
+              key={c._localId || i}
+              className="flex items-center justify-between gap-2 rounded border border-ember-sidebar/40 bg-ember-surface-muted/20 px-2 py-1.5"
+            >
+              <div className="text-xs leading-snug min-w-0 text-ember-sidebar">
+                <span className="font-semibold">{c.cropName}</span>
+                {c.variety ? ` (${c.variety})` : ""} —{" "}
+                {CROP_LIFECYCLE_LABELS[c.cropLifecycleType] || c.cropLifecycleType}
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  setCrops((prev) => prev.filter((_, idx) => idx !== i))
+                }
+                className="text-ember-sidebar hover:text-red-600 flex-shrink-0"
+                aria-label="Remove crop"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showForm ? (
+        <div className="flex flex-col gap-2 rounded-md border border-ember-sidebar/40 p-2">
+          <AutocompleteDropdown
+            label="Crop Name"
+            value={draft.cropName}
+            onChange={(v) => setDraft((d) => ({ ...d, cropName: v }))}
+            options={cropCatalog
+              .map((c) => c.cropName)
+              .sort((a, b) => a.localeCompare(b))}
+            placeholder="Search or select crop"
+          />
+          <FormInput
+            label="Variety"
+            value={draft.variety}
+            onChange={(v) => setDraft((d) => ({ ...d, variety: v }))}
+            placeholder="Enter crop variety"
+          />
+          <div className="flex flex-col gap-1">
+            <label className="font-semibold text-xs sm:text-sm">
+              Lifecycle
+            </label>
+            <div className="flex gap-1.5">
+              {CROP_LIFECYCLE_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() =>
+                    setDraft((d) => ({ ...d, cropLifecycleType: type }))
+                  }
+                  className={`flex-1 py-1.5 rounded text-xs font-semibold border ${
+                    draft.cropLifecycleType === type
+                      ? "bg-ember-sidebar text-white border-ember-sidebar"
+                      : "bg-white text-ember-sidebar border-ember-sidebar/40"
+                  }`}
+                >
+                  {CROP_LIFECYCLE_LABELS[type]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <CustomDatePicker
+            label={fieldLandType === "barren" ? "Expected start date" : "Start date"}
+            value={draft.startDate}
+            onChange={(v) => setDraft((d) => ({ ...d, startDate: v }))}
+            placeholder="Select start date"
+          />
+          {draft.cropLifecycleType === "seasonal" && (
+            <CustomDatePicker
+              label="Expected harvest date"
+              value={draft.expectedEndDate}
+              onChange={(v) => setDraft((d) => ({ ...d, expectedEndDate: v }))}
+              placeholder="Select expected harvest date"
+            />
+          )}
+          <div className="flex gap-2 mt-1">
+            <button
+              type="button"
+              onClick={handleAdd}
+              className="flex-1 h-8 bg-ember-sidebar hover:bg-ember-sidebar-hover text-white font-semibold text-xs rounded-md"
+            >
+              Add crop
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(emptyDraft);
+                setShowForm(false);
+              }}
+              className="px-3 h-8 border border-ember-sidebar/40 text-ember-sidebar font-semibold text-xs rounded-md"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowForm(true)}
+          className="flex items-center justify-center gap-1 h-8 border border-dashed border-ember-sidebar/50 text-ember-sidebar font-semibold text-xs rounded-md hover:bg-ember-sidebar/5"
+        >
+          <Plus size={14} /> Add another crop
+        </button>
+      )}
     </div>
   );
 };

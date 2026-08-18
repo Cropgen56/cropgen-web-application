@@ -6,6 +6,7 @@ import SoilHealthChart from "./SoilHealthChart";
 import CropHealthStatusBar from "./CropHealthStatusBar";
 
 import { fetchCrops } from "../../../redux/slices/cropSlice";
+import { selectAdvisoryCrop } from "../../../redux/slices/smartAdvisorySlice";
 import PremiumContentWrapper from "../../subscription/PremiumContentWrapper";
 import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
 import FeatureGuard from "../../subscription/FeatureGuard";
@@ -34,6 +35,7 @@ const CropHealth = ({
 
   const crops = useSelector((state) => state.crops.crops);
   const advisory = useSelector((state) => state.smartAdvisory?.advisory);
+  const selectedCropId = useSelector((state) => state.smartAdvisory?.selectedCropId);
   const advisoryLoading = useSelector((state) => state.smartAdvisory?.loading);
   /* ================= SUBSCRIPTION ================= */
 
@@ -46,7 +48,20 @@ const CropHealth = ({
 
   const fieldData = selectedFieldDetails || advisory?.farmFieldId || {};
 
-  const { sowingDate, cropName, acre = 0 } = fieldData;
+  // Multi-crop: this farm's active crop instances (from FarmField.crops,
+  // attached by the backend) — lets the farmer switch which crop's advisory
+  // is shown below, instead of always seeing just the farm's legacy crop.
+  const activeCrops = useMemo(
+    () => (Array.isArray(fieldData.crops) ? fieldData.crops.filter((c) => c.isActive) : []),
+    [fieldData.crops],
+  );
+
+  const selectedCropInstance = advisory?.cropInstanceId;
+
+  const sowingDate = selectedCropInstance?.startDate || fieldData.sowingDate;
+  const cropName = selectedCropInstance?.cropName || fieldData.cropName;
+  const cropVariety = selectedCropInstance?.variety || fieldData.variety;
+  const { acre = 0 } = fieldData;
 
   /* ================= FETCH CROPS ================= */
 
@@ -121,7 +136,30 @@ const CropHealth = ({
 
       {showHealthYield && (
       <div className="bg-white rounded-2xl p-3 sm:p-4 shadow border">
-        <h2 className="text-lg sm:text-xl font-bold text-ember-sidebar mb-4">Crop Health</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-ember-sidebar mb-2">Crop Health</h2>
+
+        {/* Multi-crop: switch which of this farm's active crops is shown below. */}
+        {!isPreparedForPDF && activeCrops.length > 1 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {activeCrops.map((crop) => {
+              const isSelected = String(crop._id) === String(selectedCropId);
+              return (
+                <button
+                  key={crop._id}
+                  type="button"
+                  onClick={() => dispatch(selectAdvisoryCrop(crop._id))}
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                    isSelected
+                      ? "bg-ember-sidebar text-white border-ember-sidebar"
+                      : "bg-white text-ember-sidebar border-ember-sidebar/30 hover:bg-ember-sidebar/5"
+                  }`}
+                >
+                  {crop.cropName}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <div className={`flex flex-col sm:flex-row gap-4 sm:gap-6 ${isPreparedForPDF ? "min-w-0" : ""}`}>
           {/* CROP IMAGE */}
@@ -146,7 +184,11 @@ const CropHealth = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-12 gap-y-3 text-sm">
             <Info
               label="Crop"
-              value={cropInfo?.cropName || cropName || "-"}
+              value={
+                cropName
+                  ? `${cropInfo?.cropName || cropName}${cropVariety ? ` (${cropVariety})` : ""}`
+                  : "-"
+              }
             />
 
             <Info

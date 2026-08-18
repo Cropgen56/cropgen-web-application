@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import AddFieldMap from "../components/addfield/AddFieldMap";
 import AddFieldSidebar from "../components/addfield/AddFieldSidebar";
 import { useDispatch, useSelector } from "react-redux";
-import { addFarmField } from "../redux/slices/farmSlice";
+import { addFarmField, addCropToFarm } from "../redux/slices/farmSlice";
 import { useNavigate } from "react-router-dom";
 import * as turf from "@turf/turf";
 import { message } from "antd";
@@ -123,6 +123,7 @@ const AddField = () => {
     farmName,
     typeOfFarming,
     isBarrenLand,
+    additionalCrops = [],
   }) => {
     if (markers.length === 0) {
       message.error("No markers added. Please add markers first.");
@@ -150,9 +151,41 @@ const AddField = () => {
       ).unwrap();
 
       if (result?.success) {
-        message.success("Field added successfully!");
-
         const field = result.farmField;
+
+        // Multi-crop: any extra crops the farmer added are created as
+        // separate FieldCrop entries under this farm. Best-effort — the
+        // farm itself is already saved either way, so a crop failing here
+        // only surfaces as a warning, never blocks the flow.
+        if (additionalCrops.length && field?._id) {
+          const failures = [];
+          for (const extra of additionalCrops) {
+            try {
+              await dispatch(
+                addCropToFarm({
+                  fieldId: field._id,
+                  cropData: {
+                    cropName: extra.cropName,
+                    variety: extra.variety,
+                    cropLifecycleType: extra.cropLifecycleType,
+                    startDate: extra.startDate,
+                    expectedEndDate: extra.expectedEndDate || undefined,
+                    cropRole: "intercrop",
+                  },
+                }),
+              ).unwrap();
+            } catch (cropErr) {
+              failures.push(extra.cropName);
+            }
+          }
+          if (failures.length) {
+            message.warning(
+              `Field added, but could not add: ${failures.join(", ")}. You can add them from Farm Settings.`,
+            );
+          }
+        }
+
+        message.success("Field added successfully!");
 
         const fieldData = {
           id: field._id,

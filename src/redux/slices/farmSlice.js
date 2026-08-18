@@ -5,6 +5,9 @@ import {
   getFieldAPI,
   updateFieldAPI,
   deleteFieldAPI,
+  addCropToFieldAPI,
+  updateCropAPI,
+  deleteCropAPI,
 } from "../../api/farmFieldApi";
 
 // Async thunk for adding a new farm field
@@ -89,6 +92,53 @@ export const deleteFarmField = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data || "Failed to delete farm field"
+      );
+    }
+  }
+);
+
+// ===================== Multi-crop: crops on a farm =====================
+
+// Add another crop to an existing farm.
+export const addCropToFarm = createAsyncThunk(
+  "farm/addCropToFarm",
+  async ({ fieldId, cropData }, { rejectWithValue }) => {
+    try {
+      const response = await addCropToFieldAPI(fieldId, cropData);
+      return { fieldId, crop: response.crop };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to add crop to farm"
+      );
+    }
+  }
+);
+
+// Edit a crop, or mark it harvested (isActive: false).
+export const updateCropOnFarm = createAsyncThunk(
+  "farm/updateCropOnFarm",
+  async ({ fieldId, cropId, updatedData }, { rejectWithValue }) => {
+    try {
+      const response = await updateCropAPI(fieldId, cropId, updatedData);
+      return { fieldId, cropId, crop: response.crop };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to update crop"
+      );
+    }
+  }
+);
+
+// Remove a mistakenly-added crop.
+export const deleteCropFromFarm = createAsyncThunk(
+  "farm/deleteCropFromFarm",
+  async ({ fieldId, cropId }, { rejectWithValue }) => {
+    try {
+      await deleteCropAPI(fieldId, cropId);
+      return { fieldId, cropId };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to delete crop"
       );
     }
   }
@@ -201,6 +251,43 @@ const farmSlice = createSlice({
       })
       .addCase(deleteFarmField.rejected, (state, action) => {
         state.status = "failed";
+        state.error = action.payload;
+      })
+
+      // Add crop to farm
+      .addCase(addCropToFarm.fulfilled, (state, action) => {
+        const { fieldId, crop } = action.payload;
+        const field = state.fields.find((f) => f._id === fieldId);
+        if (field && crop) {
+          field.crops = [...(field.crops || []), crop];
+        }
+      })
+      .addCase(addCropToFarm.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+      // Update crop on farm
+      .addCase(updateCropOnFarm.fulfilled, (state, action) => {
+        const { fieldId, cropId, crop } = action.payload;
+        const field = state.fields.find((f) => f._id === fieldId);
+        if (field && Array.isArray(field.crops) && crop) {
+          const idx = field.crops.findIndex((c) => c._id === cropId);
+          if (idx !== -1) field.crops[idx] = crop;
+        }
+      })
+      .addCase(updateCropOnFarm.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+      // Delete crop from farm
+      .addCase(deleteCropFromFarm.fulfilled, (state, action) => {
+        const { fieldId, cropId } = action.payload;
+        const field = state.fields.find((f) => f._id === fieldId);
+        if (field && Array.isArray(field.crops)) {
+          field.crops = field.crops.filter((c) => c._id !== cropId);
+        }
+      })
+      .addCase(deleteCropFromFarm.rejected, (state, action) => {
         state.error = action.payload;
       });
   },

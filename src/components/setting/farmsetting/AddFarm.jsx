@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Save, Trash2, ChevronDown, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Save, Trash2, ChevronDown, ChevronLeft, ChevronRight, Calendar, Plus, X, Sprout } from "lucide-react";
 import {
   getFarmFields,
   updateFarmField,
   deleteFarmField,
+  addCropToFarm,
+  updateCropOnFarm,
+  deleteCropFromFarm,
 } from "../../../redux/slices/farmSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { MapContainer, TileLayer, Polygon, useMap } from "react-leaflet";
@@ -11,6 +14,13 @@ import "leaflet/dist/leaflet.css";
 import { Modal, message } from "antd";
 import AllFarms from "./AllFarms";
 import { fetchCrops } from "../../../redux/slices/cropSlice";
+import {
+  FARMING_TYPES,
+  IRRIGATION_TYPES,
+  CROP_LIFECYCLE_TYPES,
+  CROP_LIFECYCLE_LABELS,
+  CROP_ROLE_LABELS,
+} from "../../../constants/farmEnums";
 
 const AddFarm = ({ selectedFarm }) => {
   const dispatch = useDispatch();
@@ -40,6 +50,13 @@ const AddFarm = ({ selectedFarm }) => {
     typeOfIrrigation: selectedFarm?.typeOfIrrigation || "",
     typeOfFarming: selectedFarm?.typeOfFarming || "",
   });
+  // Multi-crop: `.crops` on the redux-held farm stays current after
+  // add/update/delete (unlike selectedFarmState, a point-in-time snapshot).
+  const liveCrops =
+    farms?.find((f) => f._id === selectedFarmState?._id)?.crops ??
+    selectedFarmState?.crops ??
+    [];
+
   const [mapCenter, setMapCenter] = useState(() =>
     selectedFarm?.field?.length > 0
       ? [selectedFarm.field[0].lat, selectedFarm.field[0].lng]
@@ -236,7 +253,7 @@ const AddFarm = ({ selectedFarm }) => {
       </div>
 
       {/* FORM + BUTTONS */}
-      <div className="h-[30vh] px-3 py-2 flex flex-col">
+      <div className="h-[30vh] px-3 py-2 flex flex-col overflow-y-auto">
         {/* Scrollable form */}
         <div className="flex-grow pr-1">
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
@@ -278,7 +295,7 @@ const AddFarm = ({ selectedFarm }) => {
               label="Type Of Irrigation"
               value={formData.typeOfIrrigation}
               onChange={(value) => handleChange("typeOfIrrigation", value)}
-              options={["open-irrigation", "drip-irrigation", "sprinkler"]}
+              options={IRRIGATION_TYPES}
               placeholder="Search or select irrigation"
             />
 
@@ -286,10 +303,14 @@ const AddFarm = ({ selectedFarm }) => {
               label="Type Of Farming"
               value={formData.typeOfFarming}
               onChange={(value) => handleChange("typeOfFarming", value)}
-              options={["Organic", "Inorganic", "Integrated"]}
+              options={FARMING_TYPES}
               placeholder="Search or select farming type"
             />
           </form>
+
+          <div className="mt-3 col-span-2">
+            <CropsManager farmId={selectedFarmState._id} crops={liveCrops} cropCatalog={crops} />
+          </div>
         </div>
 
         {/* Buttons at bottom */}
@@ -388,7 +409,7 @@ const AddFarm = ({ selectedFarm }) => {
                 label="Type Of Irrigation"
                 value={formData.typeOfIrrigation}
                 onChange={(value) => handleChange("typeOfIrrigation", value)}
-                options={["open-irrigation", "drip-irrigation", "sprinkler"]}
+                options={IRRIGATION_TYPES}
                 placeholder="Search or select irrigation"
               />
 
@@ -396,9 +417,11 @@ const AddFarm = ({ selectedFarm }) => {
                 label="Type Of Farming"
                 value={formData.typeOfFarming}
                 onChange={(value) => handleChange("typeOfFarming", value)}
-                options={["Organic", "Inorganic", "Integrated"]}
+                options={FARMING_TYPES}
                 placeholder="Search or select farming type"
               />
+
+              <CropsManager farmId={selectedFarmState._id} crops={liveCrops} cropCatalog={crops} />
             </div>
           </div>
 
@@ -851,6 +874,260 @@ const AutocompleteDropdown = ({
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+// Multi-crop: view/add/harvest/remove the crops growing on this farm,
+// beyond the single crop set in the form above.
+const CropsManager = ({ farmId, crops, cropCatalog }) => {
+  const dispatch = useDispatch();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [busyCropId, setBusyCropId] = useState(null);
+  const emptyDraft = {
+    cropName: "",
+    variety: "",
+    cropLifecycleType: "seasonal",
+    startDate: "",
+    expectedEndDate: "",
+  };
+  const [draft, setDraft] = useState(emptyDraft);
+
+  const list = Array.isArray(crops) ? crops : [];
+  const activeCrops = list.filter((c) => c.isActive);
+  const inactiveCrops = list.filter((c) => !c.isActive);
+
+  const handleAddCrop = async () => {
+    if (!farmId) return;
+    if (!draft.cropName.trim())
+      return message.error("Please select a crop name.");
+    if (!draft.variety.trim())
+      return message.error("Please enter the variety.");
+    if (!draft.startDate.trim())
+      return message.error("Please select the start date.");
+    if (draft.cropLifecycleType === "seasonal" && !draft.expectedEndDate.trim()) {
+      return message.error(
+        "Please select the expected harvest date for a seasonal crop.",
+      );
+    }
+    try {
+      await dispatch(
+        addCropToFarm({
+          fieldId: farmId,
+          cropData: {
+            cropName: draft.cropName,
+            variety: draft.variety,
+            cropLifecycleType: draft.cropLifecycleType,
+            startDate: draft.startDate,
+            expectedEndDate: draft.expectedEndDate || undefined,
+            cropRole: "intercrop",
+          },
+        }),
+      ).unwrap();
+      message.success("Crop added.");
+      setDraft(emptyDraft);
+      setShowAddForm(false);
+    } catch (err) {
+      message.error("Failed to add crop.");
+    }
+  };
+
+  const handleMarkHarvested = async (crop) => {
+    if (!farmId) return;
+    setBusyCropId(crop._id);
+    try {
+      await dispatch(
+        updateCropOnFarm({
+          fieldId: farmId,
+          cropId: crop._id,
+          updatedData: { isActive: false },
+        }),
+      ).unwrap();
+      message.success(`${crop.cropName} marked as harvested.`);
+    } catch (err) {
+      message.error("Failed to update crop.");
+    } finally {
+      setBusyCropId(null);
+    }
+  };
+
+  const handleDeleteCrop = async (crop) => {
+    if (!farmId) return;
+    setBusyCropId(crop._id);
+    try {
+      await dispatch(
+        deleteCropFromFarm({ fieldId: farmId, cropId: crop._id }),
+      ).unwrap();
+      message.success(`${crop.cropName} removed.`);
+    } catch (err) {
+      message.error("Failed to delete crop.");
+    } finally {
+      setBusyCropId(null);
+    }
+  };
+
+  if (!farmId) return null;
+
+  return (
+    <div className="flex flex-col gap-2 mt-2">
+      <h5 className="font-semibold text-[#344E41] text-sm">
+        Crops on this farm
+      </h5>
+
+      {activeCrops.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          {activeCrops.map((crop) => (
+            <div
+              key={crop._id}
+              className="flex items-center justify-between gap-2 rounded border border-[#344E41]/20 bg-[#344E41]/5 px-2 py-1.5"
+            >
+              <div className="flex items-center gap-1.5 min-w-0 text-xs text-[#344E41]">
+                <Sprout className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="font-semibold truncate">{crop.cropName}</span>
+                {crop.variety ? (
+                  <span className="text-[#344E41]/70">({crop.variety})</span>
+                ) : null}
+                <span className="text-[#344E41]/50">
+                  — {CROP_ROLE_LABELS[crop.cropRole] || crop.cropRole},{" "}
+                  {CROP_LIFECYCLE_LABELS[crop.cropLifecycleType] ||
+                    crop.cropLifecycleType}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  disabled={busyCropId === crop._id}
+                  onClick={() => handleMarkHarvested(crop)}
+                  className="text-[10px] font-semibold text-[#344E41] underline underline-offset-2 hover:text-[#0b5d3d] disabled:opacity-50"
+                >
+                  Mark harvested
+                </button>
+                <button
+                  type="button"
+                  disabled={busyCropId === crop._id}
+                  onClick={() => handleDeleteCrop(crop)}
+                  className="text-[#344E41] hover:text-red-600 disabled:opacity-50"
+                  aria-label="Remove crop"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {inactiveCrops.length > 0 && (
+        <details className="text-xs text-[#344E41]/70">
+          <summary className="cursor-pointer font-semibold">
+            Harvested / removed ({inactiveCrops.length})
+          </summary>
+          <div className="flex flex-col gap-1 mt-1">
+            {inactiveCrops.map((crop) => (
+              <div
+                key={crop._id}
+                className="flex items-center justify-between px-2 py-1 rounded bg-gray-50"
+              >
+                <span>
+                  {crop.cropName}
+                  {crop.variety ? ` (${crop.variety})` : ""}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteCrop(crop)}
+                  className="text-[#344E41] hover:text-red-600"
+                  aria-label="Delete crop"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
+      {showAddForm ? (
+        <div className="flex flex-col gap-2 rounded-md border border-[#344E41]/20 p-2">
+          <AutocompleteDropdown
+            label="Crop Name"
+            value={draft.cropName}
+            onChange={(v) => setDraft((d) => ({ ...d, cropName: v }))}
+            options={(cropCatalog || [])
+              .map((c) => c.cropName)
+              .sort((a, b) => a.localeCompare(b))}
+            placeholder="Search or select crop"
+          />
+          <FormInput
+            label="Variety"
+            value={draft.variety}
+            onChange={(v) => setDraft((d) => ({ ...d, variety: v }))}
+            placeholder="Enter crop variety"
+          />
+          <div className="flex flex-col gap-1">
+            <label className="font-semibold text-sm">Lifecycle</label>
+            <div className="flex gap-1.5">
+              {CROP_LIFECYCLE_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() =>
+                    setDraft((d) => ({ ...d, cropLifecycleType: type }))
+                  }
+                  className={`flex-1 py-1.5 rounded text-xs font-semibold border ${
+                    draft.cropLifecycleType === type
+                      ? "bg-[#344E41] text-white border-[#344E41]"
+                      : "bg-white text-[#344E41] border-[#344E41]/40"
+                  }`}
+                >
+                  {CROP_LIFECYCLE_LABELS[type]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <CustomDatePicker
+            label="Start date"
+            value={draft.startDate}
+            onChange={(v) => setDraft((d) => ({ ...d, startDate: v }))}
+            placeholder="Select start date"
+            maxDate={new Date()}
+          />
+          {draft.cropLifecycleType === "seasonal" && (
+            <CustomDatePicker
+              label="Expected harvest date"
+              value={draft.expectedEndDate}
+              onChange={(v) => setDraft((d) => ({ ...d, expectedEndDate: v }))}
+              placeholder="Select expected harvest date"
+            />
+          )}
+          <div className="flex gap-2 mt-1">
+            <button
+              type="button"
+              onClick={handleAddCrop}
+              className="flex-1 h-8 bg-[#344E41] hover:bg-[#2b3e33] text-white font-semibold text-xs rounded-md"
+            >
+              Add crop
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(emptyDraft);
+                setShowAddForm(false);
+              }}
+              className="px-3 h-8 border border-[#344E41]/40 text-[#344E41] font-semibold text-xs rounded-md"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowAddForm(true)}
+          className="flex items-center justify-center gap-1 h-8 border border-dashed border-[#344E41]/40 text-[#344E41] font-semibold text-xs rounded-md hover:bg-[#344E41]/5"
+        >
+          <Plus size={14} /> Add another crop
+        </button>
+      )}
     </div>
   );
 };

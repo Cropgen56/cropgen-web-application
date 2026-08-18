@@ -46,22 +46,41 @@ const FarmCard = ({ farm, onClick, isSubscribed, index }) => (
       </div>
 
       {/* Crop Info */}
-      <div className="flex items-center gap-1.5 px-2 mt-2 bg-[#344E41]/5 mx-2 py-1.5 rounded-md border border-[#344E41]/10">
-        <Sprout className="w-4 h-4 text-[#344E41]" />
-        <span className="text-xs text-[#344E41] font-semibold">
-          {farm.cropName || "N/A"}
-        </span>
-        <span className="text-[#344E41]/30">•</span>
-        <span className="text-xs text-[#344E41]/80 font-medium">
-          {farm.sowingDate
-            ? new Date(farm.sowingDate).toLocaleDateString()
-            : "No Date"}
-        </span>
-        <span className="text-[#344E41]/30">•</span>
-        <span className="text-xs text-[#344E41]/80 font-medium">
-          {farm.variety || "N/A"}
-        </span>
-      </div>
+      {Array.isArray(farm.crops) && farm.crops.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-1 px-2 mt-2 bg-[#344E41]/5 mx-2 py-1.5 rounded-md border border-[#344E41]/10">
+          <Sprout className="w-4 h-4 text-[#344E41] flex-shrink-0" />
+          {farm.crops.slice(0, 2).map((crop) => (
+            <span
+              key={crop._id}
+              className="text-xs text-[#344E41] font-semibold bg-white/70 rounded px-1.5 py-0.5"
+            >
+              {crop.cropName}
+            </span>
+          ))}
+          {farm.crops.length > 2 && (
+            <span className="text-xs text-[#344E41]/70 font-medium">
+              +{farm.crops.length - 2} more
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className="flex items-center gap-1.5 px-2 mt-2 bg-[#344E41]/5 mx-2 py-1.5 rounded-md border border-[#344E41]/10">
+          <Sprout className="w-4 h-4 text-[#344E41]" />
+          <span className="text-xs text-[#344E41] font-semibold">
+            {farm.cropName || "N/A"}
+          </span>
+          <span className="text-[#344E41]/30">•</span>
+          <span className="text-xs text-[#344E41]/80 font-medium">
+            {farm.sowingDate
+              ? new Date(farm.sowingDate).toLocaleDateString()
+              : "No Date"}
+          </span>
+          <span className="text-[#344E41]/30">•</span>
+          <span className="text-xs text-[#344E41]/80 font-medium">
+            {farm.variety || "N/A"}
+          </span>
+        </div>
+      )}
     </div>
 
     {/* Footer */}

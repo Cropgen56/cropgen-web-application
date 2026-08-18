@@ -146,8 +146,15 @@ const PlantGrowthActivity = memo(
       featureKey: "cropGrowthMonitoring",
     });
 
+    // Multi-crop: prefer the currently-selected crop's own identity (set via
+    // the crop switcher on the Crop Health card) over the farm's legacy
+    // singular field, so this label matches whichever crop's growth data is
+    // actually shown below.
     const cropName =
-      field?.cropName || advisoryState?.farmFieldId?.cropName || "Other";
+      advisoryState?.cropInstanceId?.cropName ||
+      field?.cropName ||
+      advisoryState?.farmFieldId?.cropName ||
+      "Other";
 
     const plantActivity =
       advisoryState?.smartAdvisory?.plantGrowthActivity ||
@@ -155,7 +162,10 @@ const PlantGrowthActivity = memo(
       null;
 
     const sowingDateStr =
-      field?.sowingDate || advisoryState?.farmFieldId?.sowingDate || null;
+      advisoryState?.cropInstanceId?.startDate ||
+      field?.sowingDate ||
+      advisoryState?.farmFieldId?.sowingDate ||
+      null;
 
     const targetDateStr = advisoryState?.targetDate || new Date().toISOString();
 
