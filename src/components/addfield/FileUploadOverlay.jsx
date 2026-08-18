@@ -1,18 +1,15 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import shp from "shpjs";
-import * as toGeoJSON from "@tmcw/togeojson";
-import { DOMParser } from "xmldom";
+import { kml as kmlToGeoJSON, gpx as gpxToGeoJSON } from "@tmcw/togeojson";
 import { message } from "antd";
 import L from "leaflet";
 
+const ACCEPTED_EXTENSIONS = [".zip", ".kml", ".kmz", ".geojson", ".json", ".gpx"];
+
 const FileUploadOverlay = ({
-  showUploadOverlay,
   setShowUploadOverlay,
-  selectedFiles,
   setSelectedFiles,
-  geojsonLayers,
   setGeojsonLayers,
-  markers,
   setMarkers,
   onToggleSidebar,
   isTabletView,
@@ -20,6 +17,68 @@ const FileUploadOverlay = ({
   const [uploadError, setUploadError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const getShpLib = () => {
+    if (typeof shp === "function") return shp;
+    if (shp && typeof shp.default === "function") return shp.default;
+    if (shp && typeof shp.parseZip === "function") return shp.parseZip;
+    return null;
+  };
+
+  const toLatLngs = (ring) =>
+    (ring || [])
+      .filter((c) => Array.isArray(c) && c.length >= 2)
+      .map(([lng, lat]) => ({ lat: Number(lat), lng: Number(lng) }))
+      .filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lng));
+
+  const addRing = (coords, allMarkersRef, combinedBoundsRef) => {
+    if (!coords || coords.length < 3) return;
+    allMarkersRef.push(...coords);
+    const featureBounds = L.latLngBounds(coords.map((c) => [c.lat, c.lng]));
+    if (!featureBounds.isValid()) return;
+    if (!combinedBoundsRef.current) combinedBoundsRef.current = featureBounds;
+    else combinedBoundsRef.current.extend(featureBounds);
+  };
+
+  const extractFromGeometry = (geometry, allMarkersRef, combinedBoundsRef) => {
+    if (!geometry) return;
+    const gType = geometry.type;
+
+    if (gType === "Polygon") {
+      addRing(toLatLngs(geometry.coordinates?.[0]), allMarkersRef, combinedBoundsRef);
+    } else if (gType === "MultiPolygon") {
+      geometry.coordinates?.forEach((poly) => {
+        addRing(toLatLngs(poly?.[0]), allMarkersRef, combinedBoundsRef);
+      });
+    } else if (gType === "LineString") {
+      addRing(toLatLngs(geometry.coordinates), allMarkersRef, combinedBoundsRef);
+    } else if (gType === "MultiLineString") {
+      geometry.coordinates?.forEach((line) => {
+        addRing(toLatLngs(line), allMarkersRef, combinedBoundsRef);
+      });
+    } else if (gType === "GeometryCollection") {
+      geometry.geometries?.forEach((g) =>
+        extractFromGeometry(g, allMarkersRef, combinedBoundsRef),
+      );
+    }
+  };
+
+  const extractPolygonsAndBounds = (geojson, allMarkersRef, combinedBoundsRef) => {
+    if (!geojson) return;
+    if (geojson.type === "FeatureCollection" && Array.isArray(geojson.features)) {
+      geojson.features.forEach((f) =>
+        extractPolygonsAndBounds(f, allMarkersRef, combinedBoundsRef),
+      );
+      return;
+    }
+    if (geojson.type === "Feature") {
+      extractFromGeometry(geojson.geometry, allMarkersRef, combinedBoundsRef);
+      return;
+    }
+    extractFromGeometry(geojson, allMarkersRef, combinedBoundsRef);
+  };
 
   const normalizeShpResult = (result) => {
     const out = [];
@@ -28,11 +87,7 @@ const FileUploadOverlay = ({
       out.push(result);
       return out;
     }
-    if (
-      Array.isArray(result) &&
-      result.length &&
-      result[0].type === "Feature"
-    ) {
+    if (Array.isArray(result) && result.length && result[0].type === "Feature") {
       out.push({ type: "FeatureCollection", features: result });
       return out;
     }
@@ -42,11 +97,7 @@ const FileUploadOverlay = ({
         if (!val) continue;
         if (val.type === "FeatureCollection" && Array.isArray(val.features)) {
           out.push(val);
-        } else if (
-          Array.isArray(val) &&
-          val.length &&
-          val[0].type === "Feature"
-        ) {
+        } else if (Array.isArray(val) && val.length && val[0].type === "Feature") {
           out.push({ type: "FeatureCollection", features: val });
         } else if (val && Array.isArray(val.features)) {
           out.push(val);
@@ -56,51 +107,18 @@ const FileUploadOverlay = ({
     return out;
   };
 
-  const extractPolygonsAndBounds = (
-    geojson,
-    allMarkersRef,
-    combinedBoundsRef
-  ) => {
-    if (!geojson) return;
-    if (
-      geojson.type === "FeatureCollection" &&
-      Array.isArray(geojson.features)
-    ) {
-      geojson.features.forEach((f) => {
-        if (!f.geometry) return;
-        const gType = f.geometry.type;
-        if (gType === "Polygon") {
-          const coords = f.geometry.coordinates[0].map(([lng, lat]) => ({
-            lat,
-            lng,
-          }));
-          allMarkersRef.push(...coords);
-          const featureBounds = L.latLngBounds(
-            coords.map((c) => [c.lat, c.lng])
-          );
-          if (!combinedBoundsRef.current)
-            combinedBoundsRef.current = featureBounds;
-          else combinedBoundsRef.current.extend(featureBounds);
-        } else if (gType === "MultiPolygon") {
-          f.geometry.coordinates.forEach((poly) => {
-            const coords = poly[0].map(([lng, lat]) => ({ lat, lng }));
-            allMarkersRef.push(...coords);
-            const featureBounds = L.latLngBounds(
-              coords.map((c) => [c.lat, c.lng])
-            );
-            if (!combinedBoundsRef.current)
-              combinedBoundsRef.current = featureBounds;
-            else combinedBoundsRef.current.extend(featureBounds);
-          });
-        }
-      });
+  const parseXmlToDom = (text) => {
+    const parser = new window.DOMParser();
+    const doc = parser.parseFromString(text, "text/xml");
+    const parseError = doc.querySelector("parsererror");
+    if (parseError) {
+      throw new Error(parseError.textContent || "Invalid XML");
     }
+    return doc;
   };
 
-  // Returns boolean success
-  const handleFileChange = async (e) => {
+  const processFiles = async (files) => {
     setUploadError("");
-    const files = Array.from(e?.target?.files || []);
     setSelectedFiles(files);
 
     if (!files.length) {
@@ -111,38 +129,29 @@ const FileUploadOverlay = ({
     const parsedGeojsons = [];
     const allMarkers = [];
     const combinedBoundsRef = { current: null };
-
-    const shpLib =
-      typeof shp === "function" ? shp : shp && shp.default ? shp.default : null;
-    if (!shpLib) {
-      console.error("shpjs not available or import failed", shp);
-      setUploadError("Internal error: shapefile parser not loaded.");
-      return false;
-    }
+    const errors = [];
 
     for (const file of files) {
       const name = (file.name || "").toLowerCase();
       try {
-        let geojsonFromFile = null;
-
         if (name.endsWith(".geojson") || name.endsWith(".json")) {
           const text = await file.text();
-          geojsonFromFile = JSON.parse(text);
+          const geojsonFromFile = JSON.parse(text);
           parsedGeojsons.push(geojsonFromFile);
-          extractPolygonsAndBounds(
-            geojsonFromFile,
-            allMarkers,
-            combinedBoundsRef
-          );
+          extractPolygonsAndBounds(geojsonFromFile, allMarkers, combinedBoundsRef);
         } else if (name.endsWith(".zip")) {
+          const shpLib = getShpLib();
+          if (!shpLib) {
+            errors.push("Shapefile parser is not available. Try GeoJSON or KML instead.");
+            continue;
+          }
           try {
             const arrayBuffer = await file.arrayBuffer();
             const raw = await shpLib(arrayBuffer);
             const geojsonList = normalizeShpResult(raw);
             if (geojsonList.length === 0) {
-              console.warn("shpjs returned unexpected structure for zip:", raw);
-              setUploadError(
-                `Couldn't parse geometry from zipped shapefile "${file.name}". Make sure the zip contains .shp + .dbf + .shx (and optionally .prj/.cpg).`
+              errors.push(
+                `Couldn't parse geometry from "${file.name}". Zip must contain .shp + .dbf + .shx (and optionally .prj/.cpg).`,
               );
               continue;
             }
@@ -152,62 +161,100 @@ const FileUploadOverlay = ({
             });
           } catch (zipErr) {
             console.error("Error parsing zipped shapefile:", file.name, zipErr);
-            setUploadError(`Failed to parse zipped shapefile: ${file.name}`);
-            continue;
+            errors.push(`Failed to parse zipped shapefile: ${file.name}`);
           }
         } else if (name.endsWith(".kml")) {
           const text = await file.text();
-          const parser = new DOMParser();
-          const kmlDom = parser.parseFromString(text, "text/xml");
-          geojsonFromFile = toGeoJSON.kml(kmlDom);
+          const geojsonFromFile = kmlToGeoJSON(parseXmlToDom(text));
           parsedGeojsons.push(geojsonFromFile);
-          extractPolygonsAndBounds(
-            geojsonFromFile,
-            allMarkers,
-            combinedBoundsRef
-          );
+          extractPolygonsAndBounds(geojsonFromFile, allMarkers, combinedBoundsRef);
         } else if (name.endsWith(".gpx")) {
           const text = await file.text();
-          const parser = new DOMParser();
-          const gpxDom = parser.parseFromString(text, "text/xml");
-          geojsonFromFile = toGeoJSON.gpx(gpxDom);
+          const geojsonFromFile = gpxToGeoJSON(parseXmlToDom(text));
           parsedGeojsons.push(geojsonFromFile);
-          extractPolygonsAndBounds(
-            geojsonFromFile,
-            allMarkers,
-            combinedBoundsRef
+          extractPolygonsAndBounds(geojsonFromFile, allMarkers, combinedBoundsRef);
+        } else if (name.endsWith(".kmz") || name.endsWith(".shp")) {
+          errors.push(
+            `"${file.name}" must be uploaded as a .zip (shapefile) or exported as KML/GeoJSON.`,
           );
         } else {
-          setUploadError(`Unsupported file type: ${file.name}`);
-          continue;
+          errors.push(`Unsupported file type: ${file.name}`);
         }
       } catch (err) {
         console.error("Failed to parse file:", file.name, err);
-        setUploadError(`Failed to parse file: ${file.name}`);
-        continue;
+        errors.push(`Failed to parse file: ${file.name}`);
       }
     }
 
-    // Save parsed layers (no direct fitBounds here; AddFieldMap handles centering)
-    // Save parsed layers
-    setGeojsonLayers(parsedGeojsons);
-
-    if (allMarkers.length > 0) {
-      setMarkers(allMarkers);
+    if (errors.length) {
+      setUploadError(errors[0]);
     }
 
-    return parsedGeojsons.length > 0;
+    if (!parsedGeojsons.length || allMarkers.length < 3) {
+      if (!errors.length) {
+        setUploadError(
+          "No farm boundary found in the file. Use a polygon in GeoJSON, KML, GPX, or a zipped shapefile.",
+        );
+      }
+      return false;
+    }
+
+    setGeojsonLayers(parsedGeojsons);
+    setMarkers(allMarkers);
+    return true;
+  };
+
+  const runUpload = async (fileList) => {
+    const files = Array.from(fileList || []);
+    setUploading(true);
+    setUploadError("");
+    setUploadSuccess(false);
+    try {
+      const ok = await processFiles(files);
+      setUploadSuccess(Boolean(ok));
+      if (!ok) {
+        message.error("Failed to read the boundary file. Check the error message.");
+      }
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const closeOverlay = () => {
     setShowUploadOverlay(false);
     if (isTabletView) {
-      onToggleSidebar(true); // Show sidebar when closing on tablet
+      onToggleSidebar(true);
     }
   };
 
+  const onDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const onDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer?.files || []);
+    if (!files.length) return;
+    await runUpload(files);
+  };
+
   return (
-    <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/70 p-4 sm:p-6 lg:p-8 overflow-auto pointer-events-auto h-screen">
+    <div
+      className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/70 p-4 sm:p-6 lg:p-8 overflow-auto pointer-events-auto h-screen"
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
       <div className="bg-[#344E41] text-white rounded-lg shadow-2xl p-6 sm:p-8 relative flex flex-col min-h-0 max-h-[90vh] w-[90%] max-w-3xl">
         <button
           onClick={closeOverlay}
@@ -239,7 +286,16 @@ const FileUploadOverlay = ({
           <div className="w-full flex flex-col items-center">
             {!uploading && !uploadSuccess && (
               <>
-                <label className="flex flex-col items-center justify-center w-full h-44 sm:h-52 lg:h-56 border-2 border-dashed border-white/40 rounded-lg cursor-pointer bg-white/10 hover:bg-white/20 transition p-4">
+                <label
+                  className={`flex flex-col items-center justify-center w-full h-44 sm:h-52 lg:h-56 border-2 border-dashed rounded-lg cursor-pointer transition p-4 ${
+                    isDragging
+                      ? "border-white bg-white/25"
+                      : "border-white/40 bg-white/10 hover:bg-white/20"
+                  }`}
+                  onDragOver={onDragOver}
+                  onDragLeave={onDragLeave}
+                  onDrop={onDrop}
+                >
                   <svg
                     className="w-10 h-10 mb-4 text-white/80"
                     fill="none"
@@ -259,21 +315,13 @@ const FileUploadOverlay = ({
                   </p>
 
                   <input
+                    ref={fileInputRef}
                     type="file"
                     multiple
-                    accept=".zip,.kml,.geojson,.json,.gpx"
+                    accept={ACCEPTED_EXTENSIONS.join(",")}
                     className="hidden"
                     onChange={async (e) => {
-                      setUploading(true);
-                      setUploadError("");
-                      const ok = await handleFileChange(e);
-                      setUploading(false);
-                      setUploadSuccess(Boolean(ok));
-                      if (!ok) {
-                        message.error(
-                          "Failed to parse files. Check console / error message."
-                        );
-                      }
+                      await runUpload(e.target.files);
                     }}
                   />
 

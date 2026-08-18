@@ -13,6 +13,7 @@ import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 import FieldDropdown from "../components/comman/FieldDropdown";
 import { generateSoilReportAPI } from "../api/soilReportApi";
+import { DEFAULT_ORGANIZATION_CODE } from "../config/brand";
 
 const SoilReport = () => {
   const dispatch = useDispatch();
@@ -101,34 +102,35 @@ const SoilReport = () => {
       }
 
       const polygon = Array.isArray(field?.field)
-        ? field.field.map((p) => [Number(p?.lng), Number(p?.lat)])
+        ? field.field
+            .map((p) => [Number(p?.lng), Number(p?.lat)])
+            .filter(
+              ([lng, lat]) => Number.isFinite(lng) && Number.isFinite(lat),
+            )
         : [];
 
-      if (polygon.length < 3) {
+      const deduped = [];
+      for (const pt of polygon) {
+        const prev = deduped[deduped.length - 1];
+        if (!prev || prev[0] !== pt[0] || prev[1] !== pt[1]) deduped.push(pt);
+      }
+
+      if (deduped.length < 3) {
         message.error("Field boundary is invalid. Please update field polygon.");
         return;
       }
 
-      const first = polygon[0];
-      const last = polygon[polygon.length - 1];
+      const first = deduped[0];
+      const last = deduped[deduped.length - 1];
 
       if (first[0] !== last[0] || first[1] !== last[1]) {
-        polygon.push([...first]);
+        deduped.push([...first]);
       }
 
       const endDate = new Date().toISOString().slice(0, 10);
-
-      const sowingDate =
-        field?.sowingDate && !Number.isNaN(new Date(field.sowingDate).getTime())
-          ? new Date(field.sowingDate)
-          : null;
-
-      const fallbackStart = new Date();
-      fallbackStart.setMonth(fallbackStart.getMonth() - 18);
-
-      const startDate = (sowingDate || fallbackStart)
-        .toISOString()
-        .slice(0, 10);
+      const lookback = new Date();
+      lookback.setMonth(lookback.getMonth() - 18);
+      const startDate = lookback.toISOString().slice(0, 10);
 
       const language =
         user?.language ||
@@ -136,7 +138,8 @@ const SoilReport = () => {
         user?.userProfile?.language ||
         "en";
 
-      const organizationCode = user?.organizationCode || "BIODROPS";
+      const organizationCode =
+        user?.organizationCode || DEFAULT_ORGANIZATION_CODE;
 
       setSelectedField(field);
       setSelectedOperation(field);
@@ -147,7 +150,7 @@ const SoilReport = () => {
         const soilApi = await generateSoilReportAPI({
           geometry: {
             type: "Polygon",
-            coordinates: [polygon],
+            coordinates: [deduped],
           },
           startDate,
           endDate,

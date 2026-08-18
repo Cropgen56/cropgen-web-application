@@ -20,6 +20,7 @@ import {
   CROP_LIFECYCLE_TYPES,
   CROP_LIFECYCLE_LABELS,
   CROP_ROLE_LABELS,
+  formatFarmEnumLabel,
 } from "../../../constants/farmEnums";
 
 const AddFarm = ({ selectedFarm }) => {
@@ -775,13 +776,7 @@ const AutocompleteDropdown = ({
     };
   }, []);
 
-  const formatOptionDisplay = (option) => {
-    if (!option) return "";
-    return option
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
+  const formatOptionDisplay = (option) => formatFarmEnumLabel(option);
 
   const filteredOptions = options.filter((option) =>
     formatOptionDisplay(option)

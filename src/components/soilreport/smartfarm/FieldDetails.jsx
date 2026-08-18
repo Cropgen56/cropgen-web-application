@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { MapPin, Sprout, Droplets, Tractor } from "lucide-react";
+import { formatFarmEnumLabel } from "../../../constants/farmEnums";
 
 export default function FieldDetails({ field }) {
   const name = field?.fieldName || field?.farmName || "—";
@@ -13,7 +14,9 @@ export default function FieldDetails({ field }) {
       ? new Date(field.createdAt).toLocaleDateString()
       : "—");
   const acre = field?.acre != null ? `${Number(field.acre).toFixed(3)} ac` : "—";
-  const irrigation = field?.typeOfIrrigation || field?.irrigationType || "—";
+  const irrigation = formatFarmEnumLabel(
+    field?.typeOfIrrigation || field?.irrigationType || "",
+  ) || "—";
   const farming = field?.typeOfFarming || field?.farmingType || "—";
 
   const items = [

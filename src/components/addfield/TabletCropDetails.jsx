@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { message } from "antd";
+import {
+  IRRIGATION_TYPES,
+  FARMING_TYPES,
+  formatFarmEnumLabel,
+} from "../../constants/farmEnums";
 
 const AddFieldSidebar = ({ saveFarm, markers }) => {
   // const [selectedFieldIndex, setSelectedFieldIndex] = useState(null);
@@ -256,9 +261,11 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
                     <option value="" disabled>
                       Select irrigation Type
                     </option>
-                    <option value="open-irrigation">Open Irrigation</option>
-                    <option value="drip-irrigation">Drip Irrigation</option>
-                    <option value="sprinkler">Sprinkler Irrigation</option>
+                    {IRRIGATION_TYPES.map((type) => (
+                      <option key={type} value={type}>
+                        {formatFarmEnumLabel(type)}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className=" flex flex-col gap-1 cursor-pointer">
@@ -385,9 +392,11 @@ export default AddFieldSidebar;
           <option value="" disabled>
             Select irrigation Type
           </option>
-          <option value="open-irrigation">Open Irrigation</option>
-          <option value="drip-irrigation">Drip Irrigation</option>
-          <option value="sprinkler">Sprinkler Irrigation</option>
+          {IRRIGATION_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {formatFarmEnumLabel(type)}
+            </option>
+          ))}
         </select>
       </div>
 

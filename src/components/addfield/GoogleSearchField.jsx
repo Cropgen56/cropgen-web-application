@@ -46,7 +46,6 @@ const GoogleSearchField = ({ setMapCenter, setHasCenteredOnUser }) => {
         inputRef.current,
         {
           fields: ["geometry", "name", "formatted_address"],
-          componentRestrictions: { country: "in" },
         },
       );
 

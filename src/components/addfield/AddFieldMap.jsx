@@ -72,19 +72,27 @@ const AddFieldMap = ({
 
   useEffect(() => {
     if (geojsonLayers.length === 0 || !mapRef.current || !isMapReady) return;
-    if (hasCenteredOnUser || isLocatingUser) return;
+
+    cancelDefaultGeoRef.current = true;
+    setIsLocatingUser(false);
+    setHasCenteredOnUser(true);
 
     const timeoutId = setTimeout(() => {
       let allBounds = null;
 
       geojsonLayers.forEach((geojson) => {
-        const layer = L.geoJSON(geojson);
-        const bounds = layer.getBounds();
+        try {
+          const layer = L.geoJSON(geojson);
+          const bounds = layer.getBounds();
+          if (!bounds.isValid()) return;
 
-        if (allBounds === null) {
-          allBounds = bounds;
-        } else {
-          allBounds.extend(bounds);
+          if (allBounds === null) {
+            allBounds = bounds;
+          } else {
+            allBounds.extend(bounds);
+          }
+        } catch (err) {
+          console.error("Invalid uploaded GeoJSON layer", err);
         }
       });
 
@@ -93,12 +101,13 @@ const AddFieldMap = ({
           padding: [50, 50],
           animate: true,
           duration: 0.5,
+          maxZoom: 18,
         });
       }
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [geojsonLayers, isMapReady, hasCenteredOnUser, isLocatingUser]);
+  }, [geojsonLayers, isMapReady]);
 
   useEffect(() => {
     if (initialMapCenter == null) return;
@@ -150,12 +159,19 @@ const AddFieldMap = ({
 
   useEffect(() => {
     if (!hasCenteredOnUser || !isMapReady || !mapRef.current) return;
+    if (geojsonLayers.length > 0) return;
 
     mapRef.current.flyTo([mapCenter.lat, mapCenter.lng], 18, {
       animate: true,
       duration: 0.75,
     });
-  }, [hasCenteredOnUser, isMapReady, mapCenter.lat, mapCenter.lng]);
+  }, [
+    hasCenteredOnUser,
+    isMapReady,
+    mapCenter.lat,
+    mapCenter.lng,
+    geojsonLayers.length,
+  ]);
 
   useEffect(() => {
     if (isTabletView) {

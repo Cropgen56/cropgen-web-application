@@ -12,12 +12,24 @@ import {
 } from "lucide-react";
 import { REPORT_SATELLITE_INDICES } from "./constants";
 
-export function SmartFarmReportEmptyState({ selectedField, isDesktop }) {
+export function SmartFarmReportEmptyState({
+  selectedField,
+  isDesktop,
+  onGenerateReport,
+  isGeneratingReport = false,
+}) {
   const name = selectedField?.fieldName || selectedField?.farmName;
 
   const acres = selectedField?.acre
     ? `${Number(selectedField.acre).toFixed(2)} acres`
     : null;
+
+  const handleGenerateClick = () => {
+    if (isGeneratingReport) return;
+    if (typeof onGenerateReport === "function") {
+      onGenerateReport(selectedField);
+    }
+  };
 
   return (
     <div className="flex min-h-[min(520px,72vh)] flex-col items-center justify-center px-4 py-10">
@@ -54,12 +66,15 @@ export function SmartFarmReportEmptyState({ selectedField, isDesktop }) {
                 to load satellite layers, index analysis, and AI guidance.
               </p>
 
-              <div className="mt-6 flex items-center justify-center gap-2 rounded-[14px] bg-[#344e41] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(52,78,65,0.28)]">
+              <button
+                type="button"
+                onClick={handleGenerateClick}
+                disabled={isGeneratingReport || typeof onGenerateReport !== "function"}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-[14px] bg-[#344e41] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(52,78,65,0.28)] transition hover:bg-[#2b4036] disabled:cursor-not-allowed disabled:opacity-70"
+              >
                 <ChevronRight className="h-4 w-4" />
-                {isDesktop
-                  ? "Click Generate Report in the sidebar"
-                  : "Tap Generate Report above"}
-              </div>
+                {isGeneratingReport ? "Generating report…" : "Generate Report"}
+              </button>
             </>
           ) : (
             <>

@@ -22,7 +22,7 @@ function resolveSoilReportUrl() {
 
 export const generateSoilReportAPI = async (payload) => {
   const response = await api.post(resolveSoilReportUrl(), payload, {
-    timeout: 120000,
+    timeout: 180000,
   });
   return response.data;
 };
