@@ -1,31 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAOIs, createAOI } from "../../../redux/slices/weatherSlice";
-
-// Helper – makes sure polygon is closed
-const formatCoordinates = (points) => {
-  if (!Array.isArray(points) || points.length < 3) return [];
-
-  const coords = points.map((p) => [Number(p.lng), Number(p.lat)]);
-
-  const first = coords[0];
-  const last = coords[coords.length - 1];
-
-  // Close the polygon if not already closed
-  if (first[0] !== last[0] || first[1] !== last[1]) {
-    coords.push(first);
-  }
-
-  return coords;
-};
+import { findAoiForField, toAoiPolygon } from "../../../utils/farmGeometry";
 
 /**
  * Manages AOI (Area of Interest) for a selected farm field.
  *
  * Behavior:
  * - Fetches all AOIs once on mount
- * - Checks if AOI with name = field._id already exists
- * - If missing → automatically creates it
+ * - Checks if AOI with name = field._id (or field._id-wx) already exists
+ * - If missing → creates a 1.5 ha centroid sample (never the full polygon)
  * - Returns:
  *   - aoiId          → string | null
  *   - isLoading      → true while fetching AOIs
@@ -77,7 +61,7 @@ export const useAoiManagement = (selectedField) => {
 
   const matchingAoi = useMemo(() => {
     if (!fieldId || !aois.length) return null;
-    return aois.find((a) => a.name === fieldId);
+    return findAoiForField(aois, fieldId);
   }, [aois, fieldId]);
 
   // Update aoiId when we find match
@@ -106,10 +90,10 @@ export const useAoiManagement = (selectedField) => {
       return;
     }
 
-    const coords = formatCoordinates(selectedField?.field || []);
-
-    if (coords.length < 4) {
-      // at least 3 + closing point
+    let aoiGeometry;
+    try {
+      aoiGeometry = toAoiPolygon(selectedField?.field || []);
+    } catch {
       setError("Invalid field geometry – cannot create AOI");
       creationAttempted.current.add(fieldId);
       return;
@@ -123,17 +107,14 @@ export const useAoiManagement = (selectedField) => {
 
     dispatch(
       createAOI({
-        name: fieldId, // we use field _id as AOI name
-        geometry: {
-          type: "Polygon",
-          coordinates: [coords],
-        },
+        name: fieldId,
+        geometry: aoiGeometry,
       }),
     )
       .unwrap()
       .then((createdAoi) => {
         // Success – new AOI created
-        setAoiId(createdAoi.id);
+        setAoiId(createdAoi?.id || createdAoi);
         setIsCreating(false);
       })
       .catch((err) => {

@@ -3,6 +3,7 @@ import axios from "axios";
 import { get, set, del, keys } from "idb-keyval";
 import { getReactAppUrl } from "../../config/envUrls";
 import { DEFAULT_SATELLITE } from "../../constants/satelliteIndices";
+import { toApiPolygon } from "../../utils/farmGeometry";
 
 const SATELLITE_API_KEY =
   process.env.REACT_APP_SATELLITE_API || "CROPGEN_230498adklfjadsljf";
@@ -43,10 +44,6 @@ function getSatelliteApiBase() {
 }
 
 const SATELLITE_BASE_URL = getSatelliteApiBase();
-
-function arraysEqual(a, b) {
-  return a.length === b.length && a.every((val, index) => val === b[index]);
-}
 
 const getSixMonthsBeforeDate = () => {
   const date = new Date();
@@ -216,10 +213,7 @@ export const fetchSatelliteDates = createAsyncThunk(
       }
 
       const payload = {
-        geometry: {
-          type: "Polygon",
-          coordinates: [geometry],
-        },
+        geometry: toApiPolygon(geometry),
         start_date: sixMonthsBefore,
         end_date: today,
         provider: "both",
@@ -278,10 +272,7 @@ export const fetchIndexData = createAsyncThunk(
       }
 
       const payload = {
-        geometry: {
-          type: "Polygon",
-          coordinates: geometry,
-        },
+        geometry: toApiPolygon(geometry),
         date: endDate,
         index_name: index,
         provider: "both",
@@ -336,10 +327,7 @@ export const fetchIndexDataForMap = createAsyncThunk(
       }
 
       const payload = {
-        geometry: {
-          type: "Polygon",
-          coordinates: geometry,
-        },
+        geometry: toApiPolygon(geometry),
         date: endDate,
         index_name: index,
         provider: "both",
@@ -414,27 +402,10 @@ export const fetchIndexTimeSeriesSummary = createAsyncThunk(
         return rejectWithValue("Missing required parameters");
       }
 
-      const coordinates = geometry?.map(({ lat, lng }) => {
-        if (typeof lat !== "number" || typeof lng !== "number") {
-          throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
-        }
-        return [lng, lat];
-      });
-
-      if (
-        coordinates.length > 0 &&
-        !arraysEqual(coordinates[0], coordinates[coordinates.length - 1])
-      ) {
-        coordinates.push(coordinates[0]);
-      }
-
       const response = await axios.post(
         `${SATELLITE_BASE_URL}/timeseries/vegetation/vegetation`,
         {
-          geometry: {
-            type: "Polygon",
-            coordinates: [coordinates],
-          },
+          geometry: toApiPolygon(geometry),
           start_date: effectiveStartDate,
           end_date: effectiveEndDate,
           index: index,
@@ -480,27 +451,10 @@ export const fetchWaterIndexData = createAsyncThunk(
         return rejectWithValue("Missing required parameters");
       }
 
-      const coordinates = geometry?.map(({ lat, lng }) => {
-        if (typeof lat !== "number" || typeof lng !== "number") {
-          throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
-        }
-        return [lng, lat];
-      });
-
-      if (
-        coordinates.length > 0 &&
-        !arraysEqual(coordinates[0], coordinates[coordinates.length - 1])
-      ) {
-        coordinates.push(coordinates[0]);
-      }
-
       const response = await axios.post(
         `${SATELLITE_BASE_URL}/timeseries/water/water`,
         {
-          geometry: {
-            type: "Polygon",
-            coordinates: [coordinates],
-          },
+          geometry: toApiPolygon(geometry),
           start_date: effectiveStartDate,
           end_date: effectiveEndDate,
           index: index,

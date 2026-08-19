@@ -30,6 +30,7 @@ import {
 import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
 import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherForecast";
 import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
+import { findAoiForField } from "../utils/farmGeometry";
 
 import img1 from "../assets/image/Group 31.png";
 
@@ -121,7 +122,7 @@ const SmartAdvisory = () => {
   /* ---------- HISTORICAL (uses aoiId from useAoiManagement) ---------- */
   useEffect(() => {
     if (!selectedField) return;
-    const aoi = aois.find((a) => a.name === selectedField._id);
+    const aoi = findAoiForField(aois, selectedField._id);
     if (!aoi?.id) return;
 
     const startDate = getSixMonthsAgo();

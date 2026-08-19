@@ -6,6 +6,7 @@ import {
   buildAlertsFromVraRates,
   buildZonesFromVraRates,
 } from "../../components/dashboard/mapview/zoning/vraZoningMapper";
+import { toApiPolygon } from "../../utils/farmGeometry";
 
 const SATELLITE_API_KEY =
   process.env.REACT_APP_SATELLITE_API || "CROPGEN_230498adklfjadsljf";
@@ -108,7 +109,7 @@ export function fieldPointsToGeoJsonPolygon(fieldPoints) {
     ring.push([first[0], first[1]]);
   }
 
-  return { type: "Polygon", coordinates: [ring] };
+  return toApiPolygon({ type: "Polygon", coordinates: [ring] });
 }
 
 export function normalizeVraCrop(cropName) {

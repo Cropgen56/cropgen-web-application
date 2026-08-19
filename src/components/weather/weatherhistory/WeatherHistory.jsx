@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, Button, Spinner, Alert } from "react-bootstrap";
 import { fetchHistoricalWeather } from "../../../redux/slices/weatherSlice";
+import { findAoiForField } from "../../../utils/farmGeometry";
 import CustomDatePicker from "../CustomDatePicker";
 import { message } from "antd";
 
@@ -24,7 +25,7 @@ const WeatherHistory = ({
 
   useEffect(() => {
     if (selectedField && aois && aois.length > 0) {
-      const matchingAOI = aois.find((aoi) => aoi.name === selectedField._id);
+      const matchingAOI = findAoiForField(aois, selectedField._id);
 
       if (matchingAOI && matchingAOI.id) {
         setGeometryId(matchingAOI.id);

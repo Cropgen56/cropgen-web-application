@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { findAoiForField } from "../../utils/farmGeometry";
 
 const VISUAL_CROSSING_KEY =
   process.env.REACT_APP_VISUAL_CROSSING_KEY || "NAJUNXK89Y3ZLPJL3NYH6BS4E";
@@ -30,9 +31,7 @@ export const createAOI = createAsyncThunk(
 
     try {
       const state = getState();
-      const existingAOI = state.weather.aois?.find(
-        (aoi) => aoi.name === payload.name,
-      );
+      const existingAOI = findAoiForField(state.weather.aois, payload.name);
 
       if (existingAOI) {
         return existingAOI.id;
@@ -51,18 +50,22 @@ export const createAOI = createAsyncThunk(
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || error.response?.data?.error || "";
+      const errorText =
+        typeof errorMessage === "string"
+          ? errorMessage
+          : JSON.stringify(errorMessage);
+      const isSizeLimit = errorText.toLowerCase().includes("hectare");
       const isDuplicate =
-        error.response?.status === 409 ||
-        error.response?.status === 400 ||
-        errorMessage.toLowerCase().includes("already exists") ||
-        errorMessage.toLowerCase().includes("duplicate");
+        !isSizeLimit &&
+        (error.response?.status === 409 ||
+          error.response?.status === 400 ||
+          errorText.toLowerCase().includes("already exists") ||
+          errorText.toLowerCase().includes("duplicate"));
 
       if (isDuplicate) {
         await dispatch(fetchAOIs()).unwrap();
         const state = getState();
-        const existingAOI = state.weather.aois?.find(
-          (aoi) => aoi.name === payload.name,
-        );
+        const existingAOI = findAoiForField(state.weather.aois, payload.name);
         if (existingAOI) {
           return existingAOI.id;
         }
@@ -232,7 +235,7 @@ export const { setDateRange, clearHistoricalWeather } = weatherSlice.actions;
 
 export const selectAOIs = (state) => state.weather.aois || [];
 export const selectAOIByName = (name) => (state) =>
-  state.weather.aois?.find((aoi) => aoi.name === name) || null;
+  findAoiForField(state.weather.aois, name);
 
 /** Get forecast data for a geometry. Handles both keyed (by geometry_id) and flat store shapes. */
 export const selectForecastForGeometry = (geometryId) => (state) => {

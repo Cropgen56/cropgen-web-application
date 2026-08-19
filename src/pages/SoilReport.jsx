@@ -14,6 +14,7 @@ import PricingOverlay from "../components/pricing/PricingOverlay";
 import FieldDropdown from "../components/comman/FieldDropdown";
 import { generateSoilReportAPI } from "../api/soilReportApi";
 import { DEFAULT_ORGANIZATION_CODE } from "../config/brand";
+import { toApiPolygon } from "../utils/farmGeometry";
 
 const SoilReport = () => {
   const dispatch = useDispatch();
@@ -148,10 +149,10 @@ const SoilReport = () => {
 
       try {
         const soilApi = await generateSoilReportAPI({
-          geometry: {
+          geometry: toApiPolygon({
             type: "Polygon",
             coordinates: [deduped],
-          },
+          }),
           startDate,
           endDate,
           currentCrop: field?.cropName || "default",

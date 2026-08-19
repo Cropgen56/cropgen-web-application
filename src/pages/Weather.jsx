@@ -24,6 +24,7 @@ import {
 
 import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
 import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherForecast";
+import { findAoiForField } from "../utils/farmGeometry";
 
 import img1 from "../assets/image/Group 31.png";
 
@@ -63,7 +64,7 @@ const Weather = () => {
 
   useEffect(() => {
     if (selectedField && aois?.length) {
-      const match = aois.find((aoi) => aoi.name === selectedField._id);
+      const match = findAoiForField(aois, selectedField._id);
       if (match?.id) {
         dispatch(fetchForecastData({ geometry_id: match.id }));
       }

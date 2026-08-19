@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getReactAppUrl } from "../config/envUrls";
+import { toApiPolygon } from "../utils/farmGeometry";
 
 const DEFAULT_CACHE_TTL_MS = 4 * 24 * 60 * 60 * 1000; // 4 days
 const DEFAULT_TIMEOUT_MS = 20000;
@@ -43,29 +44,6 @@ function getSatelliteApiBase() {
 
 const SATELLITE_BASE_URL = getSatelliteApiBase();
 
-function arraysEqual(a, b) {
-  return a.length === b.length && a.every((val, index) => val === b[index]);
-}
-
-function normalizeLatLngGeometryToLngLatRing(geometry) {
-  const coordinates = geometry?.map(({ lat, lng }) => {
-    if (typeof lat !== "number" || typeof lng !== "number") {
-      throw new Error(`Invalid coordinate: lat=${lat}, lng=${lng}`);
-    }
-    return [lng, lat];
-  });
-
-  if (!Array.isArray(coordinates) || coordinates.length === 0) {
-    throw new Error("Geometry is missing");
-  }
-
-  if (!arraysEqual(coordinates[0], coordinates[coordinates.length - 1])) {
-    coordinates.push(coordinates[0]);
-  }
-
-  return coordinates;
-}
-
 // Simple in-memory cache (fast) with TTL. Keyed by endpoint+payload.
 const memCache = new Map();
 function makeCacheKey(endpoint, payload) {
@@ -97,9 +75,8 @@ async function postTimeseries({
     throw new Error("Missing required parameters");
   }
 
-  const ring = normalizeLatLngGeometryToLngLatRing(geometry);
   const payload = {
-    geometry: { type: "Polygon", coordinates: [ring] },
+    geometry: toApiPolygon(geometry),
     start_date: startDate,
     end_date: endDate,
     index: index,
