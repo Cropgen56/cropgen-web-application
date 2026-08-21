@@ -11,7 +11,7 @@ const getRiskColor = (message = "") => {
   return "text-gray-600";
 };
 
-const PestDiseaseCard = () => {
+const PestDiseaseCard = ({ isGenerating = false }) => {
   const { advisory } = useSelector((state) => state.smartAdvisory || {});
 
   // NEW SOURCE (activitiesToDo)
@@ -32,11 +32,13 @@ const PestDiseaseCard = () => {
         {!cropRisk ? (
           <>
             <p className="font-semibold text-green-600 text-center">
-              No Major Crop Risk
+              {isGenerating ? "Generating farm advisory…" : "No Major Crop Risk"}
             </p>
-            <p className="text-[12px] mt-1 text-gray-600 text-center">
-              Crop condition is stable. Continue normal monitoring.
-            </p>
+            {!isGenerating && (
+              <p className="text-[12px] mt-1 text-gray-600 text-center">
+                Crop condition is stable. Continue normal monitoring.
+              </p>
+            )}
           </>
         ) : (
           <>

@@ -66,12 +66,19 @@ const NdviGraph = ({
   );
 
   useEffect(() => {
+    if (!bypassPremium && !vegetationGuard.hasFeatureAccess) return;
     if (!fetchParams || !requestKey) return;
     if (lastRequestKeyRef.current === requestKey) return;
 
     lastRequestKeyRef.current = requestKey;
     dispatch(fetchIndexTimeSeriesSummary(fetchParams));
-  }, [dispatch, fetchParams, requestKey]);
+  }, [
+    dispatch,
+    fetchParams,
+    requestKey,
+    bypassPremium,
+    vegetationGuard.hasFeatureAccess,
+  ]);
 
   const chartData = useMemo(() => {
     let timeseries =

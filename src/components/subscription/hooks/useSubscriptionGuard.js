@@ -1,32 +1,16 @@
 import { useState, useCallback, useMemo } from "react";
 import { message } from "antd";
+import { hasPlanFeature } from "../../../utils/subscriptionAccess";
 
 export const useSubscriptionGuard = ({ field, featureKey }) => {
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [showPricingOverlay, setShowPricingOverlay] = useState(false);
   const [pricingFieldData, setPricingFieldData] = useState(null);
 
-  /* =====================================================
-     FEATURE ACCESS (STRICT & CORRECT)
-  ===================================================== */
-
-  const hasFeatureAccess = useMemo(() => {
-    if (!field?.subscription) return false;
-
-    const sub = field.subscription;
-
-    // Only ACTIVE subscription gets access
-    if (sub.status !== "active") {
-      return false;
-    }
-
-    // Feature-level validation
-    if (featureKey && sub.plan?.features) {
-      return Boolean(sub.plan.features[featureKey]);
-    }
-
-    return true;
-  }, [field, featureKey]);
+  const hasFeatureAccess = useMemo(
+    () => hasPlanFeature(field, featureKey),
+    [field, featureKey],
+  );
 
   /* =====================================================
      SUBSCRIBE HANDLER

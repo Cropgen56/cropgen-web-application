@@ -4,12 +4,24 @@ import SubscriptionModal from "./SubscriptionModal";
 import PricingOverlay from "../pricing/PricingOverlay";
 import PremiumPageWrapper from "./PremiumPageWrapper";
 const FeatureGuard = ({ guard, title, children }) => {
+  const hasFeatureAccess = guard?.hasFeatureAccess;
+  const showMembershipModal = guard?.showMembershipModal;
+  const showPricingOverlay = guard?.showPricingOverlay;
+  const closeMembershipModal = guard?.closeMembershipModal;
+  const closePricingOverlay = guard?.closePricingOverlay;
+
   useEffect(() => {
-    if (guard.hasFeatureAccess) {
-      guard.closeMembershipModal();
-      guard.closePricingOverlay();
-    }
-  }, [guard]);
+    if (!hasFeatureAccess) return;
+    if (!showMembershipModal && !showPricingOverlay) return;
+    closeMembershipModal?.();
+    closePricingOverlay?.();
+  }, [
+    hasFeatureAccess,
+    showMembershipModal,
+    showPricingOverlay,
+    closeMembershipModal,
+    closePricingOverlay,
+  ]);
 
   return (
     <>

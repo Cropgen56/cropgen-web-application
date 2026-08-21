@@ -126,7 +126,7 @@ const ActivityCard = ({
   );
 };
 
-export default function FarmAdvisoryCard({ selectedField }) {
+export default function FarmAdvisoryCard({ selectedField, isGenerating = false }) {
   const dispatch = useDispatch();
 
   const { advisory, loading, loadingFieldId, progressUpdating, progressError } =
@@ -140,12 +140,12 @@ export default function FarmAdvisoryCard({ selectedField }) {
     String(advisoryFieldId) === String(selectedField._id);
 
   const isLoadingForField =
-    loading && loadingFieldId === selectedField?._id;
+    isGenerating || (loading && loadingFieldId === selectedField?._id);
 
-  const activities =
-    fieldMatches && Array.isArray(advisory?.activitiesToDo)
-      ? advisory.activitiesToDo
-      : [];
+  const activities = useMemo(() => {
+    if (!fieldMatches || !Array.isArray(advisory?.activitiesToDo)) return [];
+    return advisory.activitiesToDo;
+  }, [fieldMatches, advisory?.activitiesToDo]);
   const advisoryDate = formatAdvisoryDate(advisory?.createdAt);
 
   const progressSummary = useMemo(() => {
@@ -233,7 +233,7 @@ export default function FarmAdvisoryCard({ selectedField }) {
       <div className="space-y-3 bg-[#10271D] px-4 py-4 sm:px-6">
         {isLoadingForField ? (
           <p className="py-4 text-center text-sm text-white/60">
-            Loading advisory…
+            Generating farm advisory…
           </p>
         ) : activities.length === 0 ? (
           <p className="py-4 text-center text-sm text-white/60">

@@ -24,6 +24,7 @@ const CropHealth = ({
   bypassPremium = false,
   isPreparedForPDF = false,
   aoiId = null,
+  isGenerating = false,
   /** PDF: show only health/yield, only soil, or full (default) */
   pdfSection = "full",
 }) => {
@@ -42,6 +43,11 @@ const CropHealth = ({
   const cropHealthGuard = useSubscriptionGuard({
     field: selectedFieldDetails,
     featureKey: "cropHealthAndYield",
+  });
+
+  const soilGuard = useSubscriptionGuard({
+    field: selectedFieldDetails,
+    featureKey: "soilAnalysisAndHealth",
   });
 
   /* ================= FIELD DATA ================= */
@@ -112,9 +118,9 @@ const CropHealth = ({
     };
   }, [advisory]);
 
-  const showStandardYield =
-    !advisoryLoading && isYieldAvailable(yieldData?.standard);
-  const showAiYield = !advisoryLoading && isYieldAvailable(yieldData?.ai);
+  const showYieldData =
+    bypassPremium || cropHealthGuard.hasFeatureAccess;
+  const showSoilData = bypassPremium || soilGuard.hasFeatureAccess;
 
   /* ================= PREMIUM SECTION ================= */
 
@@ -198,14 +204,18 @@ const CropHealth = ({
 
             <Info label="Area" value={`${totalAreaHectare} Ha`} />
 
-            {showStandardYield && (
+            {showYieldData &&
+              !advisoryLoading &&
+              isYieldAvailable(yieldData?.standard) && (
               <Info
                 label="Standard Yield"
                 value={`${yieldData.standard} ${yieldData.unit} ( Total )`}
               />
             )}
 
-            {showAiYield && (
+            {showYieldData &&
+              !advisoryLoading &&
+              isYieldAvailable(yieldData?.ai) && (
               <Info
                 label="AI Yield"
                 value={`${yieldData.ai} ${yieldData.unit}`}
@@ -214,44 +224,59 @@ const CropHealth = ({
           </div>
         </div>
 
-        {/* STATUS BAR */}
-
-        <CropHealthStatusBar selectedFieldsDetials={[fieldData]} />
+        {showYieldData ? (
+          <div className="mt-4">
+            {isGenerating && !advisory?.cropHealth ? (
+              <p className="text-sm text-ember-sidebar/70">
+                Generating farm advisory…
+              </p>
+            ) : (
+              <CropHealthStatusBar selectedFieldsDetials={[fieldData]} />
+            )}
+          </div>
+        ) : (
+          <div className="mt-4">
+            <FeatureGuard guard={cropHealthGuard} title="Crop Health & Yield">
+              <PremiumContentWrapper
+                isLocked
+                onSubscribe={cropHealthGuard.handleSubscribe}
+                title="Crop Health & Yield"
+                minHeight={140}
+              />
+            </FeatureGuard>
+          </div>
+        )}
       </div>
       )}
 
-      {/* ========= PREMIUM SECTION ========= */}
+      {/* ========= SOIL ANALYTICS (plan feature) ========= */}
 
       {showSoil && (
       <div className={`bg-white rounded-2xl shadow border ${showHealthYield ? "mt-6" : ""}`}>
-        {/* Always-visible section header */}
         <div className="px-5 py-3 border-b flex items-center justify-between">
           <h2 className="text-xl font-bold text-ember-sidebar">
             Advanced Soil Analytics
           </h2>
-          {!bypassPremium && !cropHealthGuard.hasFeatureAccess && (
+          {!showSoilData && (
             <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
               Premium
             </span>
           )}
         </div>
 
-        {/* Content — blurred when locked, shown normally when accessible */}
         <div className="p-4">
-          {bypassPremium ? (
+          {showSoilData ? (
             premiumSection
           ) : (
             <FeatureGuard
-              guard={cropHealthGuard}
-              title="Advanced Soil Analytics"
+              guard={soilGuard}
+              title="Soil Analysis & Health"
             >
               <PremiumContentWrapper
-                isLocked={!cropHealthGuard.hasFeatureAccess}
-                onSubscribe={cropHealthGuard.handleSubscribe}
-                title="Advanced Soil Analytics"
-              >
-                {premiumSection}
-              </PremiumContentWrapper>
+                isLocked
+                onSubscribe={soilGuard.handleSubscribe}
+                title="Soil Analysis & Health"
+              />
             </FeatureGuard>
           )}
         </div>

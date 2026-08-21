@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
 import { message } from "antd";
-import { Building2, UserRound } from "lucide-react";
+import { Building2 } from "lucide-react";
 import {
   getUserProfileData,
   updateUserData,
@@ -9,7 +10,7 @@ import {
 import { getCountries } from "../../api/locationApi";
 import { validateOrganizationCode } from "../../api/authApi";
 import { getStaticCountries } from "../../config/countriesFallback";
-import { DEFAULT_ORGANIZATION_CODE } from "../../config/brand";
+import { DEFAULT_ORGANIZATION_CODE, AUTH_ROUTES } from "../../config/brand";
 import {
   getPhoneValidationError,
   maxLocalPhoneLength,
@@ -66,9 +67,10 @@ const Field = ({ label, required, children }) => (
  */
 const CompleteProfileGate = () => {
   const dispatch = useDispatch();
-  const { token, user, userProfile, profileStatus } = useSelector(
-    (state) => state.auth,
-  );
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { token, user, userProfile, profileStatus, googleSignupPending } =
+    useSelector((state) => state.auth);
   const userId = user?.id || userProfile?.id || userProfile?._id;
 
   const [form, setForm] = useState({
@@ -86,7 +88,6 @@ const CompleteProfileGate = () => {
   const [orgError, setOrgError] = useState("");
   const [orgHint, setOrgHint] = useState("");
   const [checkingOrg, setCheckingOrg] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
   const orgCheckRef = useRef(0);
 
@@ -109,18 +110,21 @@ const CompleteProfileGate = () => {
   }, []);
 
   useEffect(() => {
-    if (!userProfile || hydrated) return;
-    setForm({
-      firstName: userProfile.firstName || "",
-      lastName: userProfile.lastName || "",
-      email: userProfile.email || "",
-      dialCode: "91",
-      phoneLocal: toLocalPhone(userProfile.phone || ""),
-      country: userProfile.country || "IN",
-      organizationCode: orgCodeFromUser(userProfile),
-    });
-    setHydrated(true);
-  }, [userProfile, hydrated]);
+    const source = userProfile || user;
+    if (!source) return;
+    setForm((prev) => ({
+      firstName: source.firstName || prev.firstName || "",
+      lastName: source.lastName || prev.lastName || "",
+      email: source.email || prev.email || "",
+      dialCode: prev.dialCode || "91",
+      phoneLocal: source.phone
+        ? toLocalPhone(source.phone)
+        : prev.phoneLocal,
+      country: source.country || prev.country || "IN",
+      organizationCode:
+        orgCodeFromUser(source) || prev.organizationCode || "",
+    }));
+  }, [userProfile, user]);
 
   useEffect(() => {
     const code = String(form.organizationCode || "").trim().toUpperCase();
@@ -163,12 +167,18 @@ const CompleteProfileGate = () => {
     };
   }, [form.organizationCode]);
 
-  const incomplete = isProfileDetailsIncomplete(userProfile);
+  const profileUser = userProfile || user;
+  const waitingForProfile =
+    Boolean(token) &&
+    !userProfile &&
+    profileStatus !== "failed";
+  const missingName =
+    !String(profileUser?.firstName || "").trim() ||
+    !String(profileUser?.lastName || "").trim();
   const showGate =
     Boolean(token) &&
-    profileStatus !== "loading" &&
-    userProfile &&
-    incomplete;
+    !waitingForProfile &&
+    (googleSignupPending || missingName);
 
   const countryOptions = useMemo(
     () =>
@@ -232,6 +242,12 @@ const CompleteProfileGate = () => {
 
       await dispatch(getUserProfileData());
       message.success("Profile updated successfully");
+      const onAuthScreen = Object.values(AUTH_ROUTES).includes(
+        location.pathname,
+      );
+      if (onAuthScreen) {
+        navigate("/cropgen-analytics", { replace: true });
+      }
     } catch (err) {
       const msg =
         (typeof err === "string" && err) ||
@@ -256,23 +272,60 @@ const CompleteProfileGate = () => {
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-md"
               style={{ backgroundColor: PRIMARY }}
             >
-              <UserRound className="h-5 w-5" />
+              <Building2 className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <h2
                 className="text-lg font-bold tracking-tight sm:text-xl"
                 style={{ color: PRIMARY }}
               >
-                Complete your profile
+                Choose your organization
               </h2>
               <p className="mt-0.5 text-sm leading-snug text-gray-500">
-                Add your details so we can personalize your farm experience.
+                Enter an organization code, or leave blank to join{" "}
+                {DEFAULT_ORGANIZATION_CODE}.
               </p>
             </div>
           </div>
         </div>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+          <Field label="Organization code">
+            <div className="relative">
+              <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                className="h-11 w-full rounded-xl border border-[#D5DDD8] bg-[#F8FAF9] pl-10 pr-3 text-sm uppercase text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0D4D44] focus:bg-white focus:ring-2 focus:ring-[#0D4D44]/15"
+                placeholder={DEFAULT_ORGANIZATION_CODE}
+                value={form.organizationCode}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                autoFocus
+                name="cropgen-organization-code"
+                data-lpignore="true"
+                data-1p-ignore="true"
+                data-form-type="other"
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    organizationCode: e.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z0-9]/g, ""),
+                  }))
+                }
+              />
+            </div>
+            {orgError ? (
+              <p className="mt-1 text-xs text-red-600">{orgError}</p>
+            ) : orgHint ? (
+              <p className="mt-1 text-xs text-emerald-700">{orgHint}</p>
+            ) : (
+              <p className="mt-1 text-xs text-gray-500">
+                Leave blank to join {DEFAULT_ORGANIZATION_CODE}
+              </p>
+            )}
+          </Field>
+
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Field label="First name" required>
               <input
@@ -366,41 +419,6 @@ const CompleteProfileGate = () => {
                 </option>
               ))}
             </select>
-          </Field>
-
-          <Field label="Organization code">
-            <div className="relative">
-              <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                className="h-11 w-full rounded-xl border border-[#D5DDD8] bg-[#F8FAF9] pl-10 pr-3 text-sm uppercase text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#0D4D44] focus:bg-white focus:ring-2 focus:ring-[#0D4D44]/15"
-                placeholder={DEFAULT_ORGANIZATION_CODE}
-                value={form.organizationCode}
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
-                name="cropgen-organization-code"
-                data-lpignore="true"
-                data-1p-ignore="true"
-                data-form-type="other"
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    organizationCode: e.target.value
-                      .toUpperCase()
-                      .replace(/[^A-Z0-9]/g, ""),
-                  }))
-                }
-              />
-            </div>
-            {orgError ? (
-              <p className="mt-1 text-xs text-red-600">{orgError}</p>
-            ) : orgHint ? (
-              <p className="mt-1 text-xs text-emerald-700">{orgHint}</p>
-            ) : (
-              <p className="mt-1 text-xs text-gray-500">
-                Leave blank to join {DEFAULT_ORGANIZATION_CODE}
-              </p>
-            )}
           </Field>
 
           {error ? (

@@ -17,6 +17,8 @@ import { isTokenValid } from "../../utility/token";
 import {
   persistRefreshToken,
   clearPersistedRefreshToken,
+  persistGoogleSignupPending,
+  hasGoogleSignupPending,
 } from "../../utility/authSession";
 
 // Prevents simultaneous token refresh races
@@ -262,6 +264,8 @@ export const authInitialState = {
   profileStatus: "idle",
   error: null,
   onboardingRequired: false,
+  profileDetailsRequired: false,
+  googleSignupPending: false,
   isAuthenticated: false,
   refreshPending: false,
   avatarUploading: false,
@@ -295,25 +299,39 @@ const authSlice = createSlice({
         };
         state.role = userData.role;
         state.onboardingRequired = userData.onboardingRequired || false;
+        state.profileDetailsRequired =
+          userData.profileDetailsRequired || false;
+        state.googleSignupPending = hasGoogleSignupPending();
         state.isAuthenticated = true;
       } catch {
         state.isAuthenticated = false;
         state.user = null;
         state.role = null;
         state.onboardingRequired = false;
+        state.profileDetailsRequired = false;
         state.error = "Invalid token";
       }
     },
     setGoogleLoginData: (state, action) => {
-      const { accessToken, user, role, onboardingRequired } = action.payload;
+      const {
+        accessToken,
+        user,
+        role,
+        onboardingRequired,
+        profileDetailsRequired,
+        isNewUser,
+      } = action.payload;
       state.token = accessToken;
       state.user = user;
       state.role = role;
-      state.onboardingRequired = onboardingRequired;
+      state.onboardingRequired = onboardingRequired || false;
+      state.profileDetailsRequired = !!profileDetailsRequired;
+      state.googleSignupPending = !!isNewUser;
+      persistGoogleSignupPending(!!isNewUser);
       state.isAuthenticated = !!accessToken;
       state.status = "succeeded";
       state.error = null;
-      // Seed profile so the dashboard form can open immediately for new Google users.
+      // Seed profile so the details modal can open immediately for new Google users.
       state.userProfile = user || null;
       state.profileStatus = user ? "succeeded" : "idle";
     },
@@ -338,6 +356,8 @@ const authSlice = createSlice({
         state.role = action.payload.role || null;
         state.isAuthenticated = !!action.payload.accessToken;
         state.onboardingRequired = action.payload.onboardingRequired || false;
+        state.profileDetailsRequired =
+          action.payload.profileDetailsRequired || false;
         state.error = null;
         persistRefreshToken(action.payload.refreshToken);
       })
@@ -360,6 +380,18 @@ const authSlice = createSlice({
         state.profileStatus = "succeeded";
         state.userProfile = action.payload.user || null;
         state.error = null;
+        const profile = action.payload.user;
+        const hasName =
+          !!String(profile?.firstName || "").trim() &&
+          !!String(profile?.lastName || "").trim();
+        const isReturningUser = Boolean(profile?.lastLoginAt);
+        // Returning farmers should never be blocked by the Google org popup.
+        if (hasName && (isReturningUser || !state.googleSignupPending)) {
+          state.profileDetailsRequired = false;
+          state.onboardingRequired = false;
+          state.googleSignupPending = false;
+          persistGoogleSignupPending(false);
+        }
       })
       .addCase(getUserProfileData.rejected, (state, action) => {
         state.profileStatus = "failed";
@@ -380,6 +412,13 @@ const authSlice = createSlice({
         if (updated) {
           state.userDetails = updated;
           state.userProfile = updated;
+          const firstName = String(updated.firstName || "").trim();
+          const lastName = String(updated.lastName || "").trim();
+          const phone = String(updated.phone || "").trim();
+          const country = String(updated.country || "").trim();
+          state.profileDetailsRequired = !firstName || !lastName || !phone || !country;
+          state.googleSignupPending = false;
+          persistGoogleSignupPending(false);
         }
         state.error = null;
       })
@@ -414,6 +453,7 @@ const authSlice = createSlice({
         state.role = role || null;
         state.isAuthenticated = !!accessToken;
         state.onboardingRequired = onboardingRequired || false;
+        state.profileDetailsRequired = false;
         state.error = null;
         persistRefreshToken(refreshToken);
       })
@@ -451,6 +491,7 @@ const authSlice = createSlice({
         state.role = resolvedRole;
         state.isAuthenticated = !!resolvedAccessToken;
         state.onboardingRequired = resolvedOnboardingRequired;
+        state.profileDetailsRequired = false;
         state.error = null;
         persistRefreshToken(resolvedRefreshToken);
       })
@@ -472,6 +513,7 @@ const authSlice = createSlice({
         state.role = role || state.role;
         state.isAuthenticated = !!accessToken;
         state.onboardingRequired = onboardingRequired || false;
+        state.profileDetailsRequired = false;
         state.error = null;
         persistRefreshToken(refreshToken);
       })

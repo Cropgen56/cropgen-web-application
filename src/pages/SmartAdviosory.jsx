@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,14 +22,13 @@ import FieldDropdown from "../components/comman/FieldDropdown";
 
 import { getFarmFields } from "../redux/slices/farmSlice";
 import {
-  fetchForecastData,
   fetchHistoricalWeather,
   fetchAOIs,
-  createAOI,
 } from "../redux/slices/weatherSlice";
 import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
 import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherForecast";
-import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
+import { useLiveSelectedField } from "../hooks/useLiveSelectedField";
+import { usePollSmartAdvisory } from "../hooks/usePollSmartAdvisory";
 import { findAoiForField } from "../utils/farmGeometry";
 
 import img1 from "../assets/image/Group 31.png";
@@ -39,20 +38,6 @@ const getSixMonthsAgo = () => {
   const d = new Date();
   d.setMonth(d.getMonth() - 6);
   return d.toISOString().split("T")[0];
-};
-
-/** Same order as SmartAdvisorySidebar: newest first */
-const sortFieldsNewestFirst = (list) =>
-  [...(list || [])].sort(
-    (a, b) =>
-      new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
-  );
-
-const formatCoordinates = (data) => {
-  if (!Array.isArray(data) || !data.length) return [];
-  const coords = data.map((p) => [p.lng, p.lat]);
-  if (coords.length > 2) coords.push(coords[0]);
-  return coords;
 };
 
 const EmptyState = ({ onAddField }) => (
@@ -77,12 +62,7 @@ const SmartAdvisory = () => {
   const fields = useSelector((s) => s.farmfield?.fields || []);
   const aois = useSelector((s) => s.weather?.aois || []);
 
-  const [selectedField, setSelectedField] = useState(null);
-
-  const fieldsSorted = useMemo(
-    () => sortFieldsNewestFirst(fields),
-    [fields],
-  );
+  const { selectedField, setSelectedField } = useLiveSelectedField(fields);
 
   /* ---------- AOI + WEATHER (proven flow from Dashboard/FarmReport) ---------- */
   const { aoiId } = useAoiManagement(selectedField);
@@ -99,25 +79,14 @@ const SmartAdvisory = () => {
     }
   }, [dispatch, user?.id]);
 
-  /* ---------- Default to first field in sidebar order (newest first) ---------- */
-  useEffect(() => {
-    if (!fieldsSorted.length) return;
-    if (!selectedField) {
-      setSelectedField(fieldsSorted[0]);
-      return;
-    }
-    const stillExists = fieldsSorted.some((f) => f._id === selectedField._id);
-    if (!stillExists) {
-      setSelectedField(fieldsSorted[0]);
-    }
-  }, [fieldsSorted, selectedField]);
+  const advisoryGuard = useSubscriptionGuard({
+    field: selectedField,
+    featureKey: "smartAdvisorySystem",
+  });
 
-  /* ---------- FETCH ADVISORY ---------- */
-  useEffect(() => {
-    if (selectedField?._id) {
-      dispatch(fetchSmartAdvisory({ fieldId: selectedField._id }));
-    }
-  }, [dispatch, selectedField?._id]);
+  const { isGenerating } = usePollSmartAdvisory(selectedField, {
+    enabled: advisoryGuard.hasFeatureAccess,
+  });
 
   /* ---------- HISTORICAL (uses aoiId from useAoiManagement) ---------- */
   useEffect(() => {
@@ -136,12 +105,6 @@ const SmartAdvisory = () => {
       }),
     );
   }, [dispatch, aois, selectedField]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /* ---------- SUBSCRIPTION GUARD (SAME AS WEATHER) ---------- */
-  const advisoryGuard = useSubscriptionGuard({
-    field: selectedField,
-    featureKey: "smartAdvisorySystem",
-  });
 
   useEffect(() => {
     if (location.hash !== "#activities-to-do") return;
@@ -227,15 +190,18 @@ const SmartAdvisory = () => {
                   <CropSwitcher />
 
                   <NDVIChartCard selectedField={selectedField} />
-                  <NutrientManagement />
+                  <NutrientManagement isGenerating={isGenerating} />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <WeatherCard aoiId={aoiId} />
-                    <PestDiseaseCard />
+                    <PestDiseaseCard isGenerating={isGenerating} />
                   </div>
 
                   <Soiltemp />
-                  <FarmAdvisoryCard selectedField={selectedField} />
+                  <FarmAdvisoryCard
+                    selectedField={selectedField}
+                    isGenerating={isGenerating}
+                  />
                 </div>
               </FeatureGuard>
             )}

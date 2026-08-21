@@ -2,28 +2,16 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Lock } from "lucide-react";
 
-// wrapper for dashboard satellite index componet
 const IndexPremiumWrapper = ({ children, isLocked, onSubscribe }) => {
   if (!isLocked) return children;
 
   return (
-    <div className="relative">
-      {/* Blurred Content */}
-      <div className="filter blur-sm pointer-events-none select-none">
-        {children}
-      </div>
-
-      {/* Simple Glassmorphism Overlay */}
+    <div className="relative min-h-[220px] rounded-lg overflow-hidden border border-amber-200/80 bg-gradient-to-br from-emerald-50 to-white">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="absolute inset-0 flex items-center justify-center rounded-lg"
-        style={{
-          background: "rgba(255, 255, 255, 0.1)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
-        }}
+        className="absolute inset-0 flex items-center justify-center"
       >
         <motion.button
           onClick={onSubscribe}
@@ -32,7 +20,7 @@ const IndexPremiumWrapper = ({ children, isLocked, onSubscribe }) => {
           whileTap={{ scale: 0.95 }}
         >
           <Lock className="w-5 h-5" />
-          <span>Premium Content • Subscribe to Unlock</span>
+          <span>Not in this plan · Subscribe to Unlock</span>
         </motion.button>
       </motion.div>
     </div>

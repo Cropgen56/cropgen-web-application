@@ -15,6 +15,8 @@ import FieldDropdown from "../components/comman/FieldDropdown";
 import { generateSoilReportAPI } from "../api/soilReportApi";
 import { DEFAULT_ORGANIZATION_CODE } from "../config/brand";
 import { toApiPolygon } from "../utils/farmGeometry";
+import { useLiveSelectedField } from "../hooks/useLiveSelectedField";
+import { hasPlanFeature } from "../utils/subscriptionAccess";
 
 const SoilReport = () => {
   const dispatch = useDispatch();
@@ -23,10 +25,10 @@ const SoilReport = () => {
   const user = useSelector((state) => state?.auth?.user);
   const rawFields = useSelector((state) => state?.farmfield?.fields);
   const fields = useMemo(() => rawFields || [], [rawFields]);
+  const { selectedField, setSelectedField } = useLiveSelectedField(fields);
 
   const userId = user?.id;
 
-  const [selectedField, setSelectedField] = useState(null);
   const [selectedOperation, setSelectedOperation] = useState(null);
   const [reportData, setReportData] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -43,12 +45,8 @@ const SoilReport = () => {
   }, [dispatch, userId]);
 
   useEffect(() => {
-    if (fields?.length > 0 && !selectedField) {
-      const lastField = fields[fields.length - 1];
-      setSelectedField(lastField);
-      setSelectedOperation(lastField);
-    }
-  }, [fields, selectedField]);
+    if (selectedField) setSelectedOperation(selectedField);
+  }, [selectedField]);
 
   useEffect(() => {
     setReportData(null);
@@ -58,7 +56,7 @@ const SoilReport = () => {
     setSelectedField(field);
     setSelectedOperation(field);
     setReportData(null);
-  }, []);
+  }, [setSelectedField]);
 
   const handleSubscribe = useCallback(() => {
     if (!selectedField) {
@@ -190,13 +188,14 @@ const SoilReport = () => {
         setIsGeneratingReport(false);
       }
     },
-    [user]
+    [user, setSelectedField]
   );
 
 const downloadPDF = useCallback(async () => {
-  const hasSoilReportPermission =
-    selectedField?.subscription?.hasActiveSubscription &&
-    selectedField?.subscription?.plan?.features?.soilReportGeneration;
+  const hasSoilReportPermission = hasPlanFeature(
+    selectedField,
+    "soilReportGeneration",
+  );
 
   if (!hasSoilReportPermission) {
     message.warning("Please subscribe to download soil reports");
@@ -313,12 +312,8 @@ const downloadPDF = useCallback(async () => {
 }, [selectedField, handleSubscribe]);
 
   const hasSubscription = useMemo(
-    () =>
-      Boolean(
-        selectedField?.subscription?.hasActiveSubscription &&
-          selectedField?.subscription?.plan?.features?.soilReportGeneration
-      ),
-    [selectedField]
+    () => hasPlanFeature(selectedField, "soilReportGeneration"),
+    [selectedField],
   );
 
   const reportReady = Boolean(reportData?.soilReport);

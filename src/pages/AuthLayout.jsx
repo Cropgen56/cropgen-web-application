@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SignupLogin from "../components/AuthLayout/signup/SignupLogin";
+import CompleteProfileGate from "../components/AuthLayout/CompleteProfileGate";
 import { decodeToken } from "../redux/slices/authSlice";
 import { useDispatch } from "react-redux";
 import laptop from "../assets/image/login/laptop-overlay.png";
@@ -296,6 +297,7 @@ const AuthLayout = () => {
           </div>
         </div>
       )}
+      <CompleteProfileGate />
     </div>
   );
 };

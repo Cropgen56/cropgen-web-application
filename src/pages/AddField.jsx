@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import AddFieldMap from "../components/addfield/AddFieldMap";
 import AddFieldSidebar from "../components/addfield/AddFieldSidebar";
 import { useDispatch, useSelector } from "react-redux";
-import { addFarmField, addCropToFarm } from "../redux/slices/farmSlice";
+import { addFarmField, addCropToFarm, getFarmFields } from "../redux/slices/farmSlice";
 import { useNavigate } from "react-router-dom";
 import * as turf from "@turf/turf";
 import { message } from "antd";
@@ -186,6 +186,16 @@ const AddField = () => {
         }
 
         message.success("Field added successfully!");
+
+        if (field?._id) {
+          localStorage.setItem("selectedFieldId", field._id);
+        }
+
+        try {
+          await dispatch(getFarmFields(userId)).unwrap();
+        } catch {
+          /* list refresh is best-effort; overlay still opens */
+        }
 
         const fieldData = {
           id: field._id,

@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useCallback } from "react";
-import { useDispatch } from "react-redux";
+import React from "react";
 
 import MapView from "../components/dashboard/mapview/MapView";
 import CropHealth from "../components/dashboard/crophealth/CropHealthCard";
@@ -14,59 +13,23 @@ import { useFarmFields } from "../components/dashboard/hooks/useFarmFields";
 import { useSelectedField } from "../components/dashboard/hooks/useSelectedField";
 import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
 import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherForecast";
-
-import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
+import { usePollSmartAdvisory } from "../hooks/usePollSmartAdvisory";
 
 import "../styles/dashboard.css";
 
 const Dashboard = () => {
-  const dispatch = useDispatch();
-
-  /* ================= DATA ================= */
   const { fields, isLoadingFields } = useFarmFields();
   const { selectedField, selectedFieldDetails, handleFieldSelection } =
     useSelectedField(fields);
 
   const { aoiId } = useAoiManagement(selectedFieldDetails);
   const { forecast, units } = useWeatherForecast(aoiId);
-
-  /* ================= ADVISORY (refetch when field or subscription access changes) ================= */
-  const lastAdvisoryKeyRef = useRef(null);
-
-  useEffect(() => {
-    const fieldId = selectedFieldDetails?._id;
-    if (!fieldId) return;
-
-    const subActive =
-      selectedFieldDetails?.subscription?.hasActiveSubscription === true;
-    const key = `${fieldId}:${subActive}`;
-    if (lastAdvisoryKeyRef.current === key) return;
-    lastAdvisoryKeyRef.current = key;
-
-    dispatch(fetchSmartAdvisory({ fieldId }));
-  }, [
-    dispatch,
-    selectedFieldDetails?._id,
-    selectedFieldDetails?.subscription?.hasActiveSubscription,
-  ]);
-
-  /* ================= SUBSCRIPTION HELPERS ================= */
-  const isSubscribed =
-    !!selectedFieldDetails?.subscription?.hasActiveSubscription;
-
-  const hasFeature = useCallback(
-    (featureKey) =>
-      isSubscribed &&
-      !!selectedFieldDetails?.subscription?.plan?.features?.[featureKey],
-    [isSubscribed, selectedFieldDetails],
-  );
+  const { isGenerating } = usePollSmartAdvisory(selectedFieldDetails);
 
   const showContent = fields.length > 0 && !isLoadingFields;
 
-  /* ================= RENDER ================= */
   return (
     <div className="dashboard min-h-screen w-full overflow-y-auto p-2 lg:p-4">
-      {/* MAP */}
       <MapView
         selectedField={selectedField}
         setSelectedField={handleFieldSelection}
@@ -77,14 +40,13 @@ const Dashboard = () => {
         showFieldDropdown
       />
 
-      {/* MAIN CONTENT */}
       {showContent && (
         <div className="mt-6 space-y-8">
           {selectedFieldDetails && (
             <CropHealth
               selectedFieldDetails={selectedFieldDetails}
-              hasCropHealthAndYield={hasFeature("soilAnalysisAndHealth")}
               aoiId={aoiId}
+              isGenerating={isGenerating}
             />
           )}
 
@@ -94,14 +56,12 @@ const Dashboard = () => {
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
-            hasVegetationIndices={hasFeature("vegetationIndices")}
           />
 
           <WaterIndex
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
-            hasWaterIndices={hasFeature("waterIndices")}
           />
 
           <EvapotranspirationDashboard
@@ -110,21 +70,19 @@ const Dashboard = () => {
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
-            hasEvapotranspiration={hasFeature("evapotranspirationMonitoring")}
           />
 
           <Insights
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
-            hasAgronomicInsights={hasFeature("agronomicInsights")}
+            isGenerating={isGenerating}
           />
 
           <PlantGrowthActivity
             selectedFieldsDetials={
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
-            hasCropGrowthMonitoring={hasFeature("cropGrowthMonitoring")}
           />
         </div>
       )}

@@ -14,7 +14,8 @@ import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscr
 
 import { getFarmFields } from "../redux/slices/farmSlice";
 import { clearIndexDataByType } from "../redux/slices/satelliteSlice";
-import { fetchSmartAdvisory } from "../redux/slices/smartAdvisorySlice";
+import { useLiveSelectedField } from "../hooks/useLiveSelectedField";
+import { usePollSmartAdvisory } from "../hooks/usePollSmartAdvisory";
 
 import useFarmReportPDF from "../components/farmreport/useFarmReportPDF";
 import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
@@ -30,23 +31,17 @@ const FarmReport = () => {
   const fields = useSelector((s) => s.farmfield?.fields || []);
   const fieldsLoading = useSelector((s) => s.farmfield?.loading);
 
-  const [selectedField, setSelectedField] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   const mainReportRef = useRef(null);
   const mapRef = useRef(null);
-  const lastFetchedFieldIdRef = useRef(null);
+
+  const { selectedField, setSelectedField } = useLiveSelectedField(fields);
 
   useEffect(() => {
     if (user?.id) dispatch(getFarmFields(user.id));
   }, [dispatch, user?.id]);
-
-  useEffect(() => {
-    if (!selectedField && fields.length > 0) {
-      setSelectedField(fields[fields.length - 1]);
-    }
-  }, [fields, selectedField]);
 
   useEffect(() => {
     if (selectedField?._id) {
@@ -54,20 +49,11 @@ const FarmReport = () => {
     }
   }, [dispatch, selectedField?._id]);
 
-  useEffect(() => {
-    const fieldId = selectedField?._id;
-
-    if (!fieldId) return;
-
-    if (lastFetchedFieldIdRef.current === fieldId) return;
-
-    lastFetchedFieldIdRef.current = fieldId;
-
-    dispatch(fetchSmartAdvisory({ fieldId }));
-  }, [dispatch, selectedField?._id]);
-
   const { aoiId } = useAoiManagement(selectedField);
   useWeatherForecast(aoiId);
+  usePollSmartAdvisory(selectedField, {
+    enabled: true,
+  });
 
   const { isDownloading, downloadProgress, isPreparedForPDF, downloadFarmReportPDF } =
     useFarmReportPDF(selectedField, aoiId);

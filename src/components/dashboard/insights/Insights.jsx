@@ -99,19 +99,6 @@ const Insight = ({ icon, title, description, onView }) => {
   );
 };
 
-const InsightsSkeletonRow = () => (
-  <div className="flex items-center gap-3 lg:gap-4 py-3 px-4 border-b border-gray-200 last:border-b-0 animate-pulse">
-    <div className="w-8 h-8 bg-gray-200 rounded-full" />
-    <div className="flex-1 min-w-0">
-      <div className="h-4 w-2/3 bg-gray-200 rounded mb-2" />
-      <div className="h-3 w-full bg-gray-200 rounded" />
-    </div>
-    <div className="flex gap-4 ml-auto flex-shrink-0">
-      <div className="w-10 h-10 bg-gray-200 rounded-full" />
-    </div>
-  </div>
-);
-
 const InsightsEmptyState = () => (
   <div className="p-8 text-center flex flex-col items-center justify-center gap-3 min-h-[160px]">
     <div className="w-12 h-12 rounded-full bg-[#5a7c6b]/20 flex items-center justify-center">
@@ -128,7 +115,11 @@ const InsightsEmptyState = () => (
 
 /* ================= MAIN COMPONENT ================= */
 
-const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
+const Insights = ({
+  selectedFieldsDetials,
+  bypassPremium = false,
+  isGenerating = false,
+}) => {
   const navigate = useNavigate();
   const insightsGuard = useSubscriptionGuard({
     field: selectedFieldsDetials?.[0],
@@ -143,26 +134,24 @@ const Insights = ({ selectedFieldsDetials, bypassPremium = false }) => {
 
   /* ================= BUILD INSIGHTS ================= */
 
-  const insights =
-    advisory?.activitiesToDo?.map((activity) => ({
-      icon: getIconByType(activity.type),
-      title: activity.title,
-      description: String(activity.message || "").trim(),
-      onView: goToActivitiesToDo,
-    })) || [];
+  const canSeeInsights = bypassPremium || insightsGuard.hasFeatureAccess;
 
-  /* ================= CONTENT ================= */
+  const insights = canSeeInsights
+    ? advisory?.activitiesToDo?.map((activity) => ({
+        icon: getIconByType(activity.type),
+        title: activity.title,
+        description: String(activity.message || "").trim(),
+        onView: goToActivitiesToDo,
+      })) || []
+    : [];
 
   const content = (
     <div className="flex flex-col rounded-lg shadow-inner bg-white min-h-[220px]">
       {insights.length === 0 ? (
-        // If locked, show a skeleton preview so the premium blur overlay looks good.
-        !bypassPremium && !insightsGuard.hasFeatureAccess ? (
-          <>
-            <InsightsSkeletonRow />
-            <InsightsSkeletonRow />
-            <InsightsSkeletonRow />
-          </>
+        isGenerating ? (
+          <p className="text-sm text-gray-500 text-center py-10">
+            Generating farm advisory…
+          </p>
         ) : (
           <InsightsEmptyState />
         )

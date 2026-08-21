@@ -68,6 +68,8 @@ const WaterIndex = ({
   }, [field, sowingDate, index, getSixMonthsBefore]);
 
   useEffect(() => {
+    if (!bypassPremium && !waterIndexGuard.hasFeatureAccess) return;
+
     const requestKey = fetchParams ? JSON.stringify(fetchParams) : null;
     if (!fetchParams || !requestKey) return;
     if (lastRequestKeyRef.current === requestKey) return;
@@ -93,7 +95,7 @@ const WaterIndex = ({
       });
 
     return () => controller.abort();
-  }, [fetchParams]);
+  }, [fetchParams, bypassPremium, waterIndexGuard.hasFeatureAccess]);
 
   const chartData = useMemo(() => {
     let timeseries =

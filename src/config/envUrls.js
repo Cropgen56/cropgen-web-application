@@ -43,7 +43,7 @@ const TARGETS = {
 
 function readTarget(key, fallback) {
   const raw = getReactAppUrl(key, fallback).toLowerCase();
-  return raw === "local" ? "local" : "production";
+  return raw === "local" || raw === "localhost" ? "local" : "production";
 }
 
 function overrideOr(envKey, value) {

@@ -1,13 +1,10 @@
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { message } from "antd";
-import {
-  setGoogleLoginData,
-  decodeToken,
-} from "../../../../redux/slices/authSlice";
+import { setGoogleLoginData } from "../../../../redux/slices/authSlice";
 import { persistRefreshToken } from "../../../../utility/authSession";
 import { FcGoogle } from "react-icons/fc";
 import { AUTH_EMAIL_CLIENT_BRAND } from "../../../../config/brand";
@@ -19,7 +16,6 @@ function SocialButtons() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
-  const googleButtonRef = useRef(null);
 
   const handleGoogleLogin = async (response) => {
     try {
@@ -46,21 +42,35 @@ function SocialButtons() {
         },
       );
 
-      if (res.data.success) {
-        persistRefreshToken(res.data.refreshToken);
-        dispatch(
-          setGoogleLoginData({
-            accessToken: res.data.accessToken,
-            user: res.data.user,
-            role: res.data.role,
-            onboardingRequired: res.data.onboardingRequired,
-          }),
-        );
-        dispatch(decodeToken());
-        navigate("/cropgen-analytics", { replace: true });
-      } else {
+      if (!res.data.success) {
         message.error(res.data.message || "Google login failed");
+        return;
       }
+
+      persistRefreshToken(res.data.refreshToken);
+      const user = res.data.user;
+      const isNewUser = !!res.data.isNewUser;
+      const missingName =
+        !String(user?.firstName || "").trim() ||
+        !String(user?.lastName || "").trim();
+      const needsOrganizationPopup = isNewUser || missingName;
+
+      dispatch(
+        setGoogleLoginData({
+          accessToken: res.data.accessToken,
+          user,
+          role: res.data.role,
+          isNewUser,
+          onboardingRequired: needsOrganizationPopup,
+          profileDetailsRequired: needsOrganizationPopup,
+        }),
+      );
+
+      if (needsOrganizationPopup) {
+        return;
+      }
+
+      navigate("/cropgen-analytics", { replace: true });
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "An unexpected error occurred.";
@@ -70,50 +80,44 @@ function SocialButtons() {
     }
   };
 
-  const handleCustomButtonClick = () => {
-    if (!clientId) {
-      message.error("Google sign-in is not configured.");
-      return;
-    }
-    const googleBtn =
-      googleButtonRef.current?.querySelector('div[role="button"]');
-    if (googleBtn) {
-      googleBtn.click();
-    } else {
-      message.error("Google sign-in is unavailable. Please try again.");
-    }
-  };
+  if (!clientId) {
+    return (
+      <button
+        type="button"
+        disabled
+        className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-full bg-gray-400 px-4 py-3.5 text-sm font-medium text-white"
+      >
+        <FcGoogle className="rounded-full bg-white p-0.5 text-lg" />
+        Google sign-in is not configured
+      </button>
+    );
+  }
 
   return (
-    <div className="flex flex-col justify-center items-center gap-3 w-full">
+    <div className="flex w-full flex-col items-center justify-center gap-3">
       <GoogleOAuthProvider clientId={clientId}>
-        <div className="w-full">
-          <button
-            type="button"
-            onClick={handleCustomButtonClick}
-            disabled={isLoading}
-            className={`flex w-full items-center justify-center gap-2 rounded-full px-4 py-3.5 text-sm font-medium transition-all duration-300 sm:px-6
-              ${
-                isLoading
-                  ? "cursor-not-allowed bg-gray-400 text-white"
-                  : "bg-[#0D4D44] text-white hover:opacity-95"
-              }`}
+        <div className="relative w-full">
+          <div
+            className={`flex w-full items-center justify-center gap-2 rounded-full px-4 py-3.5 text-sm font-medium text-white sm:px-6 ${
+              isLoading ? "bg-gray-400" : "bg-[#0D4D44]"
+            }`}
           >
             <FcGoogle className="rounded-full bg-white p-0.5 text-lg" />
             {isLoading ? "Signing in..." : "Continue with Google"}
-          </button>
-
-          <div ref={googleButtonRef} className="hidden" aria-hidden="true">
+          </div>
+          {/* Keep GIS button in the layout (opacity-0). display:none breaks Google login. */}
+          <div className="absolute inset-0 z-10 overflow-hidden opacity-0">
             <GoogleLogin
               onSuccess={handleGoogleLogin}
               onError={() => {
                 message.error("Google login failed. Please try again.");
                 setIsLoading(false);
               }}
-              disabled={isLoading}
               useOneTap={false}
-              width="100%"
+              width="400"
               theme="filled_blue"
+              size="large"
+              text="continue_with"
             />
           </div>
         </div>

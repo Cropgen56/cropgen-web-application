@@ -438,7 +438,11 @@ const SignupLogin = () => {
         const err = res.payload;
         const errMessage =
           typeof err === "string" ? err : err?.message || "Failed to send OTP";
-        message.error(errMessage);
+        if (/does not exist/i.test(errMessage) || /sign up first/i.test(errMessage)) {
+          message.error("User does not exist. Please sign up first.");
+        } else {
+          message.error(errMessage);
+        }
       }
     });
   };
@@ -1266,7 +1270,9 @@ const SignupLogin = () => {
                   onChange={(e) =>
                     updatePhoneLocal(formData.dialCode, e.target.value)
                   }
-                  onBlur={() => setPhoneTouched(true)}
+                  onBlur={() => {
+                    if (formData.phoneLocal) setPhoneTouched(true);
+                  }}
                   onKeyDown={handlePhoneFieldKeyDown}
                   aria-invalid={Boolean(phoneError)}
                   aria-describedby={

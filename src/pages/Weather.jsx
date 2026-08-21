@@ -25,6 +25,7 @@ import {
 import { useAoiManagement } from "../components/dashboard/hooks/useAoiManagement";
 import { useWeatherForecast } from "../components/dashboard/hooks/useWeatherForecast";
 import { findAoiForField } from "../utils/farmGeometry";
+import { useLiveSelectedField } from "../hooks/useLiveSelectedField";
 
 import img1 from "../assets/image/Group 31.png";
 
@@ -32,22 +33,22 @@ const Weather = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [selectedField, setSelectedField] = useState(null);
   const [historicalData, setHistoricalData] = useState(null);
   const [dateRange, setDateRange] = useState(null);
   const isSidebarVisible = true;
-
-  const { aoiId } = useAoiManagement(selectedField);
-  useWeatherForecast(aoiId);
 
   const user = useSelector((state) => state?.auth?.user);
   const fieldsRaw = useSelector((state) => state?.farmfield?.fields);
   const aois = useSelector((state) => state?.weather?.aois);
   const loading = useSelector((state) => state?.weather?.loading);
 
-  const forecastData = useSelector(selectForecastForGeometry(aoiId));
-
   const fields = useMemo(() => fieldsRaw ?? [], [fieldsRaw]);
+  const { selectedField, setSelectedField } = useLiveSelectedField(fields);
+
+  const { aoiId } = useAoiManagement(selectedField);
+  useWeatherForecast(aoiId);
+
+  const forecastData = useSelector(selectForecastForGeometry(aoiId));
 
   useEffect(() => {
     if (user?.id) {
@@ -55,12 +56,6 @@ const Weather = () => {
       dispatch(getFarmFields(user.id));
     }
   }, [dispatch, user?.id]);
-
-  useEffect(() => {
-    if (fields.length > 0 && !selectedField) {
-      setSelectedField(fields[fields.length - 1]);
-    }
-  }, [fields, selectedField]);
 
   useEffect(() => {
     if (selectedField && aois?.length) {
@@ -74,41 +69,12 @@ const Weather = () => {
   useEffect(() => {
     setHistoricalData(null);
     setDateRange(null);
-  }, [selectedField]);
-
-  /* ---------- SUBSCRIPTION LOGIC (NEW, UI SAFE) ---------- */
+  }, [selectedField?._id]);
 
   const subscriptionGuard = useSubscriptionGuard({
     field: selectedField,
     featureKey: "weatherAnalytics",
   });
-
-  useEffect(() => {
-    if (!selectedField || !fields.length) return;
-
-    const updatedField = fields.find((f) => f._id === selectedField._id);
-
-    if (!updatedField) return;
-
-    // Only update when subscription data relevant to Weather Analytics changes.
-    // Avoid JSON.stringify (expensive) by comparing only what the guard checks.
-    const featureKey = "weatherAnalytics";
-    const updatedSub = updatedField.subscription;
-    const selectedSub = selectedField.subscription;
-
-    const updatedSig = `${updatedSub?.status ?? ""}|${Boolean(
-      updatedSub?.plan?.features?.[featureKey]
-    )}`;
-    const selectedSig = `${selectedSub?.status ?? ""}|${Boolean(
-      selectedSub?.plan?.features?.[featureKey]
-    )}`;
-
-    if (updatedSig !== selectedSig) {
-      setSelectedField(updatedField);
-    }
-  }, [fields, selectedField]);
-
-  /* ---------- EMPTY STATE (UNCHANGED UI) ---------- */
 
   if (fields.length === 0) {
     return (

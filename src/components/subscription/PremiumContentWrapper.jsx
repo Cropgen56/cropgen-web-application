@@ -3,33 +3,29 @@ import { motion } from "framer-motion";
 import { Lock, Crown } from "lucide-react";
 
 /**
- * Wraps content that requires a premium subscription.
- * The parent component is responsible for any card shell / header — this
- * component only adds a blur + lock overlay when `isLocked` is true.
+ * Subscribe card for a locked plan feature. Real data is not rendered.
  */
-const PremiumContentWrapper = ({ children, isLocked, onSubscribe, title }) => {
+const PremiumContentWrapper = ({
+  children,
+  isLocked,
+  onSubscribe,
+  title,
+  minHeight = 200,
+}) => {
   if (!isLocked) return children;
 
   return (
-    <div className="relative rounded-xl overflow-hidden">
-      {/* Blurred content preview */}
-      <div className="filter blur-sm pointer-events-none select-none">
-        {children}
-      </div>
-
-      {/* Lock overlay */}
+    <div
+      className="relative rounded-xl overflow-hidden border border-amber-200/80 bg-gradient-to-br from-emerald-50 to-white"
+      style={{ minHeight }}
+    >
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="absolute inset-0 flex items-center justify-center"
-        style={{
-          background: "rgba(255,255,255,0.55)",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-        }}
+        className="absolute inset-0 flex items-center justify-center p-6"
       >
-        <div className="text-center p-6 max-w-xs">
+        <div className="text-center max-w-xs">
           <motion.div
             initial={{ scale: 0.5 }}
             animate={{ scale: 1 }}
@@ -40,8 +36,9 @@ const PremiumContentWrapper = ({ children, isLocked, onSubscribe, title }) => {
           </motion.div>
 
           <p className="text-sm text-gray-600 mb-4">
-            Subscribe to unlock{" "}
-            <span className="font-semibold text-[#344E41]">{title}</span>
+            This plan does not include{" "}
+            <span className="font-semibold text-[#344E41]">{title}</span>.
+            Subscribe to a plan that unlocks it.
           </p>
 
           <motion.button
@@ -51,7 +48,7 @@ const PremiumContentWrapper = ({ children, isLocked, onSubscribe, title }) => {
             whileTap={{ scale: 0.95 }}
           >
             <Crown className="w-4 h-4" />
-            Subscribe to Preview
+            Subscribe
           </motion.button>
         </div>
       </motion.div>

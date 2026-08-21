@@ -65,7 +65,7 @@ const NpkSummary = () => {
 };
 
 /* ---------- MAIN COMPONENT ---------- */
-const NutrientManagement = ({ isTablet = false }) => {
+const NutrientManagement = ({ isTablet = false, isGenerating = false }) => {
   const advisory = useSelector(
     (state) => state.smartAdvisory?.advisory ?? null,
   );
@@ -109,17 +109,23 @@ const NutrientManagement = ({ isTablet = false }) => {
         <div className="font-bold mb-3">Crop: {cropName}</div>
 
         <div className={isTablet ? "text-[9px]" : ""}>
-          <FieldList title="Spray" items={nutrientManagement?.spray} />
-          <FieldList
-            title="Micronutrient"
-            items={nutrientManagement?.micronutrient}
-          />
-          <FieldList
-            title="Fertigation"
-            items={nutrientManagement?.fertigation}
-          />
-          <FieldList title="Disease" items={nutrientManagement?.disease} />
-          <FieldList title="Pest" items={nutrientManagement?.pest} />
+          {isGenerating && !nutrientManagement ? (
+            <p className="text-sm text-white/80 py-2">Generating farm advisory…</p>
+          ) : (
+            <>
+              <FieldList title="Spray" items={nutrientManagement?.spray} />
+              <FieldList
+                title="Micronutrient"
+                items={nutrientManagement?.micronutrient}
+              />
+              <FieldList
+                title="Fertigation"
+                items={nutrientManagement?.fertigation}
+              />
+              <FieldList title="Disease" items={nutrientManagement?.disease} />
+              <FieldList title="Pest" items={nutrientManagement?.pest} />
+            </>
+          )}
         </div>
       </div>
 

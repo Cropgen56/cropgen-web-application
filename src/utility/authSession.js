@@ -16,6 +16,7 @@ export function clearPersistedRefreshToken() {
   if (typeof window === "undefined") return;
   try {
     sessionStorage.removeItem(CROPGEN_REFRESH_STORAGE_KEY);
+    sessionStorage.removeItem("cropgen_google_signup_pending");
   } catch {
     /* ignore */
   }
@@ -25,6 +26,27 @@ export function hasPersistedRefreshToken() {
   if (typeof window === "undefined") return false;
   try {
     return Boolean(sessionStorage.getItem(CROPGEN_REFRESH_STORAGE_KEY));
+  } catch {
+    return false;
+  }
+}
+
+const GOOGLE_SIGNUP_PENDING_KEY = "cropgen_google_signup_pending";
+
+export function persistGoogleSignupPending(pending) {
+  if (typeof window === "undefined") return;
+  try {
+    if (pending) sessionStorage.setItem(GOOGLE_SIGNUP_PENDING_KEY, "1");
+    else sessionStorage.removeItem(GOOGLE_SIGNUP_PENDING_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+export function hasGoogleSignupPending() {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(GOOGLE_SIGNUP_PENDING_KEY) === "1";
   } catch {
     return false;
   }

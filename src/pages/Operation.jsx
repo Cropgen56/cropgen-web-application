@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getFarmFields } from "../redux/slices/farmSlice";
 import OperationSidebar from "../components/operation/operationsidebar/OperationSidebar";
@@ -9,6 +9,7 @@ import FieldDropdown from "../components/comman/FieldDropdown";
 import FeatureGuard from "../components/subscription/FeatureGuardComponent";
 import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
 import { Sprout, Plus } from "lucide-react";
+import { useLiveSelectedField } from "../hooks/useLiveSelectedField";
 
 const Operation = () => {
   const dispatch = useDispatch();
@@ -18,19 +19,13 @@ const Operation = () => {
   const fields = useSelector((state) => state?.farmfield?.fields);
   const userId = user?.id;
 
-  const [selectedField, setSelectedField] = useState(null);
+  const { selectedField, setSelectedField } = useLiveSelectedField(fields || []);
 
   useEffect(() => {
     if (userId) {
       dispatch(getFarmFields(userId));
     }
   }, [dispatch, userId]);
-
-  useEffect(() => {
-    if (fields?.length > 0 && !selectedField) {
-      setSelectedField(fields[fields.length - 1]);
-    }
-  }, [fields, selectedField]);
 
   const subscriptionGuard = useSubscriptionGuard({
     field: selectedField,
