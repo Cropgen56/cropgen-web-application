@@ -15,7 +15,13 @@ import SmartAdvisorySatelliteIndexList from "./SmartAdvisorySatelliteIndexList";
 import {
   fetchSatelliteDates,
   clearSatelliteDates,
+  setSelectedSatellite,
 } from "../../redux/slices/satelliteSlice";
+import {
+  SATELLITE_OPTIONS,
+  DEFAULT_SATELLITE,
+  isSentinel1,
+} from "../../constants/satelliteIndices";
 
 const DATE_FORMAT_OPTIONS = { day: "numeric", month: "short", year: "numeric" };
 const DEBOUNCE_DELAY = 500;
@@ -78,6 +84,10 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
   const loadingSatelliteDates = useSelector(
     (state) => state.satellite.loading.satelliteDates,
   );
+  const selectedSatellite = useSelector(
+    (state) => state.satellite.selectedSatellite || DEFAULT_SATELLITE,
+  );
+  const satellite = selectedSatellite || DEFAULT_SATELLITE;
 
   const [dates, setDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
@@ -104,9 +114,9 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
 
   const debouncedFetch = useMemo(
     () =>
-      debounce((coords) => {
+      debounce((coords, sat) => {
         if (coords.length) {
-          dispatch(fetchSatelliteDates({ geometry: coords }));
+          dispatch(fetchSatelliteDates({ geometry: coords, satellite: sat }));
         }
       }, DEBOUNCE_DELAY),
     [dispatch],
@@ -123,9 +133,21 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
   }, [currentFieldId, dispatch]);
 
   useEffect(() => {
-    if (coordinates.length) debouncedFetch(coordinates);
+    if (coordinates.length) debouncedFetch(coordinates, satellite);
     return () => debouncedFetch.cancel();
-  }, [coordinates, debouncedFetch]);
+  }, [coordinates, satellite, debouncedFetch]);
+
+  const handleSatelliteChange = useCallback(
+    (event) => {
+      const next = event.target.value;
+      if (!next || next === satellite) return;
+      setSelectedDate("");
+      setDates([]);
+      setVisibleDates([]);
+      dispatch(setSelectedSatellite(next));
+    },
+    [satellite, dispatch],
+  );
 
   useEffect(() => {
     const handleResize = () => {
@@ -232,7 +254,21 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
         selectedDate={selectedDate}
       />
       <div className="flex items-center gap-2 w-full px-2 bg-ember-surface rounded-md">
-        <div className="relative flex items-center">
+        <div className="relative flex items-center gap-1.5">
+          <select
+            value={satellite}
+            onChange={handleSatelliteChange}
+            disabled={loadingSatelliteDates}
+            className="bg-ember-sidebar text-white text-xs rounded px-2 py-1.5 border border-white/10 cursor-pointer outline-none hover:bg-ember-sidebar/80 disabled:opacity-50 max-w-[118px]"
+            aria-label="Select satellite"
+            title="Select satellite"
+          >
+            {SATELLITE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={toggleCalendar}
@@ -286,7 +322,9 @@ const SmartAdvisoryIndexDates = ({ selectedFieldsDetials = [] }) => {
                     {dateItem.date}
                   </div>
                   <div className="text-xs text-center whitespace-nowrap">
-                    {dateItem.value.toFixed(2)}% Cloud
+                    {isSentinel1(satellite) || dateItem.value == null
+                      ? "0.00% Cloud"
+                      : `${dateItem.value.toFixed(2)}% Cloud`}
                   </div>
                 </div>
               ))}

@@ -1,35 +1,83 @@
-/** Map VRA / SOC API responses into Zoning UI models — no invented values. */
+/** Map cropgen_soil_vra API responses into Zoning UI models. */
 
 export const VRA_LAYER_KEYS = {
-  SOC: "soc_map_b64",
-  N: "vra_n_b64",
-  P: "vra_p_b64",
-  K: "vra_k_b64",
-  Combined: "combined_b64",
+  SOC: "SOC",
+  N: "N",
+  P: "P",
+  K: "K",
+  Combined: "OVERVIEW",
+  Zones: "MANAGEMENT_ZONES",
+  Moisture: "MOISTURE",
+  Clay: "CLAY",
+  pH: "PH",
+  Vigour: "VIGOUR",
 };
 
 export const VRA_ZONE_COLORS = {
+  "Very Low": "#b71c1c",
   Low: "#d32f2f",
+  "Medium-Low": "#ef6c00",
+  "Med-Low": "#ef6c00",
   Medium: "#f9a825",
+  "Medium-High": "#9ccc65",
+  "Med-High": "#9ccc65",
   High: "#388e3c",
+  "Very High": "#1b5e20",
 };
 
-/** Dose fraction labels match server ZONE_DOSE_FRACTION in vra_core.py */
-const ZONE_DOSE_LABEL = {
-  Low: "Full dose (100%)",
-  Medium: "65% dose",
-  High: "30% dose",
-};
+function zoneColor(label) {
+  return VRA_ZONE_COLORS[label] || "#64748b";
+}
 
-/**
- * Build zone rows from VRA rates for a selected nutrient.
- * Values come only from the API response.
- */
-export function buildZonesFromVraRates(vraRates, nutrient = "N", fieldBoundary = []) {
+function dosePercent(row) {
+  const frac = Number(row?.dose_fraction);
+  if (Number.isFinite(frac)) return Math.round(frac * 100);
+  return null;
+}
+
+function doseLabel(row) {
+  const pct = dosePercent(row);
+  return pct != null ? `${pct}% dose` : row?.zone_class || "";
+}
+
+function productivityFromDose(row) {
+  const frac = Number(row?.dose_fraction);
+  if (!Number.isFinite(frac)) return "medium";
+  if (frac >= 0.8) return "critical";
+  if (frac >= 0.55) return "medium";
+  return "high";
+}
+
+function priorityFromDose(row) {
+  const frac = Number(row?.dose_fraction);
+  if (!Number.isFinite(frac)) return "Medium Priority";
+  if (frac >= 0.8) return "High Priority";
+  if (frac >= 0.55) return "Medium Priority";
+  return "Low Priority";
+}
+
+/** Highest-dose zones first (Very Low soil → full dose). */
+export function orderedZoneLabels(nutrientRates) {
+  if (!nutrientRates || typeof nutrientRates !== "object") return [];
+  return Object.entries(nutrientRates)
+    .sort(([, a], [, b]) => {
+      const fa = Number(a?.dose_fraction);
+      const fb = Number(b?.dose_fraction);
+      if (Number.isFinite(fa) && Number.isFinite(fb) && fa !== fb) return fb - fa;
+      return 0;
+    })
+    .map(([label]) => label);
+}
+
+export function buildZonesFromVraRates(
+  vraRates,
+  nutrient = "N",
+  fieldBoundary = [],
+) {
   const nutrientRates = vraRates?.[nutrient];
   if (!nutrientRates || typeof nutrientRates !== "object") return [];
 
-  return ["Low", "Medium", "High"]
+  return orderedZoneLabels(nutrientRates)
     .filter((label) => nutrientRates[label])
     .map((label) => {
       const row = nutrientRates[label];
@@ -40,23 +88,17 @@ export function buildZonesFromVraRates(vraRates, nutrient = "N", fieldBoundary =
       const nutrientDose = Number(row.nutrient_dose_kg_ha) || 0;
 
       return {
-        id: `vra-${nutrient.toLowerCase()}-${label.toLowerCase()}`,
+        id: `vra-${nutrient.toLowerCase()}-${String(label).toLowerCase().replace(/\s+/g, "-")}`,
         name: `${nutrient} — ${label}`,
         nutrient,
         zoneLabel: label,
-        productivityLevel:
-          label === "High" ? "high" : label === "Medium" ? "medium" : "critical",
-        healthStatus: ZONE_DOSE_LABEL[label] || label,
+        productivityLevel: productivityFromDose(row),
+        healthStatus: doseLabel(row) || label,
         suggestedAction:
           areaHa > 0
             ? `Apply ${dose} kg/ha ${product} (${totalKg} kg total on ${areaHa.toFixed(3)} ha)`
             : `No area in ${label} zone`,
-        priority:
-          label === "Low"
-            ? "High Priority"
-            : label === "Medium"
-              ? "Medium Priority"
-              : "Low Priority",
+        priority: priorityFromDose(row),
         areaHa,
         areaAcres: Number(row.area_acres) || 0,
         pixelCount: Number(row.pixel_count) || 0,
@@ -64,29 +106,38 @@ export function buildZonesFromVraRates(vraRates, nutrient = "N", fieldBoundary =
         product,
         productDoseKgHa: dose,
         totalProductKg: totalKg,
+        doseFraction: Number(row.dose_fraction) || null,
+        soilMean: row.soil_mean ?? null,
         coordinates: fieldBoundary,
-        color: VRA_ZONE_COLORS[label],
+        color: zoneColor(label),
       };
     });
 }
 
 export function buildAlertsFromVraRates(vraRates, nutrient = "N") {
   const nutrientRates = vraRates?.[nutrient];
-  if (!nutrientRates?.Low) return [];
+  if (!nutrientRates || typeof nutrientRates !== "object") return [];
 
-  const low = nutrientRates.Low;
-  const areaHa = Number(low.area_ha) || 0;
-  if (areaHa <= 0) return [];
+  const labels = orderedZoneLabels(nutrientRates);
+  const lowLabel = labels.find((label) => {
+    const row = nutrientRates[label];
+    const frac = Number(row?.dose_fraction);
+    const area = Number(row?.area_ha) || 0;
+    return area > 0 && (!Number.isFinite(frac) || frac >= 0.8);
+  });
+  if (!lowLabel) return [];
 
+  const low = nutrientRates[lowLabel];
+  const slug = String(lowLabel).toLowerCase().replace(/\s+/g, "-");
   return [
     {
-      id: `alert-${nutrient.toLowerCase()}-low`,
-      zoneId: `vra-${nutrient.toLowerCase()}-low`,
-      zoneName: `${nutrient} — Low`,
+      id: `alert-${nutrient.toLowerCase()}-${slug}`,
+      zoneId: `vra-${nutrient.toLowerCase()}-${slug}`,
+      zoneName: `${nutrient} — ${lowLabel}`,
       type: `${nutrient} deficiency zone`,
       areaAffected: Number(low.area_acres)?.toFixed?.(2) ?? "0",
-      possibleCause: `Satellite VRA classified this area as Low ${nutrient}`,
-      recommendedAction: `Apply ${low.product_dose_kg_ha} kg/ha ${low.product} on Low ${nutrient} zones`,
+      possibleCause: `Satellite VRA classified this area as ${lowLabel} ${nutrient}`,
+      recommendedAction: `Apply ${low.product_dose_kg_ha} kg/ha ${low.product} on ${lowLabel} ${nutrient} zones`,
       centroid: null,
     },
   ];
@@ -102,7 +153,8 @@ export function buildRecommendationsFromVra(vraRates, socStats, crop) {
     const max = socStats.max_pct != null ? Number(socStats.max_pct) : null;
     let advice = "Sustain current organic-matter practices.";
     if (mean < 0.7) advice = "Build organic matter with compost or cover crops.";
-    else if (mean < 1.2) advice = "Maintain residue and reduce tillage where possible.";
+    else if (mean < 1.2)
+      advice = "Maintain residue and reduce tillage where possible.";
 
     recs.push({
       id: "rec-soc",
@@ -119,7 +171,7 @@ export function buildRecommendationsFromVra(vraRates, socStats, crop) {
     const zones = vraRates?.[nutrient];
     if (!zones) return;
 
-    const parts = ["Low", "Medium", "High"]
+    const parts = orderedZoneLabels(zones)
       .map((label) => {
         const z = zones[label];
         if (!z || !(Number(z.area_ha) > 0)) return null;
@@ -145,14 +197,14 @@ export function flattenVraRateRows(vraRates) {
 
   ["N", "P", "K"].forEach((nutrient) => {
     const zones = vraRates[nutrient] || {};
-    ["Low", "Medium", "High"].forEach((label) => {
+    orderedZoneLabels(zones).forEach((label) => {
       const row = zones[label];
       if (!row) return;
       rows.push({
         id: `${nutrient}-${label}`,
         nutrient,
         zone: label,
-        color: VRA_ZONE_COLORS[label],
+        color: zoneColor(label),
         areaHa: Number(row.area_ha) || 0,
         areaAcres: Number(row.area_acres) || 0,
         nutrientDoseKgHa: Number(row.nutrient_dose_kg_ha) || 0,
@@ -160,6 +212,7 @@ export function flattenVraRateRows(vraRates) {
         productDoseKgHa: Number(row.product_dose_kg_ha) || 0,
         totalProductKg: Number(row.total_product_kg) || 0,
         pixelCount: Number(row.pixel_count) || 0,
+        doseFraction: Number(row.dose_fraction) || null,
       });
     });
   });
@@ -181,17 +234,29 @@ export function socClassEntries(socStats, { includeEmpty = false } = {}) {
   return rows.filter((r) => r.pixels > 0 || r.ha > 0 || r.pctArea > 0);
 }
 
-/** SOC metadata.mean_indices → display rows */
-export function socMeanIndexEntries(meanIndices) {
-  if (!meanIndices || typeof meanIndices !== "object") return [];
-  const order = ["NDVI", "NDWI", "SAVI", "BSI", "SWIR1", "CLAY"];
+/** param_stats from cropgen_soil_vra → display rows */
+export function paramStatEntries(paramStats) {
+  if (!paramStats || typeof paramStats !== "object") return [];
+  const order = [
+    "SOC",
+    "N",
+    "P",
+    "K",
+    "MOISTURE",
+    "CLAY",
+    "PH",
+    "EC",
+    "VIGOUR",
+  ];
   const keys = [
-    ...order.filter((k) => meanIndices[k] != null),
-    ...Object.keys(meanIndices).filter((k) => !order.includes(k)),
+    ...order.filter((k) => paramStats[k] != null),
+    ...Object.keys(paramStats).filter((k) => !order.includes(k)),
   ];
   return keys.map((key) => ({
     key,
-    value: Number(meanIndices[key]),
+    value: Number(paramStats[key]?.mean),
+    unit: paramStats[key]?.unit || "",
+    confidence: paramStats[key]?.confidence || null,
   }));
 }
 
@@ -206,10 +271,24 @@ export function getVraImageUrl(images, layerKey) {
     : `data:image/png;base64,${cleaned}`;
 }
 
-/** Layers that actually have an image in the current payload */
 export function availableLayerOptions(images) {
   if (!images) return [];
   return Object.entries(VRA_LAYER_KEYS)
-    .filter(([, key]) => typeof images[key] === "string" && images[key].length > 0)
+    .filter(
+      ([, key]) => typeof images[key] === "string" && images[key].length > 0,
+    )
     .map(([label]) => label);
+}
+
+export function zoneLegendFromRates(vraRates, nutrient = "N") {
+  const nutrientRates = vraRates?.[nutrient];
+  if (!nutrientRates) return [];
+  return orderedZoneLabels(nutrientRates).map((label) => {
+    const row = nutrientRates[label] || {};
+    const pct = dosePercent(row);
+    return {
+      label: pct != null ? `${label} — ${pct}%` : label,
+      color: zoneColor(label),
+    };
+  });
 }

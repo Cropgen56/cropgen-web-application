@@ -11,9 +11,16 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchIndexDataForMap,
   clearIndexDataByType,
+  setSelectedSatellite,
 } from "../../../redux/slices/satelliteSlice";
 import LogoFlipLoader from "../../comman/loading/LogoFlipLoader";
 import L from "leaflet";
+import {
+  SATELLITE_OPTIONS,
+  DEFAULT_SATELLITE,
+  isSentinel1,
+  getIndexMetaForSatellite,
+} from "../../../constants/satelliteIndices";
 
 // Import Leaflet marker icons
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -28,13 +35,26 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const INDEXES = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
+const S2_INDEXES = ["NDVI", "NDMI", "NDRE", "TRUE_COLOR"];
+const S1_INDEXES = ["RVI", "SDWI", "VH", "VV"];
 
 const TITLES = {
   NDVI: "Crop Health",
   NDMI: "Water in Crop",
   NDRE: "Crop Stress / Maturity",
   TRUE_COLOR: "True Color Image",
+  RVI: "Vegetation Health",
+  SDWI: "Waterlogging Risk",
+  VH: "Crop Biomass",
+  VV: "Soil Moisture",
+};
+
+const getReportIndexes = (satellite) =>
+  isSentinel1(satellite) ? S1_INDEXES : S2_INDEXES;
+
+const getReportTitle = (indexName, satellite) => {
+  if (TITLES[indexName]) return TITLES[indexName];
+  return getIndexMetaForSatellite(satellite)?.[indexName]?.label || indexName;
 };
 
 const DEFAULT_CENTER = [20.135245, 77.156935];
@@ -196,14 +216,7 @@ const parseApiBounds = (apiBounds) => {
   return null;
 };
 
-const withTimeout = (promise, ms = 18000) => {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("SATELLITE_TIMEOUT")), ms)
-    ),
-  ]);
-};
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const formatDate = (date) => date.toISOString().split("T")[0];
 
@@ -235,8 +248,10 @@ const createDateCandidates = (selectedDate) => {
   ];
 };
 
-const hasUsableImage = (data) => {
-  return Boolean(data?.image_base64);
+const unwrapIndexPayload = (payload) => payload?.data || payload;
+
+const hasUsableImage = (payload) => {
+  return Boolean(unwrapIndexPayload(payload)?.image_base64);
 };
 
 const MoveMapToField = ({ lat, lng, bounds }) => {
@@ -454,17 +469,17 @@ const FarmReportMap = React.forwardRef(
     ref
   ) => {
     const dispatch = useDispatch();
-    const { indexDataByType, loading } = useSelector((state) => state.satellite);
+    const { indexDataByType, loading, selectedSatellite } = useSelector(
+      (state) => state.satellite
+    );
+    const satellite = selectedSatellite || DEFAULT_SATELLITE;
+    const indexes = useMemo(() => getReportIndexes(satellite), [satellite]);
 
     const prevRunKeyRef = useRef("");
+    const fetchGenerationRef = useRef(0);
     const mapInstancesRef = useRef({});
 
-    const [showLegend, setShowLegend] = useState({
-      NDVI: false,
-      NDMI: false,
-      NDRE: false,
-      TRUE_COLOR: false,
-    });
+    const [showLegend, setShowLegend] = useState({});
 
     const [localLoadingByIndex, setLocalLoadingByIndex] = useState({});
     const [failedByIndex, setFailedByIndex] = useState({});
@@ -522,7 +537,7 @@ const FarmReportMap = React.forwardRef(
     }, [polygonCoordinates]);
 
     const fetchSingleIndex = useCallback(
-      async (indexName, dateCandidates) => {
+      async (indexName, dateCandidates, generation) => {
         setLocalLoadingByIndex((prev) => ({
           ...prev,
           [indexName]: true,
@@ -533,29 +548,28 @@ const FarmReportMap = React.forwardRef(
           [indexName]: false,
         }));
 
-        let found = false;
+        let foundDate = null;
         let lastError = null;
 
         for (const dateToUse of dateCandidates) {
+          if (generation !== fetchGenerationRef.current) return null;
+
           try {
-            const result = await withTimeout(
-              dispatch(
-                fetchIndexDataForMap({
-                  endDate: dateToUse,
-                  geometry: [polygonCoordinates],
-                  index: indexName,
-                })
-              ).unwrap(),
-              18000
-            );
+            const result = await dispatch(
+              fetchIndexDataForMap({
+                endDate: dateToUse,
+                geometry: [polygonCoordinates],
+                index: indexName,
+                satellite,
+              })
+            ).unwrap();
 
             if (hasUsableImage(result)) {
               setDateUsedByIndex((prev) => ({
                 ...prev,
                 [indexName]: dateToUse,
               }));
-
-              found = true;
+              foundDate = dateToUse;
               break;
             }
           } catch (err) {
@@ -567,9 +581,8 @@ const FarmReportMap = React.forwardRef(
           }
         }
 
-        if (!found) {
+        if (!foundDate) {
           console.warn(`${indexName} no usable data found`, lastError);
-
           setFailedByIndex((prev) => ({
             ...prev,
             [indexName]: true,
@@ -580,52 +593,112 @@ const FarmReportMap = React.forwardRef(
           ...prev,
           [indexName]: false,
         }));
+
+        return foundDate;
       },
-      [dispatch, polygonCoordinates]
+      [dispatch, polygonCoordinates, satellite]
     );
 
-    const fetchAllIndexes = useCallback(async () => {
-      if (!polygonCoordinates.length || !fieldId) return;
+    const fetchAllIndexes = useCallback(
+      async (generation) => {
+        if (!polygonCoordinates.length || !fieldId) return;
+        if (generation !== fetchGenerationRef.current) return;
 
-      const dateCandidates = createDateCandidates(selectedDate);
+        const dateCandidates = createDateCandidates(selectedDate);
+        const [firstIndex, ...restIndexes] = indexes;
+        let sharedDate = firstIndex
+          ? await fetchSingleIndex(firstIndex, dateCandidates, generation)
+          : null;
+        const failed = firstIndex && !sharedDate ? [firstIndex] : [];
 
-      await Promise.allSettled(
-        INDEXES.map((indexName) => fetchSingleIndex(indexName, dateCandidates))
-      );
-    }, [polygonCoordinates, fieldId, selectedDate, fetchSingleIndex]);
+        const restDates = sharedDate
+          ? [sharedDate, ...dateCandidates.filter((d) => d !== sharedDate)]
+          : dateCandidates;
+
+        const restResults = await Promise.all(
+          restIndexes.map(async (indexName) => {
+            const usedDate = await fetchSingleIndex(
+              indexName,
+              restDates,
+              generation,
+            );
+            return { indexName, usedDate };
+          }),
+        );
+
+        for (const { indexName, usedDate } of restResults) {
+          if (usedDate) {
+            sharedDate = sharedDate || usedDate;
+          } else {
+            failed.push(indexName);
+          }
+        }
+
+        for (let attempt = 0; attempt < 2 && failed.length; attempt += 1) {
+          if (generation !== fetchGenerationRef.current) return;
+          await sleep(600);
+
+          const stillFailed = [];
+          for (const indexName of failed) {
+            if (generation !== fetchGenerationRef.current) return;
+            const orderedDates = sharedDate
+              ? [sharedDate, ...dateCandidates.filter((d) => d !== sharedDate)]
+              : dateCandidates;
+            const usedDate = await fetchSingleIndex(
+              indexName,
+              orderedDates,
+              generation,
+            );
+            if (usedDate) {
+              sharedDate = sharedDate || usedDate;
+            } else {
+              stillFailed.push(indexName);
+            }
+          }
+          failed.splice(0, failed.length, ...stillFailed);
+        }
+      },
+      [polygonCoordinates, fieldId, selectedDate, fetchSingleIndex, indexes],
+    );
 
     useEffect(() => {
       if (!polygonCoordinates.length || !fieldId) return;
 
-      const runKey = `${fieldId}-${selectedDate || "auto"}-${polygonSignature}`;
+      const runKey = `${fieldId}-${satellite}-${selectedDate || "auto"}-${polygonSignature}`;
 
       if (prevRunKeyRef.current === runKey) return;
 
       prevRunKeyRef.current = runKey;
+      const generation = fetchGenerationRef.current + 1;
+      fetchGenerationRef.current = generation;
 
       dispatch(clearIndexDataByType());
 
       setFailedByIndex({});
       setDateUsedByIndex({});
+      setShowLegend({});
       setLocalLoadingByIndex(
-        INDEXES.reduce((acc, indexName) => {
+        indexes.reduce((acc, indexName) => {
           acc[indexName] = true;
           return acc;
         }, {})
       );
 
-      fetchAllIndexes();
+      fetchAllIndexes(generation);
     }, [
       fieldId,
+      satellite,
       selectedDate,
       polygonSignature,
       polygonCoordinates.length,
       dispatch,
       fetchAllIndexes,
+      indexes,
     ]);
 
     useEffect(() => {
       return () => {
+        fetchGenerationRef.current += 1;
         dispatch(clearIndexDataByType());
         prevRunKeyRef.current = "";
       };
@@ -634,12 +707,7 @@ const FarmReportMap = React.forwardRef(
     useEffect(() => {
       const handleClickOutside = (e) => {
         if (!e.target.closest(".legend-dropdown-wrapper")) {
-          setShowLegend({
-            NDVI: false,
-            NDMI: false,
-            NDRE: false,
-            TRUE_COLOR: false,
-          });
+          setShowLegend({});
         }
       };
 
@@ -660,15 +728,45 @@ const FarmReportMap = React.forwardRef(
     const retryIndex = useCallback(
       (indexName) => {
         const dateCandidates = createDateCandidates(selectedDate);
-        fetchSingleIndex(indexName, dateCandidates);
+        fetchSingleIndex(indexName, dateCandidates, fetchGenerationRef.current);
       },
       [selectedDate, fetchSingleIndex]
     );
 
+    const handleSatelliteChange = useCallback(
+      (event) => {
+        const next = event.target.value;
+        if (!next || next === satellite) return;
+        prevRunKeyRef.current = "";
+        dispatch(setSelectedSatellite(next));
+      },
+      [satellite, dispatch]
+    );
+
+    const satelliteSelect = !hidePolygonForPDF && (
+      <div className="flex items-center justify-end mb-3">
+        <select
+          value={satellite}
+          onChange={handleSatelliteChange}
+          className="bg-[#344e41] text-white text-xs rounded px-2 py-1.5 border border-white/10 cursor-pointer outline-none hover:bg-[#2b4035] max-w-[140px]"
+          aria-label="Select satellite"
+          title="Select satellite"
+        >
+          {SATELLITE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+
     if (!field || !field.field || field.field.length < 3) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
-          {INDEXES.map((indexName) => (
+        <div>
+          {satelliteSelect}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+            {indexes.map((indexName) => (
             <div
               key={indexName}
               className="relative w-full h-[280px] rounded-xl overflow-hidden shadow-md bg-gray-800 flex items-center justify-center"
@@ -686,10 +784,11 @@ const FarmReportMap = React.forwardRef(
               </div>
 
               <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[3000] bg-ember-primary min-w-[160px] px-3 py-1.5 text-white text-sm font-semibold text-center rounded-md shadow-md">
-                {TITLES[indexName]}
+                {getReportTitle(indexName, satellite)}
               </div>
             </div>
           ))}
+          </div>
         </div>
       );
     }
@@ -699,8 +798,10 @@ const FarmReportMap = React.forwardRef(
       : "grid grid-cols-1 md:grid-cols-2 gap-3 w-full";
 
     return (
-      <div ref={ref} className={gridClasses}>
-        {INDEXES.map((indexName) => {
+      <div>
+        {satelliteSelect}
+        <div ref={ref} className={gridClasses}>
+        {indexes.map((indexName) => {
           const layer = indexDataByType?.[indexName];
 
           const reduxLoading = loading?.indexDataByType?.[indexName] === true;
@@ -741,7 +842,7 @@ const FarmReportMap = React.forwardRef(
                     <LogoFlipLoader />
 
                     <p className="text-white text-sm mt-4 font-medium animate-pulse">
-                      Loading {TITLES[indexName]}...
+                      Loading {getReportTitle(indexName, satellite)}...
                     </p>
 
                     <p className="text-white/60 text-[11px] mt-1">
@@ -753,7 +854,7 @@ const FarmReportMap = React.forwardRef(
                 {showNoData && (
                   <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center z-[4000] rounded-xl">
                     <p className="text-white text-sm font-semibold text-center px-4">
-                      No data available for {TITLES[indexName]}
+                      No data available for {getReportTitle(indexName, satellite)}
                     </p>
 
                     <p className="text-white/70 text-xs text-center px-6 mt-1">
@@ -899,19 +1000,20 @@ const FarmReportMap = React.forwardRef(
                 )}
 
                 <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-[3000] bg-ember-primary min-w-[160px] px-3 py-1.5 text-white text-sm font-semibold text-center rounded-md shadow-md">
-                  {TITLES[indexName]}
+                  {getReportTitle(indexName, satellite)}
                 </div>
               </div>
 
               {hidePolygonForPDF && layer?.legend && indexName !== "TRUE_COLOR" && (
                 <ColorBarLegend
                   legend={layer.legend}
-                  indexName={TITLES[indexName]}
+                  indexName={getReportTitle(indexName, satellite)}
                 />
               )}
             </div>
           );
         })}
+        </div>
       </div>
     );
   }

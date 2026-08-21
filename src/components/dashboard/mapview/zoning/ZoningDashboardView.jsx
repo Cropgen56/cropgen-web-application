@@ -714,7 +714,7 @@ const ZoningDashboardView = ({
       {meanIndices.length > 0 && (
         <section className={cardClass}>
           <h3 className="mb-3 text-base font-semibold text-slate-900">
-            Mean spectral indices
+            Field parameters
           </h3>
           <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-6">
             {meanIndices.map((item) => (
@@ -724,9 +724,10 @@ const ZoningDashboardView = ({
               >
                 <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                   {item.key}
+                  {item.unit ? ` · ${item.unit}` : ""}
                 </p>
                 <p className="text-lg font-bold text-slate-900">
-                  {Number.isFinite(item.value) ? item.value.toFixed(5) : "—"}
+                  {Number.isFinite(item.value) ? item.value.toFixed(2) : "—"}
                 </p>
               </div>
             ))}

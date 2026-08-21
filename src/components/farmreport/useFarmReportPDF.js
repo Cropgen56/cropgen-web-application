@@ -593,10 +593,7 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
         const hasAdvisory = !!advisory;
         const hasIndexData =
           indexData &&
-          (indexData.NDVI ||
-            indexData.NDMI ||
-            indexData.NDRE ||
-            indexData.TRUE_COLOR);
+          Object.values(indexData).some(Boolean);
         const hasForecast =
           !!forecastData?.current ||
           !!forecastData?.forecast ||
@@ -688,7 +685,7 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
         const pageMappings = {
           0: 2, // Satellite Imagery
           1: 2, // Crop Health & Yield
-          2: 3, // Crop Advisory & Soil
+          2: 3, // Soil Analytics
           3: 3, // Weather Forecast
           4: 4, // Vegetation & Water Index
           5: 4, // Evapotranspiration

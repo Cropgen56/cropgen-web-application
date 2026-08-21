@@ -8,11 +8,11 @@ import img1 from "../assets/image/Group 31.png";
 import { getFarmFields } from "../redux/slices/farmSlice";
 
 import Sidebardiseasedetection from "../components/diseasedetection/sidebar/Sidebardiseasedetection";
+import UploadCropImage from "../components/diseasedetection/uploadcropimage/UploadCropImage";
 
 import SubscriptionModal from "../components/subscription/SubscriptionModal";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 
-import ComingSoonSection from "../components/comman/loading/ComingSoonSection ";
 import FieldDropdown from "../components/comman/FieldDropdown";
 
 const DiseaseDetection = () => {
@@ -162,15 +162,7 @@ const DiseaseDetection = () => {
             />
           </div>
 
-          {/* <PremiumPageWrapper
-            isLocked={!hasDiseaseDetectionPermission}
-            onSubscribe={handleSubscribe}
-            title="Disease Detection"
-          >
-            <UploadCropImage selectedField={selectedField?._id} />
-          </PremiumPageWrapper> */}
-
-          <ComingSoonSection />
+          <UploadCropImage selectedField={selectedField} />
         </div>
       </div>
     </>

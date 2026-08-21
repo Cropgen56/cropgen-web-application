@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
 
+import ErrorBoundary from "../../comman/ErrorBoundary";
 import FarmReportMap from "./FarmReportMap";
 import CropHealth from "../../dashboard/crophealth/CropHealthCard";
-import CropAdvisory from "../../dashboard/CropAdvisory";
 import ForeCast from "../../dashboard/forecast/ForeCast";
 import PlantGrowthActivity from "../../dashboard/PlantGrowthActivity";
 import Insights from "../../dashboard/insights/Insights";
@@ -16,7 +16,7 @@ import { fetchSmartAdvisory } from "../../../redux/slices/smartAdvisorySlice";
 
 /**
  * One block = one PDF page after the cover (see useFarmReportPDF).
- * Order: satellite → health/yield → advisory+soil → forecast → NDVI+water → ET → insights → growth.
+ * Order: satellite → health/yield → soil → forecast → NDVI+water → ET → insights → growth.
  */
 const Section = ({ title, children, className = "" }) => (
   <div
@@ -30,7 +30,7 @@ const Section = ({ title, children, className = "" }) => (
       </h2>
     </div>
     <div className="overflow-hidden">
-      {children}
+      <ErrorBoundary label={title}>{children}</ErrorBoundary>
     </div>
   </div>
 );
@@ -54,8 +54,6 @@ const FarmReportContent = ({
     lastFetchedFieldIdRef.current = fieldId;
     dispatch(fetchSmartAdvisory({ fieldId }));
   }, [dispatch, selectedFieldDetails?._id]);
-
-  const noopSubscribe = () => {};
 
   if (!selectedFieldDetails) {
     return (
@@ -98,34 +96,19 @@ const FarmReportContent = ({
         </div>
       </Section>
 
-      {/* Page 4 — Weekly advisory + soil analytics */}
-      <Section 
-        title="Crop Advisory & Soil Analytics"
+      {/* Page 4 — Soil analytics (weekly advisory lives in Insights below) */}
+      <Section
+        title="Soil Analytics"
         className="lg:col-span-full"
       >
-        <div className="p-4 bg-black/20 space-y-6">
-          <div className="border-b border-white/15 pb-6">
-            <h3 className="text-base font-semibold text-ember-accent mb-4">
-              Weekly Crop Advisory
-            </h3>
-            <CropAdvisory
-              onSubscribe={noopSubscribe}
-              hasWeeklyAdvisoryReports
-            />
-          </div>
-          
-          <div>
-            <h3 className="text-base font-semibold text-ember-accent mb-4">
-              Soil Analytics
-            </h3>
-            <CropHealth
-              selectedFieldDetails={selectedFieldDetails}
-              bypassPremium
-              isPreparedForPDF={isPreparedForPDF}
-              aoiId={aoiId}
-              pdfSection="soilOnly"
-            />
-          </div>
+        <div className="p-4 bg-black/20">
+          <CropHealth
+            selectedFieldDetails={selectedFieldDetails}
+            bypassPremium
+            isPreparedForPDF={isPreparedForPDF}
+            aoiId={aoiId}
+            pdfSection="soilOnly"
+          />
         </div>
       </Section>
 
@@ -154,22 +137,26 @@ const FarmReportContent = ({
             <h3 className="text-base font-semibold text-ember-accent mb-4">
               NDVI - Vegetation Index
             </h3>
-            <NdviGraph
-              selectedFieldsDetials={[selectedFieldDetails]}
-              bypassPremium
-              isPreparedForPDF={isPreparedForPDF}
-            />
+            <ErrorBoundary label="NDVI - Vegetation Index">
+              <NdviGraph
+                selectedFieldsDetials={[selectedFieldDetails]}
+                bypassPremium
+                isPreparedForPDF={isPreparedForPDF}
+              />
+            </ErrorBoundary>
           </div>
 
           <div>
             <h3 className="text-base font-semibold text-ember-accent mb-4">
               NDMI - Water Index
             </h3>
-            <WaterIndex
-              selectedFieldsDetials={[selectedFieldDetails]}
-              bypassPremium
-              isPreparedForPDF={isPreparedForPDF}
-            />
+            <ErrorBoundary label="NDMI - Water Index">
+              <WaterIndex
+                selectedFieldsDetials={[selectedFieldDetails]}
+                bypassPremium
+                isPreparedForPDF={isPreparedForPDF}
+              />
+            </ErrorBoundary>
           </div>
         </div>
       </Section>

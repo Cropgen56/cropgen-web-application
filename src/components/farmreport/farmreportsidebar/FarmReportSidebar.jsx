@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
@@ -7,6 +7,22 @@ import PolygonPreview from "../../polygon/PolygonPreview";
 
 const SIDEBAR_BG = "#344e41";
 const SIDEBAR_HOVER = "#2b4035";
+
+const ACRES_TO_HECTARES = 0.404686;
+
+const calculateCentroid = (polygon) => {
+  if (!polygon?.length) return { lat: "0.000", lon: "0.000" };
+  const total = polygon.reduce(
+    (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }),
+    { lat: 0, lng: 0 }
+  );
+  return {
+    lat: (total.lat / polygon.length).toFixed(3),
+    lon: (total.lng / polygon.length).toFixed(3),
+  };
+};
+
+const formatArea = (acres) => `${((acres ?? 0) * ACRES_TO_HECTARES).toFixed(2)} ha`;
 
 const FieldInfo = ({
   title,
@@ -56,35 +72,25 @@ const FieldInfo = ({
   </div>
 );
 
-const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
-  const [selectedIndex, setSelectedIndex] = useState(null);
+const FarmReportSidebar = ({
+  setSelectedField,
+  setIsSidebarVisible,
+  selectedFieldId = null,
+}) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const fields = useSelector((state) => state.farmfield.fields) || [];
+  const fieldsFromStore = useSelector((state) => state.farmfield.fields);
 
   // Sort fields in descending order (latest first)
-  const filteredFields = [...fields]
-    .reverse()
-    .filter((field) =>
-      field.fieldName?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFields = useMemo(() => {
+    const fields = fieldsFromStore || [];
+    const query = searchQuery.trim().toLowerCase();
+    const sorted = [...fields].reverse();
+    if (!query) return sorted;
+    return sorted.filter((field) =>
+      field.fieldName?.toLowerCase().includes(query)
     );
-
-  const calculateCentroid = (polygon) => {
-    if (!polygon?.length) return { lat: "0.000", lon: "0.000" };
-    const total = polygon.reduce(
-      (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }),
-      { lat: 0, lng: 0 }
-    );
-    return {
-      lat: (total.lat / polygon.length).toFixed(3),
-      lon: (total.lng / polygon.length).toFixed(3),
-    };
-  };
-
-  const formatArea = (acres) => {
-    const ha = ((acres ?? 0) * 0.404686).toFixed(2);
-    return `${ha} ha`;
-  };
+  }, [fieldsFromStore, searchQuery]);
 
   return (
     <div
@@ -162,9 +168,9 @@ const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
       {/* Fields List */}
       <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
         {filteredFields.length > 0 ? (
-          filteredFields.map((field, index) => {
+          filteredFields.map((field) => {
             const { lat, lon } = calculateCentroid(field.field);
-            const isSelected = selectedIndex === index;
+            const isSelected = field._id === selectedFieldId;
             const isSubscribed = field.subscription?.hasActiveSubscription === true;
 
             return (
@@ -178,7 +184,6 @@ const FarmReportSidebar = ({ setSelectedField, setIsSidebarVisible }) => {
                 coordinates={field.field}
                 isSubscribed={isSubscribed}
                 onClick={() => {
-                  setSelectedIndex(index);
                   setSelectedField(field);
                   setIsSidebarVisible(false);
                 }}

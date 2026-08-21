@@ -125,6 +125,7 @@ const FarmReport = () => {
           <FarmReportSidebar
             setSelectedField={setSelectedField}
             setIsSidebarVisible={setIsSidebarVisible}
+            selectedFieldId={selectedField?._id}
           />
         </div>
       )}
@@ -146,6 +147,7 @@ const FarmReport = () => {
               setShowMobileSidebar(false);
             }}
             setIsSidebarVisible={() => setShowMobileSidebar(false)}
+            selectedFieldId={selectedField?._id}
           />
         </Offcanvas.Body>
       </Offcanvas>

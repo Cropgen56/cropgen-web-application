@@ -8,7 +8,7 @@ import {
 } from "../../components/dashboard/mapview/zoning/vraZoningMapper";
 import { toApiPolygon } from "../../utils/farmGeometry";
 
-const SATELLITE_REQUEST_TIMEOUT_MS = 120000;
+const SATELLITE_REQUEST_TIMEOUT_MS = 360000;
 const SATELLITE_BASE_URL = SATELLITE_API_URL;
 
 const satelliteAxiosConfig = () => ({
@@ -167,90 +167,14 @@ async function analyzeVraRaw({ geometry, start_date, end_date, crop }) {
       end_date,
       crop: normalizeVraCrop(crop),
       include_images: true,
-      provider: "both",
-      satellite: "s2",
+      include_prescription_geojson: false,
+      n_zones: 5,
+      auto_region: true,
+      soc_method: "published",
     },
     satelliteAxiosConfig(),
   );
   return response.data;
-}
-
-async function analyzeSocRaw({ geometry, start_date, end_date }) {
-  const response = await axios.post(
-    `${SATELLITE_BASE_URL}/soc/analysis`,
-    { geometry, start_date, end_date, provider: "both", satellite: "s2" },
-    satelliteAxiosConfig(),
-  );
-  return response.data;
-}
-
-function normalizeSocResponse(soc) {
-  if (!soc || typeof soc !== "object") return null;
-  const image =
-    typeof soc.image_base64 === "string" && soc.image_base64.length
-      ? soc.image_base64
-      : null;
-  return {
-    date: soc.date || soc.metadata?.capture_date || null,
-    cloud_cover: soc.cloud_cover ?? soc.metadata?.cloud_cover ?? null,
-    image_base64: image,
-    soc_stats: soc.soc_stats || null,
-    metadata: soc.metadata || null,
-  };
-}
-
-/** Runs SOC + VRA together, tolerant of either failing independently. */
-async function runSocAndVraAnalysis({ geometry, start_date, end_date, crop }) {
-  const [socSettled, vraSettled] = await Promise.allSettled([
-    analyzeSocRaw({ geometry, start_date, end_date }),
-    analyzeVraRaw({ geometry, start_date, end_date, crop }),
-  ]);
-
-  const socRaw = socSettled.status === "fulfilled" ? socSettled.value : null;
-  const vra = vraSettled.status === "fulfilled" ? vraSettled.value : null;
-  const soc = normalizeSocResponse(socRaw);
-
-  if (!soc && !vra) {
-    const err =
-      (vraSettled.status === "rejected" && vraSettled.reason) ||
-      (socSettled.status === "rejected" && socSettled.reason);
-    throw err || new Error("SOC and VRA analysis both failed");
-  }
-
-  const images = { ...(vra?.images || {}) };
-  if (soc?.image_base64) images.soc_map_b64 = soc.image_base64;
-
-  const soc_stats = soc?.soc_stats || vra?.soc_stats || null;
-
-  return {
-    date: soc?.date || vra?.date || end_date,
-    crop: vra?.crop || normalizeVraCrop(crop),
-    cloud_cover: soc?.cloud_cover ?? vra?.cloud_cover ?? null,
-    vra_rates: vra?.vra_rates || null,
-    soc_stats,
-    images: Object.keys(images).length ? images : null,
-    text_report: vra?.text_report || null,
-    metadata: {
-      ...(vra?.metadata || {}),
-      soc_metadata: soc?.metadata || null,
-      mean_indices: soc?.metadata?.mean_indices || null,
-      collection:
-        soc?.metadata?.collection || vra?.metadata?.collection || null,
-      res_m: soc?.metadata?.res_m ?? vra?.metadata?.res_m ?? null,
-      capture_date:
-        soc?.metadata?.capture_date || soc?.date || vra?.date || null,
-      soc_ok: Boolean(soc),
-      vra_ok: Boolean(vra),
-      soc_error:
-        socSettled.status === "rejected"
-          ? formatApiError(socSettled.reason)
-          : null,
-      vra_error:
-        vraSettled.status === "rejected"
-          ? formatApiError(vraSettled.reason)
-          : null,
-    },
-  };
 }
 
 // ========== State shape ==========
@@ -366,8 +290,8 @@ export const runZoningAnalysis = createAsyncThunk(
         // Keep user-selected / default end_date
       }
 
-      const start_date = daysBefore(end_date, 60);
-      const result = await runSocAndVraAnalysis({
+      const start_date = daysBefore(end_date, 365);
+      const result = await analyzeVraRaw({
         geometry,
         start_date,
         end_date,
@@ -460,9 +384,9 @@ const zoningSlice = createSlice({
         rebuildZonesForField(slot, fieldBoundary);
 
         const imgs = result?.images || {};
-        if (imgs.soc_map_b64) slot.activeLayer = "SOC";
-        else if (imgs.vra_n_b64) slot.activeLayer = "N";
-        else if (imgs.combined_b64) slot.activeLayer = "Combined";
+        if (imgs.SOC) slot.activeLayer = "SOC";
+        else if (imgs.N) slot.activeLayer = "N";
+        else if (imgs.OVERVIEW) slot.activeLayer = "Combined";
       })
       .addCase(runZoningAnalysis.rejected, (state, action) => {
         if (

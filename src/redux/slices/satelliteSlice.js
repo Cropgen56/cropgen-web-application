@@ -304,7 +304,10 @@ export const fetchIndexDataForMap = createAsyncThunk(
       const response = await axios.post(
         `${SATELLITE_BASE_URL}/calculate/index`,
         payload,
-        { headers: { "x-api-key": SATELLITE_API_KEY } },
+        {
+          headers: { "x-api-key": SATELLITE_API_KEY },
+          timeout: 90000,
+        },
       );
 
       await set(cacheKey, { data: response.data, timestamp: now });

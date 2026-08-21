@@ -116,6 +116,10 @@ export const S3_BUCKET_URL = stripSlash(
     "https://cropgen-assets.s3.ap-south-1.amazonaws.com",
   ),
 );
+/** Disease ML API — always production unless explicitly overridden. */
+export const DISEASE_API_URL = stripSlash(
+  overrideOr("REACT_APP_DISEASE_API_URL", "https://disease.cropgenapp.com"),
+);
 
 if (process.env.NODE_ENV === "development") {
   // eslint-disable-next-line no-console
@@ -128,5 +132,6 @@ if (process.env.NODE_ENV === "development") {
     AGENT_URL,
     LOCATION_API_URL,
     SITE_URL,
+    DISEASE_API_URL,
   });
 }

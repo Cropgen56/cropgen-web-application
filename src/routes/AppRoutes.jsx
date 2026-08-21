@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MainLayout from "../layout/MainLayout";
 import Dashboard from "../pages/Dashboard";
@@ -8,7 +8,6 @@ import DiseaseDetection from "../pages/DiseaseDetection";
 import SmartAdvisory from "../pages/SmartAdviosory";
 import SoilReport from "../pages/SoilReport";
 import Zoning from "../pages/Zoning";
-import FarmReport from "../pages/FarmReport";
 import PersonaliseCropSchedule from "../pages/PersonaliseCropSchedule";
 import Setting from "../pages/Setting";
 import Operation from "../pages/Operation";
@@ -16,7 +15,19 @@ import Profile from "../pages/Profile";
 import PageNotFound from "../pages/PageNotFound";
 import AuthLayout from "../pages/AuthLayout";
 import ProtectedRoute from "../authroute/ProtectedRoute";
+import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
 import { AUTH_ROUTES } from "../config/brand";
+
+// Code-split: Farm Report alone pulls in jsPDF, html2canvas and its own
+// Leaflet map/report bundle. None of that is needed until a user actually
+// visits this route, so keep it out of the main app chunk.
+const FarmReport = lazy(() => import("../pages/FarmReport"));
+
+const RouteFallback = () => (
+  <div className="h-screen flex items-center justify-center bg-[#344e41]">
+    <LoadingSpinner color="#ffffff" />
+  </div>
+);
 
 const AppRoutes = () => {
   return (
@@ -44,7 +55,14 @@ const AppRoutes = () => {
           <Route path="smart-advisory" element={<SmartAdvisory />} />
           <Route path="soil-report" element={<SoilReport />} />
           <Route path="zoning" element={<Zoning />} />
-          <Route path="farm-report" element={<FarmReport />} />
+          <Route
+            path="farm-report"
+            element={
+              <Suspense fallback={<RouteFallback />}>
+                <FarmReport />
+              </Suspense>
+            }
+          />
           <Route
             path="Personalise-crop-schedule"
             element={<PersonaliseCropSchedule />}

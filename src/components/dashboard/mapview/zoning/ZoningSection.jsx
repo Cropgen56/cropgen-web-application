@@ -12,8 +12,8 @@ import {
 import {
   buildRecommendationsFromVra,
   flattenVraRateRows,
+  paramStatEntries,
   socClassEntries,
-  socMeanIndexEntries,
 } from "./vraZoningMapper";
 import {
   DEFAULT_ZONING_FIELD_STATE,
@@ -94,11 +94,7 @@ const ZoningSection = ({ selectedFieldDetails }) => {
     [socStats],
   );
   const meanIndices = useMemo(
-    () =>
-      socMeanIndexEntries(
-        vraResult?.metadata?.mean_indices ||
-          vraResult?.metadata?.soc_metadata?.mean_indices,
-      ),
+    () => paramStatEntries(vraResult?.param_stats),
     [vraResult],
   );
   const socAreaHa = socStats?.total_area_ha ?? null;
@@ -119,7 +115,7 @@ const ZoningSection = ({ selectedFieldDetails }) => {
       return;
     }
     try {
-      const result = await dispatch(
+      const payload = await dispatch(
         runZoningAnalysis({
           fieldId,
           fieldPoints,
@@ -128,23 +124,14 @@ const ZoningSection = ({ selectedFieldDetails }) => {
           analysisDate,
         }),
       ).unwrap();
-
-      const parts = [];
-      if (result?.metadata?.soc_ok) parts.push("SOC");
-      if (result?.metadata?.vra_ok) parts.push("VRA");
+      const analysis = payload?.result;
       message.success(
-        `${parts.join(" + ") || "Zoning"} ready — scene ${result?.date || analysisDate}${
-          result?.cloud_cover != null
-            ? ` · cloud ${Number(result.cloud_cover).toFixed(1)}%`
+        `Zoning ready — scene ${analysis?.date || analysisDate}${
+          analysis?.cloud_cover != null
+            ? ` · cloud ${Number(analysis.cloud_cover).toFixed(1)}%`
             : ""
         }`,
       );
-      if (result?.metadata?.vra_error && result?.metadata?.soc_ok) {
-        message.warning(`VRA partial failure: ${result.metadata.vra_error}`);
-      }
-      if (result?.metadata?.soc_error && result?.metadata?.vra_ok) {
-        message.warning(`SOC partial failure: ${result.metadata.soc_error}`);
-      }
     } catch (err) {
       message.error(err?.error || formatApiError(err) || "Zoning analysis failed");
     }

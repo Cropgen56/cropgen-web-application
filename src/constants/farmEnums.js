@@ -5,6 +5,7 @@
 export const FARMING_TYPES = [
   "Conventional",
   "Organic",
+  "Inorganic",
   "Integrated",
   "Natural",
   "Regenerative",
