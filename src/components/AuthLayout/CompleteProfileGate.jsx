@@ -10,8 +10,13 @@ import { getCountries } from "../../api/locationApi";
 import { validateOrganizationCode } from "../../api/authApi";
 import { getStaticCountries } from "../../config/countriesFallback";
 import { DEFAULT_ORGANIZATION_CODE } from "../../config/brand";
+import {
+  getPhoneValidationError,
+  maxLocalPhoneLength,
+  normalizePhoneLocal,
+  buildE164,
+} from "../../utils/phone";
 
-const digitsOnly = (v) => String(v || "").replace(/\D/g, "");
 const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
 
 export function isProfileDetailsIncomplete(user) {
@@ -23,11 +28,8 @@ export function isProfileDetailsIncomplete(user) {
   return !firstName || !lastName || !phone || !country;
 }
 
-function toLocalPhone(rawPhone) {
-  const digits = digitsOnly(rawPhone);
-  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
-  if (digits.length > 10) return digits.slice(-10);
-  return digits;
+function toLocalPhone(rawPhone, dialCode = "91") {
+  return normalizePhoneLocal(dialCode, rawPhone);
 }
 
 function orgCodeFromUser(user) {
@@ -85,6 +87,7 @@ const CompleteProfileGate = () => {
   const [orgHint, setOrgHint] = useState("");
   const [checkingOrg, setCheckingOrg] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const orgCheckRef = useRef(0);
 
   useEffect(() => {
@@ -176,11 +179,15 @@ const CompleteProfileGate = () => {
     [countries],
   );
 
+  const phoneError = phoneTouched
+    ? getPhoneValidationError(form.dialCode, form.phoneLocal)
+    : "";
+
   const isValid =
     String(form.firstName || "").trim() &&
     String(form.lastName || "").trim() &&
     emailOk(form.email) &&
-    digitsOnly(form.phoneLocal).length >= 8 &&
+    !getPhoneValidationError(form.dialCode, form.phoneLocal) &&
     form.country &&
     !orgError &&
     !checkingOrg;
@@ -190,8 +197,10 @@ const CompleteProfileGate = () => {
       setError("User session not ready. Please refresh.");
       return;
     }
-    if (!isValid) {
-      setError("Please fill all required details.");
+    setPhoneTouched(true);
+    const phoneErr = getPhoneValidationError(form.dialCode, form.phoneLocal);
+    if (!isValid || phoneErr) {
+      setError(phoneErr || "Please fill all required details.");
       return;
     }
 
@@ -200,7 +209,7 @@ const CompleteProfileGate = () => {
       return;
     }
 
-    const phone = `+${digitsOnly(form.dialCode)}${digitsOnly(form.phoneLocal)}`;
+    const phone = buildE164(form.dialCode, form.phoneLocal);
     const organizationCode =
       String(form.organizationCode || "").trim().toUpperCase() ||
       DEFAULT_ORGANIZATION_CODE;
@@ -311,20 +320,35 @@ const CompleteProfileGate = () => {
                 aria-label="Country code"
               />
               <input
-                className={fieldClass}
+                className={`${fieldClass} ${
+                  phoneError ? "border-red-400 focus:border-red-500 focus:ring-red-200" : ""
+                }`}
                 inputMode="numeric"
                 autoComplete="tel-national"
                 placeholder="Mobile number"
                 value={form.phoneLocal}
+                maxLength={maxLocalPhoneLength(form.dialCode)}
                 onChange={(e) =>
                   setForm((prev) => ({
                     ...prev,
-                    phoneLocal: digitsOnly(e.target.value).slice(0, 12),
+                    phoneLocal: normalizePhoneLocal(
+                      prev.dialCode,
+                      e.target.value,
+                    ),
                   }))
                 }
-                maxLength={12}
+                onBlur={() => setPhoneTouched(true)}
+                aria-invalid={Boolean(phoneError)}
+                aria-describedby={
+                  phoneError ? "profile-phone-error" : undefined
+                }
               />
             </div>
+            {phoneError ? (
+              <p id="profile-phone-error" className="mt-1 text-xs text-red-600">
+                {phoneError}
+              </p>
+            ) : null}
           </Field>
 
           <Field label="Country" required>

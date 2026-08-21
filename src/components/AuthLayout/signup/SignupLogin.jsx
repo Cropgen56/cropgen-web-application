@@ -37,13 +37,15 @@ import {
   Search,
 } from "lucide-react";
 import worldCountries from "world-countries";
+import {
+  normalizeDialCode,
+  normalizePhoneLocal,
+  buildE164,
+  getPhoneValidationError,
+  maxLocalPhoneLength,
+} from "../../../utils/phone";
 
-const phoneOk = (v) => /^\+\d{10,12}$/.test(String(v).trim());
 const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
-const digitsOnly = (v) => String(v || "").replace(/\D/g, "");
-const normalizeDialCode = (v) => digitsOnly(v).slice(0, 4);
-const buildE164 = (dialCode, localNumber) =>
-  `+${normalizeDialCode(dialCode)}${digitsOnly(localNumber)}`;
 
 const iso2ToFlagCdn = (iso2) => {
   const code = String(iso2 || "").toLowerCase();
@@ -171,6 +173,7 @@ const SignupLogin = () => {
   const [completingProfile, setCompletingProfile] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [orgCodeError, setOrgCodeError] = useState("");
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
@@ -237,6 +240,7 @@ const SignupLogin = () => {
     setOtpVerified(false);
     setOtpInputs(Array(6).fill(""));
     setOrgCodeError("");
+    setPhoneTouched(false);
     setFormData((prev) => ({
       ...prev,
       country: "IN",
@@ -258,6 +262,7 @@ const SignupLogin = () => {
     setOtpInputs(Array(6).fill(""));
     setFormData((prev) => ({ ...prev, otp: "" }));
     setOrgCodeError("");
+    setPhoneTouched(false);
   }, [isSignupAccount, location.pathname]);
 
   useEffect(() => {
@@ -331,6 +336,19 @@ const SignupLogin = () => {
     [],
   );
 
+  const phoneError = phoneTouched
+    ? getPhoneValidationError(formData.dialCode, formData.phoneLocal)
+    : "";
+  const phoneMaxLen = maxLocalPhoneLength(formData.dialCode);
+
+  const updatePhoneLocal = (dialCode, raw) => {
+    setFormData((prev) => ({
+      ...prev,
+      dialCode,
+      phoneLocal: normalizePhoneLocal(dialCode, raw),
+    }));
+  };
+
   const handleOtpChange = (value, index) => {
     if (/^\d?$/.test(value)) {
       const newOtp = [...otpInputs];
@@ -364,6 +382,12 @@ const SignupLogin = () => {
     const onboarding = readOnboarding();
     const lang = onboarding.language || selectedLanguage || "en";
 
+    setPhoneTouched(true);
+    const phoneErr = getPhoneValidationError(
+      formData.dialCode,
+      formData.phoneLocal,
+    );
+
     if (isSignupAccount) {
       if (!fn) return message.error("Please enter your first name");
       if (!ln) return message.error("Please enter your last name");
@@ -371,20 +395,10 @@ const SignupLogin = () => {
         return message.error("Please enter your email");
       if (!emailOk(formData.email))
         return message.error("Please enter a valid email address");
-      if (!digitsOnly(formData.phoneLocal))
-        return message.error("Please enter your phone number");
-      if (!normalizeDialCode(formData.dialCode))
-        return message.error("Please select a country code");
-      if (!phoneOk(phone))
-        return message.error("Please enter a valid phone number");
+      if (phoneErr) return message.error(phoneErr);
       if (!formData.country) return message.error("Please select your country");
-    } else {
-      if (!digitsOnly(formData.phoneLocal))
-        return message.error("Please enter your phone number");
-      if (!normalizeDialCode(formData.dialCode))
-        return message.error("Please select a country code");
-      if (!phoneOk(phone))
-        return message.error("Please enter a valid phone number");
+    } else if (phoneErr) {
+      return message.error(phoneErr);
     }
 
     const orgCode = String(formData.organizationCode || "")
@@ -838,7 +852,7 @@ const SignupLogin = () => {
                     <AuthAutocompleteDropdown
                       value={formData.dialCode}
                       onChange={(dialValue) =>
-                        setFormData({ ...formData, dialCode: dialValue })
+                        updatePhoneLocal(dialValue, formData.phoneLocal)
                       }
                       options={countryDialOptions}
                       placeholder="+Code"
@@ -846,19 +860,35 @@ const SignupLogin = () => {
                     />
                     <input
                       type="tel"
+                      inputMode="numeric"
                       placeholder="Phone number"
                       value={formData.phoneLocal}
+                      maxLength={phoneMaxLen}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          phoneLocal: digitsOnly(e.target.value).slice(0, 12),
-                        })
+                        updatePhoneLocal(formData.dialCode, e.target.value)
                       }
+                      onBlur={() => setPhoneTouched(true)}
                       onKeyDown={handlePhoneFieldKeyDown}
                       autoComplete="off"
-                      className="min-w-0 w-full rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0D4D44]/20"
+                      aria-invalid={Boolean(phoneError)}
+                      aria-describedby={
+                        phoneError ? "signup-phone-error" : undefined
+                      }
+                      className={`min-w-0 w-full rounded-xl border bg-[#F2F2F2] px-3 py-2.5 text-sm outline-none focus:ring-2 ${
+                        phoneError
+                          ? "border-red-400 focus:ring-red-200"
+                          : "border-gray-200 focus:ring-[#0D4D44]/20"
+                      }`}
                     />
                   </div>
+                  {phoneError ? (
+                    <p
+                      id="signup-phone-error"
+                      className="-mt-1 text-xs text-red-600"
+                    >
+                      {phoneError}
+                    </p>
+                  ) : null}
                   <p className="-mt-0.5 text-xs text-gray-500">
                     Country:{" "}
                     <span className="font-semibold text-gray-700">
@@ -1213,7 +1243,7 @@ const SignupLogin = () => {
                   <AuthAutocompleteDropdown
                     value={formData.dialCode}
                     onChange={(dialValue) =>
-                      setFormData({ ...formData, dialCode: dialValue })
+                      updatePhoneLocal(dialValue, formData.phoneLocal)
                     }
                     options={countryDialOptions}
                     placeholder="+Code"
@@ -1232,16 +1262,28 @@ const SignupLogin = () => {
                   data-form-type="other"
                   placeholder="Phone number"
                   value={formData.phoneLocal}
+                  maxLength={phoneMaxLen}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      phoneLocal: digitsOnly(e.target.value).slice(0, 12),
-                    })
+                    updatePhoneLocal(formData.dialCode, e.target.value)
                   }
+                  onBlur={() => setPhoneTouched(true)}
                   onKeyDown={handlePhoneFieldKeyDown}
-                  className="h-12 min-w-0 flex-1 rounded-xl border-2 border-gray-200 bg-[#F2F2F2] px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 transition-colors focus:border-[#2E7D32] focus:ring-0 sm:px-4"
+                  aria-invalid={Boolean(phoneError)}
+                  aria-describedby={
+                    phoneError ? "login-phone-error" : undefined
+                  }
+                  className={`h-12 min-w-0 flex-1 rounded-xl border-2 bg-[#F2F2F2] px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 transition-colors focus:ring-0 sm:px-4 ${
+                    phoneError
+                      ? "border-red-400 focus:border-red-400"
+                      : "border-gray-200 focus:border-[#2E7D32]"
+                  }`}
                 />
               </div>
+              {phoneError ? (
+                <p id="login-phone-error" className="mt-2 text-xs text-red-600">
+                  {phoneError}
+                </p>
+              ) : null}
               <button
                 type="button"
                 onClick={handleSendOtp}
