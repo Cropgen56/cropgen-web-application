@@ -5,6 +5,7 @@ import { message } from "antd";
 
 import Sidebar from "../components/sidebar/Sidebar";
 import PaymentSuccessModal from "../components/subscription/PaymentSuccessModal";
+import CompleteProfileGate from "../components/AuthLayout/CompleteProfileGate";
 
 import { decodeToken } from "../redux/slices/authSlice";
 import { clearPaymentSuccess } from "../redux/slices/subscriptionSlice";
@@ -112,6 +113,7 @@ const MainLayout = () => {
         daysLeft={paymentSuccess?.daysLeft}
         transactionId={paymentSuccess?.transactionId}
       />
+      <CompleteProfileGate />
     </>
   );
 };

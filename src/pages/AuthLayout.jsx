@@ -167,7 +167,7 @@ const AuthLayout = () => {
               </div>
             </div>
           </div>
-          <div className="w-1/2 flex justify-center items-center h-full ">
+          <div className="flex h-full min-h-0 w-1/2 flex-col overflow-hidden bg-white">
             <SignupLogin />
           </div>
         </div>
@@ -291,7 +291,7 @@ const AuthLayout = () => {
               </div>
             </div>
           </div>
-          <div className="h-[65vh] bg-white flex-grow flex overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
             <SignupLogin />
           </div>
         </div>

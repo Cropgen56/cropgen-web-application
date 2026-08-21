@@ -19,24 +19,27 @@ import {
   DEFAULT_ORGANIZATION_CODE,
   AUTH_ROUTES,
 } from "../../../config/brand";
-import { getCountries, getLanguages } from "../../../api/locationApi";
+import { getCountries } from "../../../api/locationApi";
+import {
+  FARMER_LANGUAGES,
+  normalizeFarmerLanguage,
+} from "../../../config/languages";
+import { validateOrganizationCode } from "../../../api/authApi";
 import {
   ArrowRight,
-  BookOpen,
   Check,
   ChevronDown,
   Clipboard,
-  FileText,
   Globe,
   History,
   Info,
-  Languages,
   Lock,
-  MessageCircle,
+  Search,
 } from "lucide-react";
 import worldCountries from "world-countries";
 
 const phoneOk = (v) => /^\+\d{10,12}$/.test(String(v).trim());
+const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
 const digitsOnly = (v) => String(v || "").replace(/\D/g, "");
 const normalizeDialCode = (v) => digitsOnly(v).slice(0, 4);
 const buildE164 = (dialCode, localNumber) =>
@@ -78,22 +81,6 @@ const PRIMARY = "#0D4D44";
 const BORDER_GREEN = "#2E7D32";
 const INFO_BG = "#E8F5E9";
 
-const FALLBACK_LANGUAGES = [
-  { code: "en", label: "English", native: "English" },
-  { code: "hi", label: "Hindi", native: "हिंदी" },
-  { code: "mr", label: "Marathi", native: "मराठी" },
-  { code: "es", label: "Spanish", native: "Español" },
-  { code: "fr", label: "French", native: "Français" },
-];
-
-const LANG_ICONS = [
-  Languages,
-  MessageCircle,
-  FileText,
-  BookOpen,
-  MessageCircle,
-];
-
 function readOnboarding() {
   try {
     const raw = sessionStorage.getItem(ONBOARDING_KEY);
@@ -110,19 +97,6 @@ function writeOnboarding(patch) {
 
 function clearOnboarding() {
   sessionStorage.removeItem(ONBOARDING_KEY);
-}
-
-function normalizeLanguages(raw) {
-  if (!Array.isArray(raw) || raw.length === 0) return FALLBACK_LANGUAGES;
-  return raw.map((item, i) => {
-    if (typeof item === "string") {
-      return { code: item, label: item, native: item };
-    }
-    const code = item.code || item.iso || item.iso2 || item.id || String(i);
-    const label = item.name || item.englishName || item.label || code;
-    const native = item.nativeName || item.native || item.name || label;
-    return { code: String(code), label, native };
-  });
 }
 
 function StepHeader({ current, total }) {
@@ -145,9 +119,17 @@ function StepHeader({ current, total }) {
 function AuthCard({ children, className = "", style }) {
   return (
     <div
-      className={`w-full max-w-[420px] rounded-3xl border-2 bg-white px-5 py-6 shadow-[0_12px_40px_rgba(13,77,68,0.08)] sm:px-8 sm:py-9 lg:px-10 lg:py-10 ${className}`}
+      className={`w-full min-w-0 max-w-[420px] rounded-3xl border-2 bg-white px-5 py-5 shadow-[0_12px_40px_rgba(13,77,68,0.08)] sm:px-7 sm:py-6 ${className}`}
       style={{ borderColor: `${BORDER_GREEN}99`, ...style }}
     >
+      {children}
+    </div>
+  );
+}
+
+function AuthPanel({ children }) {
+  return (
+    <div className="flex h-full min-h-0 w-full flex-col items-center justify-center overflow-y-auto overscroll-contain px-4 py-3 sm:px-8 sm:py-5">
       {children}
     </div>
   );
@@ -194,6 +176,8 @@ const SignupLogin = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    email: "",
+    organizationCode: "",
     dialCode: "91",
     phoneLocal: "",
     phone: "",
@@ -204,9 +188,8 @@ const SignupLogin = () => {
   });
   const [countries, setCountries] = useState([]);
 
-  const [languages, setLanguages] = useState(FALLBACK_LANGUAGES);
-  const [languagesLoading, setLanguagesLoading] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState("");
+  const [languageSearch, setLanguageSearch] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
 
   const [otpInputs, setOtpInputs] = useState(Array(6).fill(""));
   const inputRefs = useRef([]);
@@ -311,34 +294,22 @@ const SignupLogin = () => {
 
   useEffect(() => {
     if (!isSignupLanguage) return;
-    let active = true;
-    setLanguagesLoading(true);
-    getLanguages()
-      .then((data) => {
-        if (!active) return;
-        const normalized = normalizeLanguages(data);
-        setLanguages(normalized);
-        const d = readOnboarding();
-        if (d.language && normalized.some((l) => l.code === d.language)) {
-          setSelectedLanguage(d.language);
-        } else if (normalized.length) {
-          setSelectedLanguage(normalized[0].code);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setLanguages(FALLBACK_LANGUAGES);
-          setSelectedLanguage("en");
-          message.warning("Using default language list (API unavailable).");
-        }
-      })
-      .finally(() => {
-        if (active) setLanguagesLoading(false);
-      });
-    return () => {
-      active = false;
-    };
+    setLanguageSearch("");
+    const d = readOnboarding();
+    const code = normalizeFarmerLanguage(d.language || "en");
+    setSelectedLanguage(code);
   }, [isSignupLanguage]);
+
+  const filteredLanguages = useMemo(() => {
+    const q = languageSearch.trim().toLowerCase();
+    if (!q) return FARMER_LANGUAGES;
+    return FARMER_LANGUAGES.filter(
+      (l) =>
+        l.label.toLowerCase().includes(q) ||
+        (l.native && l.native.toLowerCase().includes(q)) ||
+        l.code.toLowerCase().includes(q),
+    );
+  }, [languageSearch]);
 
   const countryOptions = normalizedCountries.map((c) => ({
     label: `${c.name}${c.dialCode ? ` (+${c.dialCode})` : ""}`,
@@ -386,7 +357,7 @@ const SignupLogin = () => {
     }
   };
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     const fn = formData.firstName.trim();
     const ln = formData.lastName.trim();
     const phone = buildE164(formData.dialCode, formData.phoneLocal);
@@ -396,6 +367,10 @@ const SignupLogin = () => {
     if (isSignupAccount) {
       if (!fn) return message.error("Please enter your first name");
       if (!ln) return message.error("Please enter your last name");
+      if (!formData.email.trim())
+        return message.error("Please enter your email");
+      if (!emailOk(formData.email))
+        return message.error("Please enter a valid email address");
       if (!digitsOnly(formData.phoneLocal))
         return message.error("Please enter your phone number");
       if (!normalizeDialCode(formData.dialCode))
@@ -412,6 +387,22 @@ const SignupLogin = () => {
         return message.error("Please enter a valid phone number");
     }
 
+    const orgCode = String(formData.organizationCode || "")
+      .trim()
+      .toUpperCase();
+
+    if (isSignupAccount && orgCode) {
+      try {
+        await validateOrganizationCode(orgCode);
+      } catch (err) {
+        const errMessage =
+          err?.response?.data?.message ||
+          (typeof err === "string" ? err : "") ||
+          `Organization '${orgCode}' not found. Leave blank to join ${DEFAULT_ORGANIZATION_CODE}.`;
+        return message.error(errMessage);
+      }
+    }
+
     setSendingOtp(true);
     dispatch(
       sendWhatsappOtpThunk({
@@ -420,6 +411,8 @@ const SignupLogin = () => {
         country: formData.country,
         firstName: fn,
         lastName: ln,
+        email: formData.email.trim().toLowerCase(),
+        organizationCode: orgCode || DEFAULT_ORGANIZATION_CODE,
         signupIntent: isSignupAccount,
       }),
     ).then((res) => {
@@ -429,9 +422,9 @@ const SignupLogin = () => {
         setStep(2);
       } else {
         const err = res.payload;
-        message.error(
-          typeof err === "string" ? err : err?.message || "Failed to send OTP",
-        );
+        const errMessage =
+          typeof err === "string" ? err : err?.message || "Failed to send OTP";
+        message.error(errMessage);
       }
     });
   };
@@ -484,68 +477,26 @@ const SignupLogin = () => {
       return;
     }
     setOrgCodeError("");
-    // #region agent log
-    fetch("http://127.0.0.1:7816/ingest/2f2e2976-5f6e-4ec5-a3c9-5521133e72c2", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "304cd3",
-      },
-      body: JSON.stringify({
-        sessionId: "304cd3",
-        runId: "signup-profile-debug",
-        hypothesisId: "H1",
-        location: "SignupLogin.jsx:handleCompleteProfile:beforeDispatch",
-        message: "Submitting complete profile payload from signup UI",
-        data: {
-          hasFirstName: Boolean(fn),
-          firstNameLength: fn.length,
-          hasLastName: Boolean(ln),
-          lastNameLength: ln.length,
-          hasPhone: Boolean(formData.phone),
-          hasCountry: Boolean(formData.country),
-          hasLanguage: Boolean(readOnboarding().language || selectedLanguage),
-          termsAccepted: formData.terms === true,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
     setCompletingProfile(true);
     const onboarding = readOnboarding();
+    const orgCode = String(formData.organizationCode || "")
+      .trim()
+      .toUpperCase();
     dispatch(
       completeProfile({
         terms: true,
-        organizationCode: DEFAULT_ORGANIZATION_CODE,
+        organizationCode: orgCode || DEFAULT_ORGANIZATION_CODE,
         firstName: fn,
         lastName: ln,
+        email: formData.email.trim().toLowerCase(),
         phone: formData.phone,
-        language: onboarding.language || selectedLanguage || "en",
+        language: normalizeFarmerLanguage(
+          onboarding.language || selectedLanguage || "en",
+        ),
         country: formData.country,
       }),
     ).then((res) => {
       setCompletingProfile(false);
-      // #region agent log
-      fetch("http://127.0.0.1:7816/ingest/2f2e2976-5f6e-4ec5-a3c9-5521133e72c2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "304cd3",
-        },
-        body: JSON.stringify({
-          sessionId: "304cd3",
-          runId: "signup-profile-debug",
-          hypothesisId: "H4",
-          location: "SignupLogin.jsx:handleCompleteProfile:afterDispatch",
-          message: "Complete profile dispatch resolved",
-          data: {
-            requestStatus: res?.meta?.requestStatus || null,
-            responseMessage: res?.payload?.message || res?.payload || null,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       if (res.meta.requestStatus === "fulfilled") {
         clearOnboarding();
         message.success("Profile completed!");
@@ -622,7 +573,7 @@ const SignupLogin = () => {
       message.error("Please choose a language");
       return;
     }
-    const lang = languages.find((l) => l.code === selectedLanguage);
+    const lang = FARMER_LANGUAGES.find((l) => l.code === selectedLanguage);
     writeOnboarding({
       language: selectedLanguage,
       languageLabel: lang?.label || selectedLanguage,
@@ -632,7 +583,7 @@ const SignupLogin = () => {
 
   if (isSignupCountry) {
     return (
-      <div className="flex min-h-full w-full flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
+      <AuthPanel>
         <AuthCard>
           <BrandMark className="mb-6" />
           <h2
@@ -703,15 +654,15 @@ const SignupLogin = () => {
             </Link>
           </p>
         </AuthCard>
-      </div>
+      </AuthPanel>
     );
   }
 
   if (isSignupLanguage) {
     return (
-      <div className="flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-hidden px-3 py-2 sm:px-6 sm:py-4">
+      <AuthPanel>
         <AuthCard
-          className="flex max-h-[calc(100dvh-1rem)] w-full max-w-[430px] flex-col overflow-hidden rounded-[24px] border bg-white px-4 py-4 shadow-[0_16px_46px_rgba(0,0,0,0.08)] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[28px] sm:px-6 sm:py-5 lg:px-7 lg:py-6"
+          className="flex max-h-full flex-col overflow-hidden !px-4 !py-4 sm:!px-6 sm:!py-5"
           style={{ borderColor: "#E5E7EB" }}
         >
           <StepHeader current={2} total={3} />
@@ -725,17 +676,33 @@ const SignupLogin = () => {
             Choose Your Language
           </h2>
           <p className="mt-2 text-[13px] leading-relaxed text-gray-500 sm:text-[13px]">
-            Select a language you&apos;re comfortable with
+            Select a language you&apos;re comfortable with ·{" "}
+            {FARMER_LANGUAGES.length} languages
           </p>
-          <div className="mt-2.5 min-h-0 flex-1 space-y-2 overflow-y-auto pr-0.5 sm:mt-3 sm:pr-1">
-            {languagesLoading ? (
-              <p className="py-8 text-center text-sm text-gray-500">
-                Loading languages…
+          <div className="relative mt-2.5">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={languageSearch}
+              onChange={(e) => setLanguageSearch(e.target.value)}
+              placeholder="Search language..."
+              autoComplete="off"
+              className="w-full rounded-xl border border-gray-200 bg-[#F2F2F2] py-2 pl-10 pr-3 text-sm text-gray-900 outline-none placeholder:text-gray-500 focus:border-[#2E7D32] focus:ring-2 focus:ring-[#0D4D44]/15"
+            />
+          </div>
+          <div className="mt-2.5 min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-0.5 sm:mt-3 sm:pr-1">
+            {filteredLanguages.length === 0 ? (
+              <p className="px-2 py-6 text-center text-sm text-gray-500">
+                No languages match your search.
               </p>
             ) : (
-              languages.map((lang, idx) => {
-                const Icon = LANG_ICONS[idx % LANG_ICONS.length];
+              filteredLanguages.map((lang) => {
                 const selected = selectedLanguage === lang.code;
+                const showSub =
+                  lang.label && lang.native && lang.label !== lang.native;
                 return (
                   <button
                     key={lang.code}
@@ -748,24 +715,26 @@ const SignupLogin = () => {
                     }`}
                   >
                     <span
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10 ${
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[10px] font-bold tracking-wide sm:h-10 sm:w-10 ${
                         selected
                           ? "bg-[#BFD6D0] text-[#0D4D44]"
                           : "bg-[#E7EAE7] text-gray-600"
                       }`}
                     >
-                      <Icon className="h-4.5 w-4.5" aria-hidden />
+                      {String(lang.code).slice(0, 3).toUpperCase()}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span
-                        className="block text-base font-semibold leading-tight text-gray-900 sm:text-[17px]"
+                        className="block truncate text-base font-semibold leading-tight sm:text-[17px]"
                         style={{ color: selected ? PRIMARY : "#333" }}
                       >
-                        {lang.native}
+                        {lang.native || lang.label}
                       </span>
-                      <span className="mt-0.5 block text-xs text-gray-500 sm:text-[11px]">
-                        {lang.label}
-                      </span>
+                      {showSub ? (
+                        <span className="mt-0.5 block truncate text-xs text-gray-500 sm:text-[11px]">
+                          {lang.label}
+                        </span>
+                      ) : null}
                     </span>
                     {selected ? (
                       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2E7D32] text-white sm:h-8 sm:w-8">
@@ -790,7 +759,7 @@ const SignupLogin = () => {
             <button
               type="button"
               onClick={goLanguageContinue}
-              disabled={languagesLoading || !selectedLanguage}
+              disabled={!selectedLanguage}
               className="mt-3 w-full rounded-2xl py-2.5 text-[15px] font-bold text-white shadow-[0_12px_24px_rgba(13,77,68,0.22)] transition hover:opacity-95 disabled:opacity-50 sm:mt-3 sm:py-3"
               style={{ backgroundColor: PRIMARY }}
             >
@@ -806,30 +775,30 @@ const SignupLogin = () => {
             </button>
           </div>
         </AuthCard>
-      </div>
+      </AuthPanel>
     );
   }
 
   if (isSignupAccount) {
     return (
-      <div className="flex min-h-full w-full flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
-        <AuthCard className="max-w-[440px]">
+      <AuthPanel>
+        <AuthCard className="my-auto max-h-full overflow-y-auto !px-4 !py-4 sm:!px-6 sm:!py-5">
           <div className="w-full">
             <section
-              className={`flex flex-col ${step === 1 ? "min-h-[420px] sm:min-h-[460px]" : "hidden"}`}
+              className={`flex flex-col ${step === 1 ? "" : "hidden"}`}
             >
               <StepHeader current={3} total={3} />
-              <BrandMark className="mb-4" />
+              <BrandMark className="mb-2 sm:mb-3" />
               <h2
-                className="text-center text-xl font-bold sm:text-2xl"
+                className="text-center text-lg font-bold sm:text-xl"
                 style={{ color: PRIMARY }}
               >
                 Get Started
               </h2>
-              <p className="mt-1 text-center text-sm text-gray-500">
+              <p className="mt-0.5 text-center text-sm text-gray-500">
                 Login or create an account to continue
               </p>
-              <div className="mt-4 flex flex-col gap-3">
+              <div className="mt-3 flex flex-col gap-2.5">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -850,23 +819,31 @@ const SignupLogin = () => {
                     className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0D4D44]/20"
                   />
                 </div>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  autoComplete="email"
+                  className="w-full rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0D4D44]/20"
+                />
                 <form
-                  className="flex flex-col gap-3"
+                  className="flex flex-col gap-2.5"
                   onSubmit={(e) => e.preventDefault()}
                   noValidate
                 >
-                  <div className="flex gap-2">
-                    <div className="w-36">
-                      <AuthAutocompleteDropdown
-                        value={formData.dialCode}
-                        onChange={(dialValue) =>
-                          setFormData({ ...formData, dialCode: dialValue })
-                        }
-                        options={countryDialOptions}
-                        placeholder="+Code"
-                        inputClassName="w-full h-11 rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 text-sm outline-none pr-10"
-                      />
-                    </div>
+                  <div className="grid w-full grid-cols-[6.5rem_minmax(0,1fr)] gap-2">
+                    <AuthAutocompleteDropdown
+                      value={formData.dialCode}
+                      onChange={(dialValue) =>
+                        setFormData({ ...formData, dialCode: dialValue })
+                      }
+                      options={countryDialOptions}
+                      placeholder="+Code"
+                      inputClassName="w-full h-11 rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 text-sm outline-none pr-10"
+                    />
                     <input
                       type="tel"
                       placeholder="Phone number"
@@ -879,10 +856,10 @@ const SignupLogin = () => {
                       }
                       onKeyDown={handlePhoneFieldKeyDown}
                       autoComplete="off"
-                      className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0D4D44]/20"
+                      className="min-w-0 w-full rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0D4D44]/20"
                     />
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="-mt-0.5 text-xs text-gray-500">
                     Country:{" "}
                     <span className="font-semibold text-gray-700">
                       {readOnboarding().countryLabel ||
@@ -891,23 +868,50 @@ const SignupLogin = () => {
                         formData.country}
                     </span>
                   </p>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Organization code"
+                      value={formData.organizationCode}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          organizationCode: e.target.value
+                            .toUpperCase()
+                            .replace(/[^A-Z0-9]/g, ""),
+                        })
+                      }
+                      autoComplete="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      name="cropgen-organization-code"
+                      data-lpignore="true"
+                      data-1p-ignore="true"
+                      data-form-type="other"
+                      className="w-full rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 py-2.5 text-sm tracking-normal outline-none placeholder:normal-case placeholder:tracking-normal focus:ring-2 focus:ring-[#0D4D44]/20"
+                    />
+                    <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                      Optional. Leave blank to join {DEFAULT_ORGANIZATION_CODE}.
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={handleSendOtp}
                     disabled={sendingOtp}
-                    className="mt-1 w-full rounded-xl py-3.5 text-base font-bold text-white disabled:opacity-50"
+                    className="w-full rounded-xl py-3 text-[15px] font-bold text-white disabled:opacity-50"
                     style={{ backgroundColor: PRIMARY }}
                   >
                     {sendingOtp ? "Sending code…" : "Continue"}
                   </button>
                 </form>
-                <div className="my-3 flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <hr className="flex-1 border-gray-200" />
-                  <span className="text-xs text-gray-400">OTP on WhatsApp</span>
+                  <span className="text-xs text-gray-400">or</span>
                   <hr className="flex-1 border-gray-200" />
                 </div>
+                <SocialButtons />
               </div>
-              <p className="mt-auto pt-6 text-center text-[11px] leading-relaxed text-gray-400">
+              <p className="mt-3 text-center text-[11px] leading-relaxed text-gray-400">
                 By continuing, you agree to our{" "}
                 <a
                   href="https://www.cropgenapp.com/terms-conditions"
@@ -921,7 +925,7 @@ const SignupLogin = () => {
             </section>
 
             <section
-              className={`flex flex-col ${step === 2 ? "min-h-[420px] sm:min-h-[460px]" : "hidden"}`}
+              className={`flex flex-col ${step === 2 ? "" : "hidden"}`}
             >
               <StepHeader current={4} total={4} />
               <BrandMark className="mb-3" />
@@ -1046,18 +1050,30 @@ const SignupLogin = () => {
             </section>
 
             <section
-              className={`flex flex-col ${step === 3 ? "min-h-[420px] sm:min-h-[460px]" : "hidden"}`}
+              className={`flex flex-col ${step === 3 ? "" : "hidden"}`}
             >
               <StepHeader current={4} total={4} />
-              <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-center">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2">
                 <p
                   className="text-xs font-semibold uppercase tracking-wide"
                   style={{ color: PRIMARY }}
                 >
                   Organization
                 </p>
-                <p className="text-sm font-bold text-gray-900">
-                  {DEFAULT_ORGANIZATION_CODE}
+                <input
+                  type="text"
+                  placeholder={DEFAULT_ORGANIZATION_CODE}
+                  value={formData.organizationCode}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      organizationCode: e.target.value.toUpperCase(),
+                    })
+                  }
+                  className="mt-1 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold uppercase text-gray-900 outline-none focus:ring-2 focus:ring-[#0D4D44]/20"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Leave blank to join {DEFAULT_ORGANIZATION_CODE}
                 </p>
               </div>
               {needsNameOnStep3 && (
@@ -1148,12 +1164,12 @@ const SignupLogin = () => {
             </section>
           </div>
         </AuthCard>
-      </div>
+      </AuthPanel>
     );
   }
 
   return (
-    <div className="flex min-h-full w-full flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
+    <AuthPanel>
       <AuthCard>
         <BrandMark className="mb-5" />
         <h2
@@ -1311,7 +1327,7 @@ const SignupLogin = () => {
           </div>
         </div>
       </AuthCard>
-    </div>
+    </AuthPanel>
   );
 };
 

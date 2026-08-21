@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DEFAULT_PROFILE_IMAGE_URL } from "../../../config/brand";
+import { S3_BUCKET_URL } from "../../../config/envUrls";
 import {
   getUserProfileData,
   updateUserData,
@@ -37,10 +38,6 @@ import {
   getFarmerLanguageLabel,
   normalizeFarmerLanguage,
 } from "../../../config/languages";
-
-const S3_BUCKET_URL =
-  process.env.REACT_APP_S3_BUCKET_URL ||
-  "https://your-bucket-name.s3.amazonaws.com";
 
 const InputField = ({
   id,

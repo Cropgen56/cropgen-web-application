@@ -1,52 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { get, set } from "idb-keyval";
-import { getReactAppUrl } from "../../config/envUrls";
+import { SATELLITE_API_KEY, SATELLITE_API_URL } from "../../config/envUrls";
 import {
   buildAlertsFromVraRates,
   buildZonesFromVraRates,
 } from "../../components/dashboard/mapview/zoning/vraZoningMapper";
 import { toApiPolygon } from "../../utils/farmGeometry";
 
-const SATELLITE_API_KEY =
-  process.env.REACT_APP_SATELLITE_API || "CROPGEN_230498adklfjadsljf";
 const SATELLITE_REQUEST_TIMEOUT_MS = 120000;
-
-/** Python FastAPI base (e.g. …/v4/api — paths like /availability/, /soc/analysis, /vra/analysis). */
-function getSatelliteApiBase() {
-  const raw = getReactAppUrl("REACT_APP_API_URL_SATELLITE");
-  const prodFallback = "https://server.cropgenapp.com/v4/api";
-  const localPython = "http://127.0.0.1:8001/v4/api";
-  const browserHost =
-    typeof window !== "undefined" ? window.location.hostname : "";
-  const isLocalBrowser =
-    browserHost === "localhost" || browserHost === "127.0.0.1";
-
-  if (raw) {
-    if (/(localhost|127\.0\.0\.1):7070/.test(raw)) {
-      return prodFallback;
-    }
-    if (
-      /127\.0\.0\.1:8001\/api\/?$/.test(raw) ||
-      /localhost:8001\/api\/?$/.test(raw)
-    ) {
-      return localPython;
-    }
-    let base = raw.replace(/\/$/, "");
-    if (/\/v1\/api$/.test(base)) {
-      base = base.replace(/\/v1\/api$/, "/v4/api");
-    }
-    return base;
-  }
-
-  if (isLocalBrowser || process.env.NODE_ENV === "development") {
-    return localPython;
-  }
-
-  return prodFallback;
-}
-
-const SATELLITE_BASE_URL = getSatelliteApiBase();
+const SATELLITE_BASE_URL = SATELLITE_API_URL;
 
 const satelliteAxiosConfig = () => ({
   headers: { "x-api-key": SATELLITE_API_KEY },

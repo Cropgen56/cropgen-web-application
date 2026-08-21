@@ -57,7 +57,10 @@ export const refreshAccessToken = createAsyncThunk(
       return response;
     } catch (error) {
       refreshLock.release(error);
-      return rejectWithValue(error.message || "Token refresh failed");
+      return rejectWithValue({
+        message: error.message || "Token refresh failed",
+        code: error.code,
+      });
     }
   },
   {
@@ -163,6 +166,7 @@ export const completeProfile = createAsyncThunk(
       organizationCode,
       firstName,
       lastName,
+      email,
       phone,
       language,
       role,
@@ -174,39 +178,12 @@ export const completeProfile = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      // #region agent log
-      fetch("http://127.0.0.1:7816/ingest/2f2e2976-5f6e-4ec5-a3c9-5521133e72c2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "304cd3",
-        },
-        body: JSON.stringify({
-          sessionId: "304cd3",
-          runId: "signup-profile-debug",
-          hypothesisId: "H1",
-          location: "authSlice.js:completeProfileThunk:beforeApi",
-          message: "Complete profile thunk payload snapshot",
-          data: {
-            hasFirstName: Boolean(firstName),
-            firstNameLength: String(firstName || "").trim().length,
-            hasLastName: Boolean(lastName),
-            lastNameLength: String(lastName || "").trim().length,
-            hasPhone: Boolean(phone),
-            hasCountry: Boolean(country),
-            hasLanguage: Boolean(language),
-            hasOrganizationCode: Boolean(organizationCode),
-            termsAccepted: terms === true,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       const response = await completeUserProfile({
         terms,
         organizationCode,
         firstName,
         lastName,
+        email,
         phone,
         language,
         role,
@@ -217,27 +194,6 @@ export const completeProfile = createAsyncThunk(
       });
       return response;
     } catch (error) {
-      // #region agent log
-      fetch("http://127.0.0.1:7816/ingest/2f2e2976-5f6e-4ec5-a3c9-5521133e72c2", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Debug-Session-Id": "304cd3",
-        },
-        body: JSON.stringify({
-          sessionId: "304cd3",
-          runId: "signup-profile-debug",
-          hypothesisId: "H4",
-          location: "authSlice.js:completeProfileThunk:catch",
-          message: "Complete profile API rejected",
-          data: {
-            status: error?.response?.status || null,
-            responseMessage: error?.response?.data?.message || null,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       return rejectWithValue(
         error.response?.data || { message: "Profile completion failed" },
       );
@@ -357,6 +313,9 @@ const authSlice = createSlice({
       state.isAuthenticated = !!accessToken;
       state.status = "succeeded";
       state.error = null;
+      // Seed profile so the dashboard form can open immediately for new Google users.
+      state.userProfile = user || null;
+      state.profileStatus = user ? "succeeded" : "idle";
     },
     resetAuthState: () => authInitialState,
     clearError: (state) => {
@@ -385,13 +344,11 @@ const authSlice = createSlice({
       .addCase(refreshAccessToken.rejected, (state, action) => {
         state.refreshPending = false;
         state.error = action.payload;
-        if (!isTokenValid(state.token)) {
-          state.isAuthenticated = false;
-          state.token = null;
-          state.user = null;
-          state.role = null;
-          state.onboardingRequired = false;
+        const deleted = action.payload?.code === "USER_DELETED";
+        if (deleted || !isTokenValid(state.token)) {
           clearPersistedRefreshToken();
+          Object.assign(state, authInitialState);
+          state.error = action.payload;
         }
       })
 
@@ -407,19 +364,26 @@ const authSlice = createSlice({
       .addCase(getUserProfileData.rejected, (state, action) => {
         state.profileStatus = "failed";
         state.error = action.payload;
+        if (action.payload?.code === "USER_DELETED") {
+          clearPersistedRefreshToken();
+          Object.assign(state, authInitialState);
+          state.error = action.payload;
+        }
       })
 
       .addCase(updateUserData.pending, (state) => {
-        state.status = "loading";
+        // Do not flip auth `status` — MainLayout treats that as a full-page loader.
         state.error = null;
       })
       .addCase(updateUserData.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.userDetails = action.payload.user || state.userDetails;
+        const updated = action.payload?.user;
+        if (updated) {
+          state.userDetails = updated;
+          state.userProfile = updated;
+        }
         state.error = null;
       })
       .addCase(updateUserData.rejected, (state, action) => {
-        state.status = "failed";
         state.error = action.payload;
       })
 

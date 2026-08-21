@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { refreshAccessToken, logout } from "../redux/slices/authSlice";
+import { refreshAccessToken, logout, getUserProfileData } from "../redux/slices/authSlice";
 import { store } from "../redux/store";
 import { decodeJWT } from "../utility/decodetoken";
 import { isTokenValid } from "../utility/token";
@@ -18,6 +18,7 @@ const AuthAutoRefresh = ({ children }) => {
     if (bootstrapTriedRef.current) return;
     if (token && isTokenValid(token)) {
       bootstrapTriedRef.current = true;
+      dispatch(getUserProfileData());
       return;
     }
     if (!hasPersistedRefreshToken()) {

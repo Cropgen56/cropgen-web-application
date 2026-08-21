@@ -5,26 +5,10 @@ import {
   AI_ASSISTANT_NAME,
   AUTH_EMAIL_CLIENT_BRAND,
 } from "../config/brand";
-import { getReactAppUrl } from "../config/envUrls";
+import { AGENT_URL, SOCKET_IO_PATH } from "../config/envUrls";
 
 const nextId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-
-const SOCKET_PATH =
-  process.env.REACT_APP_SOCKET_IO_PATH?.replace(/\/+$/, "") ||
-  "/v3/socket.io";
-const PRODUCTION_AGENT_URL = "https://server.cropgenapp.com";
-
-function resolveAgentUrl() {
-  const fromEnv =
-    getReactAppUrl("REACT_APP_CROPGEN_AGENT_URL") ||
-    getReactAppUrl("REACT_APP_AGENT_URL");
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-  if (process.env.NODE_ENV === "development" && typeof window !== "undefined") {
-    return window.location.origin;
-  }
-  return PRODUCTION_AGENT_URL;
-}
 
 function shouldAutoRouteToGeneral(text) {
   const t = String(text ?? "").toLowerCase();
@@ -80,10 +64,10 @@ export function useCropGenAiChat() {
 
     let autoSkipSent = false;
 
-    const agentUrl = resolveAgentUrl();
+    const agentUrl = AGENT_URL;
 
     const socketOpts = {
-      path: SOCKET_PATH,
+      path: SOCKET_IO_PATH,
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 8,
@@ -110,7 +94,7 @@ export function useCropGenAiChat() {
       setStatus("error");
       const hint =
         process.env.NODE_ENV === "development" &&
-        agentUrl.includes("localhost")
+        /localhost|127\.0\.0\.1/.test(agentUrl)
           ? " Check that cropgen-server is running on port 7070."
           : "";
       setError(
@@ -220,7 +204,7 @@ export function useCropGenAiChat() {
     chatHistory,
     historyStatus,
     loadChatHistory,
-    agentUrl: resolveAgentUrl(),
+    agentUrl: AGENT_URL,
     mode,
   };
 }

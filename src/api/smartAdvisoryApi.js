@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getReactAppUrl } from "../config/envUrls.js";
+import { SMART_ADVISORY_URL } from "../config/envUrls.js";
 import { attachAuthResponseInterceptor } from "./setupAuthInterceptor.js";
 
 let store;
@@ -11,7 +11,7 @@ export const attachSmartAdvisoryStore = (reduxStore, unauthorizedHandler) => {
 };
 
 const smartAdvisoryApi = axios.create({
-  baseURL: getReactAppUrl("REACT_APP_SMART_ADVISORY", "/v2/api"),
+  baseURL: SMART_ADVISORY_URL,
   withCredentials: true,
   timeout: 30000,
 });

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { getUserProfileData } from "../redux/slices/authSlice";
 import { DEFAULT_PROFILE_IMAGE_URL } from "../config/brand";
+import { S3_BUCKET_URL } from "../config/envUrls";
 import {
   Mail,
   Phone,
@@ -11,10 +12,6 @@ import {
   Shield,
   ArrowLeft,
 } from "lucide-react";
-
-const S3_BUCKET_URL =
-  process.env.REACT_APP_S3_BUCKET_URL ||
-  "https://your-bucket-name.s3.amazonaws.com";
 
 const Profile = () => {
   const dispatch = useDispatch();

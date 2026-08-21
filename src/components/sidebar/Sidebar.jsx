@@ -28,6 +28,7 @@ import {
 } from "../../redux/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { message } from "antd";
+import { S3_BUCKET_URL } from "../../config/envUrls";
 
 const NAV_ITEMS = [
   {
@@ -66,11 +67,6 @@ const Sidebar = ({ onToggleCollapse }) => {
   const user = useSelector((state) => state?.auth?.user);
   const token = useSelector((state) => state.auth.token);
   const { userDetails, userProfile } = useSelector((state) => state.auth);
-
-  // S3 bucket URL for avatar
-  const S3_BUCKET_URL =
-    process.env.REACT_APP_S3_BUCKET_URL ||
-    "https://your-bucket-name.s3.amazonaws.com";
 
   useEffect(() => {
     dispatch(decodeToken());

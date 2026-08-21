@@ -37,7 +37,12 @@ export const refreshToken = async () => {
     );
     return response.data;
   } catch (error) {
-    throw error.response?.data?.message || "Token refresh failed";
+    const data = error.response?.data;
+    const err = new Error(
+      (typeof data === "string" ? data : data?.message) || "Token refresh failed",
+    );
+    err.code = data?.code;
+    throw err;
   }
 };
 
@@ -130,6 +135,7 @@ export const completeUserProfile = async ({
   organizationCode,
   firstName,
   lastName,
+  email,
   phone,
   language,
   role,
@@ -143,6 +149,7 @@ export const completeUserProfile = async ({
     organizationCode,
     firstName,
     lastName,
+    email,
     phone,
     language,
     role,
@@ -161,6 +168,18 @@ export const completeUserProfile = async ({
     { withCredentials: true },
   );
   return response.data;
+};
+
+export const validateOrganizationCode = async (code) => {
+  const normalized = String(code || "").trim().toUpperCase();
+  if (!normalized) {
+    return { valid: true, fallback: true, organizationCode: "CROPGEN" };
+  }
+  const response = await axios.get(
+    `${AUTH_BASE_URL}/api/auth/organization-code/${encodeURIComponent(normalized)}`,
+    authBrandConfig,
+  );
+  return { valid: true, ...response.data?.data };
 };
 
 // Get presigned URL for avatar upload — token injected by api interceptor

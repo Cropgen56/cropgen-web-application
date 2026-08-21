@@ -1,11 +1,8 @@
 import axios from "axios";
 import { buildFallbackCountries } from "../utility/countryFallback";
-import { getReactAppUrl } from "../config/envUrls";
+import { LOCATION_API_URL } from "../config/envUrls";
 
-const LOCATION_BASE_URL = getReactAppUrl(
-  "REACT_APP_LOCATION_API_URL",
-  "http://localhost:3001",
-);
+const LOCATION_BASE_URL = LOCATION_API_URL;
 
 const locationClient = axios.create({
   baseURL: LOCATION_BASE_URL,

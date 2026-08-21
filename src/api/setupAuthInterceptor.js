@@ -22,6 +22,12 @@ export function attachAuthResponseInterceptor(axiosInstance, getStore, onForceLo
     (response) => response,
     async (error) => {
       const original = error.config;
+      const errorCode = error.response?.data?.code;
+      if (errorCode === "USER_DELETED") {
+        onForceLogout?.();
+        return Promise.reject(error);
+      }
+
       const authHeader =
         original?.headers?.Authorization || original?.headers?.authorization;
       const hadBearer =

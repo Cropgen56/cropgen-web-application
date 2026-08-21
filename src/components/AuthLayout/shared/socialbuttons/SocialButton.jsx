@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import { useDispatch } from "react-redux";
+import { message } from "antd";
 import {
   setGoogleLoginData,
   decodeToken,
@@ -13,6 +14,7 @@ import { AUTH_EMAIL_CLIENT_BRAND } from "../../../../config/brand";
 import { API_BASE_URL } from "../../../../config/envUrls";
 
 const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
 function SocialButtons() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -23,6 +25,11 @@ function SocialButtons() {
     try {
       setIsLoading(true);
       const { credential } = response;
+
+      if (!credential) {
+        message.error("Google sign-in did not return a credential. Try again.");
+        return;
+      }
 
       const res = await axios.post(
         `${API_BASE_URL}/api/auth/google`,
@@ -49,57 +56,58 @@ function SocialButtons() {
             onboardingRequired: res.data.onboardingRequired,
           }),
         );
-        navigate("/cropgen-analytics");
         dispatch(decodeToken());
+        navigate("/cropgen-analytics", { replace: true });
       } else {
-        alert(`Login Failed: ${res.data.message}`);
-        console.error("Login Failed:", res.data.message);
+        message.error(res.data.message || "Google login failed");
       }
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "An unexpected error occurred.";
-      alert(`Google Login Error: ${errorMessage}`);
-      console.error("Google Login Error:", error);
+      message.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCustomButtonClick = () => {
-    // Programmatically click the hidden Google button
+    if (!clientId) {
+      message.error("Google sign-in is not configured.");
+      return;
+    }
     const googleBtn =
       googleButtonRef.current?.querySelector('div[role="button"]');
     if (googleBtn) {
       googleBtn.click();
+    } else {
+      message.error("Google sign-in is unavailable. Please try again.");
     }
   };
 
   return (
     <div className="flex flex-col justify-center items-center gap-3 w-full">
       <GoogleOAuthProvider clientId={clientId}>
-        <div className="w-[95%] sm:w-[70%]">
-          {/* Custom styled button */}
+        <div className="w-full">
           <button
+            type="button"
             onClick={handleCustomButtonClick}
             disabled={isLoading}
-            className={`flex w-full items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-full font-medium text-sm transition-all duration-500 ease-in-out whitespace-nowrap
+            className={`flex w-full items-center justify-center gap-2 rounded-full px-4 py-3.5 text-sm font-medium transition-all duration-300 sm:px-6
               ${
                 isLoading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-[#0D4D44] hover:opacity-95 text-white"
+                  ? "cursor-not-allowed bg-gray-400 text-white"
+                  : "bg-[#0D4D44] text-white hover:opacity-95"
               }`}
           >
-            <FcGoogle className="text-lg bg-white rounded-full p-0.5" />
+            <FcGoogle className="rounded-full bg-white p-0.5 text-lg" />
             {isLoading ? "Signing in..." : "Continue with Google"}
           </button>
 
-          {/* Hidden GoogleLogin component */}
-          <div ref={googleButtonRef} style={{ display: "none" }}>
+          <div ref={googleButtonRef} className="hidden" aria-hidden="true">
             <GoogleLogin
               onSuccess={handleGoogleLogin}
               onError={() => {
-                alert("Google Login Failed. Please try again.");
-                console.error("Google Login Failed");
+                message.error("Google login failed. Please try again.");
                 setIsLoading(false);
               }}
               disabled={isLoading}
