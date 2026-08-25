@@ -4,9 +4,11 @@ import { resetFarmState } from "../redux/slices/farmSlice";
 import { resetAuthState } from "../redux/slices/authSlice";
 import { resetOperationState } from "../redux/slices/operationSlice";
 import { resetSatelliteState } from "../redux/slices/satelliteSlice";
+import { resetWeatherState } from "../redux/slices/weatherSlice";
 import { logoutUserApi } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
 import { AUTH_ROUTES } from "../config/brand";
+import { SELECTED_FIELD_KEY } from "../components/dashboard/hooks/useSelectedField";
 
 const useLogout = () => {
   const dispatch = useDispatch();
@@ -21,7 +23,7 @@ const useLogout = () => {
 
     try {
       localStorage.removeItem("authToken");
-      localStorage.removeItem("selectedFieldId");
+      localStorage.removeItem(SELECTED_FIELD_KEY);
 
       await clear();
 
@@ -29,6 +31,7 @@ const useLogout = () => {
       dispatch(resetAuthState());
       dispatch(resetSatelliteState());
       dispatch(resetOperationState());
+      dispatch(resetWeatherState());
 
       navigate(AUTH_ROUTES.login);
 

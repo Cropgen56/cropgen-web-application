@@ -16,14 +16,14 @@ const PremiumContentWrapper = ({
 
   return (
     <div
-      className="relative rounded-xl overflow-hidden border border-amber-200/80 bg-gradient-to-br from-emerald-50 to-white"
+      className="relative rounded-xl border border-amber-200/80 bg-gradient-to-br from-emerald-50 to-white"
       style={{ minHeight }}
     >
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className="absolute inset-0 flex items-center justify-center p-6"
+        className="flex items-center justify-center p-6 h-full"
       >
         <div className="text-center max-w-xs">
           <motion.div

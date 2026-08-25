@@ -2,27 +2,14 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { findAoiForField } from "../../utils/farmGeometry";
 
-const VISUAL_CROSSING_KEY =
-  process.env.REACT_APP_VISUAL_CROSSING_KEY || "NAJUNXK89Y3ZLPJL3NYH6BS4E";
-const OBSERVE_EARTH_KEY =
-  process.env.REACT_APP_OBSERVE_EARTH_KEY || "5b97d3f0-a01a-490b-aad1-3bfa848309f2";
+const OBSERVE_EARTH_KEY = process.env.REACT_APP_OBSERVE_EARTH_KEY;
 const OBSERVE_EARTH_BASE = "https://observearth.com/api";
 
-export const fetchweatherData = createAsyncThunk(
-  "weather/fetchweatherData",
-  async ({ latitude, longitude }, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${latitude},${longitude}?key=${VISUAL_CROSSING_KEY}`,
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data || "Failed to fetch weather data",
-      );
-    }
-  },
-);
+if (!OBSERVE_EARTH_KEY && process.env.NODE_ENV !== "test") {
+  console.error(
+    "REACT_APP_OBSERVE_EARTH_KEY is not set — AOI/weather requests will fail.",
+  );
+}
 
 export const createAOI = createAsyncThunk(
   "weather/createAOI",
@@ -130,24 +117,24 @@ export const fetchHistoricalWeather = createAsyncThunk(
   },
 );
 
+const initialState = {
+  forecastData: null,
+  historicalWeather: null,
+  loading: false,
+  error: null,
+  aoiId: null,
+  aois: [],
+  historicalLoading: false,
+  historicalError: null,
+  dateRange: {
+    startDate: "",
+    endDate: "",
+  },
+};
+
 const weatherSlice = createSlice({
   name: "weather",
-  initialState: {
-    weatherData: null,
-    forecastData: null,
-    historicalWeather: null,
-    currentWeather: null,
-    loading: false,
-    error: null,
-    aoiId: null,
-    aois: [],
-    historicalLoading: false,
-    historicalError: null,
-    dateRange: {
-      startDate: "",
-      endDate: "",
-    },
-  },
+  initialState,
   reducers: {
     setDateRange: (state, action) => {
       state.dateRange = action.payload;
@@ -156,21 +143,10 @@ const weatherSlice = createSlice({
       state.historicalWeather = null;
       state.historicalError = null;
     },
+    resetWeatherState: () => initialState,
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchweatherData.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchweatherData.fulfilled, (state, action) => {
-        state.currentWeather = action.payload.currentConditions;
-        state.loading = false;
-      })
-      .addCase(fetchweatherData.rejected, (state, action) => {
-        state.error = action.payload;
-        state.loading = false;
-      })
       .addCase(createAOI.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -231,7 +207,8 @@ const weatherSlice = createSlice({
   },
 });
 
-export const { setDateRange, clearHistoricalWeather } = weatherSlice.actions;
+export const { setDateRange, clearHistoricalWeather, resetWeatherState } =
+  weatherSlice.actions;
 
 export const selectAOIs = (state) => state.weather.aois || [];
 export const selectAOIByName = (name) => (state) =>

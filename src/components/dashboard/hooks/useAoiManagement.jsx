@@ -64,6 +64,15 @@ export const useAoiManagement = (selectedField) => {
     return findAoiForField(aois, fieldId);
   }, [aois, fieldId]);
 
+  // Clear the previous field's AOI immediately when the selected field
+  // changes, so consumers (forecast, soil charts) never render stale data
+  // for the wrong field while the new AOI is being resolved/created.
+  useEffect(() => {
+    setAoiId(null);
+    setIsCreating(false);
+    setError(null);
+  }, [fieldId]);
+
   // Update aoiId when we find match
   useEffect(() => {
     if (matchingAoi?.id) {

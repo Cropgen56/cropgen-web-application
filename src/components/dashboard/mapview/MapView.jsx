@@ -26,7 +26,6 @@ import {
   Stethoscope,
   Waves,
 } from "lucide-react";
-import { fetchweatherData } from "../../../redux/slices/weatherSlice";
 import { resetSatelliteState } from "../../../redux/slices/satelliteSlice";
 import IndexDates from "./indexdates/IndexDates";
 
@@ -562,37 +561,6 @@ const FarmMap = ({
     },
     [polygonBounds, indexData?.legend],
   );
-
-  const fetchWeatherData = useCallback(() => {
-    if (!centroid.lat || !centroid.lng) return;
-    const lastFetchTime = localStorage.getItem("lastFetchTime");
-    const currentTime = Date.now();
-    const threeHours = 3 * 60 * 60 * 1000;
-    if (
-      !lastFetchTime ||
-      currentTime - parseInt(lastFetchTime, 10) > threeHours
-    ) {
-      dispatch(
-        fetchweatherData({ latitude: centroid.lat, longitude: centroid.lng }),
-      ).then((action) => {
-        if (action.payload) {
-          try {
-            localStorage.setItem("weatherData", JSON.stringify(action.payload));
-            localStorage.setItem("lastFetchTime", currentTime.toString());
-          } catch (e) {
-            if (e.name === "QuotaExceededError") {
-              console.error("localStorage quota exceeded");
-              localStorage.removeItem("oldWeatherData");
-            }
-          }
-        }
-      });
-    }
-  }, [dispatch, centroid.lat, centroid.lng]);
-
-  useEffect(() => {
-    fetchWeatherData();
-  }, [fetchWeatherData]);
 
   useEffect(() => {
     dispatch(resetSatelliteState());

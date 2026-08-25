@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 
-const SELECTED_FIELD_KEY = "selectedFieldId";
+export const SELECTED_FIELD_KEY = "selectedFieldId";
 
 export const useSelectedField = (fields) => {
   const [selectedField, setSelectedFieldState] = useState(
@@ -27,8 +27,12 @@ export const useSelectedField = (fields) => {
       return (b._id || "").localeCompare(a._id || "");
     })[0];
 
+    const selectedExists = fields.some((f) => f?._id === selectedField);
+
     const shouldAutoSelect =
-      (!selectedField && newest) || (fields.length > prevLength && newest);
+      (!selectedField && newest) ||
+      (fields.length > prevLength && newest) ||
+      (selectedField && !selectedExists && newest);
 
     if (shouldAutoSelect && newest?._id) {
       setSelectedFieldState(newest._id);

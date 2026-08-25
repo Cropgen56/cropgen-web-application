@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PricingOverlay from "../components/pricing/PricingOverlay";
 import FieldStatusOverlay from "../components/addfield/FieldStatusOverlay";
 import LandStatusGate from "../components/addfield/LandStatusGate";
+import { SELECTED_FIELD_KEY } from "../components/dashboard/hooks/useSelectedField";
 
 const AddField = () => {
   const [markers, setMarkers] = useState([]);
@@ -188,7 +189,7 @@ const AddField = () => {
         message.success("Field added successfully!");
 
         if (field?._id) {
-          localStorage.setItem("selectedFieldId", field._id);
+          localStorage.setItem(SELECTED_FIELD_KEY, field._id);
         }
 
         try {
