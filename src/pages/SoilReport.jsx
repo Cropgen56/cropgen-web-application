@@ -2,21 +2,19 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
-import { motion, AnimatePresence } from "framer-motion";
 
 import SoilReportSidebar from "../components/soilreport/soilreportsidebar/SoilReportSidebar";
 import SmartFarmReport from "../components/soilreport/smartfarm/SmartFarmReport";
 import { getFarmFields } from "../redux/slices/farmSlice";
 import SimpleLoader from "../components/comman/loading/SimpleLoader";
 import PremiumPageWrapper from "../components/subscription/PremiumPageWrapper";
-import SubscriptionModal from "../components/subscription/SubscriptionModal";
-import PricingOverlay from "../components/pricing/PricingOverlay";
+import FeatureGuard from "../components/subscription/FeatureGuard";
+import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
 import FieldDropdown from "../components/comman/FieldDropdown";
 import { generateSoilReportAPI } from "../api/soilReportApi";
 import { DEFAULT_ORGANIZATION_CODE } from "../config/brand";
 import { toApiPolygon } from "../utils/farmGeometry";
 import { useLiveSelectedField } from "../hooks/useLiveSelectedField";
-import { hasPlanFeature } from "../utils/subscriptionAccess";
 
 const SoilReport = () => {
   const dispatch = useDispatch();
@@ -34,9 +32,10 @@ const SoilReport = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
-  const [showPricingOverlay, setShowPricingOverlay] = useState(false);
-  const [pricingFieldData, setPricingFieldData] = useState(null);
-  const [showMembershipModal, setShowMembershipModal] = useState(false);
+  const soilReportGuard = useSubscriptionGuard({
+    field: selectedField,
+    featureKey: "soilReportGeneration",
+  });
 
   const reportRef = useRef(null);
 
@@ -58,40 +57,6 @@ const SoilReport = () => {
     setReportData(null);
   }, [setSelectedField]);
 
-  const handleSubscribe = useCallback(() => {
-    if (!selectedField) {
-      message.warning("Please select a field first");
-      return;
-    }
-
-    const areaInHectares =
-      selectedField?.areaInHectares || selectedField?.acre * 0.404686 || 5;
-
-    const fieldData = {
-      id: selectedField._id,
-      name: selectedField.fieldName || selectedField.farmName,
-      areaInHectares,
-      cropName: selectedField.cropName,
-    };
-
-    setPricingFieldData(fieldData);
-    setShowPricingOverlay(true);
-    setShowMembershipModal(false);
-  }, [selectedField]);
-
-  const handleSkipMembership = useCallback(() => {
-    setShowMembershipModal(false);
-    message.info("You can activate premium anytime from the locked features");
-  }, []);
-
-  const handleCloseMembershipModal = useCallback(() => {
-    setShowMembershipModal(false);
-  }, []);
-
-  const handleClosePricing = useCallback(() => {
-    setShowPricingOverlay(false);
-    setPricingFieldData(null);
-  }, []);
 
   const handleGenerateReport = useCallback(
     async (field) => {
@@ -192,14 +157,9 @@ const SoilReport = () => {
   );
 
 const downloadPDF = useCallback(async () => {
-  const hasSoilReportPermission = hasPlanFeature(
-    selectedField,
-    "soilReportGeneration",
-  );
-
-  if (!hasSoilReportPermission) {
+  if (!soilReportGuard.hasFeatureAccess) {
     message.warning("Please subscribe to download soil reports");
-    handleSubscribe();
+    soilReportGuard.handleSubscribe();
     return;
   }
 
@@ -309,12 +269,7 @@ const downloadPDF = useCallback(async () => {
     if (cloneWrapper) cloneWrapper.remove();
     setIsDownloading(false);
   }
-}, [selectedField, handleSubscribe]);
-
-  const hasSubscription = useMemo(
-    () => hasPlanFeature(selectedField, "soilReportGeneration"),
-    [selectedField],
-  );
+}, [selectedField, soilReportGuard.hasFeatureAccess, soilReportGuard.handleSubscribe]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const reportReady = Boolean(reportData?.soilReport);
 
@@ -343,33 +298,7 @@ const downloadPDF = useCallback(async () => {
   }
 
   return (
-    <>
-      <SubscriptionModal
-        isOpen={showMembershipModal}
-        onClose={handleCloseMembershipModal}
-        onSubscribe={handleSubscribe}
-        onSkip={handleSkipMembership}
-        fieldName={selectedField?.fieldName || selectedField?.farmName}
-      />
-
-      <AnimatePresence>
-        {showPricingOverlay && pricingFieldData && (
-          <motion.div
-            key="pricing-overlay"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8"
-          >
-            <PricingOverlay
-              onClose={handleClosePricing}
-              selectedField={pricingFieldData}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <FeatureGuard guard={soilReportGuard} title="Soil Report">
       <div className="h-screen w-full bg-[#f3f6f4] flex overflow-hidden">
         <div className="hidden lg:flex w-full h-full">
           <SoilReportSidebar
@@ -384,8 +313,8 @@ const downloadPDF = useCallback(async () => {
 
           <div className="flex-1 h-screen overflow-y-auto bg-[#f3f6f4]">
             <PremiumPageWrapper
-              isLocked={!hasSubscription}
-              onSubscribe={handleSubscribe}
+              isLocked={!soilReportGuard.hasFeatureAccess}
+              onSubscribe={soilReportGuard.handleSubscribe}
               title="Smart Farm Intelligence"
             >
               <SmartFarmReport
@@ -413,8 +342,8 @@ const downloadPDF = useCallback(async () => {
 
           <div className="flex-1 overflow-y-auto bg-[#f3f6f4]">
             <PremiumPageWrapper
-              isLocked={!hasSubscription}
-              onSubscribe={handleSubscribe}
+              isLocked={!soilReportGuard.hasFeatureAccess}
+              onSubscribe={soilReportGuard.handleSubscribe}
               title="Smart Farm Intelligence"
             >
               <SmartFarmReport
@@ -431,7 +360,7 @@ const downloadPDF = useCallback(async () => {
           </div>
         </div>
       </div>
-    </>
+    </FeatureGuard>
   );
 };
 

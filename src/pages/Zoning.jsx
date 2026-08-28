@@ -6,6 +6,8 @@ import FieldDropdown from "../components/comman/FieldDropdown";
 import SimpleLoader from "../components/comman/loading/SimpleLoader";
 import ZoningSection from "../components/dashboard/mapview/zoning/ZoningSection";
 import { getFarmFields } from "../redux/slices/farmSlice";
+import FeatureGuard from "../components/subscription/FeatureGuardComponent";
+import { useSubscriptionGuard } from "../components/subscription/hooks/useSubscriptionGuard";
 
 const Zoning = () => {
   const dispatch = useDispatch();
@@ -27,6 +29,11 @@ const Zoning = () => {
       setSelectedField(fields[fields.length - 1]);
     }
   }, [fields, selectedField]);
+
+  const zoningGuard = useSubscriptionGuard({
+    field: selectedField,
+    featureKey: "zoningAnalysis",
+  });
 
   if (fields.length === 0) {
     return (
@@ -63,7 +70,9 @@ const Zoning = () => {
         />
       </div>
 
-      <ZoningSection selectedFieldDetails={selectedField} />
+      <FeatureGuard guard={zoningGuard} title="Zoning">
+        <ZoningSection selectedFieldDetails={selectedField} />
+      </FeatureGuard>
     </div>
   );
 };

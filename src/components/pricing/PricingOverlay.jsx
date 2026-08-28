@@ -64,6 +64,8 @@ const FEATURE_DISPLAY_NAMES = {
   diseaseDetectionAlerts: "Disease Detection Alerts",
   smartAdvisorySystem: "Smart Advisory System",
   soilReportGeneration: "Soil Report Generation",
+  cropCalendar: "Crop Calendar",
+  zoningAnalysis: "Zoning & VRA Analysis",
   other: "Other",
 };
 
