@@ -73,6 +73,39 @@ describe("hasPlanFeature", () => {
     };
     expect(hasPlanFeature(legacy, "smartAdvisorySystem")).toBe(true);
   });
+
+  test("legacy plan with an all-false features map (real API shape, schema defaults applied) keeps full access", () => {
+    // The backend's `features` sub-schema defaults every flag to `false`,
+    // so a plan whose admin never configured per-feature flags still
+    // arrives with a fully-populated (all-false) `features` object, not a
+    // missing one. This must be treated the same as "no features map".
+    const legacy = {
+      subscription: {
+        hasActiveSubscription: true,
+        status: "active",
+        plan: {
+          features: {
+            satelliteImagery: false,
+            cropHealthAndYield: false,
+            soilAnalysisAndHealth: false,
+            weatherAnalytics: false,
+            vegetationIndices: false,
+            waterIndices: false,
+            evapotranspirationMonitoring: false,
+            agronomicInsights: false,
+            weeklyAdvisoryReports: false,
+            cropGrowthMonitoring: false,
+            farmOperationsManagement: false,
+            diseaseDetectionAlerts: false,
+            smartAdvisorySystem: false,
+            soilReportGeneration: false,
+          },
+        },
+      },
+    };
+    expect(hasPlanFeature(legacy, "cropHealthAndYield")).toBe(true);
+    expect(hasPlanFeature(legacy, "soilAnalysisAndHealth")).toBe(true);
+  });
 });
 
 describe("fieldIsRecentlyCreated", () => {
