@@ -11,54 +11,85 @@ if (!OBSERVE_EARTH_KEY && process.env.NODE_ENV !== "test") {
   );
 }
 
+/**
+ * Module-scoped (not per-component) lock so simultaneous callers — e.g.
+ * Dashboard/Weather/SmartAdvisory/FarmReport all mount useAoiManagement
+ * independently for the same field — await one shared in-flight request
+ * instead of each firing its own POST and creating duplicate AOIs upstream.
+ * Keyed by AOI name (= farm field id).
+ */
+const createAoiInFlight = new Map();
+
 export const createAOI = createAsyncThunk(
   "weather/createAOI",
   async (payload, { rejectWithValue, dispatch, getState }) => {
-    const url = `${OBSERVE_EARTH_BASE}/geometry/`;
+    const existing = createAoiInFlight.get(payload.name);
+    if (existing) {
+      return existing;
+    }
 
-    try {
-      const state = getState();
-      const existingAOI = findAoiForField(state.weather.aois, payload.name);
+    const run = (async () => {
+      const url = `${OBSERVE_EARTH_BASE}/geometry/`;
 
-      if (existingAOI) {
-        return existingAOI.id;
-      }
-
-      const response = await axios.post(url, payload, {
-        headers: {
-          "X-API-Key": OBSERVE_EARTH_KEY,
-          "Content-Type": "application/json",
-        },
-      });
-
-      await dispatch(fetchAOIs()).unwrap();
-
-      return response.data.id;
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || error.response?.data?.error || "";
-      const errorText =
-        typeof errorMessage === "string"
-          ? errorMessage
-          : JSON.stringify(errorMessage);
-      const isSizeLimit = errorText.toLowerCase().includes("hectare");
-      const isDuplicate =
-        !isSizeLimit &&
-        (error.response?.status === 409 ||
-          error.response?.status === 400 ||
-          errorText.toLowerCase().includes("already exists") ||
-          errorText.toLowerCase().includes("duplicate"));
-
-      if (isDuplicate) {
+      try {
+        // Always resolve against a fresh, fully-paginated fetch before
+        // deciding to create — stale/partial state here is what caused
+        // the same field to get a new AOI created on nearly every visit.
         await dispatch(fetchAOIs()).unwrap();
         const state = getState();
         const existingAOI = findAoiForField(state.weather.aois, payload.name);
         if (existingAOI) {
           return existingAOI.id;
         }
-      }
 
-      return rejectWithValue(error.response?.data || "Failed to create AOI");
+        const response = await axios.post(url, payload, {
+          headers: {
+            "X-API-Key": OBSERVE_EARTH_KEY,
+            "Content-Type": "application/json",
+          },
+        });
+
+        await dispatch(fetchAOIs()).unwrap();
+
+        return response.data.id;
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.message || error.response?.data?.error || "";
+        const errorText =
+          typeof errorMessage === "string"
+            ? errorMessage
+            : JSON.stringify(errorMessage);
+        const isSizeLimit = errorText.toLowerCase().includes("hectare");
+        const isDuplicate =
+          !isSizeLimit &&
+          (error.response?.status === 409 ||
+            error.response?.status === 400 ||
+            errorText.toLowerCase().includes("already exists") ||
+            errorText.toLowerCase().includes("duplicate"));
+
+        if (isDuplicate) {
+          await dispatch(fetchAOIs()).unwrap();
+          const state = getState();
+          const existingAOI = findAoiForField(
+            state.weather.aois,
+            payload.name,
+          );
+          if (existingAOI) {
+            return existingAOI.id;
+          }
+        }
+
+        throw error.response?.data || new Error("Failed to create AOI");
+      }
+    })();
+
+    createAoiInFlight.set(payload.name, run);
+    try {
+      return await run;
+    } catch (error) {
+      return rejectWithValue(error);
+    } finally {
+      createAoiInFlight.delete(payload.name);
     }
   },
 );
@@ -66,15 +97,29 @@ export const createAOI = createAsyncThunk(
 export const fetchAOIs = createAsyncThunk(
   "weather/fetchAOIs",
   async (_, { rejectWithValue }) => {
-    const url = `${OBSERVE_EARTH_BASE}/geometry/?detail=false`;
-    try {
-      const response = await axios.get(url, {
-        headers: { "X-API-Key": OBSERVE_EARTH_KEY },
-      });
+    let url = `${OBSERVE_EARTH_BASE}/geometry/?detail=false&page_size=200`;
+    const aoisData = [];
 
-      const aoisData = Array.isArray(response.data)
-        ? response.data
-        : response.data.results || [];
+    try {
+      // Follow pagination fully — the account has more AOIs than one page
+      // (default page size 50), and the old single-page fetch meant older
+      // AOIs were invisible to the "does this field already have one?"
+      // check, so they kept getting silently recreated.
+      let guard = 0;
+      while (url && guard < 100) {
+        const response = await axios.get(url, {
+          headers: { "X-API-Key": OBSERVE_EARTH_KEY },
+        });
+
+        if (Array.isArray(response.data)) {
+          aoisData.push(...response.data);
+          break;
+        }
+
+        aoisData.push(...(response.data.results || []));
+        url = response.data.next || null;
+        guard += 1;
+      }
 
       return aoisData;
     } catch (error) {

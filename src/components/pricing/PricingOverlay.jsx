@@ -203,7 +203,7 @@ export default function PricingOverlay({ onClose, selectedField }) {
 
   const [billing, setBilling] = useState("monthly");
   /** Shown prices + sent as displayCurrency on create-order (server uses matching pricing row). */
-  const [displayCurrency, setDisplayCurrency] = useState("USD");
+  const [displayCurrency, setDisplayCurrency] = useState("INR");
   const [groupIndex, setGroupIndex] = useState(0);
   const [cardsPerGroup, setCardsPerGroup] = useState(3);
   const [checkoutData, setCheckoutData] = useState(null);

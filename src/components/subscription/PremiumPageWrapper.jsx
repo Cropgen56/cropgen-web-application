@@ -6,9 +6,9 @@ const PremiumPageWrapper = ({ children, isLocked, onSubscribe, title }) => {
   if (!isLocked) return children;
 
   return (
-    <div className="relative w-full min-h-[70vh] overflow-hidden rounded-2xl">
+    <div className="relative w-full h-full min-h-screen overflow-hidden rounded-2xl">
       <div
-        className="absolute inset-0 flex items-center justify-center"
+        className="sticky top-0 flex h-screen items-center justify-center"
         style={{
           background: "rgba(52, 78, 65, 0.72)",
           backdropFilter: "blur(12px)",
