@@ -172,11 +172,16 @@ const NdviGraph = ({
   const isLoading = loading?.indexTimeSeriesSummary || false;
   const hasData = chartData.length > 0;
   const showInitialLoader = isLoading && !hasData && !isPreparedForPDF;
+  // The PDF exporter can't see this Redux loading flag from outside — flag
+  // it in the DOM so useFarmReportPDF's readiness poll can wait for it,
+  // instead of capturing the "still loading" placeholder permanently.
+  const pdfPending = isLoading && !hasData;
 
   /* ================= CHART SECTION ================= */
 
   const chartSection = (
     <div
+      data-pdf-pending={pdfPending ? "true" : undefined}
       ref={scrollRef}
       className="overflow-x-auto pr-6 scrollbar-hide no-scrollbar scroll-smooth cursor-grab active:cursor-grabbing bg-white rounded-xl p-2 min-h-[180px]"
     >

@@ -284,6 +284,27 @@ const calculatePolygonBounds = (coordinates) => {
   ];
 };
 
+/**
+ * Leaflet's ImageOverlay can only draw an axis-aligned rectangle, but a
+ * field's real boundary is usually a rotated/irregular polygon — so for
+ * anything but a perfect north-aligned rectangle, the raster overflows
+ * past the field's true edges into the padding around it. Build a CSS
+ * clip-path (percentages relative to the image's own bounds) so the
+ * rendered raster is masked to the field's actual shape.
+ */
+const buildClipPathPolygon = (coordinates, bounds) => {
+  if (!bounds || !coordinates?.length || coordinates.length < 3) return null;
+  const [[minLat, minLng], [maxLat, maxLng]] = bounds;
+  if (maxLat === minLat || maxLng === minLng) return null;
+
+  const points = coordinates.map(({ lat, lng }) => {
+    const x = ((lng - minLng) / (maxLng - minLng)) * 100;
+    const y = ((maxLat - lat) / (maxLat - minLat)) * 100;
+    return `${x.toFixed(3)}% ${y.toFixed(3)}%`;
+  });
+  return `polygon(${points.join(", ")})`;
+};
+
 const parseColorToRgb = (value) => {
   if (!value || typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -473,6 +494,10 @@ const FarmMap = ({
     () => calculatePolygonBounds(polygonCoordinates),
     [polygonCoordinates],
   );
+  const overlayClipPath = useMemo(
+    () => buildClipPathPolygon(polygonCoordinates, polygonBounds),
+    [polygonCoordinates, polygonBounds],
+  );
 
   useEffect(() => {
     setImage(
@@ -636,19 +661,24 @@ const FarmMap = ({
               positions={polygonCoordinates.map(({ lat, lng }) => [lat, lng])}
             />
             {polygonBounds && image && (
-              <ImageOverlay
-                url={image}
-                bounds={polygonBounds}
-                opacity={1}
-                zIndex={400}
-                interactive={true}
-                className="leaflet-image-overlay-custom"
-                eventHandlers={{
-                  mouseover: handleOverlayHover,
-                  mousemove: handleOverlayHover,
-                  mouseout: () => setHoveredLegendItem(null),
-                }}
-              />
+              <>
+                {overlayClipPath && (
+                  <style>{`.leaflet-image-overlay-custom { clip-path: ${overlayClipPath}; -webkit-clip-path: ${overlayClipPath}; }`}</style>
+                )}
+                <ImageOverlay
+                  url={image}
+                  bounds={polygonBounds}
+                  opacity={1}
+                  zIndex={400}
+                  interactive={true}
+                  className="leaflet-image-overlay-custom"
+                  eventHandlers={{
+                    mouseover: handleOverlayHover,
+                    mousemove: handleOverlayHover,
+                    mouseout: () => setHoveredLegendItem(null),
+                  }}
+                />
+              </>
             )}
           </>
         )}

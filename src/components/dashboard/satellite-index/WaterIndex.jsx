@@ -188,6 +188,9 @@ const WaterIndex = ({
 
   const hasData = chartData.length > 0;
   const showInitialLoader = isLoading && !hasData && !isPreparedForPDF;
+  // See VegetationIndex.jsx: this component's loading state is local, not
+  // Redux, so flag it in the DOM for useFarmReportPDF's readiness poll.
+  const pdfPending = isLoading && !hasData;
 
   const indexDescriptions = {
     NDMI: "NDMI values can be used to monitor vegetation water content and drought conditions over time.",
@@ -202,6 +205,7 @@ const WaterIndex = ({
 
   const chartSection = (
     <div
+      data-pdf-pending={pdfPending ? "true" : undefined}
       ref={scrollRef}
       className="w-full overflow-x-auto pr-6 bg-white rounded-xl p-2 min-h-[180px]"
     >

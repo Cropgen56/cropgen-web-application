@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import SoilAnalysisChart from "./SoilAnalysisChart";
@@ -18,6 +18,9 @@ function isYieldAvailable(value) {
   const n = Number(value);
   return Number.isFinite(n) && n > 0;
 }
+
+const CROP_IMAGE_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect fill='%23e5e7eb' width='160' height='160'/%3E%3C/svg%3E";
 
 const CropHealth = ({
   selectedFieldDetails,
@@ -39,6 +42,13 @@ const CropHealth = ({
   const selectedCropId = useSelector((state) => state.smartAdvisory?.selectedCropId);
   const advisoryLoading = useSelector((state) => state.smartAdvisory?.loading);
   /* ================= SUBSCRIPTION ================= */
+
+  // Some stored crop photos (e.g. certain S3 assets) fail to load — no
+  // Access-Control-Allow-Origin header, so the browser refuses the request
+  // entirely. Rather than leave a blank box (both live and baked into the
+  // PDF export), fall back to the same placeholder used when there's no
+  // photo at all.
+  const [cropImageFailed, setCropImageFailed] = useState(false);
 
   const cropHealthGuard = useSubscriptionGuard({
     field: selectedFieldDetails,
@@ -85,6 +95,11 @@ const CropHealth = ({
         c.cropName?.toLowerCase().trim() === cropName?.toLowerCase().trim(),
     );
   }, [cropName, crops]);
+
+  // Give a new photo URL a fresh chance to load (e.g. switching crops/fields).
+  useEffect(() => {
+    setCropImageFailed(false);
+  }, [cropInfo?.cropImage]);
 
   /* ================= DAYS FROM SOWING ================= */
 
@@ -177,9 +192,11 @@ const CropHealth = ({
           >
             <img
               src={
-                cropInfo?.cropImage ||
-                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect fill='%23e5e7eb' width='160' height='160'/%3E%3C/svg%3E"
+                cropImageFailed || !cropInfo?.cropImage
+                  ? CROP_IMAGE_PLACEHOLDER
+                  : cropInfo.cropImage
               }
+              onError={() => setCropImageFailed(true)}
               alt="crop"
               className="w-full h-full object-contain"
             />

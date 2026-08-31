@@ -613,6 +613,32 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
     });
   }, []);
 
+  // Some sections (VegetationIndex, WaterIndex, ETChart) fetch their own
+  // data locally rather than through Redux, so waitForDataReadiness above
+  // has no visibility into them — it was resolving as soon as *any one* of
+  // advisory/indexData/forecast showed up, long before those charts had
+  // actually loaded. They mark themselves `data-pdf-pending="true"` while
+  // still loading; poll for that clearing before snapshotting the section,
+  // instead of capturing whatever placeholder text they show at that instant.
+  const waitForSectionReady = useCallback((sectionElement, maxWaitMs = 28000) => {
+    const pollIntervalMs = 250;
+    const start = Date.now();
+
+    return new Promise((resolve) => {
+      const check = () => {
+        const stillPending = sectionElement.querySelector(
+          '[data-pdf-pending="true"]'
+        );
+        if (!stillPending || Date.now() - start >= maxWaitMs) {
+          resolve();
+          return;
+        }
+        setTimeout(check, pollIntervalMs);
+      };
+      check();
+    });
+  }, []);
+
   const getSectionTitle = useCallback((sectionElement) => {
     if (sectionElement?.dataset?.sectionTitle) {
       return sectionElement.dataset.sectionTitle;
@@ -676,21 +702,21 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
         const contentEndY = pdfHeight - PDF_CONFIG.FOOTER_HEIGHT - PDF_CONFIG.CONTENT_PADDING;
         const maxContentHeight = contentEndY - contentStartY;
 
-        // Page Mapping:
-        // Page 2: Satellite Maps + Crop Health
-        // Page 3: Crop Advisory + Weather Forecast
-        // Page 4: NDVI + Water Index + ET
-        // Page 5: Insights + Growth Activity
-
+        // One section = one page, matching FarmReportContent.jsx's own
+        // "One block = one PDF page" design. This used to cram 2 sections
+        // per page (Page 2: Satellite Maps + Crop Health, etc.), which
+        // squished large sections (map + legend, or two charts) together —
+        // often triggering the "scale down to fit" overflow path and
+        // producing a distorted, cramped layout.
         const pageMappings = {
           0: 2, // Satellite Imagery
-          1: 2, // Crop Health & Yield
-          2: 3, // Soil Analytics
-          3: 3, // Weather Forecast
-          4: 4, // Vegetation & Water Index
-          5: 4, // Evapotranspiration
-          6: 5, // Agronomic Insights
-          7: 5  // Plant Growth Activity
+          1: 3, // Crop Health & Yield
+          2: 4, // Soil Analytics
+          3: 5, // Weather Forecast
+          4: 6, // Vegetation & Water Index
+          5: 7, // Evapotranspiration
+          6: 8, // Agronomic Insights
+          7: 9  // Plant Growth Activity
         };
 
         const capturedSections = [];
@@ -703,6 +729,7 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
           const sec = sections[i];
           if (sec.classList.contains("exclude-from-pdf")) continue;
 
+          await waitForSectionReady(sec);
           await new Promise((res) => setTimeout(res, 300));
 
           const canvas = await captureSectionFromDOM(sec);
@@ -723,9 +750,14 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
 
         setDownloadProgress(50);
 
-        // Calculate total pages
+        // Total pages = cover + however many distinct pages the captured
+        // sections actually landed on (a section can be excluded via
+        // .exclude-from-pdf, so this can't be hardcoded to the full count).
         const titleBarHeight = PDF_CONFIG.SECTION_TITLE_HEIGHT + 2;
-        const totalPages = 5;
+        const highestMappedPage = Math.max(0, ...Object.values(pageMappings));
+        const totalPages = capturedSections.length
+          ? Math.max(...capturedSections.map((s) => s.pageNumber))
+          : highestMappedPage;
 
         // Create cover page
         await createCoverPage(pdf, fieldName, logoBase64);
@@ -829,6 +861,7 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
       getLogoBase64,
       captureSectionFromDOM,
       waitForDataReadiness,
+      waitForSectionReady,
       createNewPage,
       getSectionTitle,
     ]

@@ -11,24 +11,28 @@ import NdviGraph from "../../dashboard/satellite-index/VegetationIndex";
 import WaterIndex from "../../dashboard/satellite-index/WaterIndex";
 import EvapotranspirationChart from "../../dashboard/satellite-index/ETChart";
 
-import { useAoiManagement } from "../../dashboard/hooks/useAoiManagement";
 import { fetchSmartAdvisory } from "../../../redux/slices/smartAdvisorySlice";
 
 /**
  * One block = one PDF page after the cover (see useFarmReportPDF).
  * Order: satellite → health/yield → soil → forecast → NDVI+water → ET → insights → growth.
  */
-const Section = ({ title, children, className = "" }) => (
+const Section = ({ title, children, className = "", isPreparedForPDF = false }) => (
   <div
     className={`farm-section bg-gradient-to-br from-[#344e41]/50 to-[#2b4035]/50 border border-white/15 rounded-xl shadow-lg mb-6 overflow-hidden backdrop-blur-sm ${className}`}
     data-section-title={title}
   >
-    <div className="bg-gradient-to-r from-[#344e41] to-[#5a7c6b] px-4 py-3 border-b border-white/15">
-      <h2 className="text-lg font-bold text-white flex items-center gap-2">
-        <span className="w-1 h-6 bg-ember-accent rounded-full"></span>
-        {title}
-      </h2>
-    </div>
+    {/* useFarmReportPDF already draws this same title as a jsPDF header bar
+        above the captured image — showing it here too during export
+        duplicated the heading on every page. */}
+    {!isPreparedForPDF && (
+      <div className="bg-gradient-to-r from-[#344e41] to-[#5a7c6b] px-4 py-3 border-b border-white/15">
+        <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <span className="w-1 h-6 bg-ember-accent rounded-full"></span>
+          {title}
+        </h2>
+      </div>
+    )}
     <div className="overflow-hidden">
       <ErrorBoundary label={title}>{children}</ErrorBoundary>
     </div>
@@ -43,8 +47,10 @@ const FarmReportContent = ({
 }) => {
   const dispatch = useDispatch();
 
-  useAoiManagement(selectedFieldDetails);
-
+  // AOI is already managed once by the parent (FarmReport.jsx), which passes
+  // the resulting aoiId down as a prop — calling useAoiManagement here too
+  // duplicated the fetchAOIs() request and risked a second, racing
+  // createAOI() call for the same field.
   const lastFetchedFieldIdRef = useRef(null);
 
   useEffect(() => {
@@ -69,6 +75,7 @@ const FarmReportContent = ({
       <Section 
         title="Satellite Imagery & Crop Health Maps"
         className="lg:col-span-full"
+        isPreparedForPDF={isPreparedForPDF}
       >
         <div className="p-4 bg-black/20">
           <FarmReportMap
@@ -84,6 +91,7 @@ const FarmReportContent = ({
       <Section 
         title="Crop Health & Yield Analytics"
         className="lg:col-span-full"
+        isPreparedForPDF={isPreparedForPDF}
       >
         <div className="p-4 bg-black/20">
           <CropHealth
@@ -100,6 +108,7 @@ const FarmReportContent = ({
       <Section
         title="Soil Analytics"
         className="lg:col-span-full"
+        isPreparedForPDF={isPreparedForPDF}
       >
         <div className="p-4 bg-black/20">
           <CropHealth
@@ -116,6 +125,7 @@ const FarmReportContent = ({
       <Section 
         title="Weather Forecast & Climate Data"
         className="lg:col-span-full"
+        isPreparedForPDF={isPreparedForPDF}
       >
         <div className="p-4 bg-black/20">
           <ForeCast
@@ -131,6 +141,7 @@ const FarmReportContent = ({
       <Section 
         title="Vegetation & Water Index Time Series"
         className="lg:col-span-full"
+        isPreparedForPDF={isPreparedForPDF}
       >
         <div className="space-y-6 p-4 bg-black/20">
           <div className="border-b border-white/15 pb-6">
@@ -165,6 +176,7 @@ const FarmReportContent = ({
       <Section 
         title="Evapotranspiration (ET) Analysis"
         className="lg:col-span-full"
+        isPreparedForPDF={isPreparedForPDF}
       >
         <div className="p-4 bg-black/20">
           <EvapotranspirationChart
@@ -180,6 +192,7 @@ const FarmReportContent = ({
       <Section 
         title="Agronomic Insights & Recommendations"
         className="lg:col-span-full"
+        isPreparedForPDF={isPreparedForPDF}
       >
         <div className="p-4 bg-black/20">
           <Insights
@@ -194,6 +207,7 @@ const FarmReportContent = ({
       <Section 
         title="Plant Growth Activity & Phenology"
         className="lg:col-span-full"
+        isPreparedForPDF={isPreparedForPDF}
       >
         <div className="p-4 bg-black/20">
           <PlantGrowthActivity

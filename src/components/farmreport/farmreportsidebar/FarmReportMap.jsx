@@ -548,40 +548,53 @@ const FarmReportMap = React.forwardRef(
           [indexName]: false,
         }));
 
-        let foundDate = null;
-        let lastError = null;
-
-        for (const dateToUse of dateCandidates) {
-          if (generation !== fetchGenerationRef.current) return null;
-
-          try {
-            const result = await dispatch(
+        // Try every candidate date concurrently instead of one at a time —
+        // a field with poor satellite coverage previously had to exhaust up
+        // to 6 sequential requests (each a real raster computation) before
+        // giving up, which could take 30s+ and left the map tiles' loading
+        // spinners visible that whole time (and baked into PDF exports).
+        // Preference order (most recent first) is preserved by picking the
+        // earliest-in-list candidate that actually returned a usable image,
+        // not just whichever settled first.
+        const settled = await Promise.allSettled(
+          dateCandidates.map((dateToUse) =>
+            dispatch(
               fetchIndexDataForMap({
                 endDate: dateToUse,
                 geometry: [polygonCoordinates],
                 index: indexName,
                 satellite,
               })
-            ).unwrap();
+            ).unwrap()
+          )
+        );
 
-            if (hasUsableImage(result)) {
-              setDateUsedByIndex((prev) => ({
-                ...prev,
-                [indexName]: dateToUse,
-              }));
-              foundDate = dateToUse;
-              break;
-            }
-          } catch (err) {
-            lastError = err;
+        if (generation !== fetchGenerationRef.current) return null;
+
+        let foundDate = null;
+        let lastError = null;
+
+        for (let i = 0; i < dateCandidates.length; i++) {
+          const outcome = settled[i];
+          if (outcome.status === "fulfilled" && hasUsableImage(outcome.value)) {
+            foundDate = dateCandidates[i];
+            break;
+          }
+          if (outcome.status === "rejected") {
+            lastError = outcome.reason;
             console.warn(
-              `${indexName} failed for date ${dateToUse}:`,
-              err?.message || err
+              `${indexName} failed for date ${dateCandidates[i]}:`,
+              outcome.reason?.message || outcome.reason
             );
           }
         }
 
-        if (!foundDate) {
+        if (foundDate) {
+          setDateUsedByIndex((prev) => ({
+            ...prev,
+            [indexName]: foundDate,
+          }));
+        } else {
           console.warn(`${indexName} no usable data found`, lastError);
           setFailedByIndex((prev) => ({
             ...prev,
@@ -797,10 +810,38 @@ const FarmReportMap = React.forwardRef(
       ? "grid grid-cols-2 gap-3 w-full"
       : "grid grid-cols-1 md:grid-cols-2 gap-3 w-full";
 
+    // useFarmReportPDF's export waits on [data-pdf-pending="true"] before
+    // snapshotting a section (see VegetationIndex.jsx for the same pattern).
+    // Without this, the map tiles' own "Loading ... / Searching latest
+    // available satellite scene" placeholders got captured and baked into
+    // the PDF permanently whenever a tile hadn't finished loading yet.
+    const anyTilePending = indexes.some((indexName) => {
+      const layer = indexDataByType?.[indexName];
+      const reduxLoading = loading?.indexDataByType?.[indexName] === true;
+      const localLoading = localLoadingByIndex?.[indexName] === true;
+      const imageUrl = layer?.image_base64
+        ? `data:image/png;base64,${layer.image_base64}`
+        : null;
+      const apiParsedBounds = parseApiBounds(layer?.bounds);
+      const effectiveImageBounds =
+        apiParsedBounds && isValidBounds(apiParsedBounds)
+          ? apiParsedBounds
+          : imageBounds && isValidBounds(imageBounds)
+            ? imageBounds
+            : null;
+      const canRenderImage =
+        imageUrl && effectiveImageBounds && isValidBounds(effectiveImageBounds);
+      return (reduxLoading || localLoading) && !canRenderImage;
+    });
+
     return (
       <div>
         {satelliteSelect}
-        <div ref={ref} className={gridClasses}>
+        <div
+          ref={ref}
+          className={gridClasses}
+          data-pdf-pending={anyTilePending ? "true" : undefined}
+        >
         {indexes.map((indexName) => {
           const layer = indexDataByType?.[indexName];
 

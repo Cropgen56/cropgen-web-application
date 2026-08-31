@@ -122,9 +122,16 @@ const EvapotranspirationChart = ({
   /* ===== CHART CONTENT ===== */
 
   const hasETData = evapotranspirationData.length > 0 && dateData.length > 0;
+  // Flag the still-loading state in the DOM so useFarmReportPDF's readiness
+  // poll can wait for the forecast fetch instead of capturing "not yet
+  // available" permanently (see VegetationIndex.jsx for the same pattern).
+  const pdfPending = isPreparedForPDF && !hasETData;
 
   const chartContent = (
-    <div className="w-full bg-white rounded-xl p-2 min-h-[220px]">
+    <div
+      data-pdf-pending={pdfPending ? "true" : undefined}
+      className="w-full bg-white rounded-xl p-2 min-h-[220px]"
+    >
       {hasETData ? (
         <ReactECharts
           ref={chartRef}
