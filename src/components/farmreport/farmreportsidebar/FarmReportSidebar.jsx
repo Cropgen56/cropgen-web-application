@@ -4,6 +4,7 @@ import { Weather2 } from "../../../assets/Globalicon";
 import { CiSearch } from "react-icons/ci";
 import { CloudRain } from "lucide-react";
 import PolygonPreview from "../../polygon/PolygonPreview";
+import SubscriptionStatusBadge from "../../comman/SubscriptionStatusBadge";
 
 const SIDEBAR_BG = "#344e41";
 const SIDEBAR_HOVER = "#2b4035";
@@ -53,15 +54,7 @@ const FieldInfo = ({
         >
           {title}
         </h4>
-        <span
-          className={`shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
-            isSubscribed
-              ? "bg-emerald-400/25 text-emerald-50"
-              : "bg-red-500/20 text-red-100"
-          }`}
-        >
-          {isSubscribed ? "Active" : "Off"}
-        </span>
+        <SubscriptionStatusBadge isSubscribed={isSubscribed} variant="onDark" />
       </div>
       <p className="text-[11px] text-white/60 truncate">{area}</p>
       <div className="flex gap-2 text-[10px] text-white/50 mt-0.5">
