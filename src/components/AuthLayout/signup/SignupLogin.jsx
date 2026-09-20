@@ -175,6 +175,7 @@ const SignupLogin = () => {
   const [orgCodeError, setOrgCodeError] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [step, setStep] = useState(1);
+  const [loginMethod, setLoginMethod] = useState("phone"); // "phone" | "email"
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -241,12 +242,14 @@ const SignupLogin = () => {
     setOtpInputs(Array(6).fill(""));
     setOrgCodeError("");
     setPhoneTouched(false);
+    setLoginMethod("phone");
     setFormData((prev) => ({
       ...prev,
       country: "IN",
       dialCode: "91",
       phoneLocal: "",
       phone: "",
+      email: "",
       otp: "",
     }));
   }, [isLogin, location.pathname]);
@@ -376,6 +379,28 @@ const SignupLogin = () => {
   };
 
   const handleSendOtp = async () => {
+    if (isLogin && loginMethod === "email") {
+      const email = formData.email.trim().toLowerCase();
+      if (!email) return message.error("Please enter your email");
+      if (!emailOk(email))
+        return message.error("Please enter a valid email address");
+
+      setSendingOtp(true);
+      dispatch(sendotp({ email, signupIntent: false })).then((res) => {
+        setSendingOtp(false);
+        if (res.meta.requestStatus === "fulfilled") {
+          setFormData((prev) => ({ ...prev, email }));
+          setStep(2);
+        } else {
+          const err = res.payload;
+          const errMessage =
+            typeof err === "string" ? err : err?.message || "Failed to send OTP";
+          message.error(errMessage);
+        }
+      });
+      return;
+    }
+
     const fn = formData.firstName.trim();
     const ln = formData.lastName.trim();
     const phone = buildE164(formData.dialCode, formData.phoneLocal);
@@ -452,12 +477,17 @@ const SignupLogin = () => {
       return message.error("Enter a valid 6-digit OTP");
 
     setVerifyingOtp(true);
-    dispatch(
-      verifyWhatsappOtpThunk({
-        phone: formData.phone,
-        otp: formData.otp,
-      }),
-    ).then((res) => {
+    const verifyAction =
+      isLogin && loginMethod === "email"
+        ? verifyuserotp({
+            email: formData.email.trim().toLowerCase(),
+            otp: formData.otp,
+          })
+        : verifyWhatsappOtpThunk({
+            phone: formData.phone,
+            otp: formData.otp,
+          });
+    dispatch(verifyAction).then((res) => {
       setVerifyingOtp(false);
       if (res.meta.requestStatus === "fulfilled") {
         const responseData = res.payload?.data || {};
@@ -1213,8 +1243,36 @@ const SignupLogin = () => {
           Welcome back
         </h2>
         <p className="mt-2 text-center text-sm text-gray-500">
-          Sign in with your phone number. We&apos;ll send a WhatsApp OTP.
+          {loginMethod === "email"
+            ? "Sign in with your email. We'll send a one-time code."
+            : "Sign in with your phone number. We'll send a WhatsApp OTP."}
         </p>
+        <div className="mx-auto mt-4 grid w-full max-w-xs grid-cols-2 gap-1 rounded-full bg-gray-100 p-1">
+          <button
+            type="button"
+            onClick={() => setLoginMethod("phone")}
+            className={`rounded-full py-2 text-sm font-semibold transition-colors ${
+              loginMethod === "phone"
+                ? "bg-white shadow text-gray-900"
+                : "text-gray-500"
+            }`}
+            style={loginMethod === "phone" ? { color: PRIMARY } : undefined}
+          >
+            Phone
+          </button>
+          <button
+            type="button"
+            onClick={() => setLoginMethod("email")}
+            className={`rounded-full py-2 text-sm font-semibold transition-colors ${
+              loginMethod === "email"
+                ? "bg-white shadow text-gray-900"
+                : "text-gray-500"
+            }`}
+            style={loginMethod === "email" ? { color: PRIMARY } : undefined}
+          >
+            Email
+          </button>
+        </div>
         <div className="relative mt-6 min-h-[320px] overflow-x-visible overflow-y-hidden sm:min-h-[360px]">
           <div
             className="absolute left-0 top-0 h-full w-full transition-transform duration-500 ease-in-out"
@@ -1242,54 +1300,79 @@ const SignupLogin = () => {
                 tabIndex={-1}
                 aria-hidden="true"
               />
-              <div className="flex gap-2">
-                <div className="w-28 sm:w-32">
-                  <AuthAutocompleteDropdown
-                    value={formData.dialCode}
-                    onChange={(dialValue) =>
-                      updatePhoneLocal(dialValue, formData.phoneLocal)
-                    }
-                    options={countryDialOptions}
-                    placeholder="+Code"
-                    inputClassName="w-full h-12 rounded-xl border-2 border-gray-200 bg-[#F2F2F2] px-3 pr-10 text-sm text-gray-900 outline-none transition-colors focus:border-[#2E7D32] focus:ring-0"
-                  />
-                </div>
+              {loginMethod === "email" ? (
                 <input
-                  type="tel"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
+                  type="email"
+                  inputMode="email"
                   autoComplete="off"
                   autoCorrect="off"
                   spellCheck={false}
-                  name="biodrops-phone-manual"
+                  name="biodrops-email-manual"
                   data-lpignore="true"
                   data-form-type="other"
-                  placeholder="Phone number"
-                  value={formData.phoneLocal}
-                  maxLength={phoneMaxLen}
+                  placeholder="Email address"
+                  value={formData.email}
                   onChange={(e) =>
-                    updatePhoneLocal(formData.dialCode, e.target.value)
+                    setFormData((prev) => ({ ...prev, email: e.target.value }))
                   }
-                  onBlur={() => {
-                    if (formData.phoneLocal) setPhoneTouched(true);
-                  }}
                   onKeyDown={handlePhoneFieldKeyDown}
-                  aria-invalid={Boolean(phoneError)}
-                  aria-describedby={
-                    phoneError ? "login-phone-error" : undefined
-                  }
-                  className={`h-12 min-w-0 flex-1 rounded-xl border-2 bg-[#F2F2F2] px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 transition-colors focus:ring-0 sm:px-4 ${
-                    phoneError
-                      ? "border-red-400 focus:border-red-400"
-                      : "border-gray-200 focus:border-[#2E7D32]"
-                  }`}
+                  className="h-12 w-full rounded-xl border-2 border-gray-200 bg-[#F2F2F2] px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 transition-colors focus:border-[#2E7D32] focus:ring-0 sm:px-4"
                 />
-              </div>
-              {phoneError ? (
-                <p id="login-phone-error" className="mt-2 text-xs text-red-600">
-                  {phoneError}
-                </p>
-              ) : null}
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <div className="w-28 sm:w-32">
+                      <AuthAutocompleteDropdown
+                        value={formData.dialCode}
+                        onChange={(dialValue) =>
+                          updatePhoneLocal(dialValue, formData.phoneLocal)
+                        }
+                        options={countryDialOptions}
+                        placeholder="+Code"
+                        inputClassName="w-full h-12 rounded-xl border-2 border-gray-200 bg-[#F2F2F2] px-3 pr-10 text-sm text-gray-900 outline-none transition-colors focus:border-[#2E7D32] focus:ring-0"
+                      />
+                    </div>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      name="biodrops-phone-manual"
+                      data-lpignore="true"
+                      data-form-type="other"
+                      placeholder="Phone number"
+                      value={formData.phoneLocal}
+                      maxLength={phoneMaxLen}
+                      onChange={(e) =>
+                        updatePhoneLocal(formData.dialCode, e.target.value)
+                      }
+                      onBlur={() => {
+                        if (formData.phoneLocal) setPhoneTouched(true);
+                      }}
+                      onKeyDown={handlePhoneFieldKeyDown}
+                      aria-invalid={Boolean(phoneError)}
+                      aria-describedby={
+                        phoneError ? "login-phone-error" : undefined
+                      }
+                      className={`h-12 min-w-0 flex-1 rounded-xl border-2 bg-[#F2F2F2] px-3 text-base text-gray-900 outline-none placeholder:text-gray-400 transition-colors focus:ring-0 sm:px-4 ${
+                        phoneError
+                          ? "border-red-400 focus:border-red-400"
+                          : "border-gray-200 focus:border-[#2E7D32]"
+                      }`}
+                    />
+                  </div>
+                  {phoneError ? (
+                    <p
+                      id="login-phone-error"
+                      className="mt-2 text-xs text-red-600"
+                    >
+                      {phoneError}
+                    </p>
+                  ) : null}
+                </>
+              )}
               <button
                 type="button"
                 onClick={handleSendOtp}
@@ -1323,12 +1406,14 @@ const SignupLogin = () => {
                 className="mb-3 h-14 w-14 animate-bounce"
               />
               <h3 className="text-lg font-semibold" style={{ color: PRIMARY }}>
-                Check WhatsApp
+                {loginMethod === "email" ? "Check your email" : "Check WhatsApp"}
               </h3>
               <p className="mt-1 text-center text-sm text-gray-500">
-                Code sent on WhatsApp to{" "}
+                {loginMethod === "email"
+                  ? "Code sent to"
+                  : "Code sent on WhatsApp to"}{" "}
                 <span className="font-medium text-gray-800">
-                  {formData.phone}
+                  {loginMethod === "email" ? formData.email : formData.phone}
                 </span>
               </p>
               <div
@@ -1369,7 +1454,9 @@ const SignupLogin = () => {
                   setOtpVerified(false);
                 }}
               >
-                Use a different phone
+                {loginMethod === "email"
+                  ? "Use a different email"
+                  : "Use a different phone"}
               </button>
             </div>
           </div>

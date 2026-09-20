@@ -16,6 +16,7 @@ import {
   socClassEntries,
 } from "./vraZoningMapper";
 import {
+  clearAnalysisError,
   DEFAULT_ZONING_FIELD_STATE,
   fetchZoningAvailability,
   fieldPointsToGeoJsonPolygon,
@@ -50,6 +51,7 @@ const ZoningSection = ({ selectedFieldDetails }) => {
     (state) => state.zoning.byField[fieldId] ?? DEFAULT_ZONING_FIELD_STATE,
   );
   const loading = useSelector((state) => state.zoning.loading);
+  const analysisError = useSelector((state) => state.zoning.error);
 
   const {
     zones,
@@ -69,7 +71,8 @@ const ZoningSection = ({ selectedFieldDetails }) => {
   // Reset to the Analysis tab whenever the selected field changes
   useEffect(() => {
     setActiveView("dashboard");
-  }, [fieldId]);
+    dispatch(clearAnalysisError());
+  }, [dispatch, fieldId]);
 
   // Prefetch availability so the date picker can use real Sentinel-2 scenes
   useEffect(() => {
@@ -193,7 +196,7 @@ const ZoningSection = ({ selectedFieldDetails }) => {
           fieldName={fieldName}
           fieldCropName={selectedFieldDetails?.cropName || null}
           loading={loading.analysis}
-          error={null}
+          error={analysisError}
           hasGenerated={hasGenerated}
           recommendations={recommendations}
           images={images}

@@ -110,6 +110,10 @@ export function defaultAnalysisEndDate() {
 }
 
 export function formatApiError(err) {
+  const status = err?.response?.status;
+  if (err?.code === "ECONNABORTED" || status === 504 || status === 502 || status === 503) {
+    return "The satellite analysis service is taking too long to respond. Please try again in a moment.";
+  }
   const detail = err?.response?.data?.detail ?? err?.response?.data?.message;
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail)) {
@@ -336,6 +340,9 @@ const zoningSlice = createSlice({
       const { fieldId, date } = action.payload;
       ensureFieldSlot(state, fieldId).analysisDate = date;
     },
+    clearAnalysisError: (state) => {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -406,6 +413,7 @@ export const {
   setSelectedZoneId,
   setZones,
   setAnalysisDate,
+  clearAnalysisError,
 } = zoningSlice.actions;
 
 export default zoningSlice.reducer;
