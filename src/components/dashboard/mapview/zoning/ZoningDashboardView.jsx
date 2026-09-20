@@ -5,6 +5,7 @@ import {
   Download,
   LayoutGrid,
   Leaf,
+  Loader2,
   ShieldCheck,
   Sparkles,
   TriangleAlert,
@@ -277,11 +278,20 @@ const ZoningDashboardView = ({
             <button
               type="button"
               onClick={() => runVraAnalysis?.()}
-              disabled={!hasField}
+              disabled={!hasField || loading}
               className="mt-auto inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-ember-sidebar px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-ember-sidebar-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <WandSparkles size={16} />
-              Generate Zones
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Generating Zones…
+                </>
+              ) : (
+                <>
+                  <WandSparkles size={16} />
+                  Generate Zones
+                </>
+              )}
             </button>
 
             {error && (
@@ -350,12 +360,16 @@ const ZoningDashboardView = ({
                   showLayer={false}
                 />
                 <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-900/25 backdrop-blur-[1px]">
-                  <div className="rounded-xl bg-white/95 px-5 py-4 text-center shadow-lg">
+                  <div className="rounded-xl bg-white/95 px-6 py-5 text-center shadow-lg">
+                    <Loader2
+                      size={28}
+                      className="mx-auto mb-3 animate-spin text-ember-sidebar"
+                    />
                     <div className="mx-auto mb-3 h-1.5 w-36 overflow-hidden rounded-full bg-ember-sidebar/15">
                       <div className="h-full w-1/3 animate-pulse rounded-full bg-ember-sidebar" />
                     </div>
                     <p className="text-sm font-semibold text-slate-800">
-                      Generate Zones…
+                      Generating Zones…
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
                       SOC & VRA analysis
@@ -364,7 +378,8 @@ const ZoningDashboardView = ({
                 </div>
               </div>
             ) : (
-              <div className="flex h-full min-h-[320px] items-center justify-center lg:min-h-[420px]">
+              <div className="flex h-full min-h-[320px] flex-col items-center justify-center gap-3 lg:min-h-[420px]">
+                <Loader2 size={28} className="animate-spin text-ember-sidebar" />
                 <div className="h-1.5 w-40 overflow-hidden rounded-full bg-ember-sidebar/15">
                   <div className="h-full w-1/3 animate-pulse rounded-full bg-ember-sidebar" />
                 </div>
@@ -452,7 +467,11 @@ const ZoningDashboardView = ({
             disabled={loading || !hasField}
             className="inline-flex min-h-[34px] items-center gap-2 rounded-lg bg-ember-sidebar px-5 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-ember-sidebar-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <WandSparkles size={16} />
+            {loading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <WandSparkles size={16} />
+            )}
             {loading ? "Analyzing…" : "Generate Zones"}
           </button>
         </div>
