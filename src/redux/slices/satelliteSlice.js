@@ -19,13 +19,17 @@ const CACHE_TTL = 4 * 24 * 60 * 60 * 1000;
 const TIMESERIES_MAX_POINTS = 36;
 const SATELLITE_REQUEST_TIMEOUT_MS = 20000;
 
+// Bump when request geometry changes so stale IndexedDB results are not reused
+// (v2: full field boundary instead of the >2 ha centroid sample).
+const CACHE_VERSION = "v2";
+
 const generateCacheKey = (prefix, input) => {
   const inputStr = JSON.stringify(input);
   const hash = inputStr.split("").reduce((a, b) => {
     a = (a << 5) - a + b.charCodeAt(0);
     return a & a;
   }, 0);
-  return `api_cache_${prefix}_${Math.abs(hash)}`;
+  return `api_cache_${CACHE_VERSION}_${prefix}_${Math.abs(hash)}`;
 };
 
 const getSatelliteDatesEffectiveRange = ({ startDate, endDate }) => {

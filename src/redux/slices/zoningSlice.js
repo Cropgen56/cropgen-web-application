@@ -6,7 +6,6 @@ import {
   buildAlertsFromVraRates,
   buildZonesFromVraRates,
 } from "../../components/dashboard/mapview/zoning/vraZoningMapper";
-import { toApiPolygon } from "../../utils/farmGeometry";
 
 const SATELLITE_REQUEST_TIMEOUT_MS = 360000;
 const SATELLITE_BASE_URL = SATELLITE_API_URL;
@@ -72,7 +71,9 @@ export function fieldPointsToGeoJsonPolygon(fieldPoints) {
     ring.push([first[0], first[1]]);
   }
 
-  return toApiPolygon({ type: "Polygon", coordinates: [ring] });
+  // Always the real boundary: zones and maps are clipped to this polygon, so
+  // toApiPolygon's >2 ha centroid-square sampling would render the wrong shape.
+  return { type: "Polygon", coordinates: [ring] };
 }
 
 export function normalizeVraCrop(cropName) {
@@ -104,9 +105,13 @@ export function daysBefore(isoDate, days) {
   return d.toISOString().split("T")[0];
 }
 
-/** Default end date ~21 days ago — Sentinel-2 scenes lag real-time. */
+/**
+ * Preferred end date = today. Actual satellite lag is handled by
+ * resolveAnalysisEndDate(), which snaps down to the latest scene the
+ * availability API actually has — no need to guess a fixed offset here.
+ */
 export function defaultAnalysisEndDate() {
-  return daysBefore(new Date().toISOString().split("T")[0], 21);
+  return new Date().toISOString().split("T")[0];
 }
 
 export function formatApiError(err) {

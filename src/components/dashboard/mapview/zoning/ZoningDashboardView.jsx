@@ -1,7 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
+  CheckCircle2,
+  Circle,
   Download,
   LayoutGrid,
   Leaf,
@@ -55,6 +57,134 @@ const downloadBase64Png = (filename, dataUrl) => {
   a.download = filename;
   a.click();
 };
+
+const ANALYSIS_STEPS = [
+  { label: "Fetching satellite imagery", threshold: 0 },
+  { label: "Processing vegetation indices", threshold: 35 },
+  { label: "Generating zones & insights", threshold: 72 },
+];
+const PROGRESS_RING_RADIUS = 26;
+const PROGRESS_RING_CIRCUMFERENCE = 2 * Math.PI * PROGRESS_RING_RADIUS;
+
+/** Backend reports no progress — simulate an advancing % while the request is in flight, capped short of 100. */
+const AnalyzingProgressCard = () => {
+  const [progress, setProgress] = useState(4);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 92) return prev;
+        const step = prev < 40 ? 3 : prev < 70 ? 1.5 : 0.6;
+        return Math.min(92, prev + step);
+      });
+    }, 600);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeStepIndex = ANALYSIS_STEPS.reduce(
+    (acc, step, i) => (progress >= step.threshold ? i : acc),
+    0,
+  );
+  const dashOffset =
+    PROGRESS_RING_CIRCUMFERENCE * (1 - progress / 100);
+
+  return (
+    <div className="w-full max-w-sm rounded-2xl bg-white px-6 py-6 text-center shadow-xl">
+      <svg
+        width="64"
+        height="64"
+        viewBox="0 0 64 64"
+        className="mx-auto mb-4 -rotate-90"
+      >
+        <circle
+          cx="32"
+          cy="32"
+          r={PROGRESS_RING_RADIUS}
+          fill="none"
+          stroke="#e2e8f0"
+          strokeWidth="6"
+        />
+        <circle
+          cx="32"
+          cy="32"
+          r={PROGRESS_RING_RADIUS}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="6"
+          strokeLinecap="round"
+          className="text-ember-sidebar transition-[stroke-dashoffset] duration-500 ease-out"
+          strokeDasharray={PROGRESS_RING_CIRCUMFERENCE}
+          strokeDashoffset={dashOffset}
+        />
+      </svg>
+
+      <p className="text-base font-bold text-slate-900">
+        Analyzing farm data…
+      </p>
+      <p className="mx-auto mt-1.5 max-w-xs text-xs text-slate-500">
+        This may take a few seconds. Please wait while we process the
+        satellite data and generate insights.
+      </p>
+
+      <div className="mt-4 flex items-center gap-2">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="h-full rounded-full bg-emerald-600 transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <span className="w-9 text-right text-xs font-semibold text-slate-600">
+          {Math.round(progress)}%
+        </span>
+      </div>
+
+      <ul className="mt-4 space-y-2 text-left">
+        {ANALYSIS_STEPS.map((step, i) => {
+          const status =
+            i < activeStepIndex
+              ? "done"
+              : i === activeStepIndex
+                ? "active"
+                : "pending";
+          return (
+            <li key={step.label} className="flex items-center gap-2.5">
+              {status === "done" && (
+                <CheckCircle2
+                  size={18}
+                  className="shrink-0 text-emerald-600"
+                />
+              )}
+              {status === "active" && (
+                <Circle size={18} className="shrink-0 text-emerald-600" />
+              )}
+              {status === "pending" && (
+                <Circle size={18} className="shrink-0 text-slate-300" />
+              )}
+              <span
+                className={`text-sm ${
+                  status === "pending"
+                    ? "text-slate-400"
+                    : "font-medium text-slate-800"
+                }`}
+              >
+                {step.label}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
+
+const RightPanelSkeleton = () => (
+  <div className="mt-6 space-y-2.5">
+    <div className="h-2.5 w-full animate-pulse rounded-full bg-slate-200" />
+    <div className="h-2.5 w-4/5 animate-pulse rounded-full bg-slate-200" />
+    <div className="h-2.5 w-3/5 animate-pulse rounded-full bg-slate-200" />
+    <div className="h-2.5 w-1/3 animate-pulse rounded-full bg-slate-200" />
+  </div>
+);
 
 const ZoningDashboardView = ({
   zones,
@@ -239,41 +369,10 @@ const ZoningDashboardView = ({
                   2
                 </span>
                 <span className="pt-0.5 text-slate-600">
-                  End Date
-                </span>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ember-sidebar text-[11px] font-bold text-white">
-                  3
-                </span>
-                <span className="pt-0.5 text-slate-600">
                   Generate Zones
                 </span>
               </li>
             </ol>
-
-            {hasField && (
-              <label className="mb-4 flex flex-col gap-1.5">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  End Date
-                </span>
-                <input
-                  type="date"
-                  value={analysisDate}
-                  list="zoning-available-dates"
-                  max={availableDates[availableDates.length - 1] || undefined}
-                  onChange={(e) => setAnalysisDate?.(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-800 outline-none transition focus:border-ember-sidebar focus:bg-white focus:ring-2 focus:ring-ember-sidebar/20"
-                />
-                {availableDates.length > 0 && (
-                  <datalist id="zoning-available-dates">
-                    {availableDates.map((d) => (
-                      <option key={d} value={d} />
-                    ))}
-                  </datalist>
-                )}
-              </label>
-            )}
 
             <button
               type="button"
@@ -359,30 +458,13 @@ const ZoningDashboardView = ({
                   showLabels={false}
                   showLayer={false}
                 />
-                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-900/25 backdrop-blur-[1px]">
-                  <div className="rounded-xl bg-white/95 px-6 py-5 text-center shadow-lg">
-                    <Loader2
-                      size={28}
-                      className="mx-auto mb-3 animate-spin text-ember-sidebar"
-                    />
-                    <div className="mx-auto mb-3 h-1.5 w-36 overflow-hidden rounded-full bg-ember-sidebar/15">
-                      <div className="h-full w-1/3 animate-pulse rounded-full bg-ember-sidebar" />
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      Generating Zones…
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      SOC & VRA analysis
-                    </p>
-                  </div>
+                <div className="absolute inset-0 z-[1200] flex items-center justify-center rounded-2xl bg-white/70 px-4 backdrop-blur-sm">
+                  <AnalyzingProgressCard />
                 </div>
               </div>
             ) : (
-              <div className="flex h-full min-h-[320px] flex-col items-center justify-center gap-3 lg:min-h-[420px]">
-                <Loader2 size={28} className="animate-spin text-ember-sidebar" />
-                <div className="h-1.5 w-40 overflow-hidden rounded-full bg-ember-sidebar/15">
-                  <div className="h-full w-1/3 animate-pulse rounded-full bg-ember-sidebar" />
-                </div>
+              <div className="flex h-full min-h-[320px] items-center justify-center px-4 lg:min-h-[420px]">
+                <AnalyzingProgressCard />
               </div>
             )}
           </section>
@@ -411,6 +493,7 @@ const ZoningDashboardView = ({
                 N · P · K rate maps
               </li>
             </ul>
+            <RightPanelSkeleton />
           </section>
         </div>
       </motion.div>
@@ -434,24 +517,6 @@ const ZoningDashboardView = ({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[12px] text-slate-600">
-            End Date
-            <input
-              type="date"
-              value={analysisDate}
-              list="zoning-available-dates-ready"
-              max={availableDates[availableDates.length - 1] || undefined}
-              onChange={(e) => setAnalysisDate?.(e.target.value)}
-              className="border-0 bg-transparent text-[13px] font-semibold text-slate-800 outline-none"
-            />
-            {availableDates.length > 0 && (
-              <datalist id="zoning-available-dates-ready">
-                {availableDates.map((d) => (
-                  <option key={d} value={d} />
-                ))}
-              </datalist>
-            )}
-          </label>
           <button
             type="button"
             onClick={handleExport}

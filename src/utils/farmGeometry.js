@@ -1,7 +1,4 @@
-import { area as turfArea } from "@turf/turf";
-
 export const SAMPLE_HECTARES = 1.5;
-export const FULL_GEOMETRY_MAX_HECTARES = 2;
 const METERS_PER_DEG_LAT = 111_320;
 
 export function compactAoiName(farmId) {
@@ -114,21 +111,9 @@ export function normalizeToPolygon(input) {
 }
 
 /**
- * Satellite / soil / zoning API geometry.
- * Fields already ≤ 2 ha keep their real boundary; larger fields use a 1.5 ha centroid sample.
+ * Satellite / soil / zoning API geometry: always the field's real boundary,
+ * so results are computed and clipped to the actual field shape.
  */
 export function toApiPolygon(input) {
-  const full = normalizeToPolygon(input);
-  let farmAreaHa = null;
-  try {
-    farmAreaHa = turfArea(full) / 10_000;
-  } catch {
-    farmAreaHa = null;
-  }
-
-  if (farmAreaHa != null && farmAreaHa <= FULL_GEOMETRY_MAX_HECTARES) {
-    return full;
-  }
-
-  return samplePolygonFromRing(full.coordinates[0], SAMPLE_HECTARES);
+  return normalizeToPolygon(input);
 }
