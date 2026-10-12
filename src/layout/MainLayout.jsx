@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Outlet } from "react-router-dom";
+import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
 import { message } from "antd";
 
 import Sidebar from "../components/sidebar/Sidebar";
@@ -99,7 +100,9 @@ const MainLayout = () => {
 
         {/* Main Content */}
         <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden transition-[margin] duration-300 ease-out safe-area-inset">
-          <Outlet />
+          <Suspense fallback={<LoadingSpinner height="100vh" />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
 
