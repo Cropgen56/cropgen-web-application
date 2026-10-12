@@ -192,7 +192,10 @@ const AuthLayout = () => {
               <div
                 className="absolute pointer-events-none"
                 style={{
-                  top: "62%", // Moved down more
+                  // Phones: let the sphere hang below the banner. Tablets: keep
+                  // it inside the banner so it doesn't cover the form card.
+                  top: width > 600 ? "50%" : "62%",
+                  transform: width > 600 ? "translateY(-50%)" : undefined,
                   width: `${responsiveSizes.sphereSize}px`,
                   height: `${responsiveSizes.sphereSize}px`
                 }}
