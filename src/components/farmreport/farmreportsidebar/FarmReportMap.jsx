@@ -654,8 +654,12 @@ const FarmReportMap = React.forwardRef(
           const stillFailed = [];
           for (const indexName of failed) {
             if (generation !== fetchGenerationRef.current) return;
-            const orderedDates = sharedDate
-              ? [sharedDate, ...dateCandidates.filter((d) => d !== sharedDate)]
+            const preferredDate = sharedDate;
+            const orderedDates = preferredDate
+              ? [
+                  preferredDate,
+                  ...dateCandidates.filter((d) => d !== preferredDate),
+                ]
               : dateCandidates;
             const usedDate = await fetchSingleIndex(
               indexName,

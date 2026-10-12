@@ -121,7 +121,8 @@ export default function CropGenAiChat({ variant = "page", onClose = null }) {
       state.auth?.user?._id ||
       state.auth?.userDetails?._id,
   );
-  const farms = useSelector((state) => state.farmfield?.fields) || [];
+  const farmFields = useSelector((state) => state.farmfield?.fields);
+  const farms = useMemo(() => farmFields || [], [farmFields]);
 
   const {
     messages,

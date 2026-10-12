@@ -225,7 +225,6 @@ function MiniStep({ done, active, warning, icon: Icon, label }) {
 
 const SOIL_REPORT_PROGRESS_START = 10;
 const SOIL_REPORT_PROGRESS_END = 100;
-const SOIL_REPORT_PROGRESS_DURATION_MS = 120000;
 
 export function ReportBuildProgress({
   fieldLabel,

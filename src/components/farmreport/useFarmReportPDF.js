@@ -18,20 +18,20 @@ const DARK_GREEN = {
   background: [31, 41, 55],     // Very dark gray
 };
 
+const PDF_CONFIG = {
+  MARGIN_LEFT: 10,
+  MARGIN_RIGHT: 10,
+  HEADER_HEIGHT: 14,
+  FOOTER_HEIGHT: 10,
+  SECTION_TITLE_HEIGHT: 8,
+  SECTION_GAP: 5,
+  CONTENT_PADDING: 2,
+};
+
 const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isPreparedForPDF, setIsPreparedForPDF] = useState(false);
-
-  const PDF_CONFIG = {
-    MARGIN_LEFT: 10,
-    MARGIN_RIGHT: 10,
-    HEADER_HEIGHT: 14,
-    FOOTER_HEIGHT: 10,
-    SECTION_TITLE_HEIGHT: 8,
-    SECTION_GAP: 5,
-    CONTENT_PADDING: 2,
-  };
 
   const getLogoBase64 = useCallback(async () => {
     try {
@@ -700,7 +700,6 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
         const contentWidth = pdfWidth - PDF_CONFIG.MARGIN_LEFT - PDF_CONFIG.MARGIN_RIGHT;
         const contentStartY = PDF_CONFIG.HEADER_HEIGHT + PDF_CONFIG.CONTENT_PADDING;
         const contentEndY = pdfHeight - PDF_CONFIG.FOOTER_HEIGHT - PDF_CONFIG.CONTENT_PADDING;
-        const maxContentHeight = contentEndY - contentStartY;
 
         // One section = one page, matching FarmReportContent.jsx's own
         // "One block = one PDF page" design. This used to cram 2 sections
@@ -772,7 +771,7 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
 
           for (let i = 0; i < pageSections.length; i++) {
             const section = pageSections[i];
-            const { canvas, imgHeight, title, imgData } = section;
+            const { imgHeight, title, imgData } = section;
 
             const sectionHeight = imgHeight + titleBarHeight + PDF_CONFIG.SECTION_GAP;
 
@@ -854,8 +853,6 @@ const useFarmReportPDF = (selectedFieldDetails, aoiId = null) => {
     [
       selectedFieldDetails,
       aoiId,
-      addPDFHeader,
-      addPDFFooter,
       addSectionTitle,
       createCoverPage,
       getLogoBase64,

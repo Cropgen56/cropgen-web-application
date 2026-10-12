@@ -298,7 +298,7 @@ const SignupLogin = () => {
     );
     if (!code) return;
     setFormData((prev) => ({ ...prev, dialCode: code }));
-  }, [normalizedCountries, isSignupAccount]);
+  }, [normalizedCountries, isSignupAccount, countries.length]);
 
   useEffect(() => {
     if (!isSignupLanguage) return;

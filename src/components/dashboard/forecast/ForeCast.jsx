@@ -91,7 +91,7 @@ function ForeCast({
       <div className="flex flex-col items-center flex-shrink-0">
         <div className="p-[2px] rounded-xl bg-gray-100 shadow-xl">
           <div className="bg-white rounded-xl p-4 w-[200px] flex flex-col items-center shadow-xl h-full">
-            <h3 className="h-5 w-28 bg-gray-200 rounded mb-4" />
+            <div className="h-5 w-28 bg-gray-200 rounded mb-4" />
             <div className="h-12 w-20 bg-gray-200 rounded mb-3" />
             <div className="h-7 w-24 bg-gray-200 rounded mb-5" />
             <div className="flex flex-col gap-2 text-xs lg:text-sm w-full">

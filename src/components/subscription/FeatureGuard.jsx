@@ -3,23 +3,30 @@ import { useEffect } from "react";
 import SubscriptionModal from "./SubscriptionModal";
 import PricingOverlay from "../pricing/PricingOverlay";
 const FeatureGuard = ({ guard, title, children }) => {
+  const {
+    hasFeatureAccess,
+    showMembershipModal,
+    showPricingOverlay,
+    closeMembershipModal,
+    closePricingOverlay,
+  } = guard || {};
+
   useEffect(() => {
-    if (!guard?.hasFeatureAccess) return;
+    if (!hasFeatureAccess) return;
 
     // Avoid render loops: only close when something is currently open.
     // Also do not depend on the whole `guard` object identity.
-    const shouldClose =
-      Boolean(guard.showMembershipModal) || Boolean(guard.showPricingOverlay);
+    const shouldClose = Boolean(showMembershipModal) || Boolean(showPricingOverlay);
     if (!shouldClose) return;
 
-    guard.closeMembershipModal();
-    guard.closePricingOverlay();
+    closeMembershipModal();
+    closePricingOverlay();
   }, [
-    guard?.hasFeatureAccess,
-    guard?.showMembershipModal,
-    guard?.showPricingOverlay,
-    guard?.closeMembershipModal,
-    guard?.closePricingOverlay,
+    hasFeatureAccess,
+    showMembershipModal,
+    showPricingOverlay,
+    closeMembershipModal,
+    closePricingOverlay,
   ]);
 
   return (
