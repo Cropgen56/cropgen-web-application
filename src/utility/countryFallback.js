@@ -1,4 +1,5 @@
 import worldCountries from "world-countries";
+import { worldCountryDialCode } from "../utils/phone";
 
 const worldCountriesList = Array.isArray(worldCountries)
   ? worldCountries
@@ -12,9 +13,7 @@ export function buildFallbackCountries() {
     .filter((c) => c?.cca2)
     .map((c) => {
       const iso2 = String(c.cca2).toUpperCase();
-      const root = c.idd?.root || "";
-      const suffix = c.idd?.suffixes?.[0] || "";
-      const phonecode = `${root}${suffix}`.replace(/\D/g, "");
+      const phonecode = worldCountryDialCode(c);
       return {
         iso2,
         name: c.name?.common || iso2,

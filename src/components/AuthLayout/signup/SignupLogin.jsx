@@ -43,6 +43,7 @@ import {
   buildE164,
   getPhoneValidationError,
   maxLocalPhoneLength,
+  worldCountryDialCode,
 } from "../../../utils/phone";
 
 const emailOk = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim());
@@ -62,9 +63,7 @@ const worldCountriesList = Array.isArray(worldCountries)
 const datasetByIso2 = new Map(
   worldCountriesList.map((c) => {
     const iso2 = String(c.cca2 || "").toUpperCase();
-    const root = c.idd?.root || "";
-    const suffix = c.idd?.suffixes?.[0] || "";
-    const dialCode = normalizeDialCode(`${root}${suffix}`);
+    const dialCode = worldCountryDialCode(c);
     return [
       iso2,
       {
@@ -333,6 +332,7 @@ const SignupLogin = () => {
         .map((c) => ({
           value: c.dialCode,
           label: `+${c.dialCode}`,
+          name: c.name,
           flagUrl: iso2ToFlagCdn(c.iso2),
           optionKey: `${c.iso2}-${c.dialCode}`,
         })),
@@ -890,7 +890,7 @@ const SignupLogin = () => {
                       }
                       options={countryDialOptions}
                       placeholder="+Code"
-                      inputClassName="w-full h-11 rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 text-sm outline-none pr-10"
+                      inputClassName="w-full h-11 rounded-xl border border-gray-200 bg-[#F2F2F2] pl-3 text-sm outline-none pr-10"
                     />
                     <input
                       type="tel"
@@ -1329,7 +1329,7 @@ const SignupLogin = () => {
                         }
                         options={countryDialOptions}
                         placeholder="+Code"
-                        inputClassName="w-full h-12 rounded-xl border-2 border-gray-200 bg-[#F2F2F2] px-3 pr-10 text-sm text-gray-900 outline-none transition-colors focus:border-[#2E7D32] focus:ring-0"
+                        inputClassName="w-full h-12 rounded-xl border-2 border-gray-200 bg-[#F2F2F2] pl-3 pr-10 text-sm text-gray-900 outline-none transition-colors focus:border-[#2E7D32] focus:ring-0"
                       />
                     </div>
                     <input
@@ -1477,6 +1477,9 @@ const AuthAutocompleteDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  // Several countries share a dial code (+1, +7, +44): remember which one
+  // was picked so its flag is the one shown.
+  const [selectedKey, setSelectedKey] = useState(null);
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
   const menuRef = useRef(null);
@@ -1510,10 +1513,11 @@ const AuthAutocompleteDropdown = ({
 
     const updateMenuPosition = () => {
       const rect = dropdownRef.current.getBoundingClientRect();
+      // At least 15rem so country names fit beside a narrow dial-code field.
       setMenuStyle({
         top: rect.bottom + 6,
         left: rect.left,
-        width: rect.width,
+        width: Math.max(rect.width, 240),
       });
     };
 
@@ -1527,10 +1531,17 @@ const AuthAutocompleteDropdown = ({
     };
   }, [isOpen]);
 
-  const currentLabel = options.find((opt) => opt.value === value)?.label || "";
+  const selectedOption =
+    options.find((opt) => opt.optionKey === selectedKey && opt.value === value) ||
+    options.find((opt) => opt.value === value);
+  const currentLabel = selectedOption?.label || "";
+  const showSelectedFlag = Boolean(selectedOption?.flagUrl) && !isFocused;
 
-  const filteredOptions = options.filter((opt) =>
-    opt.label.toLowerCase().includes(searchTerm.toLowerCase()),
+  const query = searchTerm.trim().toLowerCase().replace(/^\+/, "");
+  const filteredOptions = options.filter(
+    (opt) =>
+      opt.label.toLowerCase().replace(/^\+/, "").includes(query) ||
+      String(opt.name || "").toLowerCase().includes(query),
   );
 
   const handleInputChange = (e) => {
@@ -1538,8 +1549,9 @@ const AuthAutocompleteDropdown = ({
     setIsOpen(true);
   };
 
-  const handleSelect = (optValue) => {
-    onChange(optValue);
+  const handleSelect = (opt) => {
+    setSelectedKey(opt.optionKey || null);
+    onChange(opt.value);
     setSearchTerm("");
     setIsOpen(false);
     setIsFocused(false);
@@ -1558,11 +1570,18 @@ const AuthAutocompleteDropdown = ({
   };
 
   const defaultInputClass =
-    "w-full h-12 sm:h-[52px] px-4 bg-white text-[#0b5d3d] rounded-full border-2 border-[#0b5d3d]/40 outline-none placeholder-gray-400 text-sm font-semibold hover:border-[#0b5d3d] transition-all duration-200 focus:ring-2 focus:ring-emerald-200 pr-10 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed";
+    "w-full h-12 sm:h-[52px] pl-4 bg-white text-[#0b5d3d] rounded-full border-2 border-[#0b5d3d]/40 outline-none placeholder-gray-400 text-sm font-semibold hover:border-[#0b5d3d] transition-all duration-200 focus:ring-2 focus:ring-emerald-200 pr-10 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed";
 
   return (
     <div className="relative flex flex-col gap-1" ref={dropdownRef}>
       <div className="relative">
+        {showSelectedFlag ? (
+          <img
+            src={selectedOption.flagUrl}
+            alt=""
+            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-5 -translate-y-1/2 rounded-[2px] border border-emerald-200 object-cover"
+          />
+        ) : null}
         <input
           ref={inputRef}
           type="text"
@@ -1577,6 +1596,9 @@ const AuthAutocompleteDropdown = ({
           placeholder={placeholder}
           disabled={disabled}
           className={inputClassName || defaultInputClass}
+          // Room for the flag. Callers use pl-*, not px-*: Bootstrap's .px-*
+          // utilities are !important and would override this.
+          style={showSelectedFlag ? { paddingLeft: "2.5rem" } : undefined}
         />
         <button
           type="button"
@@ -1611,9 +1633,9 @@ const AuthAutocompleteDropdown = ({
                   <div
                     key={opt.optionKey || `${opt.value}-${index}`}
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => handleSelect(opt.value)}
+                    onClick={() => handleSelect(opt)}
                     className={`cursor-pointer px-3 py-2 text-sm text-emerald-900 transition-colors duration-150 hover:bg-emerald-50 ${
-                      value === opt.value ? "bg-emerald-100 font-semibold" : ""
+                      opt === selectedOption ? "bg-emerald-100 font-semibold" : ""
                     } ${
                       index !== filteredOptions.length - 1
                         ? "border-b border-emerald-100"
@@ -1630,6 +1652,11 @@ const AuthAutocompleteDropdown = ({
                         />
                       ) : null}
                       <span>{opt.label}</span>
+                      {opt.name ? (
+                        <span className="truncate text-xs text-emerald-900/60">
+                          {opt.name}
+                        </span>
+                      ) : null}
                     </span>
                   </div>
                 ))

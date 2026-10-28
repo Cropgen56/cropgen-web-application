@@ -1,4 +1,5 @@
 import worldCountries from "world-countries";
+import { worldCountryDialCode } from "../utils/phone";
 
 /**
  * Offline country list when location.cropgenapp.com is slow or unavailable.
@@ -9,9 +10,7 @@ export function getStaticCountries() {
     .map((c) => {
       const iso2 = String(c.cca2 || "").toUpperCase();
       if (!iso2) return null;
-      const root = c.idd?.root || "";
-      const suffix = c.idd?.suffixes?.[0] || "";
-      const phonecode = String(root + suffix).replace(/\D/g, "");
+      const phonecode = worldCountryDialCode(c);
       return {
         iso2,
         name: c.name?.common || iso2,
