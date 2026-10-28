@@ -71,7 +71,7 @@ const SmartAdvisorySidebar = ({
     };
   };
 
-  const formatArea = (acres) => `${(acres * 0.404686).toFixed(2)}h`;
+  const formatArea = (acres) => `${(acres * 0.404686).toFixed(2)} ha`;
 
   return (
     <div className="sm:min-w-[250px] sm:max-w-[20vw] bg-white shadow-md flex flex-col h-full">

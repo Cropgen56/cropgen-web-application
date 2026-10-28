@@ -92,6 +92,25 @@ export function getDaysAgo(timestamp) {
   return daysAgo;
 }
 
+/**
+ * Time (ms) of the newest point in a satellite time-series response. The
+ * satellite API returns `{ summary, timeseries: [{ date, value }] }` with no
+ * top-level timestamp, so "Last Update" comes from the latest data date.
+ */
+export function latestTimeseriesTimestamp(payload) {
+  if (payload?.timestamp) return Number(payload.timestamp);
+  const series =
+    payload?.data?.timeseries ||
+    payload?.timeseries ||
+    (Array.isArray(payload) ? payload : []);
+  let latest = null;
+  for (const point of series) {
+    const t = new Date(point?.date).getTime();
+    if (Number.isFinite(t) && (latest === null || t > latest)) latest = t;
+  }
+  return latest;
+}
+
 export function getTodayDate() {
   const today = new Date();
 

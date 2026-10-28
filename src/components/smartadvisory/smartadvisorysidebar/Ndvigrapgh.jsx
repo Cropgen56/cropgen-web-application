@@ -16,7 +16,11 @@ import {
   Legend,
 } from "recharts";
 import { MdDownload } from "react-icons/md";
-import { getDaysAgo, getTodayDate } from "../../../utility/formatDate";
+import {
+  getDaysAgo,
+  getTodayDate,
+  latestTimeseriesTimestamp,
+} from "../../../utility/formatDate";
 import IndexChartLoader from "./IndexChartLoader";
 import { fetchVegetationTimeseries } from "../../../api/satelliteTimeseriesApi";
 
@@ -112,7 +116,7 @@ const NDVIChartCard = ({ selectedField }) => {
       indexTimeSeriesSummary?.summary ||
       {};
 
-    const timestamp = indexTimeSeriesSummary?.timestamp || null;
+    const timestamp = latestTimeseriesTimestamp(indexTimeSeriesSummary);
     const { min = 0, mean = 0, max = 0 } = summary;
 
     let change = 0;

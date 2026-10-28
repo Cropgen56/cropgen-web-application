@@ -75,7 +75,7 @@ const DiseaseSidebar = ({ setSelectedField, selectedField }) => {
     };
   };
 
-  const formatArea = (acres) => `${(acres * 0.404686).toFixed(2)}h`;
+  const formatArea = (acres) => `${(acres * 0.404686).toFixed(2)} ha`;
 
   if (!isSidebarVisible) return null;
 

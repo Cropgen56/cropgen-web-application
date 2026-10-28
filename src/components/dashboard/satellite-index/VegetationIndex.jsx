@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchIndexTimeSeriesSummary } from "../../../redux/slices/satelliteSlice";
 import {
   getDaysAgo,
+  latestTimeseriesTimestamp,
   getOneYearBefore,
   getTodayDate,
 } from "../../../utility/formatDate";
@@ -103,7 +104,7 @@ const NdviGraph = ({
     const summary = indexTimeSeriesSummary?.data?.summary ||
       indexTimeSeriesSummary?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
 
-    const timestamp = indexTimeSeriesSummary?.timestamp || null;
+    const timestamp = latestTimeseriesTimestamp(indexTimeSeriesSummary);
 
     const { min = -0.1, mean = 0.2, max = 0.4 } = summary;
 

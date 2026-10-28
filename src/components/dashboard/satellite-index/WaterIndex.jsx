@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import {
   getDaysAgo,
+  latestTimeseriesTimestamp,
   getTodayDate,
 } from "../../../utility/formatDate";
 import LoadingSpinner from "../../comman/loading/LoadingSpinner";
@@ -120,7 +121,7 @@ const WaterIndex = ({
     const summary = waterIndexData?.data?.summary ||
       waterIndexData?.summary || { min: -0.1, mean: 0.2, max: 0.4 };
 
-    const timestamp = waterIndexData?.timestamp || null;
+    const timestamp = latestTimeseriesTimestamp(waterIndexData);
 
     const { min = -0.1, mean = 0.2, max = 0.4 } = summary;
 
