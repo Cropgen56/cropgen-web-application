@@ -34,7 +34,7 @@ describe("isSubscriptionActive", () => {
 });
 
 describe("hasPlanFeature", () => {
-  const aatStarter = {
+  const limitedPlanField = {
     subscription: {
       hasActiveSubscription: true,
       status: "active",
@@ -50,12 +50,12 @@ describe("hasPlanFeature", () => {
     },
   };
 
-  test("AAT Starter unlocks crop health, not smart advisory", () => {
-    expect(hasPlanFeature(aatStarter, "cropHealthAndYield")).toBe(true);
-    expect(hasPlanFeature(aatStarter, "weatherAnalytics")).toBe(true);
-    expect(hasPlanFeature(aatStarter, "smartAdvisorySystem")).toBe(false);
-    expect(hasPlanFeature(aatStarter, "soilAnalysisAndHealth")).toBe(false);
-    expect(hasPlanFeature(aatStarter, "diseaseDetectionAlerts")).toBe(false);
+  test("plan with a features map unlocks only its enabled features", () => {
+    expect(hasPlanFeature(limitedPlanField, "cropHealthAndYield")).toBe(true);
+    expect(hasPlanFeature(limitedPlanField, "weatherAnalytics")).toBe(true);
+    expect(hasPlanFeature(limitedPlanField, "smartAdvisorySystem")).toBe(false);
+    expect(hasPlanFeature(limitedPlanField, "soilAnalysisAndHealth")).toBe(false);
+    expect(hasPlanFeature(limitedPlanField, "diseaseDetectionAlerts")).toBe(false);
   });
 
   test("unsubscribed farm never has features", () => {
