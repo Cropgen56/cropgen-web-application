@@ -173,6 +173,12 @@ const SignupLogin = () => {
   const [otpVerified, setOtpVerified] = useState(false);
   const [orgCodeError, setOrgCodeError] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
+  // Signup duplicates reported by the server, shown under the matching input.
+  const [serverFieldErrors, setServerFieldErrors] = useState({
+    phone: "",
+    email: "",
+  });
+  const [duplicateCanLogin, setDuplicateCanLogin] = useState(false);
   const [step, setStep] = useState(1);
   const [loginMethod, setLoginMethod] = useState("phone"); // "phone" | "email"
 
@@ -339,12 +345,22 @@ const SignupLogin = () => {
     [],
   );
 
-  const phoneError = phoneTouched
-    ? getPhoneValidationError(formData.dialCode, formData.phoneLocal)
-    : "";
+  const phoneError =
+    (phoneTouched
+      ? getPhoneValidationError(formData.dialCode, formData.phoneLocal)
+      : "") || serverFieldErrors.phone;
+  const emailError = serverFieldErrors.email;
+
+  const clearServerFieldError = (field) => {
+    setServerFieldErrors((prev) =>
+      prev[field] ? { ...prev, [field]: "" } : prev,
+    );
+    setDuplicateCanLogin(false);
+  };
   const phoneMaxLen = maxLocalPhoneLength(formData.dialCode);
 
   const updatePhoneLocal = (dialCode, raw) => {
+    clearServerFieldError("phone");
     setFormData((prev) => ({
       ...prev,
       dialCode,
@@ -416,9 +432,8 @@ const SignupLogin = () => {
     if (isSignupAccount) {
       if (!fn) return message.error("Please enter your first name");
       if (!ln) return message.error("Please enter your last name");
-      if (!formData.email.trim())
-        return message.error("Please enter your email");
-      if (!emailOk(formData.email))
+      // Email is optional; the WhatsApp OTP verifies the account.
+      if (formData.email.trim() && !emailOk(formData.email))
         return message.error("Please enter a valid email address");
       if (phoneErr) return message.error(phoneErr);
       if (!formData.country) return message.error("Please select your country");
@@ -463,6 +478,20 @@ const SignupLogin = () => {
         const err = res.payload;
         const errMessage =
           typeof err === "string" ? err : err?.message || "Failed to send OTP";
+        // Signup duplicate (phone / email already associated): show it
+        // under that input instead of a toast.
+        const duplicateField =
+          isSignupAccount && (err?.field === "phone" || err?.field === "email")
+            ? err.field
+            : null;
+        if (duplicateField) {
+          setServerFieldErrors((prev) => ({
+            ...prev,
+            [duplicateField]: errMessage,
+          }));
+          setDuplicateCanLogin(err?.code !== "PHONE_REGISTERED_OTHER_PLATFORM");
+          return;
+        }
         if (/does not exist/i.test(errMessage) || /sign up first/i.test(errMessage)) {
           message.error("User does not exist. Please sign up first.");
         } else {
@@ -869,14 +898,26 @@ const SignupLogin = () => {
                 </div>
                 <input
                   type="email"
-                  placeholder="Email"
+                  placeholder="Email (optional)"
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  onChange={(e) => {
+                    clearServerFieldError("email");
+                    setFormData({ ...formData, email: e.target.value });
+                  }}
                   autoComplete="email"
-                  className="w-full rounded-xl border border-gray-200 bg-[#F2F2F2] px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[#0D4D44]/20"
+                  aria-invalid={Boolean(emailError)}
+                  aria-describedby={emailError ? "signup-email-error" : undefined}
+                  className={`w-full rounded-xl border bg-[#F2F2F2] px-3 py-2.5 text-sm outline-none focus:ring-2 ${
+                    emailError
+                      ? "border-red-400 focus:ring-red-200"
+                      : "border-gray-200 focus:ring-[#0D4D44]/20"
+                  }`}
                 />
+                {emailError ? (
+                  <p id="signup-email-error" className="-mt-1 text-xs text-red-600">
+                    {emailError}
+                  </p>
+                ) : null}
                 <form
                   className="flex flex-col gap-2.5"
                   onSubmit={(e) => e.preventDefault()}
@@ -922,6 +963,16 @@ const SignupLogin = () => {
                     >
                       {phoneError}
                     </p>
+                  ) : null}
+                  {duplicateCanLogin &&
+                  (serverFieldErrors.phone || serverFieldErrors.email) ? (
+                    <Link
+                      to={AUTH_ROUTES.login}
+                      className="-mt-1 text-xs font-semibold underline"
+                      style={{ color: PRIMARY }}
+                    >
+                      Log in instead →
+                    </Link>
                   ) : null}
                   <p className="-mt-0.5 text-xs text-gray-500">
                     Country:{" "}

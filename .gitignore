@@ -33,3 +33,7 @@ yarn-error.log*
 
 # Mac OS Finder files
 .FBCIndex
+
+# macOS metadata
+._*
+.DS_Store
