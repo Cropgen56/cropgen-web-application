@@ -161,7 +161,11 @@ const DateRangeBadge = ({ startDate, endDate, onClear }) => {
   );
 };
 
-const IndexSelector = ({ selectedFieldsDetials = [] }) => {
+const IndexSelector = ({
+  selectedFieldsDetials = [],
+  locked = false,
+  onLockedClick,
+}) => {
   const dispatch = useDispatch();
   const { satelliteDates, loading, selectedSatellite } = useSelector(
     (state) => state.satellite,
@@ -514,6 +518,8 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
       <SatelliteIndexList
         selectedFieldsDetials={selectedFieldsDetials}
         selectedDate={selectedDate}
+        locked={locked}
+        onLockedClick={onLockedClick}
       />
       <div className="flex items-center gap-2 w-full px-2 bg-ember-surface rounded-md relative">
         <div className="relative flex items-center gap-1.5">
@@ -592,9 +598,13 @@ const IndexSelector = ({ selectedFieldsDetials = [] }) => {
   );
 };
 
-export default React.memo(IndexSelector, (prev, next) =>
-  areArraysEqual(
-    prev.selectedFieldsDetials[0]?.field,
-    next.selectedFieldsDetials[0]?.field,
-  ),
+export default React.memo(
+  IndexSelector,
+  (prev, next) =>
+    prev.locked === next.locked &&
+    prev.onLockedClick === next.onLockedClick &&
+    areArraysEqual(
+      prev.selectedFieldsDetials[0]?.field,
+      next.selectedFieldsDetials[0]?.field,
+    ),
 );

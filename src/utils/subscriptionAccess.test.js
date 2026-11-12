@@ -3,6 +3,7 @@ import {
   hasPlanFeature,
   fieldIsRecentlyCreated,
 } from "./subscriptionAccess";
+import { PLAN_FEATURE_KEYS } from "./planFeatures";
 
 describe("isSubscriptionActive", () => {
   test("false when field or subscription is missing", () => {
@@ -74,37 +75,51 @@ describe("hasPlanFeature", () => {
     expect(hasPlanFeature(legacy, "smartAdvisorySystem")).toBe(true);
   });
 
-  test("legacy plan with an all-false features map (real API shape, schema defaults applied) keeps full access", () => {
-    // The backend's `features` sub-schema defaults every flag to `false`,
-    // so a plan whose admin never configured per-feature flags still
-    // arrives with a fully-populated (all-false) `features` object, not a
-    // missing one. This must be treated the same as "no features map".
-    const legacy = {
+  test("plan with an all-false features map unlocks nothing", () => {
+    const allFalse = {
       subscription: {
         hasActiveSubscription: true,
         status: "active",
         plan: {
-          features: {
-            satelliteImagery: false,
-            cropHealthAndYield: false,
-            soilAnalysisAndHealth: false,
-            weatherAnalytics: false,
-            vegetationIndices: false,
-            waterIndices: false,
-            evapotranspirationMonitoring: false,
-            agronomicInsights: false,
-            weeklyAdvisoryReports: false,
-            cropGrowthMonitoring: false,
-            farmOperationsManagement: false,
-            diseaseDetectionAlerts: false,
-            smartAdvisorySystem: false,
-            soilReportGeneration: false,
-          },
+          features: Object.fromEntries(
+            PLAN_FEATURE_KEYS.map((k) => [k, false]),
+          ),
         },
       },
     };
-    expect(hasPlanFeature(legacy, "cropHealthAndYield")).toBe(true);
-    expect(hasPlanFeature(legacy, "soilAnalysisAndHealth")).toBe(true);
+    PLAN_FEATURE_KEYS.forEach((k) =>
+      expect(hasPlanFeature(allFalse, k)).toBe(false),
+    );
+  });
+
+  test("only explicitly-true flags unlock, for every known feature", () => {
+    PLAN_FEATURE_KEYS.forEach((on) => {
+      const field = {
+        subscription: {
+          hasActiveSubscription: true,
+          status: "active",
+          plan: {
+            features: Object.fromEntries(
+              PLAN_FEATURE_KEYS.map((k) => [k, k === on]),
+            ),
+          },
+        },
+      };
+      PLAN_FEATURE_KEYS.forEach((k) =>
+        expect(hasPlanFeature(field, k)).toBe(k === on),
+      );
+    });
+  });
+
+  test("locked farm has no feature even when the plan enables it", () => {
+    const field = {
+      isLocked: true,
+      subscription: {
+        hasActiveSubscription: true,
+        plan: { features: { weatherAnalytics: true } },
+      },
+    };
+    expect(hasPlanFeature(field, "weatherAnalytics")).toBe(false);
   });
 });
 

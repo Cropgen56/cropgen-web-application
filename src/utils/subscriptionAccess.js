@@ -1,8 +1,8 @@
 /**
  * Plan-feature access for a farm field (from GET /field enrichment).
  *
- * Legacy CropGen plans without a `features` object keep full access once
- * the farm is subscribed. AAT (and any plan with a features map) only
+ * A farm whose plan has no `features` object at all keeps full access once
+ * subscribed. Any plan that carries a features map (even all-false) only
  * unlocks keys that are explicitly true.
  */
 
@@ -22,19 +22,14 @@ export function hasPlanFeature(field, featureKey) {
   if (!featureKey) return true;
 
   const features = field?.subscription?.plan?.features;
+  // No features map at all (plan not resolved, e.g. a subscription whose plan
+  // document was removed): keep the paid farm usable.
   if (!features || typeof features !== "object") return true;
 
-  // The backend's `features` map defaults every flag to `false`, so a
-  // legacy plan that was never configured with per-feature flags still
-  // arrives here as a fully-populated object (all false) rather than
-  // missing entirely. An all-false map is indistinguishable from "never
-  // configured" (a paid plan that unlocks nothing isn't a real product),
-  // so only start enforcing the allowlist once at least one flag has been
-  // explicitly turned on.
-  const isConfigured = Object.values(features).some(Boolean);
-  if (!isConfigured) return true;
-
-  return Boolean(features[featureKey]);
+  // A features map is authoritative. The backend defaults every flag to
+  // `false`, so a plan with no flags enabled unlocks nothing: an unconfigured
+  // plan must never grant every feature.
+  return features[featureKey] === true;
 }
 
 export function fieldIsRecentlyCreated(field, maxAgeMs = 15 * 60 * 1000) {

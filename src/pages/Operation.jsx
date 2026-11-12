@@ -85,6 +85,8 @@ const Operation = () => {
           <FeatureGuard
             guard={subscriptionGuard}
             title="Farm Operations Management"
+            inset
+            lockClassName="min-h-0"
           >
             <Calendar
               selectedField={selectedField?._id}

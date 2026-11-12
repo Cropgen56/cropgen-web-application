@@ -10,7 +10,7 @@ import {
   fetchIndexData,
   removeSelectedIndexData,
 } from "../../../../redux/slices/satelliteSlice";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import {
   DEFAULT_SATELLITE,
   getDefaultIndexForSatellite,
@@ -21,6 +21,8 @@ import {
 const SatelliteIndexList = ({
   selectedFieldsDetials = [],
   selectedDate = null,
+  locked = false,
+  onLockedClick,
 }) => {
   const dispatch = useDispatch();
   const selectedSatellite = useSelector(
@@ -79,6 +81,7 @@ const SatelliteIndexList = ({
 
   const handleFetchIndex = useCallback(
     (index) => {
+      if (locked) return; // plan does not include satellite imagery
       if (!selectedDate || !coordinates.length || !index) return;
       dispatch(
         fetchIndexData({
@@ -89,7 +92,7 @@ const SatelliteIndexList = ({
         }),
       );
     },
-    [selectedDate, coordinates, dispatch, selectedSatellite],
+    [selectedDate, coordinates, dispatch, selectedSatellite, locked],
   );
 
   const debouncedFetchIndex = useMemo(
@@ -141,15 +144,21 @@ const SatelliteIndexList = ({
           >
             {indices.map((index) => {
               const meta = indexMeta[index];
-              const isSelected = selectedIndex === index;
+              const isSelected = !locked && selectedIndex === index;
 
               return (
                 <button
                   key={`${selectedSatellite}-${index}`}
                   onClick={() => {
+                    if (locked) {
+                      onLockedClick?.();
+                      return;
+                    }
                     dispatch(removeSelectedIndexData());
                     setSelectedIndex(index);
                   }}
+                  title={locked ? "Not in this plan · Subscribe to unlock" : undefined}
+                  aria-disabled={locked || undefined}
                   className={`
                     flex-shrink-0 rounded text-white font-medium
                     px-3 py-1.5 text-xs lg:text-sm
@@ -164,7 +173,9 @@ const SatelliteIndexList = ({
                     }
                   `}
                 >
-                  <span className="text-base leading-none">{meta?.icon}</span>
+                  <span className="text-base leading-none">
+                    {locked ? <Lock size={16} strokeWidth={2} /> : meta?.icon}
+                  </span>
                   <span className="leading-tight text-center text-[11px] lg:text-xs font-semibold whitespace-nowrap">
                     {meta?.label || index}
                   </span>

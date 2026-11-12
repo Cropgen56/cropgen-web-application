@@ -112,6 +112,7 @@ const SoilReport = () => {
 
       try {
         const soilApi = await generateSoilReportAPI({
+          fieldId: field?._id,
           geometry: toApiPolygon({
             type: "Polygon",
             coordinates: [deduped],
@@ -316,6 +317,7 @@ const downloadPDF = useCallback(async () => {
               isLocked={!soilReportGuard.hasFeatureAccess}
               onSubscribe={soilReportGuard.handleSubscribe}
               title="Smart Farm Intelligence"
+              inset
             >
               <SmartFarmReport
                 reportData={reportData}
@@ -345,6 +347,7 @@ const downloadPDF = useCallback(async () => {
               isLocked={!soilReportGuard.hasFeatureAccess}
               onSubscribe={soilReportGuard.handleSubscribe}
               title="Smart Farm Intelligence"
+              inset
             >
               <SmartFarmReport
                 reportData={reportData}

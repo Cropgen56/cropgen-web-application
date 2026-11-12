@@ -2,18 +2,29 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Lock, Crown } from "lucide-react";
 
-const PremiumPageWrapper = ({ children, isLocked, onSubscribe, title }) => {
+/**
+ * Full-page "Premium Content" lock. One look for every sidebar page: a solid,
+ * rounded dark-green panel (independent of the page background behind it)
+ * with the lock badge, title and Subscribe button centred inside.
+ *
+ * - `inset`: add outer padding, for pages whose content area has none.
+ * - `className`: extra classes for the panel (e.g. "min-h-0" inside a
+ *   fixed-height container).
+ */
+const PremiumPageWrapper = ({
+  children,
+  isLocked,
+  onSubscribe,
+  title,
+  inset = false,
+  className = "",
+}) => {
   if (!isLocked) return children;
 
   return (
-    <div className="relative w-full h-full min-h-screen overflow-hidden rounded-2xl">
+    <div className={`w-full h-full ${inset ? "p-4" : ""}`}>
       <div
-        className="sticky top-0 flex h-screen items-center justify-center"
-        style={{
-          background: "rgba(52, 78, 65, 0.72)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-        }}
+        className={`flex h-full w-full min-h-[calc(100vh_-_11rem)] items-center justify-center rounded-2xl bg-[#435a4e] shadow-inner ${className}`}
       >
         <div className="text-center p-8 max-w-md">
           <motion.div

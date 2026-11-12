@@ -124,7 +124,7 @@ const Weather = () => {
         {loading ? (
           <WeatherSkeleton />
         ) : (
-          <FeatureGuard guard={subscriptionGuard} title="Weather Analytics">
+          <FeatureGuard guard={subscriptionGuard} title="Weather Analytics" inset>
             <WeekWeather
               selectedField={selectedField}
               forecastData={forecastData}

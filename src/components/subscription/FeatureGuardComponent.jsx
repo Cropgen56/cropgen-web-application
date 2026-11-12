@@ -3,13 +3,31 @@ import { useEffect } from "react";
 import SubscriptionModal from "./SubscriptionModal";
 import PricingOverlay from "../pricing/PricingOverlay";
 import PremiumPageWrapper from "./PremiumPageWrapper";
-const FeatureGuard = ({ guard, title, children }) => {
+
+/**
+ * Single feature-guard implementation.
+ *
+ * - `lock` (default true): replace `children` with the "not in this plan" lock
+ *   card when `guard.hasFeatureAccess` is false.
+ * - `lock={false}`: only host the subscribe modal / pricing overlay; the caller
+ *   locks its own content (e.g. with PremiumContentWrapper). Use the
+ *   `./FeatureGuard` wrapper for this mode.
+ */
+const FeatureGuard = ({
+  guard,
+  title,
+  children,
+  lock = true,
+  inset = false,
+  lockClassName = "",
+}) => {
   const hasFeatureAccess = guard?.hasFeatureAccess;
   const showMembershipModal = guard?.showMembershipModal;
   const showPricingOverlay = guard?.showPricingOverlay;
   const closeMembershipModal = guard?.closeMembershipModal;
   const closePricingOverlay = guard?.closePricingOverlay;
 
+  // Once access is granted (e.g. right after payment) close any open overlay.
   useEffect(() => {
     if (!hasFeatureAccess) return;
     if (!showMembershipModal && !showPricingOverlay) return;
@@ -25,18 +43,16 @@ const FeatureGuard = ({ guard, title, children }) => {
 
   return (
     <>
-      {/* Subscription Modal */}
       <SubscriptionModal
-        isOpen={guard.showMembershipModal}
-        onClose={guard.closeMembershipModal}
-        onSubscribe={guard.handleSubscribe}
-        onSkip={guard.closeMembershipModal}
-        fieldName={guard.pricingFieldData?.name}
+        isOpen={showMembershipModal}
+        onClose={closeMembershipModal}
+        onSubscribe={guard?.handleSubscribe}
+        onSkip={closeMembershipModal}
+        fieldName={guard?.pricingFieldData?.name}
       />
 
-      {/* Pricing Overlay */}
       <AnimatePresence>
-        {guard.showPricingOverlay && guard.pricingFieldData && (
+        {showPricingOverlay && guard?.pricingFieldData && (
           <motion.div
             key="pricing"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -46,20 +62,26 @@ const FeatureGuard = ({ guard, title, children }) => {
             className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-8"
           >
             <PricingOverlay
-              onClose={guard.closePricingOverlay}
+              onClose={closePricingOverlay}
               selectedField={guard.pricingFieldData}
             />
           </motion.div>
         )}
-        {/* Feature Lock Wrapper */}
+      </AnimatePresence>
+
+      {lock ? (
         <PremiumPageWrapper
-          isLocked={!guard.hasFeatureAccess}
-          onSubscribe={guard.handleSubscribe}
+          isLocked={!hasFeatureAccess}
+          onSubscribe={guard?.handleSubscribe}
           title={title}
+          inset={inset}
+          className={lockClassName}
         >
           {children}
         </PremiumPageWrapper>
-      </AnimatePresence>
+      ) : (
+        children
+      )}
     </>
   );
 };

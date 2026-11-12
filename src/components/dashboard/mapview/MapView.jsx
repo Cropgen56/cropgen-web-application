@@ -28,6 +28,9 @@ import {
 } from "lucide-react";
 import { resetSatelliteState } from "../../../redux/slices/satelliteSlice";
 import IndexDates from "./indexdates/IndexDates";
+import FeatureGuard from "../../subscription/FeatureGuard";
+import { describeFarmPlan } from "../../../utils/farmPlan";
+import { useSubscriptionGuard } from "../../subscription/hooks/useSubscriptionGuard";
 
 // ─── Satellite Scan Loader ───────────────────────────────────────────────────
 
@@ -470,6 +473,18 @@ const FarmMap = ({
     [selectedFieldObj],
   );
 
+  /** Which plan the selected farm is on (shown beside the farm name). */
+  const selectedPlan = useMemo(
+    () => describeFarmPlan(selectedFieldObj),
+    [selectedFieldObj],
+  );
+
+  // Satellite imagery (index dates + imagery overlay) is a plan feature.
+  const satelliteGuard = useSubscriptionGuard({
+    field: selectedFieldObj,
+    featureKey: "satelliteImagery",
+  });
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (!e.target.closest(".legend-dropdown-wrapper")) setShowLegend(false);
@@ -709,6 +724,14 @@ const FarmMap = ({
                     <span className="truncate">
                       {selectedFieldObj?.fieldName || "Select a field"}
                     </span>
+                    {selectedFieldObj ? (
+                      <span
+                        className="ml-auto max-w-[45%] shrink-0 truncate rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-white/90"
+                        title={`${selectedPlan.title} · ${selectedPlan.detail}`}
+                      >
+                        {selectedPlan.hasPlan ? selectedPlan.title : "No plan"}
+                      </span>
+                    ) : null}
                   </div>
                 </Listbox.Button>
 
@@ -889,7 +912,13 @@ const FarmMap = ({
           </div>
         </div>
       )}
-      <IndexDates selectedFieldsDetials={selectedFieldsDetials} />
+      <FeatureGuard guard={satelliteGuard} title="Satellite Imagery">
+        <IndexDates
+          selectedFieldsDetials={selectedFieldsDetials}
+          locked={Boolean(selectedFieldObj) && !satelliteGuard.hasFeatureAccess}
+          onLockedClick={satelliteGuard.handleSubscribe}
+        />
+      </FeatureGuard>
     </div>
   );
 };

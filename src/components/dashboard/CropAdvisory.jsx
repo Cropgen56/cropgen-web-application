@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import IndexPremiumWrapper from "../subscription/PremiumIndexWrapper";
+import FeatureGuard from "../subscription/FeatureGuard";
+import { useSubscriptionGuard } from "../subscription/hooks/useSubscriptionGuard";
 
 /* ===================== ROW ===================== */
 const Row = ({ label, value }) => {
@@ -46,7 +48,12 @@ const AdvisoryCard = ({ title, icon, children }) => {
 };
 
 /* ===================== MAIN ===================== */
-const CropAdvisory = ({ onSubscribe, hasWeeklyAdvisoryReports }) => {
+const CropAdvisory = ({ selectedFieldDetails }) => {
+  const advisoryGuard = useSubscriptionGuard({
+    field: selectedFieldDetails,
+    featureKey: "weeklyAdvisoryReports",
+  });
+
   const { advisory: data, loading } = useSelector(
     (s) => s.smartAdvisory || {}
   );
@@ -61,9 +68,10 @@ const CropAdvisory = ({ onSubscribe, hasWeeklyAdvisoryReports }) => {
         Crop Advisory
       </h2>
 
+      <FeatureGuard guard={advisoryGuard} title="Weekly Advisory Reports">
       <IndexPremiumWrapper
-        isLocked={!hasWeeklyAdvisoryReports}
-        onSubscribe={onSubscribe}
+        isLocked={!advisoryGuard.hasFeatureAccess}
+        onSubscribe={advisoryGuard.handleSubscribe}
         title="Weekly Crop Recommendation"
       >
         {loading ? (
@@ -73,14 +81,14 @@ const CropAdvisory = ({ onSubscribe, hasWeeklyAdvisoryReports }) => {
 
             {/* Spray */}
             <AdvisoryCard title="Spray Recommendation" icon="🧪">
-              <Row label="Problem" value={weekly.sprayRecommendation.problem} />
-              <Row label="Chemical" value={weekly.sprayRecommendation.chemical} />
-              <Row label="Dose" value={weekly.sprayRecommendation.dose} />
-              <Row label="Time" value={weekly.sprayRecommendation.time} />
-              <Row label="Purpose" value={weekly.sprayRecommendation.purpose} />
+              <Row label="Problem" value={weekly.sprayRecommendation?.problem} />
+              <Row label="Chemical" value={weekly.sprayRecommendation?.chemical} />
+              <Row label="Dose" value={weekly.sprayRecommendation?.dose} />
+              <Row label="Time" value={weekly.sprayRecommendation?.time} />
+              <Row label="Purpose" value={weekly.sprayRecommendation?.purpose} />
               <Row
                 label="Instruction"
-                value={weekly.sprayRecommendation.instruction}
+                value={weekly.sprayRecommendation?.instruction}
               />
             </AdvisoryCard>
 
@@ -88,40 +96,40 @@ const CropAdvisory = ({ onSubscribe, hasWeeklyAdvisoryReports }) => {
             <AdvisoryCard title="Fertigation Recommendation" icon="🌱">
               <Row
                 label="Fertilizer"
-                value={weekly.fertigationSchedule.fertilizer}
+                value={weekly.fertigationSchedule?.fertilizer}
               />
-              <Row label="Dose" value={weekly.fertigationSchedule.dose} />
-              <Row label="Method" value={weekly.fertigationSchedule.method} />
-              <Row label="Time" value={weekly.fertigationSchedule.time} />
-              <Row label="Purpose" value={weekly.fertigationSchedule.purpose} />
+              <Row label="Dose" value={weekly.fertigationSchedule?.dose} />
+              <Row label="Method" value={weekly.fertigationSchedule?.method} />
+              <Row label="Time" value={weekly.fertigationSchedule?.time} />
+              <Row label="Purpose" value={weekly.fertigationSchedule?.purpose} />
               <Row
                 label="Instruction"
-                value={weekly.fertigationSchedule.instruction}
+                value={weekly.fertigationSchedule?.instruction}
               />
             </AdvisoryCard>
 
             {/* Crop Risk */}
             <AdvisoryCard title="Crop Risk" icon="⚠️">
-              <Row label="Risk Type" value={weekly.cropRiskAlert.riskType} />
-              <Row label="Risk Level" value={weekly.cropRiskAlert.riskLevel} />
+              <Row label="Risk Type" value={weekly.cropRiskAlert?.riskType} />
+              <Row label="Risk Level" value={weekly.cropRiskAlert?.riskLevel} />
               <Row
                 label="Preventive Chemical"
-                value={weekly.cropRiskAlert.preventiveChemical}
+                value={weekly.cropRiskAlert?.preventiveChemical}
               />
-              <Row label="Dose" value={weekly.cropRiskAlert.dose} />
+              <Row label="Dose" value={weekly.cropRiskAlert?.dose} />
               <Row
                 label="Instruction"
-                value={weekly.cropRiskAlert.instruction}
+                value={weekly.cropRiskAlert?.instruction}
               />
             </AdvisoryCard>
 
             {/* Weather */}
             <AdvisoryCard title="Weather Advisory" icon="🌦️">
-              <Row label="Severity" value={weekly.weatherAlert.severity} />
-              <Row label="Forecast" value={weekly.weatherAlert.forecast} />
+              <Row label="Severity" value={weekly.weatherAlert?.severity} />
+              <Row label="Forecast" value={weekly.weatherAlert?.forecast} />
               <Row
                 label="Instruction"
-                value={weekly.weatherAlert.instruction}
+                value={weekly.weatherAlert?.instruction}
               />
             </AdvisoryCard>
 
@@ -132,6 +140,7 @@ const CropAdvisory = ({ onSubscribe, hasWeeklyAdvisoryReports }) => {
           </div>
         )}
       </IndexPremiumWrapper>
+      </FeatureGuard>
     </div>
   );
 };

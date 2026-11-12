@@ -58,9 +58,11 @@ const FarmReport = () => {
   const { isDownloading, downloadProgress, isPreparedForPDF, downloadFarmReportPDF } =
     useFarmReportPDF(selectedField, aoiId);
 
+  // Farm Report aggregates cards that each enforce their own plan flag
+  // (crop health, weather, indices, ET, insights, growth). The page itself only
+  // requires an active subscription; no featureKey => subscription check only.
   const farmReportGuard = useSubscriptionGuard({
     field: selectedField,
-    featureKey: "cropHealthAndYield",
   });
 
   const handleDownloadPDF = () => {
@@ -239,7 +241,7 @@ const FarmReport = () => {
         )}
 
         {/* Main Content */}
-        <FeatureGuard guard={farmReportGuard} title="Farm Report">
+        <FeatureGuard guard={farmReportGuard} title="Farm Report" inset>
           <div
             ref={mainReportRef}
             className={`flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4 ${
