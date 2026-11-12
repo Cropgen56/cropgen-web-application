@@ -431,7 +431,7 @@ const ZoningMap = ({
                       <Crosshair size={18} />
                     </div>
                     <p className="text-[15px] font-medium">
-                      {alert.areaAffected} Acre area affected in {alert.zoneName}
+                      {alert.areaAffected} ha area affected in {alert.zoneName}
                     </p>
                   </div>
                 </div>

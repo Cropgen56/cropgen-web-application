@@ -21,7 +21,7 @@ export function SmartFarmReportEmptyState({
   const name = selectedField?.fieldName || selectedField?.farmName;
 
   const acres = selectedField?.acre
-    ? `${Number(selectedField.acre).toFixed(2)} acres`
+    ? `${(Number(selectedField.acre) * 0.404686).toFixed(2)} ha`
     : null;
 
   const handleGenerateClick = () => {

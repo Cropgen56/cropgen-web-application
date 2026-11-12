@@ -135,7 +135,8 @@ export function buildAlertsFromVraRates(vraRates, nutrient = "N") {
       zoneId: `vra-${nutrient.toLowerCase()}-${slug}`,
       zoneName: `${nutrient} — ${lowLabel}`,
       type: `${nutrient} deficiency zone`,
-      areaAffected: Number(low.area_acres)?.toFixed?.(2) ?? "0",
+      // Hectares only (the API reports acres).
+      areaAffected: ((Number(low.area_acres) || 0) * 0.404686).toFixed(2),
       possibleCause: `Satellite VRA classified this area as ${lowLabel} ${nutrient}`,
       recommendedAction: `Apply ${low.product_dose_kg_ha} kg/ha ${low.product} on ${lowLabel} ${nutrient} zones`,
       centroid: null,

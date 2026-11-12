@@ -214,7 +214,6 @@ const ZoningDashboardView = ({
   availableDates = [],
   meanIndices = [],
   socAreaHa = null,
-  socAreaAcres = null,
   collection = null,
   resM = null,
 }) => {
@@ -692,11 +691,9 @@ const ZoningDashboardView = ({
             {fieldAreaHa > 0 ? formatArea(fieldAreaHa) : "—"}
           </p>
           <p className="text-xs text-slate-500">
-            {socAreaAcres != null
-              ? `${Number(socAreaAcres).toFixed(2)} Acres`
-              : hasGenerated
-                ? `${zones.length} ${activeNutrient} · VRA zones`
-                : "From field / SOC analysis"}
+            {hasGenerated
+              ? `${zones.length} ${activeNutrient} · VRA zones`
+              : "From field / SOC analysis"}
           </p>
         </div>
         <div className={cardClass}>
@@ -762,7 +759,6 @@ const ZoningDashboardView = ({
                   <th className="px-3 py-2">Class</th>
                   <th className="px-3 py-2">Pixels</th>
                   <th className="px-3 py-2">Area (ha)</th>
-                  <th className="px-3 py-2">Acres</th>
                   <th className="px-3 py-2">% of field</th>
                 </tr>
               </thead>
@@ -775,7 +771,6 @@ const ZoningDashboardView = ({
                     <td className="px-3 py-3 font-medium">{row.label}</td>
                     <td className="px-3 py-3">{row.pixels.toLocaleString()}</td>
                     <td className="px-3 py-3">{row.ha.toFixed(3)}</td>
-                    <td className="px-3 py-3">{row.acres.toFixed(3)}</td>
                     <td className="px-3 py-3">{row.pctArea.toFixed(1)}%</td>
                   </tr>
                 ))}
@@ -831,7 +826,6 @@ const ZoningDashboardView = ({
                   <th className="px-3 py-2">Nutrient</th>
                   <th className="px-3 py-2">Zone</th>
                   <th className="px-3 py-2">Area (ha)</th>
-                  <th className="px-3 py-2">Acres</th>
                   <th className="px-3 py-2">Nutrient kg/ha</th>
                   <th className="px-3 py-2">Product</th>
                   <th className="px-3 py-2">Product kg/ha</th>
@@ -858,7 +852,6 @@ const ZoningDashboardView = ({
                       </span>
                     </td>
                     <td className="px-3 py-3">{row.areaHa.toFixed(3)}</td>
-                    <td className="px-3 py-3">{row.areaAcres.toFixed(3)}</td>
                     <td className="px-3 py-3">{row.nutrientDoseKgHa}</td>
                     <td className="px-3 py-3">{row.product}</td>
                     <td className="px-3 py-3">{row.productDoseKgHa}</td>
@@ -978,11 +971,6 @@ const ZoningDashboardView = ({
                       ? `${Number(socStats.total_area_ha).toFixed(2)} ha`
                       : "—"}
                   </p>
-                  {socStats.total_area_acres != null && (
-                    <p className="text-[11px] text-slate-500">
-                      {Number(socStats.total_area_acres).toFixed(2)} Acres
-                    </p>
-                  )}
                 </div>
               </div>
               {socClasses.length > 0 && (

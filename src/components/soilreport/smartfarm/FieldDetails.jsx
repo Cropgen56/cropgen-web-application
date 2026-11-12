@@ -13,7 +13,8 @@ export default function FieldDetails({ field }) {
     (field?.createdAt
       ? new Date(field.createdAt).toLocaleDateString()
       : "—");
-  const acre = field?.acre != null ? `${Number(field.acre).toFixed(3)} ac` : "—";
+  const acre =
+    field?.acre != null ? `${(Number(field.acre) * 0.404686).toFixed(3)} ha` : "—";
   const irrigation = formatFarmEnumLabel(
     field?.typeOfIrrigation || field?.irrigationType || "",
   ) || "—";
@@ -24,7 +25,7 @@ export default function FieldDetails({ field }) {
     { icon: Sprout, label: "Crop Name", value: crop },
     { icon: Sprout, label: "Variety", value: variety },
     { label: "Sowing Date", value: sowing },
-    { label: "Total Acre", value: acre },
+    { label: "Total Area", value: acre },
     { icon: Droplets, label: "Irrigation Type", value: irrigation },
     { icon: Tractor, label: "Farming Type", value: farming },
   ];
