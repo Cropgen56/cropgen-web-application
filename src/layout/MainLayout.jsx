@@ -1,6 +1,6 @@
 import React, { Suspense, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import LoadingSpinner from "../components/comman/loading/LoadingSpinner";
 import { message } from "antd";
 
@@ -20,6 +20,7 @@ import {
 } from "../utility/demoAccess";
 
 const MainLayout = () => {
+  const { pathname } = useLocation();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const dispatch = useDispatch();
@@ -101,7 +102,10 @@ const MainLayout = () => {
         {/* Main Content */}
         <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden transition-[margin] duration-300 ease-out safe-area-inset">
           <Suspense fallback={<LoadingSpinner height="100vh" />}>
-            <Outlet />
+            {/* Keyed on the path: every page eases in instead of popping. */}
+            <div key={pathname} className="page-enter min-h-full">
+              <Outlet />
+            </div>
           </Suspense>
         </main>
       </div>

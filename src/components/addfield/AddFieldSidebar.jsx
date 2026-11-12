@@ -256,6 +256,9 @@ const AddFieldSidebar = ({
               size={20}
               color="#0B5D3D"
               strokeWidth={2}
+              className="cursor-pointer"
+              role="button"
+              aria-label="Hide sidebar"
               onClick={toggleSidebarVisibility}
             />
           </div>

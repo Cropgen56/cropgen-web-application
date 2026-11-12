@@ -8,6 +8,7 @@ import WaterIndex from "../components/dashboard/satellite-index/WaterIndex";
 import EvapotranspirationDashboard from "../components/dashboard/satellite-index/ETChart";
 import Insights from "../components/dashboard/insights/Insights";
 import PlantGrowthActivity from "../components/dashboard/PlantGrowthActivity";
+import CropAdvisory from "../components/dashboard/CropAdvisory";
 
 import { useFarmFields } from "../components/dashboard/hooks/useFarmFields";
 import { useSelectedField } from "../components/dashboard/hooks/useSelectedField";
@@ -41,7 +42,7 @@ const Dashboard = () => {
       />
 
       {showContent && (
-        <div className="mt-6 space-y-8">
+        <div className="mt-6 space-y-8 stagger-children">
           {selectedFieldDetails && (
             <CropHealth
               selectedFieldDetails={selectedFieldDetails}
@@ -84,6 +85,10 @@ const Dashboard = () => {
               selectedFieldDetails ? [selectedFieldDetails] : []
             }
           />
+
+          {selectedFieldDetails && (
+            <CropAdvisory selectedFieldDetails={selectedFieldDetails} />
+          )}
         </div>
       )}
     </div>

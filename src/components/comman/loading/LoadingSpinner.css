@@ -1,5 +1,7 @@
 /* Styles for the dual-ring spinner */
 .dual-ring-spinner {
+  /* Fades in after a short delay so loads under ~200ms never flash a spinner. */
+  animation: spinner-fade-in 200ms ease-out 180ms both;
   display: inline-block;
   position: relative;
   width: var(--spinner-size, 64px);
@@ -17,6 +19,15 @@
   border-color: var(--spinner-color, #86d72f) transparent
     var(--spinner-color, #86d72f) transparent;
   animation: dual-ring 1.2s linear infinite;
+}
+
+@keyframes spinner-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes dual-ring {

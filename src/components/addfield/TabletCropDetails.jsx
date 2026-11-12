@@ -92,6 +92,9 @@ const AddFieldSidebar = ({ saveFarm, markers }) => {
               size={20}
               color="#344E41"
               strokeWidth={2}
+              className="cursor-pointer"
+              role="button"
+              aria-label="Hide sidebar"
               onClick={toggleSidebarVisibility}
             />
           </div>

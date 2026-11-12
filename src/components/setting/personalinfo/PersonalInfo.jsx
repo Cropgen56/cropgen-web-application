@@ -62,8 +62,8 @@ const InputField = ({
       </label>
       <div className="relative">
         {Icon ? (
-          <div className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-ember-sidebar">
-            <Icon className="h-3.5 w-3.5" aria-hidden />
+          <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-ember-sidebar">
+            <Icon className="h-4 w-4" aria-hidden />
           </div>
         ) : null}
         <input
@@ -360,13 +360,13 @@ const PersonalInfo = ({ setShowSidebar }) => {
   };
 
   const StatCard = ({ icon: Icon, value, label }) => (
-    <div className="flex items-center gap-2 rounded-lg border border-white/25 bg-white/15 px-2.5 py-1.5 backdrop-blur-sm sm:px-3 sm:py-2">
-      <Icon className="h-3.5 w-3.5 shrink-0 text-white sm:h-4 sm:w-4" aria-hidden />
+    <div className="flex items-center gap-2.5 rounded-xl border border-white/25 bg-white/15 px-3 py-2 shadow-sm backdrop-blur-sm transition-colors hover:bg-white/25 sm:px-3.5 sm:py-2.5">
+      <Icon className="h-4 w-4 shrink-0 text-white sm:h-[18px] sm:w-[18px]" aria-hidden />
       <div className="min-w-0">
-        <p className="text-sm font-bold leading-tight text-white sm:text-base">
+        <p className="text-base font-bold leading-tight text-white sm:text-lg">
           {value}
         </p>
-        <p className="text-[10px] text-white/80 sm:text-[11px]">{label}</p>
+        <p className="text-[11px] text-white/80 sm:text-xs">{label}</p>
       </div>
     </div>
   );
@@ -382,12 +382,14 @@ const PersonalInfo = ({ setShowSidebar }) => {
       onBack={setShowSidebar}
       className="h-full bg-[#f8fbf9]"
     >
-      <div className="mx-auto w-full max-w-4xl space-y-3 sm:space-y-4">
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-ember-sidebar via-ember-sidebar-hover to-ember-surface-muted shadow-md sm:rounded-2xl">
-          <div className="absolute top-0 right-0 h-32 w-32 translate-x-1/3 -translate-y-1/3 rounded-full bg-white/5 sm:h-48 sm:w-48" />
+      <div className="mx-auto w-full max-w-4xl space-y-4 sm:space-y-5">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#243d31] via-ember-sidebar to-[#5A7C6B] shadow-xl sm:rounded-3xl">
+          <div className="absolute top-0 right-0 h-40 w-40 translate-x-1/3 -translate-y-1/3 rounded-full bg-white/10 sm:h-60 sm:w-60" />
+          <div className="absolute -bottom-16 left-1/4 h-40 w-40 rounded-full bg-[#7dffb3]/10 blur-2xl" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
 
-          <div className="relative px-3 py-4 sm:px-5 sm:py-5">
-            <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <div className="relative px-4 py-5 sm:px-7 sm:py-7">
+            <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
               <div className="relative shrink-0">
                 <input
                   type="file"
@@ -400,7 +402,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
                   type="button"
                   onClick={handleAvatarClick}
                   disabled={avatarUploading}
-                  className="relative block h-[72px] w-[72px] overflow-hidden rounded-xl ring-2 ring-white/35 transition-all hover:ring-white/55 focus:outline-none focus:ring-2 focus:ring-white/55 disabled:cursor-wait disabled:opacity-70 sm:h-20 sm:w-20"
+                  className="relative block h-24 w-24 overflow-hidden rounded-2xl shadow-xl ring-4 ring-white/40 transition-all hover:scale-[1.03] hover:ring-white/70 focus:outline-none focus:ring-4 focus:ring-white/70 disabled:cursor-wait disabled:opacity-70 sm:h-28 sm:w-28"
                 >
                   {avatarUploading ? (
                     <div className="flex h-full w-full flex-col items-center justify-center bg-white/10">
@@ -426,23 +428,23 @@ const PersonalInfo = ({ setShowSidebar }) => {
                     </>
                   )}
                 </button>
-                <div className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-md border border-ember-sidebar bg-white shadow">
-                  <Camera className="h-3 w-3 text-ember-sidebar" aria-hidden />
+                <div className="pointer-events-none absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-ember-sidebar shadow-lg">
+                  <Camera className="h-4 w-4 text-white" aria-hidden />
                 </div>
               </div>
 
               <div className="min-w-0 flex-1 text-center sm:text-left">
-                <h2 className="text-base font-bold leading-tight text-white sm:text-lg">
+                <h2 className="text-xl font-bold leading-tight text-white drop-shadow-sm sm:text-2xl">
                   {userProfile?.firstName} {userProfile?.lastName}
                 </h2>
-                <p className="mt-0.5 text-xs font-medium capitalize text-white/90">
+                <p className="mt-1 inline-block rounded-full bg-white/20 px-3 py-0.5 text-xs font-semibold capitalize text-white">
                   {userProfile?.role}
                 </p>
-                <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white/95 sm:text-[11px]">
-                  <Languages className="h-3 w-3 shrink-0" aria-hidden />
+                <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/95">
+                  <Languages className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   {getFarmerLanguageLabel(userProfile?.language)}
                 </p>
-                <div className="mt-2.5 flex flex-wrap justify-center gap-2 sm:justify-start">
+                <div className="mt-3.5 flex flex-wrap justify-center gap-2.5 sm:justify-start">
                   <StatCard
                     icon={Home}
                     value={fields?.length || 0}
@@ -459,9 +461,13 @@ const PersonalInfo = ({ setShowSidebar }) => {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm sm:rounded-2xl">
-          <form onSubmit={handleSubmit} className="p-3 sm:p-4 md:p-5">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5">
+        <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg sm:rounded-3xl">
+          <div className="border-b border-gray-100 bg-gradient-to-r from-[#f1f8f4] to-white px-4 py-3.5 sm:px-6">
+            <h3 className="text-base font-bold text-ember-sidebar">Personal details</h3>
+            <p className="text-xs text-gray-500 sm:text-sm">Your name, contact and location</p>
+          </div>
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
               <InputField
                 id="firstName"
                 label="First Name"
@@ -575,14 +581,14 @@ const PersonalInfo = ({ setShowSidebar }) => {
               </div>
             </div>
 
-            <div className="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="mt-6 flex flex-col gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:flex-wrap sm:items-center">
               {!isEditing ? (
                 <button
                   type="button"
                   onClick={handleEnableEdit}
                   className={`${fs.btnPrimary} w-full sm:w-auto`}
                 >
-                  <Pencil className="h-3.5 w-3.5" aria-hidden />
+                  <Pencil className="h-4 w-4" aria-hidden />
                   Edit details
                 </button>
               ) : (
@@ -593,7 +599,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
                     disabled={isSaving}
                     className={`${fs.btnSecondary} w-full sm:w-auto`}
                   >
-                    <X className="h-3.5 w-3.5" aria-hidden />
+                    <X className="h-4 w-4" aria-hidden />
                     Cancel
                   </button>
                   <button
@@ -603,12 +609,12 @@ const PersonalInfo = ({ setShowSidebar }) => {
                   >
                     {isSaving ? (
                       <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                         Saving…
                       </>
                     ) : (
                       <>
-                        <Save className="h-3.5 w-3.5" aria-hidden />
+                        <Save className="h-4 w-4" aria-hidden />
                         Save changes
                       </>
                     )}
@@ -670,7 +676,7 @@ const SelectField = ({
       ))}
     </select>
     {hint ? (
-      <p className="mt-1 text-[10px] leading-snug text-gray-500 sm:text-[11px]">
+      <p className="mt-1.5 text-xs leading-snug text-gray-500">
         {hint}
       </p>
     ) : null}

@@ -2,6 +2,118 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------- Motion & polish (opacity/transform only, no shadows) ---------- */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Pages ease in when the route changes (see MainLayout). */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-enter {
+  animation: page-enter 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.stagger-children > * {
+  animation: page-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 220ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 280ms; }
+.stagger-children > *:nth-child(n + 6) { animation-delay: 340ms; }
+
+@layer base {
+  /* Hover / focus colour changes ease instead of snapping (colour only, so it never fights framer-motion or Tailwind transforms). */
+  a,
+  button,
+  [role="button"],
+  [role="tab"],
+  select,
+  input,
+  textarea {
+    transition-property: color, background-color, border-color, opacity,
+      text-decoration-color;
+    transition-duration: 160ms;
+    transition-timing-function: ease-out;
+  }
+
+  /* One clear, consistent keyboard focus ring. */
+  :focus-visible {
+    outline: 2px solid #5a7c6b;
+    outline-offset: 2px;
+  }
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline-offset: 0;
+  }
+}
+
+/* Keep scrolling stable when a scrollbar appears, and tidy it. */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Respect the OS "reduce motion" setting. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Cursors. Tailwind's preflight already makes <button> and [role="button"] show
+ * a pointer; these rules cover the controls it leaves on the default arrow
+ * (form controls, tabs/switches, labels wrapping a checkbox) and give disabled
+ * controls a "not-allowed" cursor. They sit in the base layer, so any
+ * `cursor-*` utility class on an element still wins.
+ */
+@layer base {
+  a[href],
+  summary,
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled),
+  input[type="range"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="button"]:not(:disabled),
+  [role="tab"]:not([aria-disabled="true"]),
+  [role="switch"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  [role="option"]:not([aria-disabled="true"]),
+  label:has(> input[type="checkbox"]:not(:disabled)),
+  label:has(> input[type="radio"]:not(:disabled)) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled,
+  input:disabled,
+  textarea:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
 /* Poppins is loaded in public/index.html */
 
 /* CropGen shared brand colors */
