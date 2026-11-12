@@ -12,29 +12,19 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSubscriptions } from "../../../redux/slices/subscriptionSlice";
 import SettingsPanel from "../SettingsPanel";
+import { FEATURE_DISPLAY_NAMES } from "../../../utils/planFeatures";
+import {
+  ENTERPRISE_CONTACT_URL,
+  ENTERPRISE_NAME,
+  ENTERPRISE_PRICING,
+  ENTERPRISE_TAGLINE,
+} from "../../../utils/enterprisePlan";
 
-const FEATURE_DISPLAY_NAMES = {
-  satelliteImagery: "Satellite Imagery",
-  cropHealthAndYield: "Crop Health & Yield Monitoring",
-  soilAnalysisAndHealth: "Soil Analysis & Health",
-  weatherAnalytics: "Weather Analytics",
-  vegetationIndices: "Vegetation Indices",
-  waterIndices: "Water Indices",
-  evapotranspirationMonitoring: "Evapotranspiration Monitoring",
-  agronomicInsights: "Agronomic Insights",
-  weeklyAdvisoryReports: "Weekly Advisory Reports",
-  cropGrowthMonitoring: "Crop Growth Monitoring",
-  farmOperationsManagement: "Farm Operations Management",
-  diseaseDetectionAlerts: "Disease Detection Alerts",
-  smartAdvisorySystem: "Smart Advisory System",
-  soilReportGeneration: "Soil Report Generation",
-  other: "Other Features",
-};
 
 const ENTERPRISE_PLAN = {
   _id: "enterprise",
-  name: "Enterprise",
-  description: "Custom solution for large-scale agriculture",
+  name: ENTERPRISE_NAME,
+  description: ENTERPRISE_TAGLINE,
   features: Object.entries(FEATURE_DISPLAY_NAMES).map(([key, name]) => ({
     name,
     enabled: true,
@@ -58,11 +48,11 @@ function findPricingEntry(pricing, cycle, currency) {
   const byCycle = pricing.filter((p) => norm(p).billingCycle === cyc);
   if (byCycle.length === 0) return null;
 
-  const exact = byCycle.find((p) => norm(p).currency === cur);
-  if (exact) return exact;
-
-  return byCycle[0];
+  return byCycle.find((p) => norm(p).currency === cur) || null;
 }
+
+/** 1 acre = 0.404686 ha. Web shows every plan price per hectare. */
+const ACRES_TO_HECTARES = 0.404686;
 
 function amountMajorFromEntry(entry) {
   if (!entry || typeof entry !== "object") {
@@ -76,7 +66,9 @@ function amountMajorFromEntry(entry) {
     return { value: entry.amount_minor / 100, perAcre: false };
   }
   if (typeof entry.pricePerUnitMinor === "number") {
-    return { value: entry.pricePerUnitMinor / 100, perAcre: true };
+    const major = entry.pricePerUnitMinor / 100;
+    const perHa = entry.unit === "hectare" ? major : major / ACRES_TO_HECTARES;
+    return { value: Math.round(perHa * 100) / 100, perAcre: true };
   }
   if (typeof entry.price_per_unit_minor === "number") {
     return { value: entry.price_per_unit_minor / 100, perAcre: true };
@@ -109,7 +101,8 @@ function transformApiData(apiData) {
       (plan) =>
         (plan.platform == null ||
           plan.platform === "" ||
-          plan.platform === "web") &&
+          plan.platform === "web" ||
+          plan.platform === "all") &&
         plan.active !== false &&
         plan.isInternal !== true
     )
@@ -196,12 +189,12 @@ function PlanCard({
   const handleContact = (e) => {
     e.stopPropagation();
     if (onContactClick) onContactClick({ plan });
-    else window.open("https://www.cropgenapp.com/contact", "_blank");
+    else window.open(ENTERPRISE_CONTACT_URL, "_blank", "noopener,noreferrer");
   };
 
   if (isEnterprise) {
     return (
-      <div className="w-[320px] h-[450px] flex-shrink-0" style={{ perspective: 1000 }}>
+      <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.25 }} className="w-[min(320px,86vw)] min-h-[450px] flex-shrink-0" style={{ perspective: 1000 }}>
         <motion.div
           onClick={() => setFlipped((s) => !s)}
           animate={{ rotateY: flipped ? 180 : 0 }}
@@ -210,12 +203,13 @@ function PlanCard({
             transformStyle: "preserve-3d",
             width: "100%",
             height: "100%",
+            minHeight: 450,
             position: "relative",
           }}
           className="cursor-pointer"
         >
           <div
-            className="absolute inset-0 p-6 flex flex-col rounded-2xl bg-gradient-to-br from-[#0a2e22] via-ember-sidebar to-ember-gradient-mid text-white border-2 border-[#E1FFF0]/30"
+            className="relative h-full p-6 flex flex-col rounded-3xl shadow-2xl bg-gradient-to-br from-[#0a2e22] via-ember-sidebar to-ember-gradient-mid text-white border-2 border-[#E1FFF0]/30"
             style={{ backfaceVisibility: "hidden" }}
           >
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#E1FFF0] to-[#a8e6cf] text-ember-sidebar text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1 shadow-[0_2px_6px_rgba(0,0,0,0.3)]">
@@ -234,15 +228,23 @@ function PlanCard({
               </div>
             </div>
 
-            <div className="flex items-baseline gap-2 my-1">
-              <p className="text-[20px] font-bold text-[#E1FFF0] mb-0">
-                Custom Pricing
-              </p>
+            <div className="my-1 flex flex-col gap-1">
+              {ENTERPRISE_PRICING.map(({ label, value }) => (
+                <p
+                  key={label}
+                  className="mb-0 flex items-baseline justify-between gap-3 text-xs text-white/75"
+                >
+                  {label}
+                  <span className="text-[18px] font-bold text-[#E1FFF0]">
+                    {value}
+                  </span>
+                </p>
+              ))}
             </div>
 
             <hr className="border-t border-white/60 my-2" />
 
-            <div className="flex-1 flex flex-col gap-2 text-[11px] font-semibold overflow-hidden">
+            <div className="flex-1 flex flex-col gap-2.5 text-xs font-semibold">
               {frontFeatures.map((f, idx) => (
                 <p key={idx} className="flex items-center gap-2 mb-0">
                   <div
@@ -332,13 +334,15 @@ function PlanCard({
             </div>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div
-      className="h-[min(400px,72vh)] w-[min(280px,82vw)] flex-shrink-0 sm:h-[420px] sm:w-[260px] md:w-[280px]"
+    <motion.div
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.25 }}
+      className="min-h-[430px] w-[min(300px,82vw)] flex-shrink-0 sm:w-[290px] md:w-[300px]"
       style={{ perspective: 1000 }}
     >
       <motion.div
@@ -349,18 +353,20 @@ function PlanCard({
           transformStyle: "preserve-3d",
           width: "100%",
           height: "100%",
+          minHeight: 430,
           position: "relative",
         }}
         className="cursor-pointer"
       >
         <div
-          className="absolute inset-0 rounded-2xl px-4 py-3 flex flex-col gap-2 bg-white text-black border-1 border-ember-sidebar"
+          className="relative h-full overflow-hidden rounded-3xl px-5 py-4 flex flex-col gap-2.5 bg-gradient-to-b from-[#eefaf3] via-white to-white text-black border border-[#344E41]/20 shadow-lg"
           style={{ backfaceVisibility: "hidden" }}
         >
-          <h3 className="mb-0 text-lg font-extrabold sm:text-xl">{plan.name}</h3>
-          <p className="text-xs mb-0">{plan.description}</p>
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#5A7C6B] via-[#7dd3a8] to-[#344E41]" />
+          <h3 className="mb-0 mt-1 text-xl font-extrabold sm:text-2xl">{plan.name}</h3>
+          <p className="text-sm mb-0 text-gray-600">{plan.description}</p>
           <div className="flex items-baseline gap-2 flex-wrap">
-            <p className="text-[20px] font-bold text-ember-sidebar mb-0">
+            <p className="text-[28px] font-extrabold tracking-tight text-ember-sidebar mb-0">
               {price === 0 ? (
                 "Free"
               ) : (
@@ -369,7 +375,7 @@ function PlanCard({
                   {formatPlanPrice(price, displayCurrency)}
                   {perAcre ? (
                     <span className="text-sm font-semibold text-ember-sidebar/80">
-                      /acre
+                      /ha
                     </span>
                   ) : null}
                 </>
@@ -383,9 +389,9 @@ function PlanCard({
             ) : null}
           </div>
 
-          <hr className="border-t border-1 border-ember-sidebar my-2" />
+          <hr className="border-t border-[#344E41]/15 my-2" />
 
-          <div className="flex-1 flex flex-col gap-2 text-[11px] font-semibold overflow-hidden">
+          <div className="flex-1 flex flex-col gap-2.5 text-xs font-semibold">
             {frontFeatures.map((f, idx) => (
               <p key={idx} className="flex items-center gap-2 mb-0">
                 {f.enabled ? (
@@ -404,13 +410,13 @@ function PlanCard({
                 e.stopPropagation();
                 setFlipped(true);
               }}
-              className="flex-1 py-2 rounded-2xl text-xs bg-[#5A7C6B] text-white hover:bg-[#466657] transition-all duration-500 ease-in-out"
+              className="flex-1 min-h-[40px] py-2 rounded-2xl text-sm font-semibold border border-[#5A7C6B]/40 bg-white/70 text-[#344E41] hover:border-[#5A7C6B] hover:bg-white transition-all duration-300 ease-in-out"
             >
               View All Features
             </button>
             <button
               onClick={handleSubscribe}
-              className="flex-1 py-2 rounded-2xl font-bold text-xs bg-ember-sidebar text-white hover:bg-ember-sidebar-hover transition-all duration-500 ease-in-out"
+              className="flex-1 min-h-[40px] py-2 rounded-2xl font-bold text-sm bg-gradient-to-r from-[#344E41] to-[#5A7C6B] text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110 transition-all duration-300 ease-in-out"
             >
               Subscribe
             </button>
@@ -418,13 +424,13 @@ function PlanCard({
         </div>
 
         <div
-          className="absolute inset-0 rounded-2xl px-4 py-3 flex flex-col gap-2 bg-white text-black border-1 border-ember-sidebar"
+          className="absolute inset-0 overflow-hidden rounded-3xl px-5 py-4 flex flex-col gap-2 bg-gradient-to-b from-[#eefaf3] via-white to-white text-black border border-[#344E41]/20 shadow-lg"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           <h3 className="text-[18px] font-bold mb-2">
             {plan.name} — All Features
           </h3>
-          <div className="text-[11px] flex-1 overflow-auto font-semibold leading-[24px] pr-2">
+          <div className="text-xs flex-1 overflow-auto font-semibold leading-[24px] pr-2">
             {backFeatures.map((f, idx) => (
               <p key={idx} className="flex items-center gap-2 mb-1">
                 {f.enabled ? (
@@ -441,13 +447,13 @@ function PlanCard({
               e.stopPropagation();
               setFlipped(false);
             }}
-            className="mt-3 w-full py-2 rounded-2xl bg-[#5A7C6B] text-white hover:bg-[#466657] transition-all duration-500 ease-in-out"
+            className="mt-3 w-full min-h-[40px] py-2 rounded-2xl bg-gradient-to-r from-[#344E41] to-[#5A7C6B] text-sm font-bold text-white shadow-md hover:brightness-110 transition-all duration-300 ease-in-out"
           >
             Back
           </button>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -457,7 +463,7 @@ const Pricing = ({ setShowSidebar }) => {
     (state) => state.subscription || {}
   );
   const [billing, setBilling] = useState("monthly");
-  const [currency, setCurrency] = useState("INR");
+  const [currency, setCurrency] = useState("USD");
   const scrollContainerRef = React.useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -502,13 +508,13 @@ const Pricing = ({ setShowSidebar }) => {
     >
       <div className="mx-auto w-full max-w-6xl">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex overflow-hidden rounded-md border border-gray-200 text-xs">
+        <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white text-sm shadow-sm">
           {["monthly", "yearly"].map((b) => (
             <button
               key={b}
               type="button"
               onClick={() => setBilling(b)}
-              className={`px-2.5 py-1 capitalize transition-colors sm:px-3 sm:py-1.5 ${
+              className={`min-h-[38px] px-4 py-1.5 font-semibold capitalize transition-colors ${
                 billing === b
                   ? "bg-ember-sidebar text-white"
                   : "bg-white text-gray-600 hover:text-ember-sidebar"
@@ -519,13 +525,13 @@ const Pricing = ({ setShowSidebar }) => {
           ))}
         </div>
 
-        <div className="flex overflow-hidden rounded-md border border-gray-200 text-xs">
+        <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white text-sm shadow-sm">
           {["INR", "USD"].map((c) => (
             <button
               key={c}
               type="button"
               onClick={() => setCurrency(c)}
-              className={`px-2.5 py-1 transition-colors sm:px-3 sm:py-1.5 ${
+              className={`min-h-[38px] px-4 py-1.5 font-semibold transition-colors ${
                 currency === c
                   ? "bg-ember-sidebar text-white"
                   : "bg-white text-gray-600 hover:text-ember-sidebar"
@@ -560,8 +566,16 @@ const Pricing = ({ setShowSidebar }) => {
             scrollbarWidth: "none",
           }}
         >
-          <div className="flex gap-4 pb-2">
-            {plans.map((plan) => (
+          <div className="flex items-stretch gap-5 px-1 pb-3 pt-2">
+            {plans
+              .filter(
+                (plan) =>
+                  plan.isEnterprise ||
+                  (plan.pricing || []).some(
+                    (p) => String(p.currency).toUpperCase() === currency,
+                  ),
+              )
+              .map((plan) => (
               <PlanCard
                 key={plan._id}
                 plan={plan}

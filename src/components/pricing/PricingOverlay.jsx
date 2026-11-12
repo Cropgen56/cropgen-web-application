@@ -25,10 +25,17 @@ import {
 import { getFarmFields } from "../../redux/slices/farmSlice";
 import { toast } from "react-toastify";
 import PlanCard from "./PlanCard";
+import { FEATURE_DISPLAY_NAMES } from "../../utils/planFeatures";
+import { ENTERPRISE_TAGLINE } from "../../utils/enterprisePlan";
+import { describeFarmPlan } from "../../utils/farmPlan";
 
 /* ================= CONSTANTS ================= */
 
 const PLAN_ORDER = [
+  "base-plan-mobile",
+  "basic-plan",
+  "pro-plan",
+  "premium",
   "web-basic",
   "web-pro",
   "web-premium",
@@ -41,6 +48,30 @@ const PLAN_ORDER = [
 /** US survey acre → hectare (same factor as elsewhere in the web app). */
 const ACRES_TO_HECTARES = 0.404686;
 
+/** Price per hectare (major units) for a pricing row quoted per acre or per hectare. */
+function pricePerHectare(row) {
+  if (!row) return 0;
+  const major = (Number(row.pricePerUnitMinor) || 0) / 100;
+  return row.unit === "hectare" ? major : major / ACRES_TO_HECTARES;
+}
+
+/**
+ * Real yearly saving vs paying monthly for 12 months, from the plan's own
+ * pricing rows in `currency` (0 when either price is missing or yearly is not cheaper).
+ */
+function yearlySavingsPercent(pricing, currency) {
+  const rows = Array.isArray(pricing) ? pricing : [];
+  const monthly = pricePerHectare(
+    rows.find((p) => p.currency === currency && p.billingCycle === "monthly"),
+  );
+  const yearly = pricePerHectare(
+    rows.find((p) => p.currency === currency && p.billingCycle === "yearly"),
+  );
+  if (!(monthly > 0) || !(yearly > 0)) return 0;
+  const pct = Math.round((1 - yearly / (monthly * 12)) * 100);
+  return pct > 0 ? pct : 0;
+}
+
 function resolveFieldAreaAcres(selectedField) {
   const acre = Number(selectedField?.acre);
   if (acre > 0) return acre;
@@ -49,30 +80,11 @@ function resolveFieldAreaAcres(selectedField) {
   return 0;
 }
 
-const FEATURE_DISPLAY_NAMES = {
-  satelliteImagery: "Satellite Imagery",
-  cropHealthAndYield: "Crop Health & Yield Monitoring",
-  soilAnalysisAndHealth: "Soil Analysis & Health",
-  weatherAnalytics: "Weather Analytics",
-  vegetationIndices: "Vegetation Indices",
-  waterIndices: "Water Indices",
-  evapotranspirationMonitoring: "Evapotranspiration Monitoring",
-  agronomicInsights: "Agronomic Insights",
-  weeklyAdvisoryReports: "Weekly Advisory Reports",
-  cropGrowthMonitoring: "Crop Growth Monitoring",
-  farmOperationsManagement: "Farm Operations Management",
-  diseaseDetectionAlerts: "Disease Detection Alerts",
-  smartAdvisorySystem: "Smart Advisory System",
-  soilReportGeneration: "Soil Report Generation",
-  cropCalendar: "Crop Calendar",
-  zoningAnalysis: "Zoning & VRA Analysis",
-  other: "Other",
-};
 
 const ENTERPRISE_PLAN = {
   _id: "enterprise",
   name: "Enterprise",
-  tagline: "Complete solution for large-scale agricultural operations",
+  tagline: ENTERPRISE_TAGLINE,
   isEnterprise: true,
   features: Object.values(FEATURE_DISPLAY_NAMES),
   missing: [],
@@ -91,12 +103,42 @@ function isCatalogTrialPlan(plan) {
   return false;
 }
 
-function transformApiData(
+/** Free Trial card derived from the Growth plan (same features and post-trial price). */
+function buildFreeTrialPlan(base) {
+  const offer = base.freeTrialOffer;
+  const tooLarge = base.areaHectares > offer.maxHectares + 1e-9;
+  const used = Boolean(offer.used);
+  return {
+    ...base,
+    _id: `free-trial:${base._id}`,
+    planId: base._id,
+    name: "Free Trial",
+    tagline: `${offer.days} days of ${base.name} features`,
+    recommended: true,
+    isFreeTrialOffer: true,
+    isTrialPlan: true,
+    trialDays: offer.days,
+    savingsPct: 0,
+    freeTrialLimits: {
+      maxHectares: offer.maxHectares,
+      maxFarms: offer.maxFarms,
+    },
+    trialDisabled: tooLarge || used,
+    disabledMessage: used
+      ? "You have already used your free trial. It is available once per account — choose a plan to continue."
+      : tooLarge
+      ? `This farm is ${base.areaHectares.toFixed(2)} ha. The free trial supports farms up to ${offer.maxHectares} ha — choose a paid plan instead.`
+      : undefined,
+  };
+}
+
+export function transformApiData(
   apiData,
   billing,
   selectedField,
   platform = "web",
   displayCurrency = "USD",
+  options = {},
 ) {
   if (!Array.isArray(apiData)) return [];
 
@@ -107,9 +149,11 @@ function transformApiData(
   let plans = apiData
     .filter(
       (plan) =>
-        plan.platform === platform &&
+        (plan.platform === platform || plan.platform === "all") &&
         plan.active !== false &&
-        plan.isInternal !== true,
+        plan.isInternal !== true &&
+        // INR shows the India plan, USD the international plans.
+        (plan.pricing || []).some((p) => p.currency === cur),
     )
     .map((plan) => {
       const priceObj = plan.pricing?.find(
@@ -124,13 +168,16 @@ function transformApiData(
       let unitPriceInr = 0;
       let totalPriceInr = 0;
 
-      if (priceObj && area > 0) {
-        unitPrice = priceObj.pricePerUnitMinor / 100; // cents → dollars
-        total = unitPrice * area;
+      // Web shows prices per hectare; total = price/ha × field hectares.
+      // Unit prices do not depend on a field (Settings lists plans with no
+      // field selected); totals are 0 until an area is known.
+      if (priceObj) {
+        unitPrice = pricePerHectare(priceObj);
+        total = unitPrice * areaHectares;
       }
-      if (inrObj && area > 0) {
-        unitPriceInr = inrObj.pricePerUnitMinor / 100; // paise → rupees
-        totalPriceInr = unitPriceInr * area;
+      if (inrObj) {
+        unitPriceInr = pricePerHectare(inrObj);
+        totalPriceInr = unitPriceInr * areaHectares;
       }
 
       const enabled = [];
@@ -176,8 +223,17 @@ function transformApiData(
         active: plan.active,
         isEnterprise: false,
         unavailableForBilling,
+        savingsPct: yearlySavingsPercent(plan.pricing, cur),
+        /** Set by the API on the Growth plan: the 21-day Free Trial offer. */
+        freeTrialOffer: plan.freeTrialOffer || null,
       };
     });
+
+  // No trial for this farm (it has a plan or already used its trial): nothing
+  // should advertise one, the checkout is a normal paid subscription.
+  if (options.skipFreeTrial) {
+    plans = plans.map((p) => ({ ...p, isTrialPlan: false, trialDays: 0 }));
+  }
 
   plans.sort((a, b) => {
     const ia = PLAN_ORDER.indexOf(a.slug);
@@ -187,6 +243,24 @@ function transformApiData(
     if (sa !== sb) return sa - sb;
     return (a.name || "").localeCompare(b.name || "");
   });
+  // A dedicated Free Trial card (21 days, autopay required, 1 farm, up to
+  // 5 ha), built from the plan that carries the offer in the shown currency:
+  // Growth for USD, Basic for India (INR).
+  const trialBase = plans.find(
+    (p) =>
+      p.freeTrialOffer &&
+      p.freeTrialOffer.currency === cur &&
+      !p.unavailableForBilling,
+  );
+  // Not offered to a farm that already has a plan: changing plan is not a trial.
+  if (trialBase && !options.skipFreeTrial) {
+    const i = plans.indexOf(trialBase);
+    // The base plan stays purchasable but no longer advertises its own
+    // shorter trial next to the 21-day Free Trial card.
+    plans[i] = { ...trialBase, isTrialPlan: false, trialDays: 0 };
+    plans.unshift(buildFreeTrialPlan(trialBase));
+  }
+
   plans.push(ENTERPRISE_PLAN);
 
   return plans;
@@ -203,7 +277,7 @@ export default function PricingOverlay({ onClose, selectedField }) {
 
   const [billing, setBilling] = useState("monthly");
   /** Shown prices + sent as displayCurrency on create-order (server uses matching pricing row). */
-  const [displayCurrency, setDisplayCurrency] = useState("INR");
+  const [displayCurrency, setDisplayCurrency] = useState("USD");
   const [groupIndex, setGroupIndex] = useState(0);
   const [cardsPerGroup, setCardsPerGroup] = useState(3);
   const [checkoutData, setCheckoutData] = useState(null);
@@ -229,6 +303,20 @@ export default function PricingOverlay({ onClose, selectedField }) {
     navigateRef.current = navigate;
     onCloseRef.current = onClose;
   }, [dispatch, navigate, onClose]);
+
+  /* Esc closes the dialog; the page behind does not scroll while it is open. */
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onCloseRef.current?.();
+    };
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
 
   const resolveUserId = () => userRef.current?.id ?? userRef.current?._id;
 
@@ -262,6 +350,23 @@ export default function PricingOverlay({ onClose, selectedField }) {
 
   /* ---------- DATA ---------- */
 
+  /** The plan this farm is on now (changing plan switches from it). */
+  const currentPlan = useMemo(() => describeFarmPlan(selectedField), [selectedField]);
+
+  // A farm gets one trial ever: the farm list says whether this one can still
+  // have it (`trialEligible`). With a plan already running, a switch is never a trial.
+  const farmsInStore = useSelector((s) => s.farmfield?.fields);
+  const storeFarm = useMemo(
+    () =>
+      (Array.isArray(farmsInStore) ? farmsInStore : []).find(
+        (f) => String(f._id) === String(selectedField?.id ?? selectedField?._id),
+      ),
+    [farmsInStore, selectedField],
+  );
+  const trialAvailable =
+    !currentPlan.hasPlan &&
+    (selectedField?.trialEligible ?? storeFarm?.trialEligible) !== false;
+
   const plans = useMemo(
     () =>
       transformApiData(
@@ -270,12 +375,21 @@ export default function PricingOverlay({ onClose, selectedField }) {
         selectedField,
         "web",
         displayCurrency,
+        { skipFreeTrial: !trialAvailable },
       ),
-    [subscriptions, billing, selectedField, displayCurrency],
+    [subscriptions, billing, selectedField, displayCurrency, trialAvailable],
+  );
+
+  /** The 21-day Free Trial card, when this currency has one. */
+  const freeTrialPlan = useMemo(
+    () => plans.find((pl) => pl.isFreeTrialOffer) || null,
+    [plans],
   );
 
   const headerTrialDays = useMemo(() => {
-    const p = plans.find((pl) => pl.isTrialPlan && pl.trialDays > 0);
+    const p = plans.find(
+      (pl) => pl.isTrialPlan && pl.trialDays > 0 && !pl.isFreeTrialOffer,
+    );
     return p?.trialDays ?? null;
   }, [plans]);
 
@@ -288,6 +402,15 @@ export default function PricingOverlay({ onClose, selectedField }) {
   }, [plans, cardsPerGroup]);
 
   const visiblePlans = groups[groupIndex] || [];
+
+  /** Yearly discount across the plans shown in the selected currency (real-time). */
+  const savingsLabel = useMemo(() => {
+    const pcts = plans.map((p) => p.savingsPct || 0).filter((n) => n > 0);
+    if (!pcts.length) return null;
+    const max = Math.max(...pcts);
+    const min = Math.min(...pcts);
+    return max === min ? `Save ${max}%` : `Save up to ${max}%`;
+  }, [plans]);
 
   const refreshFarmFields = useCallback(async () => {
     const userId = resolveUserId();
@@ -332,14 +455,23 @@ export default function PricingOverlay({ onClose, selectedField }) {
         return;
       }
 
-      const payload = {
-        farmId,
-        planId: plan._id,
-        /** Web: every plan starts with a free trial; post-trial billing uses Monthly/Yearly toggle. */
-        billingCycle: "trial",
-        commitBillingCycle: billing,
-        displayCurrency,
-      };
+      const payload = plan.isFreeTrialOffer
+        ? {
+            farmId,
+            planId: plan.planId,
+            /** 21-day Free Trial: autopay is saved now, the Growth plan bills after the trial. */
+            freeTrial: true,
+            billingCycle: billing,
+            displayCurrency: plan.freeTrialOffer?.currency || displayCurrency,
+          }
+        : {
+            farmId,
+            planId: plan._id,
+            /** Web: every plan starts with a free trial; post-trial billing uses Monthly/Yearly toggle. */
+            billingCycle: "trial",
+            commitBillingCycle: billing,
+            displayCurrency,
+          };
 
       const res = await dispatch(createUserSubscription(payload)).unwrap();
 
@@ -458,6 +590,20 @@ export default function PricingOverlay({ onClose, selectedField }) {
           }
 
           const d = result.data || {};
+
+          // Switched within 24 hours of paying for the old plan: it is refunded.
+          if (d.previousPlanRefund?.status === "refunded") {
+            toast.success(
+              "Plan switched. You changed plans within 24 hours, so your previous plan's payment is being refunded — it can take 5–7 working days to reach your account.",
+              { autoClose: 9000 },
+            );
+          } else if (d.previousPlanRefund?.status === "failed") {
+            toast.info(
+              "Plan switched. Your previous plan's payment qualifies for a refund (switched within 24 hours); we could not issue it automatically, so our team will process it.",
+              { autoClose: 9000 },
+            );
+          }
+
           dispatchRef.current(
             setPaymentSuccess({
               fieldName: d.fieldName ?? fieldSnap?.fieldName,
@@ -517,10 +663,13 @@ export default function PricingOverlay({ onClose, selectedField }) {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#344E41]/60 p-2 backdrop-blur-[2px] sm:p-3 md:p-4">
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Choose the right plan"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="flex max-h-[calc(100dvh-0.75rem)] w-full max-w-7xl min-h-0 flex-col overflow-x-hidden overflow-y-hidden rounded-2xl border border-white/10 bg-white/10 shadow-xl backdrop-blur-md sm:max-h-[calc(100dvh-1.25rem)] md:max-h-[calc(100dvh-2rem)]"
+        className="flex max-h-[calc(100dvh-0.75rem)] w-full max-w-6xl min-h-0 flex-col overflow-x-hidden overflow-y-hidden rounded-2xl border border-white/10 bg-white/10 shadow-xl backdrop-blur-md sm:max-h-[calc(100dvh-1.25rem)] md:max-h-[calc(100dvh-2rem)]"
       >
         <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-white/10 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-6">
           <button
@@ -545,155 +694,183 @@ export default function PricingOverlay({ onClose, selectedField }) {
           </button>
         </div>
 
-        {/* Currency + billing — compact; details on demand */}
-        <div className="shrink-0 space-y-2 border-b border-white/10 px-3 py-2.5 sm:space-y-2.5 sm:px-4 sm:py-3 md:px-6">
-          <div className="mx-auto max-w-2xl px-0.5 text-center">
-            {headerTrialDays ? (
-              <p className="text-[11px] leading-snug text-white/90 sm:text-xs md:text-sm">
-                <strong className="text-white">
-                  {headerTrialDays}-day free trial
-                </strong>{" "}
-                on this field — one{" "}
-                <strong className="text-white">Razorpay (INR)</strong>{" "}
-                checkout, then the{" "}
-                <strong className="text-white">full plan</strong> after the
-                trial. <strong className="text-white">Monthly</strong> /{" "}
-                <strong className="text-white">Yearly</strong> applies after
-                that.
-                <span className="text-white/70">
-                  {" "}
-                  USD/INR toggle is display only (per acre × area).
-                </span>
-              </p>
-            ) : (
-              <p className="text-[11px] leading-snug text-white/90 sm:text-xs md:text-sm">
-                One{" "}
-                <strong className="text-white">Razorpay (INR)</strong> checkout
-                for this field.{" "}
-                <strong className="text-white">Monthly</strong> /{" "}
-                <strong className="text-white">Yearly</strong> applies
-                immediately based on your selection.
-                <span className="text-white/70">
-                  {" "}
-                  USD/INR toggle is display only (per acre × area).
-                </span>
-              </p>
-            )}
+        {/* Billing summary + currency / cycle controls (compact; details on demand) */}
+        <div className="shrink-0 border-b border-white/10 px-3 py-2 sm:px-4 sm:py-2.5 md:px-6">
+          <div className="mx-auto flex max-w-4xl flex-col items-center gap-2 sm:gap-2.5">
+            <p className="text-center text-[11px] leading-snug text-white/90 sm:text-xs md:text-[13px]">
+              {freeTrialPlan ? (
+                <>
+                  <strong className="text-white">
+                    {freeTrialPlan.trialDays}-day free trial
+                  </strong>{" "}
+                  with autopay: 1 farm, up to{" "}
+                  <strong className="text-white">
+                    {freeTrialPlan.freeTrialLimits.maxHectares} ha
+                  </strong>
+                  , then the plan bills in{" "}
+                  <strong className="text-white">INR</strong> via Razorpay.
+                </>
+              ) : headerTrialDays ? (
+                <>
+                  <strong className="text-white">
+                    {headerTrialDays}-day free trial
+                  </strong>{" "}
+                  on this field, then the{" "}
+                  <strong className="text-white">full plan</strong> bills in{" "}
+                  <strong className="text-white">INR</strong> via Razorpay.
+                </>
+              ) : (
+                <>
+                  One <strong className="text-white">Razorpay (INR)</strong>{" "}
+                  checkout for this field, billed{" "}
+                  <strong className="text-white">
+                    {billing === "yearly" ? "yearly" : "monthly"}
+                  </strong>
+                  .
+                </>
+              )}{" "}
+              <button
+                type="button"
+                onClick={() => setShowBillingDetails((v) => !v)}
+                className="inline-flex items-center gap-0.5 whitespace-nowrap font-semibold text-[#E1FFF0] underline decoration-[#E1FFF0]/50 underline-offset-2 hover:text-white"
+                aria-expanded={showBillingDetails}
+              >
+                {showBillingDetails ? "Hide details" : "Billing details"}
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${showBillingDetails ? "rotate-180" : ""}`}
+                  strokeWidth={2.5}
+                />
+              </button>
+            </p>
+
             {showBillingDetails ? (
-              <div className="mt-2 space-y-1.5 text-left text-[11px] leading-relaxed text-white/80 sm:text-xs">
+              <div className="max-h-28 w-full space-y-1.5 overflow-y-auto rounded-lg bg-black/15 px-3 py-2 text-left text-[11px] leading-relaxed text-white/85 sm:text-xs">
                 <p>
-                  One checkout saves your payment method in INR. You are not
-                  charged the full subscription amount until the trial ends.
-                  Monthly or Yearly sets recurring billing from then on.
+                  {freeTrialPlan
+                    ? `The free trial covers one farm of up to ${freeTrialPlan.freeTrialLimits.maxHectares} ha for ${freeTrialPlan.trialDays} days, once per account. Adding another farm or more area needs a paid plan. One checkout saves your autopay in INR; nothing is charged until the trial ends, then Monthly or Yearly billing starts.`
+                    : headerTrialDays
+                      ? "One checkout saves your payment method in INR. You are not charged the full subscription amount until the trial ends. Monthly or Yearly sets recurring billing from then on."
+                      : "Monthly or Yearly applies immediately, based on your selection."}
                 </p>
                 <p className="text-white/70">
-                  Switching USD or INR only changes how dollar or rupee amounts
-                  are shown; payment is processed in INR.
+                  The USD / INR toggle only changes how amounts are shown
+                  (price per hectare × field area); payment is processed in
+                  INR.
                 </p>
               </div>
             ) : null}
-            <button
-              type="button"
-              onClick={() => setShowBillingDetails((v) => !v)}
-              className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-[#E1FFF0] underline decoration-[#E1FFF0]/50 underline-offset-2 hover:text-white sm:text-xs"
-              aria-expanded={showBillingDetails}
-            >
-              {showBillingDetails ? "Hide details" : "More about billing"}
-              <ChevronDown
-                className={`h-3.5 w-3.5 transition-transform ${showBillingDetails ? "rotate-180" : ""}`}
-                strokeWidth={2.5}
+
+            <div className="flex w-full flex-col items-center justify-center gap-2 sm:flex-row sm:gap-x-6">
+              <div className="flex items-center gap-2 text-xs text-white select-none sm:text-sm">
+                <span className="text-white/70">Prices in</span>
+                <button
+                  type="button"
+                  onClick={() => setDisplayCurrency("USD")}
+                  className={`rounded px-1 font-semibold ${
+                    displayCurrency === "USD"
+                      ? "text-[#E1FFF0] underline decoration-2 underline-offset-4"
+                      : "text-white/60 hover:text-white/90"
+                  }`}
+                >
+                  USD
+                </button>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={displayCurrency === "INR"}
+                  aria-label="Toggle currency between USD and INR"
+                  onClick={() =>
+                    setDisplayCurrency((c) => (c === "USD" ? "INR" : "USD"))
+                  }
+                  className="relative h-6 w-12 shrink-0 cursor-pointer rounded-full bg-gray-200"
+                >
+                  <span
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-[#344E41] transition-[left] duration-200 ${
+                      displayCurrency === "USD" ? "left-0.5" : "left-[1.625rem]"
+                    }`}
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDisplayCurrency("INR")}
+                  className={`rounded px-1 font-semibold ${
+                    displayCurrency === "INR"
+                      ? "text-[#E1FFF0] underline decoration-2 underline-offset-4"
+                      : "text-white/60 hover:text-white/90"
+                  }`}
+                >
+                  INR
+                </button>
+              </div>
+
+              <div
+                className="hidden h-6 w-px shrink-0 bg-white/25 sm:block"
+                aria-hidden
               />
-            </button>
-          </div>
-          <div className="flex w-full max-w-2xl flex-col items-stretch gap-2 sm:mx-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-6 sm:gap-y-2">
-            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-white select-none sm:text-sm sm:justify-start">
-              <span className="text-white/70">Prices in</span>
-              <button
-                type="button"
-                onClick={() => setDisplayCurrency("USD")}
-                className={`font-semibold px-1 rounded ${
-                  displayCurrency === "USD"
-                    ? "text-[#E1FFF0] underline decoration-2 underline-offset-4"
-                    : "text-white/60 hover:text-white/90"
-                }`}
-              >
-                USD
-              </button>
-              <button
-                type="button"
-                aria-label="Toggle currency"
-                onClick={() =>
-                  setDisplayCurrency((c) => (c === "USD" ? "INR" : "USD"))
-                }
-                className="w-12 h-6 bg-gray-200 rounded-full relative cursor-pointer shrink-0"
-              >
-                <span
-                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-[#344E41] transition-[left] duration-200 ${
-                    displayCurrency === "USD" ? "left-0.5" : "left-[1.375rem]"
-                  }`}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => setDisplayCurrency("INR")}
-                className={`font-semibold px-1 rounded ${
-                  displayCurrency === "INR"
-                    ? "text-[#E1FFF0] underline decoration-2 underline-offset-4"
-                    : "text-white/60 hover:text-white/90"
-                }`}
-              >
-                INR
-              </button>
-            </div>
 
-            <div
-              className="hidden h-7 w-px shrink-0 bg-white/25 sm:block"
-              aria-hidden
-            />
-
-            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-white sm:gap-3 sm:text-sm">
-              <button
-                type="button"
-                onClick={() => setBilling("monthly")}
-                className={
-                  billing === "monthly"
-                    ? "font-semibold text-[#E1FFF0]"
-                    : "text-white/70 hover:text-white"
-                }
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                aria-label="Toggle monthly or yearly billing"
-                onClick={() =>
-                  setBilling((b) => (b === "monthly" ? "yearly" : "monthly"))
-                }
-                className="w-14 h-7 bg-gray-200 rounded-full relative cursor-pointer shrink-0"
-              >
-                <span
-                  className={`absolute top-0.5 w-6 h-6 rounded-full bg-[#344E41] transition-[left] duration-200 ${
-                    billing === "monthly" ? "left-1" : "left-7"
-                  }`}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => setBilling("yearly")}
-                className={
-                  billing === "yearly"
-                    ? "font-semibold text-[#E1FFF0]"
-                    : "text-white/70 hover:text-white"
-                }
-              >
-                Yearly
-              </button>
-              <span className="bg-[#E1FFF0] text-[#344E41] px-2 py-0.5 rounded text-xs font-bold">
-                Save 20%
-              </span>
+              <div className="flex items-center gap-2 text-xs text-white select-none sm:gap-3 sm:text-sm">
+                <button
+                  type="button"
+                  onClick={() => setBilling("monthly")}
+                  className={
+                    billing === "monthly"
+                      ? "font-semibold text-[#E1FFF0]"
+                      : "text-white/70 hover:text-white"
+                  }
+                >
+                  Monthly
+                </button>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={billing === "yearly"}
+                  aria-label="Toggle between monthly and yearly billing"
+                  onClick={() =>
+                    setBilling((b) => (b === "monthly" ? "yearly" : "monthly"))
+                  }
+                  className="relative h-6 w-12 shrink-0 cursor-pointer rounded-full bg-gray-200"
+                >
+                  <span
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-[#344E41] transition-[left] duration-200 ${
+                      billing === "monthly" ? "left-0.5" : "left-[1.625rem]"
+                    }`}
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBilling("yearly")}
+                  className={
+                    billing === "yearly"
+                      ? "font-semibold text-[#E1FFF0]"
+                      : "text-white/70 hover:text-white"
+                  }
+                >
+                  Yearly
+                </button>
+                {savingsLabel ? (
+                  <span className="rounded bg-[#E1FFF0] px-2 py-0.5 text-[11px] font-bold text-[#344E41] sm:text-xs">
+                    {savingsLabel}
+                  </span>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
+
+        {currentPlan.hasPlan ? (
+          <div className="shrink-0 border-b border-white/10 bg-black/10 px-3 py-2 text-center text-xs text-white/90 sm:px-4 sm:text-sm md:px-6">
+            <span className="text-white/70">
+              {selectedField?.fieldName ? `${selectedField.fieldName}: ` : ""}
+              current plan
+            </span>{" "}
+            <strong className="text-white">{currentPlan.title}</strong>
+            <span className="text-white/70"> · {currentPlan.detail}</span>
+            <span className="ml-2 hidden text-white/60 sm:inline">
+              Pick another plan below to switch — it starts right away and replaces this one.
+              Switch within 24 hours of paying and your previous payment is refunded; after that there is no refund.
+            </span>
+          </div>
+        ) : null}
 
         {/* Plans: cards use fixed height (540px) so %-height chains never collapse to “top border only” */}
         <div className="flex min-h-0 flex-1 flex-col px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 sm:px-3 md:px-5">
@@ -701,9 +878,15 @@ export default function PricingOverlay({ onClose, selectedField }) {
             <div className="relative flex min-h-0 flex-1 flex-col">
               <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
                 <div
-                  className={`flex flex-wrap justify-center gap-5 py-2 sm:gap-6 md:gap-8 ${
+                  className={`grid grid-cols-1 items-stretch justify-center justify-items-center gap-5 pb-4 pt-4 sm:gap-6 md:gap-7 ${
+                    visiblePlans.length >= 3
+                      ? "md:grid-cols-[repeat(3,minmax(0,340px))]"
+                      : visiblePlans.length === 2
+                        ? "md:grid-cols-[repeat(2,minmax(0,340px))]"
+                        : "md:grid-cols-[minmax(0,340px)]"
+                  } ${
                     groups.length > 1
-                      ? "px-6 sm:px-10 md:px-12"
+                      ? "px-8 sm:px-12 md:px-14"
                       : "px-1"
                   }`}
                 >
@@ -714,6 +897,12 @@ export default function PricingOverlay({ onClose, selectedField }) {
                       displayCurrency={displayCurrency}
                       selectedField={selectedField}
                       onSubscribeClick={handleSubscribeClick}
+                      changeMode={currentPlan.hasPlan}
+                      isCurrent={
+                        currentPlan.hasPlan &&
+                        String(p._id) === currentPlan.planId &&
+                        (!currentPlan.cycle || currentPlan.cycle === billing)
+                      }
                     />
                   ))}
                 </div>

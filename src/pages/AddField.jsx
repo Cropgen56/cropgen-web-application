@@ -214,7 +214,12 @@ const AddField = () => {
       }
     } catch (error) {
       console.error("Error adding field:", error);
-      message.error("Failed to add field. Please try again.");
+      // The server enforces the free-trial farm limit and says why.
+      message.error(
+        error?.code === "FREE_TRIAL_FARM_LIMIT" && error?.message
+          ? error.message
+          : "Failed to add field. Please try again.",
+      );
     }
   };
 

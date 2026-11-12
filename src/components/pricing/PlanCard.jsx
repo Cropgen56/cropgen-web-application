@@ -1,6 +1,21 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, X, Users, Headphones, Shield } from "lucide-react";
+import {
+  Check,
+  X,
+  Users,
+  Headphones,
+  Shield,
+  Sparkles,
+  Sprout,
+  Building2,
+  Crown,
+  ArrowRight,
+} from "lucide-react";
+import {
+  ENTERPRISE_PRICING,
+  openEnterpriseContact,
+} from "../../utils/enterprisePlan";
 
 function formatUsd(amount) {
   if (amount == null || Number.isNaN(amount)) return "—";
@@ -21,6 +36,23 @@ function formatInr(amount) {
   }).format(amount);
 }
 
+/** Per-hectare unit prices keep paise (e.g. ₹491.73/ha). */
+function formatInrUnit(amount) {
+  if (amount == null || Number.isNaN(amount)) return "—";
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+/**
+ * Cards size to their content (nothing is clipped); this is only the minimum so
+ * short plans still look substantial. Rows in the dialog grid stretch to equal height.
+ */
+const CARD_MIN_HEIGHT = 500;
+
 function billingPeriodShort(cycle) {
   if (cycle === "yearly") return "yr";
   if (cycle === "season") return "season";
@@ -33,6 +65,13 @@ export default function PlanCard({
   selectedField,
   onSubscribeClick,
   onContactClick,
+  /** Settings page: no field selected, so show the per-hectare price. */
+  perHectare = false,
+  subscribeLabel,
+  /** This farm is already on this plan (and billing cycle). */
+  isCurrent = false,
+  /** The farm already has a plan, so subscribing means switching to this one. */
+  changeMode = false,
 }) {
   const [flipped, setFlipped] = useState(false);
 
@@ -45,9 +84,13 @@ export default function PlanCard({
 
   if (isEnterprise) {
     return (
-      <div
-        className="mx-auto w-[300px] shrink-0 md:w-[320px]"
-        style={{ perspective: 1000, height: 540 }}
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -6 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        className="group h-full w-full max-w-[340px] shrink-0"
+        style={{ perspective: 1000, minHeight: CARD_MIN_HEIGHT }}
       >
         <motion.div
           animate={{ rotateY: flipped ? 180 : 0 }}
@@ -58,53 +101,88 @@ export default function PlanCard({
             position: "relative",
             width: "100%",
             height: "100%",
+            minHeight: CARD_MIN_HEIGHT,
           }}
         >
           <div
-            className="absolute inset-0 flex min-h-0 flex-col rounded-2xl border border-[#E1FFF0]/30 bg-gradient-to-br from-[#1a2e22] via-[#344E41] to-[#2d4a3a] p-6 pt-8 text-white shadow-xl"
+            className="relative flex h-full flex-col rounded-3xl border border-[#E1FFF0]/30 bg-gradient-to-br from-[#12241b] via-[#2b4538] to-[#3a5e4b] p-6 pt-9 text-white shadow-[0_20px_45px_-15px_rgba(0,0,0,0.6)] transition-shadow duration-300 group-hover:shadow-[0_28px_60px_-15px_rgba(0,0,0,0.7)]"
             style={{ backfaceVisibility: "hidden" }}
           >
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-[#344E41] text-xs font-bold px-4 py-1 rounded-full shadow">
+            {/* soft glows */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl"
+            >
+              <div className="absolute -right-16 -top-16 h-52 w-52 rounded-full bg-[#7dffb3]/20 blur-3xl" />
+              <div className="absolute -bottom-20 -left-16 h-52 w-52 rounded-full bg-emerald-300/10 blur-3xl" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+            </div>
+
+            <span className="absolute -top-3 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-r from-[#E1FFF0] to-[#a8e6cf] px-4 py-1 text-xs font-bold tracking-wide text-[#1f3a2d] shadow-lg">
+              <Crown size={12} />
               ENTERPRISE
             </span>
 
-            <div className="shrink-0">
-              <h3 className="mt-2 text-[22px] font-extrabold leading-tight sm:text-2xl">
-                {plan.name}
-              </h3>
-              <p className="mt-1 text-sm leading-snug text-gray-200">
-                {plan.tagline}
-              </p>
-
-              <div className="mt-4 text-xl font-bold text-[#E1FFF0] sm:text-[22px]">
-                Custom Pricing
+            <div className="relative shrink-0">
+              <div className="flex items-start gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur">
+                  <Building2 className="text-[#E1FFF0]" size={26} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[22px] font-extrabold leading-tight sm:text-2xl">
+                    {plan.name}
+                  </h3>
+                  <p className="mt-0.5 text-sm leading-snug text-gray-200">
+                    {plan.tagline}
+                  </p>
+                </div>
               </div>
+
+              <dl className="mt-5 space-y-2 text-sm">
+                {ENTERPRISE_PRICING.map(({ label, value }) => (
+                  <div
+                    key={label}
+                    className="flex items-baseline justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5"
+                  >
+                    <dt className="text-white/75">{label}</dt>
+                    <dd className="bg-gradient-to-r from-[#E1FFF0] to-[#9be8c2] bg-clip-text text-xl font-extrabold text-transparent">
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             </div>
 
-            <div className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto text-sm font-medium pr-0.5">
-              <p className="flex items-center gap-2">
-                <Check size={16} /> All Premium Features
-              </p>
-              <p className="flex items-center gap-2">
-                <Users size={16} /> Unlimited Team Members
-              </p>
-              <p className="flex items-center gap-2">
-                <Headphones size={16} /> Dedicated Manager
-              </p>
-              <p className="flex items-center gap-2">
-                <Shield size={16} /> Priority Support
-              </p>
+            <div className="relative mb-5 mt-6 flex-1 space-y-3.5 text-sm font-medium">
+              {[
+                { Icon: Check, label: "All Premium Features" },
+                { Icon: Users, label: "Unlimited Team Members" },
+                { Icon: Headphones, label: "Dedicated Manager" },
+                { Icon: Shield, label: "Priority Support" },
+              ].map(({ Icon, label }) => (
+                <p key={label} className="flex items-center gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15">
+                    <Icon size={14} className="text-[#E1FFF0]" />
+                  </span>
+                  {label}
+                </p>
+              ))}
             </div>
 
             <button
               type="button"
-              className="mt-auto w-full shrink-0 rounded-xl bg-white py-3 text-sm font-semibold text-[#344E41] transition hover:bg-[#E1FFF0] sm:py-3.5 sm:text-[15px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                (onContactClick ?? openEnterpriseContact)({ plan });
+              }}
+              className="relative mt-auto inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-white to-[#E1FFF0] py-3 text-sm font-bold text-[#244034] shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:py-3.5 sm:text-[15px]"
             >
               Contact Sales
+              <ArrowRight size={16} />
             </button>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -122,11 +200,16 @@ export default function PlanCard({
         : null,
     inrUnit:
       plan.hasInrPricing && plan.unitPriceInr > 0
-        ? formatInr(plan.unitPriceInr)
+        ? formatInrUnit(plan.unitPriceInr)
         : null,
   };
-  const mainTotal = cur === "INR" ? priceDualBlock.inrTotal : priceDualBlock.usdTotal;
   const mainUnit = cur === "INR" ? priceDualBlock.inrUnit : priceDualBlock.usdUnit;
+  const mainTotal = perHectare
+    ? mainUnit
+    : cur === "INR"
+      ? priceDualBlock.inrTotal
+      : priceDualBlock.usdTotal;
+  const periodLabel = perHectare ? `ha/${period}` : period;
   const mainLabel = cur === "INR" ? "INR" : "USD";
   /** Web pricing overlay: trial length comes from transform (0 when no trial). */
   const trialDaysShown = plan.trialDays >= 1 ? plan.trialDays : 0;
@@ -135,6 +218,43 @@ export default function PlanCard({
     trialDaysShown > 0 &&
     !plan.unavailableForBilling &&
     !plan.trialDisabled;
+
+  const limitsNote = plan.freeTrialLimits ? (
+    <ul className="mt-1 flex flex-wrap gap-1.5">
+      {[
+        `Up to ${plan.freeTrialLimits.maxHectares} ha`,
+        `${plan.freeTrialLimits.maxFarms} farm only`,
+        "No extra farm or area",
+        "Autopay required",
+      ].map((t) => (
+        <li
+          key={t}
+          className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+            isRecommended
+              ? "bg-white/15 text-white"
+              : "bg-[#344E41]/10 text-[#344E41]"
+          }`}
+        >
+          {t}
+        </li>
+      ))}
+    </ul>
+  ) : null;
+
+  const savingsNote =
+    plan.savingsPct > 0 ? (
+      <p
+        className={`inline-block rounded px-1.5 py-0.5 text-[11px] font-semibold ${
+          isRecommended
+            ? "bg-[#E1FFF0]/20 text-[#E1FFF0]"
+            : "bg-emerald-50 text-emerald-800"
+        }`}
+      >
+        {plan.billingCycle === "yearly"
+          ? `You save ${plan.savingsPct}% vs monthly`
+          : `Save ${plan.savingsPct}% with yearly billing`}
+      </p>
+    ) : null;
 
   /* ================= NORMAL PLAN ================= */
 
@@ -149,14 +269,18 @@ export default function PlanCard({
 
   const handleSubscribe = (e) => {
     e.stopPropagation();
-    if (isDisabled) return;
+    if (isDisabled || isCurrent) return;
     onSubscribeClick?.({ plan, selectedField });
   };
 
   return (
-    <div
-      className="mx-auto w-[300px] shrink-0 md:w-[320px]"
-      style={{ perspective: 1000, height: 540 }}
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={isDisabled ? undefined : { y: -6 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="group h-full w-full max-w-[340px] shrink-0"
+      style={{ perspective: 1000, minHeight: CARD_MIN_HEIGHT }}
     >
       <motion.div
         animate={{ rotateY: flipped ? 180 : 0 }}
@@ -167,23 +291,44 @@ export default function PlanCard({
           position: "relative",
           width: "100%",
           height: "100%",
+          minHeight: CARD_MIN_HEIGHT,
         }}
       >
         {/* FRONT SIDE */}
 
         <div
-          className={`absolute inset-0 flex h-full min-h-0 flex-col rounded-2xl border p-6 shadow-xl ${
+          className={`relative flex h-full flex-col overflow-hidden rounded-3xl border p-6 shadow-[0_16px_40px_-18px_rgba(0,0,0,0.55)] transition-shadow duration-300 group-hover:shadow-[0_26px_55px_-18px_rgba(0,0,0,0.65)] ${
             isRecommended
-              ? "border-2 border-white bg-[#344E41] text-white"
-              : "border-gray-200 bg-white text-black"
+              ? "border-2 border-white/80 bg-gradient-to-br from-[#244034] via-[#344E41] to-[#3f5f4e] text-white"
+              : "border-white/70 bg-gradient-to-b from-[#eefaf3] via-white to-white text-gray-900"
           } ${isDisabled ? "opacity-70" : ""}`}
           style={{ backfaceVisibility: "hidden" }}
         >
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#5A7C6B] via-[#7dd3a8] to-[#344E41]" />
+          {isCurrent ? (
+            <span className="absolute right-4 top-4 z-10 inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white shadow">
+              <Check size={11} strokeWidth={3} /> Current plan
+            </span>
+          ) : null}
+
           <div className="shrink-0 space-y-1">
-            <h3 className="mt-2 text-[24px] font-extrabold leading-tight">
-              {plan.name}
-            </h3>
-            <p className={`text-sm ${muted}`}>{plan.tagline}</p>
+            <div className="mt-2 flex items-center gap-3">
+              <div
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-md ${
+                  isRecommended
+                    ? "bg-white/15 text-[#E1FFF0] ring-1 ring-white/25"
+                    : "bg-gradient-to-br from-[#5A7C6B] to-[#344E41] text-white"
+                }`}
+              >
+                {plan.isFreeTrialOffer ? <Sparkles size={22} /> : <Sprout size={22} />}
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-[22px] font-extrabold leading-tight">
+                  {plan.name}
+                </h3>
+                <p className={`text-sm leading-snug ${muted}`}>{plan.tagline}</p>
+              </div>
+            </div>
 
             <div className="space-y-1.5 pt-2">
               {plan.unavailableForBilling ? (
@@ -198,12 +343,17 @@ export default function PlanCard({
               ) : showTrialStylePricing ? (
                 <>
                   <p
-                    className={`text-lg font-bold ${isRecommended ? "text-[#E1FFF0]" : "text-[#344E41]"}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold ${
+                      isRecommended
+                        ? "bg-[#E1FFF0]/20 text-[#E1FFF0]"
+                        : "bg-emerald-100 text-emerald-800"
+                    }`}
                   >
+                    <Sparkles size={14} />
                     {trialDaysShown}-day free trial
                   </p>
                   <p
-                    className={`text-base font-semibold leading-snug ${
+                    className={`text-sm font-semibold leading-snug ${
                       isRecommended
                         ? cur === "INR"
                           ? "text-[#b8ffe0]"
@@ -213,15 +363,20 @@ export default function PlanCard({
                           : "text-gray-900"
                     }`}
                   >
-                    Then {mainTotal}
-                    <span className={`font-normal ${subMuted}`}>/{period}</span>
+                    Then{" "}
+                    <span className="text-xl font-bold">{mainTotal}</span>
+                    <span className={`text-sm font-normal ${subMuted}`}>/{periodLabel}</span>
                     <span className={`ml-1.5 text-xs font-normal ${subMuted}`}>
                       ({mainLabel})
                     </span>
                   </p>
-                  <p className={`text-[11px] leading-relaxed ${subMuted}`}>
-                    {plan.areaHectares.toFixed(2)} ha × {mainUnit}/ac ({mainLabel})
-                  </p>
+                  {perHectare ? null : (
+                    <p className={`text-[11px] leading-relaxed ${subMuted}`}>
+                      {plan.areaHectares.toFixed(2)} ha × {mainUnit}/ha ({mainLabel})
+                    </p>
+                  )}
+                  {savingsNote}
+                  {limitsNote}
                 </>
               ) : (
                 <>
@@ -236,17 +391,22 @@ export default function PlanCard({
                           : "text-gray-900"
                     }`}
                   >
-                    {mainTotal}
+                    <span className="text-[30px] font-extrabold tracking-tight">
+                      {mainTotal}
+                    </span>
                     <span className={`font-normal text-base ${subMuted}`}>
-                      /{period}
+                      /{periodLabel}
                     </span>
                     <span className={`ml-1.5 text-sm font-normal ${subMuted}`}>
                       ({mainLabel})
                     </span>
                   </p>
-                  <p className={`text-[11px] ${subMuted}`}>
-                    {plan.areaHectares.toFixed(2)} ha × {mainUnit}/ac ({mainLabel})
-                  </p>
+                  {perHectare ? null : (
+                    <p className={`text-[11px] ${subMuted}`}>
+                      {plan.areaHectares.toFixed(2)} ha × {mainUnit}/ha ({mainLabel})
+                    </p>
+                  )}
+                  {savingsNote}
                 </>
               )}
             </div>
@@ -254,11 +414,11 @@ export default function PlanCard({
 
           <hr
             className={`my-3 shrink-0 ${
-              isRecommended ? "border-white/25" : "border-gray-200"
+              isRecommended ? "border-white/25" : "border-[#344E41]/10"
             }`}
           />
 
-          <div className="flex min-h-0 max-h-[200px] flex-1 flex-col gap-2 overflow-y-auto pr-1 text-sm font-medium">
+          <div className="flex flex-1 flex-col gap-2.5 pb-3 text-sm font-medium">
             {isDisabled ? (
               <div
                 className={`rounded-xl border px-4 py-4 text-sm leading-relaxed min-h-[140px] ${
@@ -275,12 +435,15 @@ export default function PlanCard({
               <>
                 {frontFeatures.map((f, idx) => (
                   <p key={idx} className="flex items-start gap-2 shrink-0">
-                    <Check
-                      size={16}
-                      className={
-                        isRecommended ? "text-[#7dffb3] shrink-0 mt-0.5" : "text-green-600 shrink-0 mt-0.5"
-                      }
-                    />
+                    <span
+                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                        isRecommended
+                          ? "bg-[#7dffb3]/20 text-[#7dffb3]"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      <Check size={12} strokeWidth={3} />
+                    </span>
                     <span>{f}</span>
                   </p>
                 ))}
@@ -296,7 +459,7 @@ export default function PlanCard({
 
           <div
             className={`mt-auto flex shrink-0 gap-3 border-t pt-4 ${
-              isRecommended ? "border-white/20" : "border-gray-200"
+              isRecommended ? "border-white/20" : "border-[#344E41]/10"
             }`}
           >
             <button
@@ -305,10 +468,12 @@ export default function PlanCard({
                 e.stopPropagation();
                 setFlipped(true);
               }}
-              className={`min-h-[44px] flex-1 rounded-xl py-2.5 text-sm font-medium text-white transition ${
+              className={`min-h-[44px] flex-1 rounded-2xl border py-2.5 text-sm font-semibold transition ${
                 isDisabled
-                  ? "cursor-not-allowed bg-[#9AA9A1]"
-                  : "bg-[#5A7C6B] hover:bg-[#49675a]"
+                  ? "cursor-not-allowed border-transparent bg-[#9AA9A1] text-white"
+                  : isRecommended
+                    ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
+                    : "border-[#5A7C6B]/40 bg-white/70 text-[#344E41] hover:border-[#5A7C6B] hover:bg-white"
               }`}
               disabled={isDisabled}
             >
@@ -318,20 +483,30 @@ export default function PlanCard({
             <button
               type="button"
               onClick={handleSubscribe}
-              className={`min-h-[44px] flex-1 rounded-xl border py-2.5 text-sm font-semibold transition ${
-                isDisabled
+              className={`inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-2xl border py-2.5 text-sm font-bold transition ${
+                isCurrent
+                  ? "cursor-not-allowed border-emerald-300 bg-emerald-50 text-emerald-800"
+                  : isDisabled
                   ? "cursor-not-allowed border-gray-300 bg-gray-100 text-gray-400"
                   : isRecommended
-                    ? "border-[#E1FFF0] bg-[#E1FFF0] text-[#344E41] hover:bg-white"
-                    : "border-[#344E41] bg-white text-[#344E41] hover:bg-[#f5f7f6]"
+                    ? "border-[#E1FFF0] bg-[#E1FFF0] text-[#344E41] shadow-md hover:bg-white hover:shadow-lg"
+                    : "border-transparent bg-gradient-to-r from-[#344E41] to-[#5A7C6B] text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110"
               }`}
-              disabled={isDisabled}
+              disabled={isDisabled || isCurrent}
             >
-              {isDisabled
+              {isCurrent
+                ? "Current plan"
+                : isDisabled
                 ? "Not Available"
-                : showTrialStylePricing
-                  ? "Start trial"
-                  : "Subscribe"}
+                : changeMode && !subscribeLabel
+                ? "Switch to this plan"
+                : (subscribeLabel ??
+                  (showTrialStylePricing
+                    ? plan.isFreeTrialOffer
+                      ? "Start free trial"
+                      : "Start trial"
+                    : "Subscribe"))}
+              {!isDisabled && !isCurrent ? <ArrowRight size={15} /> : null}
             </button>
           </div>
         </div>
@@ -339,10 +514,11 @@ export default function PlanCard({
         {/* BACK SIDE */}
 
         <div
-          className="absolute inset-0 flex h-full min-h-0 flex-col rounded-2xl border border-gray-200 bg-white p-6 text-black shadow-xl"
+          className="absolute inset-0 flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-white/70 bg-gradient-to-b from-[#eefaf3] via-white to-white p-6 text-gray-900 shadow-[0_16px_40px_-18px_rgba(0,0,0,0.55)]"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
-          <h3 className="mb-3 mt-2 shrink-0 text-[20px] font-bold">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#5A7C6B] via-[#7dd3a8] to-[#344E41]" />
+          <h3 className="mb-3 mt-2 shrink-0 text-[20px] font-extrabold">
             {plan.name} — All Features
           </h3>
 
@@ -350,9 +526,13 @@ export default function PlanCard({
             {backFeatures.map((f, idx) => (
               <p key={idx} className="flex items-start gap-2">
                 {plan.features.includes(f) ? (
-                  <Check size={16} className="text-green-600 shrink-0 mt-0.5" />
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                    <Check size={12} strokeWidth={3} />
+                  </span>
                 ) : (
-                  <X size={16} className="text-red-500 shrink-0 mt-0.5" />
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-500">
+                    <X size={12} strokeWidth={3} />
+                  </span>
                 )}
                 <span>{f}</span>
               </p>
@@ -365,12 +545,12 @@ export default function PlanCard({
               e.stopPropagation();
               setFlipped(false);
             }}
-            className="mt-auto min-h-[44px] w-full shrink-0 rounded-xl bg-[#5A7C6B] py-2.5 text-sm font-medium text-white transition hover:bg-[#49675a]"
+            className="mt-auto min-h-[44px] w-full shrink-0 rounded-2xl bg-gradient-to-r from-[#344E41] to-[#5A7C6B] py-2.5 text-sm font-bold text-white shadow-md transition hover:brightness-110"
           >
             Back
           </button>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
