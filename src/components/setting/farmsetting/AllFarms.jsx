@@ -32,12 +32,12 @@ const FarmCard = ({ farm, onClick, onChangePlan, isSubscribed, index }) => {
     className="group relative flex flex-col bg-white rounded-2xl shadow-md border border-[#344E41]/15 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:border-[#344E41]/40 overflow-hidden cursor-pointer"
   >
     {/* Header */}
-    <div className="flex items-start justify-between gap-2 px-4 py-3 bg-gradient-to-r from-[#344E41]/10 to-[#344E41]/[0.03] border-b border-[#344E41]/10 min-w-0">
+    <div className="flex items-start justify-between gap-2 px-3.5 py-2 bg-gradient-to-r from-[#344E41]/10 to-[#344E41]/[0.03] border-b border-[#344E41]/10 min-w-0">
       <div className="text-left min-w-0 flex-1">
-        <span className="block font-bold text-[#344E41] text-lg leading-tight truncate">
+        <span className="block font-bold text-[#344E41] text-base leading-tight truncate">
           {farm.fieldName}
         </span>
-        <span className="block text-sm font-semibold text-[#344E41]/70 mt-0.5">
+        <span className="block text-xs font-semibold text-[#344E41]/70 mt-0.5">
           {(Number(farm.acre || 0) * 0.404686).toFixed(2)} ha
         </span>
       </div>
@@ -46,8 +46,8 @@ const FarmCard = ({ farm, onClick, onChangePlan, isSubscribed, index }) => {
     </div>
 
     {/* Map Preview */}
-    <div className="flex-grow flex flex-col justify-center bg-gradient-to-b from-white to-[#344E41]/5 py-3">
-      <div className="w-full h-24 flex items-center justify-center px-3 transition-transform duration-300 group-hover:scale-105">
+    <div className="flex-grow flex flex-col justify-center bg-gradient-to-b from-white to-[#344E41]/5 py-2">
+      <div className="w-full h-16 flex items-center justify-center px-3 transition-transform duration-300 group-hover:scale-105">
         {farm.field && farm.field.length > 0 ? (
           <PolygonPreview coordinates={farm.field} />
         ) : (
@@ -59,7 +59,7 @@ const FarmCard = ({ farm, onClick, onChangePlan, isSubscribed, index }) => {
 
       {/* Crop Info */}
       {activeCrops.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-1.5 px-2.5 mt-2 bg-[#344E41]/5 mx-3 py-2 rounded-lg border border-[#344E41]/10">
+        <div className="flex flex-wrap items-center gap-1.5 px-2.5 mt-1.5 bg-[#344E41]/5 mx-3 py-1.5 rounded-lg border border-[#344E41]/10">
           <Sprout className="w-4 h-4 text-[#344E41] flex-shrink-0" />
           {activeCrops.slice(0, 2).map((crop) => (
             <span
@@ -76,7 +76,7 @@ const FarmCard = ({ farm, onClick, onChangePlan, isSubscribed, index }) => {
           )}
         </div>
       ) : (
-        <div className="flex flex-wrap items-center gap-1.5 px-2.5 mt-2 bg-[#344E41]/5 mx-3 py-2 rounded-lg border border-[#344E41]/10">
+        <div className="flex flex-wrap items-center gap-1.5 px-2.5 mt-1.5 bg-[#344E41]/5 mx-3 py-1.5 rounded-lg border border-[#344E41]/10">
           <Sprout className="w-4 h-4 text-[#344E41]" />
           <span className="text-xs text-[#344E41] font-semibold">
             {farm.cropName || "N/A"}
@@ -99,35 +99,47 @@ const FarmCard = ({ farm, onClick, onChangePlan, isSubscribed, index }) => {
 
     {/* Subscription: which plan this farm is on, and a way to change it */}
     <div
-      className="flex items-center justify-between gap-2 border-t border-[#344E41]/10 bg-white px-4 py-2.5 cursor-default"
+      className="flex items-center justify-between gap-2 border-t border-[#344E41]/10 bg-white px-3.5 py-2 cursor-default"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="min-w-0">
-        <p className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#344E41]/60">
-          <Crown size={11} aria-hidden /> Subscription
-        </p>
         <p
-          className="truncate text-sm font-bold text-[#344E41]"
+          className="mb-0 flex items-center gap-1.5 text-sm font-bold text-[#344E41]"
           title={plan.title}
         >
-          {plan.title}
+          <span
+            className={`h-2 w-2 shrink-0 rounded-full ${
+              plan.hasPlan ? "bg-emerald-500" : "bg-gray-300"
+            }`}
+            aria-hidden
+          />
+          <span className="truncate">{plan.title}</span>
         </p>
-        <p className="truncate text-xs text-gray-500" title={plan.detail}>
-          {plan.detail}
-        </p>
+        {plan.hasPlan ? (
+          <p
+            className="mb-0 truncate text-[11px] leading-snug text-gray-500"
+            title={plan.detail}
+          >
+            {plan.detail}
+          </p>
+        ) : null}
       </div>
       <button
         type="button"
         onClick={() => onChangePlan?.(farm)}
-        className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[#344E41]/30 bg-[#344E41]/5 px-2.5 py-1.5 text-xs font-semibold text-[#344E41] transition hover:bg-[#344E41] hover:text-white"
+        className={`inline-flex h-8 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-lg px-3 text-xs font-bold transition-all duration-200 ${
+          plan.hasPlan
+            ? "border border-[#344E41]/30 bg-white text-[#344E41] hover:bg-[#344E41] hover:text-white"
+            : "bg-gradient-to-r from-[#344E41] to-[#5A7C6B] text-white shadow hover:brightness-110"
+        }`}
       >
-        {plan.hasPlan ? <RefreshCw size={12} aria-hidden /> : null}
+        {plan.hasPlan ? <RefreshCw size={12} aria-hidden /> : <Crown size={12} aria-hidden />}
         {plan.hasPlan ? "Change plan" : "Subscribe"}
       </button>
     </div>
 
     {/* Footer */}
-    <div className="flex justify-between items-center bg-gradient-to-r from-[#243d31] via-[#344E41] to-[#4a6b5e] px-4 py-2.5">
+    <div className="flex justify-between items-center bg-gradient-to-r from-[#243d31] via-[#344E41] to-[#4a6b5e] px-3.5 py-1.5">
       <span className="text-xs text-white font-semibold">
         ID: CROP-{String(index + 1).padStart(3, "0")}
       </span>
@@ -145,11 +157,11 @@ const FarmCard = ({ farm, onClick, onChangePlan, isSubscribed, index }) => {
 
 const AddNewFarmCard = ({ onClick }) => (
   <div
-    className="group flex flex-col items-center justify-center gap-1 p-4 bg-white/70 rounded-2xl border-2 border-dashed border-[#344E41]/25 text-center cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#344E41]/60 hover:bg-emerald-50 hover:shadow-lg min-h-[220px]"
+    className="group flex flex-col items-center justify-center gap-1 p-4 bg-white/70 rounded-2xl border-2 border-dashed border-[#344E41]/25 text-center cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#344E41]/60 hover:bg-emerald-50 hover:shadow-lg min-h-[150px]"
     onClick={onClick}
   >
-    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#344E41]/10 text-[#344E41] transition-colors group-hover:bg-[#344E41] group-hover:text-white">
-      <Plus strokeWidth={1.75} className="w-9 h-9" />
+    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#344E41]/10 text-[#344E41] transition-colors group-hover:bg-[#344E41] group-hover:text-white">
+      <Plus strokeWidth={1.75} className="w-7 h-7" />
     </span>
     <span className="mt-1 text-base font-bold text-[#344E41]/70 group-hover:text-[#344E41]">Add New Farm</span>
   </div>

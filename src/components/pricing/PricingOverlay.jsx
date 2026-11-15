@@ -5,6 +5,7 @@ import React, {
   useRef,
   useCallback,
 } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -27,6 +28,7 @@ import { toast } from "react-toastify";
 import PlanCard from "./PlanCard";
 import { FEATURE_DISPLAY_NAMES } from "../../utils/planFeatures";
 import { ENTERPRISE_TAGLINE } from "../../utils/enterprisePlan";
+import { planCurrencyForUser } from "../../utils/planRegion";
 import { describeFarmPlan } from "../../utils/farmPlan";
 
 /* ================= CONSTANTS ================= */
@@ -272,12 +274,17 @@ export default function PricingOverlay({ onClose, selectedField }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { subscriptions, loading, error } = useSelector((s) => s.subscription);
+  const { subscriptions, loading, error, currency: serverCurrency } =
+    useSelector((s) => s.subscription);
   const { token, user } = useSelector((s) => s.auth);
 
   const [billing, setBilling] = useState("monthly");
-  /** Shown prices + sent as displayCurrency on create-order (server uses matching pricing row). */
-  const [displayCurrency, setDisplayCurrency] = useState("USD");
+  /** Shown prices + sent as displayCurrency on create-order (server uses matching pricing row).
+   *  Fixed by the user's country: India -> INR, everyone else -> USD. */
+  const displayCurrency = useMemo(
+    () => planCurrencyForUser(user, serverCurrency),
+    [user, serverCurrency],
+  );
   const [groupIndex, setGroupIndex] = useState(0);
   const [cardsPerGroup, setCardsPerGroup] = useState(3);
   const [checkoutData, setCheckoutData] = useState(null);
@@ -448,9 +455,8 @@ export default function PricingOverlay({ onClose, selectedField }) {
       }
 
       if (plan.unavailableForBilling) {
-        const other = displayCurrency === "USD" ? "INR" : "USD";
         setDialogError(
-          `This plan has no ${billing} ${displayCurrency} price. Switch the currency toggle to ${other}, change Monthly/Yearly, or add ${displayCurrency} pricing in admin.`,
+          `This plan has no ${billing} ${displayCurrency} price. Try the other Monthly/Yearly option, or add ${displayCurrency} pricing in admin.`,
         );
         return;
       }
@@ -649,18 +655,21 @@ export default function PricingOverlay({ onClose, selectedField }) {
 
   /* ================= RENDER ================= */
 
+  // Portal to <body>: a transformed/filtered ancestor would otherwise make
+  // `fixed` relative to it and push the dialog off-centre.
   if (loading) {
-    return (
+    return createPortal(
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#2a3f33]/90 backdrop-blur-sm p-6">
         <div className="flex flex-col items-center gap-4 text-white">
           <Loader2 className="h-10 w-10 animate-spin text-[#E1FFF0]" />
           <p className="text-sm text-white/80">Loading plans…</p>
         </div>
-      </div>
+      </div>,
+      document.body,
     );
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#344E41]/60 p-2 backdrop-blur-[2px] sm:p-3 md:p-4">
       <motion.div
         role="dialog"
@@ -753,61 +762,13 @@ export default function PricingOverlay({ onClose, selectedField }) {
                       : "Monthly or Yearly applies immediately, based on your selection."}
                 </p>
                 <p className="text-white/70">
-                  The USD / INR toggle only changes how amounts are shown
-                  (price per hectare × field area); payment is processed in
-                  INR.
+                  Amounts are shown as price per hectare × field area in your
+                  region's currency; payment is processed in INR.
                 </p>
               </div>
             ) : null}
 
             <div className="flex w-full flex-col items-center justify-center gap-2 sm:flex-row sm:gap-x-6">
-              <div className="flex items-center gap-2 text-xs text-white select-none sm:text-sm">
-                <span className="text-white/70">Prices in</span>
-                <button
-                  type="button"
-                  onClick={() => setDisplayCurrency("USD")}
-                  className={`rounded px-1 font-semibold ${
-                    displayCurrency === "USD"
-                      ? "text-[#E1FFF0] underline decoration-2 underline-offset-4"
-                      : "text-white/60 hover:text-white/90"
-                  }`}
-                >
-                  USD
-                </button>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={displayCurrency === "INR"}
-                  aria-label="Toggle currency between USD and INR"
-                  onClick={() =>
-                    setDisplayCurrency((c) => (c === "USD" ? "INR" : "USD"))
-                  }
-                  className="relative h-6 w-12 shrink-0 cursor-pointer rounded-full bg-gray-200"
-                >
-                  <span
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-[#344E41] transition-[left] duration-200 ${
-                      displayCurrency === "USD" ? "left-0.5" : "left-[1.625rem]"
-                    }`}
-                  />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDisplayCurrency("INR")}
-                  className={`rounded px-1 font-semibold ${
-                    displayCurrency === "INR"
-                      ? "text-[#E1FFF0] underline decoration-2 underline-offset-4"
-                      : "text-white/60 hover:text-white/90"
-                  }`}
-                >
-                  INR
-                </button>
-              </div>
-
-              <div
-                className="hidden h-6 w-px shrink-0 bg-white/25 sm:block"
-                aria-hidden
-              />
-
               <div className="flex items-center gap-2 text-xs text-white select-none sm:gap-3 sm:text-sm">
                 <button
                   type="button"
@@ -994,6 +955,7 @@ export default function PricingOverlay({ onClose, selectedField }) {
           </div>
         )}
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DEFAULT_PROFILE_IMAGE_URL } from "../../../config/brand";
 import { S3_BUCKET_URL } from "../../../config/envUrls";
@@ -34,10 +34,195 @@ import SettingsPanel, {
   settingsFieldStyles as fs,
 } from "../SettingsPanel";
 import {
+  buildE164,
+  getPhoneValidationError,
+  maxLocalPhoneLength,
+  normalizePhoneLocal,
+} from "../../../utils/phone";
+import {
   FARMER_LANGUAGE_OPTIONS,
   getFarmerLanguageLabel,
   normalizeFarmerLanguage,
 } from "../../../config/languages";
+
+const flagUrl = (iso2) =>
+  iso2 ? `https://flagcdn.com/w40/${String(iso2).toLowerCase()}.png` : "";
+
+/** Searchable country-code picker: flag, country name and +code for every country. */
+const DialCodeSelect = ({
+  countries,
+  value,
+  selectedIso,
+  onSelect,
+  disabled,
+  onBlur,
+}) => {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef(null);
+
+  const selected =
+    countries.find((c) => c.iso2 === selectedIso && c.code === value) ||
+    countries.find((c) => c.code === value) ||
+    null;
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (rootRef.current && !rootRef.current.contains(e.target)) {
+        setOpen(false);
+        onBlur?.();
+      }
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, onBlur]);
+
+  const q = query.trim().toLowerCase().replace(/^\+/, "");
+  const list = q
+    ? countries.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.iso2.toLowerCase() === q ||
+          c.code.startsWith(q)
+      )
+    : countries;
+
+  return (
+    <div ref={rootRef} className="relative shrink-0">
+      <button
+        type="button"
+        id="dialCode"
+        disabled={disabled}
+        aria-label="Country code"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => {
+          setQuery("");
+          setOpen((o) => !o);
+        }}
+        className={`${fs.inputBase} flex w-[7.5rem] items-center gap-2 px-3 ${
+          disabled ? fs.inputReadonly : fs.inputEditable
+        }`}
+      >
+        {selected ? (
+          <img
+            src={flagUrl(selected.iso2)}
+            alt=""
+            className="h-4 w-6 shrink-0 rounded-sm object-cover"
+          />
+        ) : null}
+        <span className="font-medium">+{value || "--"}</span>
+        <svg
+          className="ml-auto h-3.5 w-3.5 text-gray-400"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden
+        >
+          <path d="M5.5 7.5 10 12l4.5-4.5-1-1L10 10 6.5 6.5z" />
+        </svg>
+      </button>
+
+      {open ? (
+        <div className="absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
+          <div className="border-b border-gray-100 p-2">
+            <input
+              autoFocus
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search country or code"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-ember-sidebar focus:ring-2 focus:ring-ember-sidebar/20"
+            />
+          </div>
+          <ul role="listbox" className="max-h-64 overflow-y-auto py-1">
+            {list.length === 0 ? (
+              <li className="px-3 py-3 text-sm text-gray-500">No match</li>
+            ) : (
+              list.map((c) => {
+                const active =
+                  c.code === value &&
+                  (!selectedIso || c.iso2 === selected?.iso2);
+                return (
+                  <li key={c.iso2} role="option" aria-selected={active}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelect(c);
+                        setOpen(false);
+                      }}
+                      className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-[#eefaf3] ${
+                        active ? "bg-[#eefaf3] font-semibold" : ""
+                      }`}
+                    >
+                      <img
+                        src={flagUrl(c.iso2)}
+                        alt=""
+                        loading="lazy"
+                        className="h-4 w-6 shrink-0 rounded-sm object-cover"
+                      />
+                      <span className="min-w-0 flex-1 truncate">{c.name}</span>
+                      <span className="shrink-0 text-gray-500">+{c.code}</span>
+                    </button>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const NAME_RE = /^[\p{L}\p{M}][\p{L}\p{M} .'-]*$/u;
+
+/** Split a stored E.164 number ("+917878787878") into dial code + local digits. */
+function splitE164(phone, dialCodes) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return { dialCode: "", local: "" };
+  for (const len of [4, 3, 2, 1]) {
+    const code = digits.slice(0, len);
+    if (dialCodes.has(code)) return { dialCode: code, local: digits.slice(len) };
+  }
+  return { dialCode: "91", local: digits };
+}
+
+const emptyForm = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  dialCode: "91",
+  phone: "",
+  organization: "",
+  language: "en",
+  country: "",
+  state: "",
+  city: "",
+};
+
+function validateForm(f, hadPhone) {
+  const errors = {};
+  const first = f.firstName.trim();
+  const last = f.lastName.trim();
+  if (!first) errors.firstName = "First name is required";
+  else if (first.length > 50 || !NAME_RE.test(first))
+    errors.firstName = "Use letters only (max 50 characters)";
+  if (last && (last.length > 50 || !NAME_RE.test(last)))
+    errors.lastName = "Use letters only (max 50 characters)";
+  if (f.phone.trim() || hadPhone) {
+    const err = getPhoneValidationError(f.dialCode, f.phone);
+    if (err) errors.phone = err;
+  }
+  return errors;
+}
 
 const InputField = ({
   id,
@@ -50,6 +235,12 @@ const InputField = ({
   placeholder,
   icon: Icon,
   isEditing = false,
+  error,
+  onBlur,
+  inputMode,
+  maxLength,
+  autoComplete,
+  required = false,
 }) => {
   const isEditable = isEditing && !readOnly;
 
@@ -59,6 +250,11 @@ const InputField = ({
     <div className="group">
       <label htmlFor={id} className={fs.label}>
         {label}
+        {required && isEditing ? (
+          <span className="ml-0.5 text-red-500" aria-hidden>
+            *
+          </span>
+        ) : null}
       </label>
       <div className="relative">
         {Icon ? (
@@ -72,13 +268,24 @@ const InputField = ({
           placeholder={placeholder || label}
           value={value}
           onChange={onChange}
+          onBlur={onBlur}
           disabled={disabled || !isEditable}
           readOnly={readOnly}
+          inputMode={inputMode}
+          maxLength={maxLength}
+          autoComplete={autoComplete}
+          aria-invalid={error ? "true" : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
           className={`${fs.inputBase} ${Icon ? fs.inputWithIcon : fs.inputPlain} ${
             locked ? fs.inputReadonly : fs.inputEditable
-          }`}
+          } ${error ? "!border-red-400 focus:!ring-red-200" : ""}`}
         />
       </div>
+      {error ? (
+        <p id={`${id}-error`} role="alert" className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 };
@@ -98,29 +305,10 @@ const PersonalInfo = ({ setShowSidebar }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    organization: "",
-    language: "en",
-    country: "",
-    state: "",
-    city: "",
-  });
-
-  const [originalData, setOriginalData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    organization: "",
-    language: "en",
-    country: "",
-    state: "",
-    city: "",
-  });
+  const [formData, setFormData] = useState(emptyForm);
+  const [originalData, setOriginalData] = useState(emptyForm);
+  const [touched, setTouched] = useState({});
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [countries, setCountries] = useState(() => getStaticCountries());
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
@@ -129,14 +317,34 @@ const PersonalInfo = ({ setShowSidebar }) => {
   const [updateStatus, setUpdateStatus] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Every country with a dial code (static data: works even if the location API is slow).
+  const dialCountries = useMemo(
+    () =>
+      getStaticCountries()
+        .map((c) => ({
+          iso2: c.iso2,
+          name: c.name,
+          code: String(c.phonecode || "").replace(/\D/g, ""),
+        }))
+        .filter((c) => c.code),
+    []
+  );
+  const dialCodeSet = useMemo(
+    () => new Set(dialCountries.map((c) => c.code)),
+    [dialCountries]
+  );
+  const [dialIso, setDialIso] = useState("");
+
   useEffect(() => {
     // Do not overwrite in-progress typing while edit mode is active.
     if (userProfile && !isEditing) {
+      const { dialCode, local } = splitE164(userProfile.phone, dialCodeSet);
       const profileData = {
         firstName: userProfile.firstName || "",
         lastName: userProfile.lastName || "",
         email: userProfile.email || "",
-        phone: userProfile.phone || "",
+        dialCode: dialCode || "91",
+        phone: local,
         organization:
           userProfile.organization?.organizationName || "No Organization",
         language: normalizeFarmerLanguage(userProfile.language),
@@ -146,9 +354,10 @@ const PersonalInfo = ({ setShowSidebar }) => {
       };
       setFormData(profileData);
       setOriginalData(profileData);
+      setDialIso("");
       setPreviewUrl(null);
     }
-  }, [userProfile, isEditing]);
+  }, [userProfile, isEditing, dialCodeSet]);
 
   useEffect(() => {
     if (updateStatus) {
@@ -268,56 +477,126 @@ const PersonalInfo = ({ setShowSidebar }) => {
     const { id, value } = e.target;
     setFormData((prev) => {
       if (id === "country") {
-        return { ...prev, country: value, state: "", city: "" };
+        // Follow the country's dial code unless the user already typed a number.
+        const code = dialCountries.find((x) => x.iso2 === value)?.code || "";
+        return {
+          ...prev,
+          country: value,
+          state: "",
+          city: "",
+          dialCode: !prev.phone && code ? code : prev.dialCode,
+        };
       }
       if (id === "state") {
         return { ...prev, state: value, city: "" };
+      }
+      if (id === "phone") {
+        return {
+          ...prev,
+          phone: normalizePhoneLocal(prev.dialCode, value),
+        };
+      }
+      if (id === "dialCode") {
+        return {
+          ...prev,
+          dialCode: value,
+          phone: normalizePhoneLocal(value, prev.phone),
+        };
       }
       return { ...prev, [id]: value };
     });
   };
 
+  const handleBlur = (e) => {
+    const { id } = e.target;
+    setTouched((t) => ({ ...t, [id]: true }));
+  };
+
+  const hadPhone = Boolean(originalData.phone);
+  const errors = useMemo(
+    () => (isEditing ? validateForm(formData, hadPhone) : {}),
+    [formData, hadPhone, isEditing]
+  );
+  const showError = (key) =>
+    submitAttempted || touched[key] || (key === "phone" && touched.dialCode)
+      ? errors[key]
+      : undefined;
+
+  const changedKeys = useMemo(
+    () =>
+      Object.keys(formData).filter(
+        (k) => String(formData[k] ?? "") !== String(originalData[k] ?? "")
+      ),
+    [formData, originalData]
+  );
+  const isDirty = isEditing && changedKeys.length > 0;
+
+  // Warn before closing the tab with unsaved edits.
+  useEffect(() => {
+    if (!isDirty) return undefined;
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
   const handleEnableEdit = () => {
     setOriginalData({ ...formData });
+    setTouched({});
+    setSubmitAttempted(false);
     setIsEditing(true);
   };
 
   const handleCancelEdit = () => {
+    if (
+      isDirty &&
+      !window.confirm("Discard your unsaved changes?")
+    ) {
+      return;
+    }
     setFormData({ ...originalData });
+    setTouched({});
+    setSubmitAttempted(false);
     setIsEditing(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSaving) return;
     setUpdateStatus(null);
+    setSubmitAttempted(true);
+
+    if (Object.keys(errors).length > 0) {
+      message.error("Please fix the highlighted fields");
+      return;
+    }
+    if (changedKeys.length === 0) {
+      setIsEditing(false);
+      return;
+    }
+
     setIsSaving(true);
-
     try {
-      const rawPhone = String(formData.phone || "").trim();
-      const digitsOnly = rawPhone.replace(/\D/g, "");
-      let formattedPhone = "";
-
-      if (digitsOnly.length > 0) {
-        if (digitsOnly.length === 10) {
-          formattedPhone = `+91${digitsOnly}`;
-        } else if (digitsOnly.length >= 11 && digitsOnly.length <= 12) {
-          formattedPhone = `+${digitsOnly}`;
-        } else {
-          throw new Error("Please enter a valid phone number");
-        }
+      // Send only what changed (email and organization are read-only here).
+      const updatePayload = {};
+      if (changedKeys.includes("firstName"))
+        updatePayload.firstName = formData.firstName.trim();
+      if (changedKeys.includes("lastName"))
+        updatePayload.lastName = formData.lastName.trim();
+      if (changedKeys.includes("language"))
+        updatePayload.language = normalizeFarmerLanguage(formData.language);
+      ["country", "state", "city"].forEach((k) => {
+        if (changedKeys.includes(k)) updatePayload[k] = formData[k];
+      });
+      if (changedKeys.includes("phone") || changedKeys.includes("dialCode")) {
+        updatePayload.phone = buildE164(formData.dialCode, formData.phone);
       }
 
-      const updatePayload = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        language: normalizeFarmerLanguage(formData.language),
-        country: formData.country,
-        state: formData.state,
-        city: formData.city,
-      };
-      if (formattedPhone) {
-        updatePayload.phone = formattedPhone;
+      if (Object.keys(updatePayload).length === 0) {
+        setIsEditing(false);
+        return;
       }
 
       await dispatch(
@@ -333,8 +612,11 @@ const PersonalInfo = ({ setShowSidebar }) => {
       });
 
       setIsEditing(false);
+      setTouched({});
+      setSubmitAttempted(false);
     } catch (err) {
       const errMessage =
+        (typeof err === "string" ? err : null) ||
         err?.message ||
         err?.response?.data?.message ||
         "Failed to update profile";
@@ -358,6 +640,13 @@ const PersonalInfo = ({ setShowSidebar }) => {
     }
     return DEFAULT_PROFILE_IMAGE_URL;
   };
+
+  const cropCount = (fields || []).reduce((n, f) => {
+    if (Array.isArray(f.crops) && f.crops.length > 0) {
+      return n + f.crops.filter((c) => c.isActive !== false).length;
+    }
+    return n + (f.cropName ? 1 : 0);
+  }, 0);
 
   const StatCard = ({ icon: Icon, value, label }) => (
     <div className="flex items-center gap-2.5 rounded-xl border border-white/25 bg-white/15 px-3 py-2 shadow-sm backdrop-blur-sm transition-colors hover:bg-white/25 sm:px-3.5 sm:py-2.5">
@@ -452,7 +741,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
                   />
                   <StatCard
                     icon={Sprout}
-                    value={fields?.length || 0}
+                    value={cropCount}
                     label="Crops"
                   />
                 </div>
@@ -476,6 +765,11 @@ const PersonalInfo = ({ setShowSidebar }) => {
                 placeholder="First Name"
                 icon={User}
                 isEditing={isEditing}
+                required
+                maxLength={50}
+                autoComplete="given-name"
+                onBlur={handleBlur}
+                error={showError("firstName")}
               />
               <InputField
                 id="lastName"
@@ -485,6 +779,10 @@ const PersonalInfo = ({ setShowSidebar }) => {
                 placeholder="Last Name"
                 icon={User}
                 isEditing={isEditing}
+                maxLength={50}
+                autoComplete="family-name"
+                onBlur={handleBlur}
+                error={showError("lastName")}
               />
               <InputField
                 id="email"
@@ -496,15 +794,64 @@ const PersonalInfo = ({ setShowSidebar }) => {
                 icon={Mail}
                 isEditing={isEditing}
               />
-              <InputField
-                id="phone"
-                label="Phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="+91 9876543210"
-                icon={Phone}
-                isEditing={isEditing}
-              />
+              <div className="group">
+                <label htmlFor="phone" className={fs.label}>
+                  Phone
+                  {isEditing ? (
+                    <span className="ml-0.5 text-red-500" aria-hidden>
+                      *
+                    </span>
+                  ) : null}
+                </label>
+                <div className="flex gap-2">
+                  <DialCodeSelect
+                    countries={dialCountries}
+                    value={formData.dialCode}
+                    selectedIso={dialIso || formData.country}
+                    disabled={!isEditing}
+                    onBlur={() => setTouched((t) => ({ ...t, dialCode: true }))}
+                    onSelect={(c) => {
+                      setDialIso(c.iso2);
+                      setFormData((prev) => ({
+                        ...prev,
+                        dialCode: c.code,
+                        phone: normalizePhoneLocal(c.code, prev.phone),
+                      }));
+                    }}
+                  />
+                  <div className="relative min-w-0 flex-1">
+                    <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-ember-sidebar">
+                      <Phone className="h-4 w-4" aria-hidden />
+                    </div>
+                    <input
+                      id="phone"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel-national"
+                      placeholder="9876543210"
+                      maxLength={maxLocalPhoneLength(formData.dialCode) + 4}
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      onBlur={handleBlur}
+                      disabled={!isEditing}
+                      aria-invalid={showError("phone") ? "true" : undefined}
+                      aria-describedby={showError("phone") ? "phone-error" : undefined}
+                      className={`${fs.inputBase} ${fs.inputWithIcon} ${
+                        isEditing ? fs.inputEditable : fs.inputReadonly
+                      } ${showError("phone") ? "!border-red-400 focus:!ring-red-200" : ""}`}
+                    />
+                  </div>
+                </div>
+                {showError("phone") ? (
+                  <p id="phone-error" role="alert" className="mt-1 text-xs text-red-600">
+                    {showError("phone")}
+                  </p>
+                ) : isEditing ? (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Used to sign in and for alerts. Must be unique to your account.
+                  </p>
+                ) : null}
+              </div>
               <SelectField
                 id="language"
                 label="Preferred language"
@@ -604,7 +951,7 @@ const PersonalInfo = ({ setShowSidebar }) => {
                   </button>
                   <button
                     type="submit"
-                    disabled={isSaving}
+                    disabled={isSaving || !isDirty}
                     className={`${fs.btnPrimary} w-full sm:w-auto`}
                   >
                     {isSaving ? (
@@ -626,7 +973,9 @@ const PersonalInfo = ({ setShowSidebar }) => {
             {isEditing ? (
               <p className="mt-2 text-center text-[11px] text-amber-800 sm:text-xs">
                 <span className="inline-block rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1">
-                  Edit mode — save when finished.
+                  {isDirty
+                    ? `${changedKeys.length} unsaved change${changedKeys.length === 1 ? "" : "s"} — save when finished.`
+                    : "Edit mode — change a field to enable Save."}
                 </span>
               </p>
             ) : null}

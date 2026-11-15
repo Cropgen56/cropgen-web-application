@@ -2,7 +2,9 @@ import api from "./api";
 
 export const fetchAllSubscriptions = async () => {
   const response = await api.get("/api/subscription-plans");
-  return response.data.data;
+  // `currency` is the account's price list from the server (INR for India,
+  // USD elsewhere); null when it could not be determined.
+  return { plans: response.data.data, currency: response.data.currency || null };
 };
 
 export const createSubscription = async (payload) => {

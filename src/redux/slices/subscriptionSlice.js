@@ -64,6 +64,8 @@ const subscriptionSlice = createSlice({
   name: "subscription",
   initialState: {
     subscriptions: [],
+    /** "INR" | "USD" for this account (from the server), null until known. */
+    currency: null,
     loading: false,
     error: null,
 
@@ -93,7 +95,8 @@ const subscriptionSlice = createSlice({
       })
       .addCase(fetchSubscriptions.fulfilled, (state, action) => {
         state.loading = false;
-        state.subscriptions = action.payload;
+        state.subscriptions = action.payload.plans;
+        state.currency = action.payload.currency;
       })
       .addCase(fetchSubscriptions.rejected, (state, action) => {
         state.loading = false;

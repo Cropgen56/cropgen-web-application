@@ -10,6 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
+import { planCurrencyForUser } from "../../../utils/planRegion";
 import { fetchSubscriptions } from "../../../redux/slices/subscriptionSlice";
 import SettingsPanel from "../SettingsPanel";
 import { FEATURE_DISPLAY_NAMES } from "../../../utils/planFeatures";
@@ -151,6 +152,22 @@ function formatPlanPrice(value, currency) {
   });
 }
 
+/**
+ * Real yearly saving vs paying monthly for 12 months, from the plan's own
+ * per-hectare prices in `currency`. Returns null when it can't be computed
+ * (missing price, enterprise, or yearly not cheaper).
+ */
+function yearlySavings(plan, currency) {
+  const m = plan?.prices?.monthly?.[currency]?.value;
+  const y = plan?.prices?.yearly?.[currency]?.value;
+  if (!(m > 0) || !(y > 0)) return null;
+  const monthsPaid = m * 12;
+  const saved = monthsPaid - y;
+  const pct = Math.round((saved / monthsPaid) * 100);
+  if (!(pct > 0)) return null;
+  return { pct, saved, monthsPaid, yearly: y, perMonth: y / 12 };
+}
+
 function PlanCard({
   plan,
   billing,
@@ -180,6 +197,7 @@ function PlanCard({
   const perAcre = !!tier.perAcre;
   const displayCurrency = tier.displayCurrency || currency;
   const symbol = displayCurrency === "INR" ? "₹" : "$";
+  const savings = isEnterprise ? null : yearlySavings(plan, currency);
 
   const handleSubscribe = (e) => {
     e.stopPropagation();
@@ -359,15 +377,24 @@ function PlanCard({
         className="cursor-pointer"
       >
         <div
-          className="relative h-full overflow-hidden rounded-3xl px-5 py-4 flex flex-col gap-2.5 bg-gradient-to-b from-[#eefaf3] via-white to-white text-black border border-[#344E41]/20 shadow-lg"
+          className={`relative h-full overflow-hidden rounded-3xl px-5 py-4 flex flex-col gap-2.5 text-black shadow-lg ${
+            plan.isFreeTrialOffer
+              ? "bg-gradient-to-b from-[#d6f5e3] via-[#f1fbf5] to-white border-2 border-[#5A7C6B]/60"
+              : "bg-white border border-[#344E41]/15"
+          }`}
           style={{ backfaceVisibility: "hidden" }}
         >
+          {plan.isFreeTrialOffer ? (
+            <span className="absolute right-4 top-4 rounded-full bg-[#344E41] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+              {plan.trialDays} days free
+            </span>
+          ) : null}
           <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#5A7C6B] via-[#7dd3a8] to-[#344E41]" />
           <h3 className="mb-0 mt-1 text-xl font-extrabold sm:text-2xl">{plan.name}</h3>
           <p className="text-sm mb-0 text-gray-600">{plan.description}</p>
           <div className="flex items-baseline gap-2 flex-wrap">
             <p className="text-[28px] font-extrabold tracking-tight text-ember-sidebar mb-0">
-              {price === 0 ? (
+              {plan.isFreeTrialOffer || price === 0 ? (
                 "Free"
               ) : (
                 <>
@@ -381,11 +408,49 @@ function PlanCard({
                 </>
               )}
             </p>
-            <span className="text-sm text-gray-500">/{billing}</span>
+            <span className="whitespace-nowrap text-sm text-gray-500">
+              {plan.isFreeTrialOffer
+                ? `for ${plan.trialDays} days`
+                : billing === "yearly"
+                ? "/year"
+                : "/month"}
+            </span>
+            {plan.isFreeTrialOffer ? (
+              <span className="w-full text-[11px] text-gray-500">
+                1 farm, up to {plan.freeTrialOffer.maxHectares} ha, then{" "}
+                {symbol}
+                {formatPlanPrice(price, displayCurrency)}/ha per {billing === "yearly" ? "year" : "month"}
+              </span>
+            ) : null}
             {displayCurrency !== currency && price !== 0 ? (
               <span className="text-[10px] text-gray-400 w-full">
                 Priced in {displayCurrency}
               </span>
+            ) : null}
+            {savings && !plan.isFreeTrialOffer ? (
+              billing === "yearly" ? (
+                <div className="w-full space-y-1">
+                  <span className="inline-block rounded-full bg-green-100 px-2.5 py-0.5 text-[11px] font-bold text-green-700">
+                    You save {savings.pct}% vs monthly
+                  </span>
+                  <p className="mb-0 text-[11px] text-gray-500">
+                    <span className="line-through">
+                      {symbol}
+                      {formatPlanPrice(savings.monthsPaid, displayCurrency)}
+                    </span>{" "}
+                    {symbol}
+                    {formatPlanPrice(savings.yearly, displayCurrency)}/ha per
+                    year = {symbol}
+                    {formatPlanPrice(savings.perMonth, displayCurrency)}/ha per
+                    month. You save {symbol}
+                    {formatPlanPrice(savings.saved, displayCurrency)}/ha.
+                  </p>
+                </div>
+              ) : (
+                <span className="inline-block rounded-full bg-green-100 px-2.5 py-0.5 text-[11px] font-bold text-green-700">
+                  Save {savings.pct}% with yearly billing
+                </span>
+              )
             ) : null}
           </div>
 
@@ -404,21 +469,21 @@ function PlanCard({
             ))}
           </div>
 
-          <div className="mt-3 flex gap-2">
+          <div className="mt-auto flex gap-2 pt-3">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setFlipped(true);
               }}
-              className="flex-1 min-h-[40px] py-2 rounded-2xl text-sm font-semibold border border-[#5A7C6B]/40 bg-white/70 text-[#344E41] hover:border-[#5A7C6B] hover:bg-white transition-all duration-300 ease-in-out"
+              className="min-w-0 flex-1 h-11 whitespace-nowrap px-2 rounded-xl text-[13px] font-semibold border border-[#5A7C6B]/50 bg-white text-[#344E41] hover:border-[#344E41] hover:bg-[#eefaf3] transition-all duration-300 ease-in-out"
             >
-              View All Features
+              All Features
             </button>
             <button
               onClick={handleSubscribe}
-              className="flex-1 min-h-[40px] py-2 rounded-2xl font-bold text-sm bg-gradient-to-r from-[#344E41] to-[#5A7C6B] text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110 transition-all duration-300 ease-in-out"
+              className="min-w-0 flex-[1.35] h-11 whitespace-nowrap px-2 rounded-xl font-bold text-[13px] bg-gradient-to-r from-[#344E41] to-[#5A7C6B] text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg hover:brightness-110 transition-all duration-300 ease-in-out"
             >
-              Subscribe
+              {plan.isFreeTrialOffer ? "Start Free Trial" : "Subscribe"}
             </button>
           </div>
         </div>
@@ -459,11 +524,16 @@ function PlanCard({
 
 const Pricing = ({ setShowSidebar }) => {
   const dispatch = useDispatch();
-  const { subscriptions = [] } = useSelector(
+  const { subscriptions = [], currency: serverCurrency = null } = useSelector(
     (state) => state.subscription || {}
   );
   const [billing, setBilling] = useState("monthly");
-  const [currency, setCurrency] = useState("USD");
+  const { user } = useSelector((state) => state.auth || {});
+  // India -> INR plan, everyone else -> USD plans (by profile country).
+  const currency = useMemo(
+    () => planCurrencyForUser(user, serverCurrency),
+    [user, serverCurrency]
+  );
   const scrollContainerRef = React.useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -472,7 +542,45 @@ const Pricing = ({ setShowSidebar }) => {
     dispatch(fetchSubscriptions());
   }, [dispatch]);
 
-  const plans = useMemo(() => transformApiData(subscriptions), [subscriptions]);
+  const plans = useMemo(
+    () =>
+      transformApiData(subscriptions).filter(
+        (p) =>
+          p.isEnterprise ||
+          (p.pricing || []).some(
+            (r) => String(r.currency).toUpperCase() === currency
+          )
+      ),
+    [subscriptions, currency]
+  );
+
+  // Free Trial card (e.g. 21 days), built from the plan that carries the
+  // trial offer in the shown currency (same as the "Choose the Right Plan" popup).
+  const displayPlans = useMemo(() => {
+    const base = plans.find(
+      (p) =>
+        p.freeTrialOffer &&
+        String(p.freeTrialOffer.currency || "").toUpperCase() === currency
+    );
+    if (!base) return plans;
+    const offer = base.freeTrialOffer;
+    const trialCard = {
+      ...base,
+      _id: `free-trial:${base._id}`,
+      name: "Free Trial",
+      description: `${offer.days} days of ${base.name} features`,
+      isFreeTrialOffer: true,
+      trialDays: offer.days,
+    };
+    return [trialCard, ...plans];
+  }, [plans, currency]);
+
+  const savingsPcts = displayPlans
+    .filter((p) => !p.isFreeTrialOffer && !p.isEnterprise)
+    .map((p) => yearlySavings(p, currency)?.pct || 0)
+    .filter((n) => n > 0);
+  const maxSavingsPct = savingsPcts.length ? Math.max(...savingsPcts) : 0;
+  const minSavingsPct = savingsPcts.length ? Math.min(...savingsPcts) : 0;
 
   const checkScroll = () => {
     if (scrollContainerRef.current) {
@@ -521,23 +629,18 @@ const Pricing = ({ setShowSidebar }) => {
               }`}
             >
               {b}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex overflow-hidden rounded-xl border border-gray-200 bg-white text-sm shadow-sm">
-          {["INR", "USD"].map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCurrency(c)}
-              className={`min-h-[38px] px-4 py-1.5 font-semibold transition-colors ${
-                currency === c
-                  ? "bg-ember-sidebar text-white"
-                  : "bg-white text-gray-600 hover:text-ember-sidebar"
-              }`}
-            >
-              {c}
+              {b === "yearly" && maxSavingsPct > 0 ? (
+                <span
+                  className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold normal-case ${
+                    billing === "yearly"
+                      ? "bg-white/20 text-white"
+                      : "bg-green-100 text-green-700"
+                  }`}
+                >
+                  Save {minSavingsPct === maxSavingsPct ? "" : "up to "}
+                  {maxSavingsPct}%
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
@@ -559,15 +662,15 @@ const Pricing = ({ setShowSidebar }) => {
         <div
           ref={scrollContainerRef}
           onScroll={checkScroll}
-          className="scrollbar-hide my-3 overflow-x-auto overflow-y-hidden sm:my-4"
+          className="scrollbar-hide my-3 overflow-x-auto overflow-y-hidden rounded-3xl bg-gradient-to-br from-[#dff3e8] via-[#eef8f2] to-[#cfe9db] sm:my-4"
           style={{
             scrollBehavior: "smooth",
             msOverflowStyle: "none",
             scrollbarWidth: "none",
           }}
         >
-          <div className="flex items-stretch gap-5 px-1 pb-3 pt-2">
-            {plans
+          <div className="flex items-stretch gap-5 px-4 pb-5 pt-5">
+            {displayPlans
               .filter(
                 (plan) =>
                   plan.isEnterprise ||
